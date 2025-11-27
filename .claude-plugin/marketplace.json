@@ -1,0 +1,19 @@
+{
+  "name": "turboshovel",
+  "owner": {
+    "name": "Toby Hede",
+    "email": "toby@tobyhede.com"
+  },
+  "metadata": {
+    "description": "Turboshovel plugin marketplace",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "turboshovel",
+      "source": "./plugin",
+      "description": "Generic hook framework for Claude Code with context injection and quality gates",
+      "version": "0.1.0"
+    }
+  ]
+}
