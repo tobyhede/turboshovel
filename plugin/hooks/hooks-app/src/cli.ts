@@ -173,7 +173,7 @@ async function handleHookDispatch(): Promise<void> {
     // ALWAYS log hook invocation (unconditional - for debugging)
     await logger.always('HOOK_INVOKED', {
       input_length: inputStr.length,
-      input_preview: inputStr.substring(0, 200)
+      input_preview: inputStr.substring(0, 500)
     });
 
     // Log raw input at CLI entry point
