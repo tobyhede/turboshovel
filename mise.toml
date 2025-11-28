@@ -1,17 +1,15 @@
 # Turboshovel mise configuration
 
-# Hook logging tasks
+# Hook logging tasks (logging enabled by default)
 [tasks.logs]
-description = "Tail hook logs (enable with TURBOSHOVEL_LOG=1)"
+description = "Tail hook logs"
 run = """
 LOG_FILE=$(node plugin/hooks/hooks-app/dist/cli.js log-path)
 if [[ -f "$LOG_FILE" ]]; then
   tail -f "$LOG_FILE"
 else
   echo "No log file found at: $LOG_FILE"
-  echo ""
-  echo "Enable logging by setting: export TURBOSHOVEL_LOG=1"
-  echo "Then trigger a hook event (e.g., edit a file in Claude Code)"
+  echo "Trigger a hook event (e.g., edit a file in Claude Code) to create the log."
 fi
 """
 
@@ -23,7 +21,6 @@ if [[ -f "$LOG_FILE" ]]; then
   tail -f "$LOG_FILE" | jq -c 'select(.level == "error")'
 else
   echo "No log file found at: $LOG_FILE"
-  echo "Enable logging by setting: export TURBOSHOVEL_LOG=1"
 fi
 """
 
@@ -35,7 +32,6 @@ if [[ -d "$LOG_DIR" ]]; then
   tail -f "$LOG_DIR"/hooks-*.log
 else
   echo "No log directory found at: $LOG_DIR"
-  echo "Enable logging by setting: export TURBOSHOVEL_LOG=1"
 fi
 """
 
@@ -47,7 +43,6 @@ if [[ -f "$LOG_FILE" ]]; then
   tail -f "$LOG_FILE" | jq -r '"\(.ts | split("T")[1] | split(".")[0]) [\(.level | ascii_upcase)] \(.event // .message) \(del(.ts, .level, .event, .message) | to_entries | map("\(.key)=\(.value)") | join(" "))"'
 else
   echo "No log file found at: $LOG_FILE"
-  echo "Enable logging by setting: export TURBOSHOVEL_LOG=1"
 fi
 '''
 

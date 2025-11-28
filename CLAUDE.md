@@ -46,8 +46,8 @@ See plugin/hooks/ARCHITECTURE.md for system design.
 
 ## Environment Variables
 
-- `TURBOSHOVEL_LOG=1` - Enable debug logging to `$TMPDIR/turboshovel/`
-- `TURBOSHOVEL_LOG_LEVEL=debug|info|warn|error` - Set log verbosity
+- `TURBOSHOVEL_LOG=0` - Disable logging (enabled by default)
+- `TURBOSHOVEL_LOG_LEVEL=debug|info|warn|error` - Set log verbosity (default: info)
 
 ## Documentation
 

@@ -14,26 +14,18 @@ First, verify the plugin loaded without errors:
 
 ### 2. Check Logging
 
-Check if logging is enabled and view recent log entries:
+Logging is **enabled by default**. View recent log entries:
 
 ```bash
 # Show log file path
 mise run logs:path
 
-# Or directly:
-node plugin/hooks/hooks-app/dist/cli.js log-path
-```
-
-If no logs exist, enable logging:
-```bash
-export TURBOSHOVEL_LOG=1
-```
-
-Then tail the logs in a separate terminal:
-```bash
+# Tail logs in a separate terminal
 mise run logs
 # or: mise run logs:pretty
 ```
+
+To disable logging: `TURBOSHOVEL_LOG=0`
 
 ### 3. Test Hook Invocation
 
@@ -66,15 +58,15 @@ Test the CLI directly with simulated hook input:
 ```bash
 # Test SessionStart (should return context injection)
 echo '{"hook_event_name":"SessionStart","cwd":"'$(pwd)'"}' | \
-  TURBOSHOVEL_LOG=1 node plugin/hooks/hooks-app/dist/cli.js
+  node plugin/hooks/hooks-app/dist/cli.js
 
 # Test PostToolUse with Edit tool
 echo '{"hook_event_name":"PostToolUse","tool_name":"Edit","cwd":"'$(pwd)'"}' | \
-  TURBOSHOVEL_LOG=1 node plugin/hooks/hooks-app/dist/cli.js
+  node plugin/hooks/hooks-app/dist/cli.js
 
 # Test UserPromptSubmit with keyword matching
 echo '{"hook_event_name":"UserPromptSubmit","user_message":"please run lint","cwd":"'$(pwd)'"}' | \
-  TURBOSHOVEL_LOG=1 node plugin/hooks/hooks-app/dist/cli.js
+  node plugin/hooks/hooks-app/dist/cli.js
 ```
 
 ### 6. Session State
@@ -104,10 +96,10 @@ When working correctly, you should see:
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| No log entries | Logging disabled | `export TURBOSHOVEL_LOG=1` |
 | Plugin errors on load | Invalid hooks.json | Check for unsupported hook types |
 | Gates not firing | No gates.json | Create `.claude/gates.json` |
 | Wrong cwd in logs | Plugin path issue | Check `CLAUDE_PLUGIN_ROOT` resolution |
+| Too many logs | Logging enabled by default | Set `TURBOSHOVEL_LOG=0` |
 
 ## Arguments
 
