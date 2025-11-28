@@ -21,28 +21,7 @@
         "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
       }]
     }],
-    "SlashCommandStart": [{
-      "matcher": ".*",
-      "hooks": [{
-        "type": "command",
-        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
-      }]
-    }],
-    "SlashCommandEnd": [{
-      "matcher": ".*",
-      "hooks": [{
-        "type": "command",
-        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
-      }]
-    }],
-    "SkillStart": [{
-      "matcher": ".*",
-      "hooks": [{
-        "type": "command",
-        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
-      }]
-    }],
-    "SkillEnd": [{
+    "SubagentStart": [{
       "matcher": ".*",
       "hooks": [{
         "type": "command",
@@ -78,6 +57,20 @@
       }]
     }],
     "Notification": [{
+      "matcher": ".*",
+      "hooks": [{
+        "type": "command",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
+      }]
+    }],
+    "PreCompact": [{
+      "matcher": ".*",
+      "hooks": [{
+        "type": "command",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
+      }]
+    }],
+    "PermissionRequest": [{
       "matcher": ".*",
       "hooks": [{
         "type": "command",
