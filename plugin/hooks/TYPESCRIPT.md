@@ -9,8 +9,8 @@ TypeScript gates are gates defined **without a `command` field** in `gates.json`
 ```json
 {
   "gates": {
-    "commands": {
-      "description": "Context-aware command injection",
+    "plugin-path": {
+      "description": "Verify plugin path resolution in subagents",
       "on_pass": "CONTINUE",
       "on_fail": "CONTINUE"
     }
@@ -18,7 +18,7 @@ TypeScript gates are gates defined **without a `command` field** in `gates.json`
 }
 ```
 
-When this gate runs, the system loads `src/gates/commands.ts` and calls its `execute()` function.
+When this gate runs, the system loads `src/gates/plugin-path.ts` and calls its `execute()` function.
 
 ## Built-in Gates
 
@@ -216,60 +216,11 @@ export async function execute(input: HookInput): Promise<GateResult> {
 
 Logs go to `$TMPDIR/turboshovel/hooks-YYYY-MM-DD.log`.
 
-## Example: Commands Gate
+## Example: Plugin Path Gate
 
-The built-in `commands` gate shows a complete implementation:
+The built-in `plugin-path` gate shows a complete implementation. See `hooks-app/src/gates/plugin-path.ts` for the full source code.
 
-```typescript
-// src/gates/commands.ts
-import { HookInput, GateResult } from '../types';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import * as yaml from 'js-yaml';
-
-interface ClaudeMdFrontmatter {
-  commands?: Record<string, string>;
-}
-
-async function parseClaudeMd(cwd: string): Promise<Record<string, string>> {
-  const claudeMdPath = path.join(cwd, 'CLAUDE.md');
-  try {
-    const content = await fs.readFile(claudeMdPath, 'utf-8');
-    const frontmatterMatch = content.match(/^---\s*\n([\s\S]*?)\n---/);
-    if (!frontmatterMatch) return {};
-    const frontmatter = yaml.load(frontmatterMatch[1]) as ClaudeMdFrontmatter;
-    return frontmatter.commands || {};
-  } catch {
-    return {};
-  }
-}
-
-function detectNeededCommands(userMessage: string): string[] {
-  const needed: string[] = [];
-  const lower = userMessage.toLowerCase();
-  if (lower.includes('run project test command')) needed.push('test');
-  if (lower.includes('run project check command')) needed.push('check');
-  if (lower.includes('run project build command')) needed.push('build');
-  return [...new Set(needed)];
-}
-
-export async function execute(input: HookInput): Promise<GateResult> {
-  const commands = await parseClaudeMd(input.cwd);
-  const needed = detectNeededCommands(input.user_message || '');
-
-  if (needed.length === 0) return {};
-
-  const lines = ['<project_commands>'];
-  for (const cmd of needed) {
-    if (commands[cmd]) {
-      lines.push(`  <${cmd}>${commands[cmd]}</${cmd}>`);
-    }
-  }
-  lines.push('</project_commands>');
-
-  return { additionalContext: lines.join('\n') };
-}
-```
+This gate verifies that plugin paths are correctly resolved in subagent contexts, ensuring the `CLAUDE_PLUGIN_ROOT` environment variable is properly set and accessible.
 
 ## Development Workflow
 

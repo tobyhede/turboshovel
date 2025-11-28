@@ -100,6 +100,7 @@ Edit your project's `gates.json` to match your build tooling:
     },
     "test": {
       "description": "Run tests",
+      "keywords": ["test", "testing"],  // ← Optional: only for UserPromptSubmit
       "command": "npm test",  // ← Change to your command
       "on_pass": "CONTINUE",
       "on_fail": "BLOCK"
@@ -117,6 +118,10 @@ Edit your project's `gates.json` to match your build tooling:
   }
 }
 ```
+
+**Gate Configuration Notes:**
+- **keywords**: Optional array of trigger words. Only applies to `UserPromptSubmit` hook - ignored for other hooks. Gates with keywords only run when user message contains matching terms.
+- **command**: Shell command to execute. Mutually exclusive with `plugin`/`gate` fields (use one or the other, not both).
 
 ### Common Command Patterns
 

@@ -1,5 +1,7 @@
 # Turboshovel
 
+![Turboshovel Logo](turboshovel.png)
+
 Generic hook framework for Claude Code providing:
 - Automatic context injection via `.claude/context/` files
 - Configurable quality gates (check, test, build)

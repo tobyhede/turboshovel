@@ -34,8 +34,4 @@ cp ${CLAUDE_PLUGIN_ROOT}hooks/examples/context/session-start.md \
    .claude/context/session-start.md
 ```
 
-**Note:** SessionStart is not currently a supported hook in Claude Code. This file serves as a template for injecting environment context via other hooks (e.g., UserPromptSubmit, SlashCommandStart).
-
-## Alternative: User Prompt Hook
-
-If SessionStart hook becomes available, this context will auto-inject. Until then, consider using UserPromptSubmit hook or command-specific context injection.
+**Note:** SessionStart is supported by Claude Code and fires at the beginning of each session. This context file will auto-inject when a new session starts.

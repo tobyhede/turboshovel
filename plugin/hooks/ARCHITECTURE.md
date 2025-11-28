@@ -203,6 +203,12 @@ Based on gate result and `on_pass`/`on_fail` configuration:
 - **STOP**: Return stop signal to halt Claude
 - **{gate_name}**: Chain to another gate
 
+### Gate Chain Limit
+
+To prevent infinite loops from misconfigured gate chains, there is a circuit breaker limit of **10 gates per dispatch** (`MAX_GATES_PER_DISPATCH`).
+
+If a gate chain exceeds this limit, execution stops with a block reason indicating the maximum depth was exceeded. Check your gate configuration for circular references if you encounter this error.
+
 ## Supported Hook Events
 
 All 12 Claude Code hook types are supported:
@@ -221,6 +227,8 @@ All 12 Claude Code hook types are supported:
 | `PostToolUse` | `{tool}-post.md` | After tool executes |
 | `Stop` | `agent-stop.md` | Agent stops |
 | `Notification` | `notification-receive.md` | Notification received |
+
+**Note:** SessionStart fires at the beginning of each Claude Code session and injects context from `session-start.md`.
 
 ## TypeScript Gates
 

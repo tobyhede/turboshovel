@@ -24,21 +24,23 @@ Conventions allow project-specific hook behavior without editing `gates.json`. P
 - Agent with different command: `.claude/context/rust-agent-execute-end.md`
 - Plan review agent: `.claude/context/plan-review-agent-verify-start.md`
 
-**Supported hooks:**
+**Supported hooks (12 total):**
 - `SessionStart` - At beginning of Claude Code session
 - `SessionEnd` - At end of Claude Code session
+- `UserPromptSubmit` - Before user prompt is processed
 - `SlashCommandStart` - Before command executes
 - `SlashCommandEnd` - After command completes
 - `SkillStart` - When skill loads
 - `SkillEnd` - When skill completes
 - `SubagentStop` - After agent completes (supports agent-command scoping)
-- `UserPromptSubmit` - Before user prompt is processed
 - `PreToolUse` - Before a tool is used
 - `PostToolUse` - After a tool is used
 - `Stop` - When agent stops
 - `Notification` - When notification is received
 
 **All Claude Code hook types are supported.** Plugin provides default context for `SessionStart` via `${CLAUDE_PLUGIN_ROOT}/context/session-start.md`.
+
+**Note:** SessionStart fires at the beginning of each Claude Code session and injects context from `session-start.md`.
 
 **Examples:**
 

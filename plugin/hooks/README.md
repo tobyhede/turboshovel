@@ -81,7 +81,7 @@ All 12 Claude Code hook types are supported:
 
 | Event | Context Pattern | Default Behavior |
 |-------|----------------|------------------|
-| `SessionStart` | `session-start.md` | Plugin injects agent selection guide |
+| `SessionStart` | `session-start.md` | Plugin provides environment context |
 | `SessionEnd` | `session-end.md` | - |
 | `UserPromptSubmit` | `prompt-submit.md` | Keyword-triggered gates (check, test, build) |
 | `SlashCommandStart` | `{command}-start.md` | - |
@@ -93,6 +93,8 @@ All 12 Claude Code hook types are supported:
 | `PostToolUse` | `{tool}-post.md` | - |
 | `Stop` | `agent-stop.md` | - |
 | `Notification` | `notification-receive.md` | - |
+
+**Note:** SessionStart fires at the beginning of each Claude Code session and injects context from `session-start.md`.
 
 ## Context Injection
 
@@ -153,9 +155,12 @@ The security checklist appears in the conversation automatically. **No configura
 | `SessionStart` | `session-start.md` | Session begins |
 | `UserPromptSubmit` | `prompt-submit.md` | User sends message |
 | `SlashCommandStart` | `{command}-start.md` | `/code-review-start.md` |
+| `SlashCommandEnd` | `{command}-end.md` | `/code-review-end.md` |
 | `SkillStart` | `{skill}-start.md` | `test-driven-development-start.md` |
+| `SkillEnd` | `{skill}-end.md` | `test-driven-development-end.md` |
 | `SubagentStop` | `{agent}-end.md` | `rust-agent-end.md` |
 | `PreToolUse` | `{tool}-pre.md` | `Edit-pre.md` |
+| `PostToolUse` | `{tool}-post.md` | `Edit-post.md` |
 
 See **[CONVENTIONS.md](./CONVENTIONS.md)** for full documentation.
 
@@ -250,6 +255,8 @@ Gates can define `keywords` to only run when the user message contains matching 
 - Gates without `keywords` always run (backwards compatible)
 - Keyword matching is case-insensitive
 
+**Important:** The `keywords` field only applies to the `UserPromptSubmit` hook. Keywords are ignored for all other hook types (PostToolUse, SubagentStop, etc.).
+
 ### Agent Filtering for SubagentStop
 
 **Important:** Without `enabled_agents`, SubagentStop triggers for ALL agents - including verification-only agents that don't modify code.
@@ -320,7 +327,7 @@ ls $TMPDIR/turboshovel/hooks-*.log
 
 ## Examples
 
-See `examples/` for ready-to-use configurations:
+See `plugin/hooks/examples/` for ready-to-use configurations:
 
 - `strict.json` - Block on all failures
 - `permissive.json` - Warn only
