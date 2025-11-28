@@ -185,9 +185,22 @@ async function handleHookDispatch(): Promise<void> {
     // Parse input
     let input: HookInput;
     try {
+      if (inputStr.length === 0) {
+        await logger.error('CLI received empty input', {
+          reason: 'stdin was empty - possible CLI race condition or cancelled operation'
+        });
+        console.error(
+          JSON.stringify({
+            continue: false,
+            message: 'Empty input received'
+          })
+        );
+        process.exit(1);
+      }
       input = JSON.parse(inputStr);
     } catch (error) {
-      await logger.error('CLI failed to parse JSON input', {
+      await logger.error('CLI failed to parse invalid JSON', {
+        input_length: inputStr.length,
         input_preview: inputStr.substring(0, 200),
         error: error instanceof Error ? error.message : String(error)
       });
