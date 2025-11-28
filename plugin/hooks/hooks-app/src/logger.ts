@@ -39,10 +39,11 @@ function getLogFilePath(): string {
 
 /**
  * Check if logging is enabled via environment variable.
- * TURBOSHOVEL_LOG=1 enables logging.
+ * Logging is ENABLED by default (env vars don't pass through from Claude CLI).
+ * Set TURBOSHOVEL_LOG=0 to disable.
  */
 function isLoggingEnabled(): boolean {
-  return process.env.TURBOSHOVEL_LOG === '1';
+  return process.env.TURBOSHOVEL_LOG !== '0';
 }
 
 /**
