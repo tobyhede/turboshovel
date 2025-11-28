@@ -5,6 +5,7 @@
   "gates": {
     "test": {
       "description": "Run project test suite",
+      "comment": "Examples: 'npm test' | 'cargo test' | 'mise run test'",
       "command": "npm test",
       "on_pass": "CONTINUE",
       "on_fail": "BLOCK"

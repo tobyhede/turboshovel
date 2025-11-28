@@ -2,17 +2,17 @@
   "name": "turboshovel",
   "owner": {
     "name": "Toby Hede",
-    "email": "toby@tobyhede.com"
+    "email": "toby@cipherstash.com"
   },
   "metadata": {
-    "description": "Turboshovel plugin marketplace",
+    "description": "Turboshovel plugin marketplace - quality enforcement and context injection",
     "version": "0.1.0"
   },
   "plugins": [
     {
       "name": "turboshovel",
       "source": "./plugin",
-      "description": "Generic hook framework for Claude Code with context injection and quality gates",
+      "description": "Generic hook framework for quality enforcement and context injection",
       "version": "0.1.0"
     }
   ]

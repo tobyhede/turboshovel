@@ -2,24 +2,28 @@
   "gates": {
     "format": {
       "description": "Auto-format code",
+      "comment": "Examples: 'npm run format' | 'cargo fmt' | 'mise run format'",
       "command": "mise run format",
       "on_pass": "check",
       "on_fail": "STOP"
     },
     "check": {
       "description": "Quality checks",
+      "comment": "Examples: 'npm run lint' | 'cargo clippy' | 'mise run check'",
       "command": "mise run check",
       "on_pass": "test",
       "on_fail": "BLOCK"
     },
     "test": {
       "description": "Run tests",
+      "comment": "Examples: 'npm test' | 'cargo test' | 'mise run test'",
       "command": "mise run test",
       "on_pass": "build",
       "on_fail": "BLOCK"
     },
     "build": {
       "description": "Build project",
+      "comment": "Examples: 'npm run build' | 'cargo build' | 'mise run build'",
       "command": "mise run build",
       "on_pass": "CONTINUE",
       "on_fail": "BLOCK"

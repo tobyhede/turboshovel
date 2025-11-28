@@ -165,6 +165,31 @@ See **[CONVENTIONS.md](./CONVENTIONS.md)** for full documentation.
 
 Gates are defined in `gates.json` and can be:
 
+## Plugin Gate References
+
+Reference gates defined in other plugins:
+
+```json
+{
+  "gates": {
+    "plan-compliance": {
+      "plugin": "cipherpowers",
+      "gate": "plan-compliance"
+    },
+    "check": {
+      "command": "npm run lint"
+    }
+  },
+  "hooks": {
+    "SubagentStop": {
+      "gates": ["plan-compliance", "check"]
+    }
+  }
+}
+```
+
+The `plugin` field uses sibling convention - assumes plugins are installed in the same directory (e.g., `~/.claude/plugins/`). The gate's command runs in the plugin's directory context.
+
 ### Shell Command Gates
 
 ```json

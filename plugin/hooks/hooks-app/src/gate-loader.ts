@@ -2,7 +2,8 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
-import { HookInput, GateResult, GateConfig } from './types';
+import { HookInput, GateResult, GateConfig, GatesConfig } from './types';
+import { resolvePluginPath, loadConfigFile } from './config';
 
 const execAsync = promisify(exec);
 
@@ -84,13 +85,63 @@ export async function executeBuiltinGate(gateName: string, input: HookInput): Pr
   }
 }
 
+// Track plugin gate call stack to detect circular references
+const MAX_PLUGIN_DEPTH = 10;
+
 export async function executeGate(
   gateName: string,
   gateConfig: GateConfig,
-  input: HookInput
+  input: HookInput,
+  pluginStack: string[] = []
 ): Promise<{ passed: boolean; result: GateResult }> {
+  // Handle plugin gate reference
+  if (gateConfig.plugin && gateConfig.gate) {
+    // Circular reference detection
+    const gateRef = `${gateConfig.plugin}:${gateConfig.gate}`;
+    if (pluginStack.includes(gateRef)) {
+      throw new Error(
+        `Circular gate reference detected: ${pluginStack.join(' -> ')} -> ${gateRef}`
+      );
+    }
+
+    // Depth limit to prevent infinite recursion
+    if (pluginStack.length >= MAX_PLUGIN_DEPTH) {
+      throw new Error(
+        `Maximum plugin gate depth (${MAX_PLUGIN_DEPTH}) exceeded: ${pluginStack.join(' -> ')} -> ${gateRef}`
+      );
+    }
+
+    const { gateConfig: pluginGateConfig, pluginRoot } = await loadPluginGate(
+      gateConfig.plugin,
+      gateConfig.gate
+    );
+
+    // Recursively execute the plugin's gate with updated stack
+    const newStack = [...pluginStack, gateRef];
+
+    // Execute the plugin's gate command in the plugin's directory
+    if (pluginGateConfig.command) {
+      const shellResult = await executeShellCommand(pluginGateConfig.command, pluginRoot);
+      const passed = shellResult.exitCode === 0;
+
+      return {
+        passed,
+        result: {
+          additionalContext: shellResult.output
+        }
+      };
+    } else if (pluginGateConfig.plugin && pluginGateConfig.gate) {
+      // Plugin gate references another plugin gate - recurse
+      return executeGate(gateRef, pluginGateConfig, input, newStack);
+    } else {
+      throw new Error(
+        `Plugin gate '${gateConfig.plugin}:${gateConfig.gate}' has no command`
+      );
+    }
+  }
+
   if (gateConfig.command) {
-    // Shell command gate
+    // Shell command gate (existing behavior)
     const shellResult = await executeShellCommand(gateConfig.command, input.cwd);
     const passed = shellResult.exitCode === 0;
 
@@ -110,4 +161,50 @@ export async function executeGate(
       result
     };
   }
+}
+
+export interface PluginGateResult {
+  gateConfig: GateConfig;
+  pluginRoot: string;
+}
+
+/**
+ * Load a gate definition from another plugin.
+ *
+ * SECURITY: Plugins are trusted by virtue of being explicitly installed by the user.
+ * This function loads plugin configuration and does NOT validate command safety.
+ * The trust boundary is at plugin installation, not at gate reference.
+ *
+ * However, we do validate that the loaded config has the expected structure to
+ * prevent runtime errors from malformed plugin configurations.
+ *
+ * @param pluginName - Name of the plugin (e.g., 'cipherpowers')
+ * @param gateName - Name of the gate within the plugin
+ * @returns The gate config and the plugin root path for execution context
+ */
+export async function loadPluginGate(
+  pluginName: string,
+  gateName: string
+): Promise<PluginGateResult> {
+  const pluginRoot = resolvePluginPath(pluginName);
+  const gatesPath = path.join(pluginRoot, 'hooks', 'gates.json');
+
+  const pluginConfig = await loadConfigFile(gatesPath);
+  if (!pluginConfig) {
+    throw new Error(`Cannot find gates.json for plugin '${pluginName}' at ${gatesPath}`);
+  }
+
+  // Validate plugin config has gates object
+  if (!pluginConfig.gates || typeof pluginConfig.gates !== 'object') {
+    throw new Error(
+      `Invalid gates.json structure in plugin '${pluginName}': missing or invalid 'gates' object`
+    );
+  }
+
+  const gateConfig = pluginConfig.gates[gateName];
+  if (!gateConfig) {
+    throw new Error(`Gate '${gateName}' not found in plugin '${pluginName}'`);
+  }
+
+  return { gateConfig, pluginRoot };
 }

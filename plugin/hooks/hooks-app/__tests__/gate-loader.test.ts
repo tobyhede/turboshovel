@@ -1,7 +1,9 @@
 // plugin/hooks/hooks-app/__tests__/gate-loader.test.ts
-import { executeShellCommand, executeGate } from '../src/gate-loader';
+import { executeShellCommand, executeGate, loadPluginGate } from '../src/gate-loader';
 import { GateConfig, HookInput } from '../src/types';
 import * as os from 'os';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 describe('Gate Loader - Shell Commands', () => {
   test('executes shell command and returns exit code', async () => {
@@ -74,5 +76,103 @@ describe('Gate Loader - executeGate', () => {
     await expect(executeGate('nonexistent-gate', gateConfig, mockInput)).rejects.toThrow(
       'Failed to load built-in gate nonexistent-gate'
     );
+  });
+});
+
+describe('Plugin Gate Loading', () => {
+  let mockPluginDir: string;
+  let originalEnv: string | undefined;
+
+  beforeEach(async () => {
+    // Create mock plugin directory structure
+    mockPluginDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mock-plugins-'));
+    const cipherpowersDir = path.join(mockPluginDir, 'cipherpowers', 'hooks');
+    await fs.mkdir(cipherpowersDir, { recursive: true });
+
+    // Create mock gates.json for cipherpowers
+    const gatesConfig = {
+      hooks: {},
+      gates: {
+        'plan-compliance': {
+          command: 'node dist/gates/plan-compliance.js',
+          on_fail: 'BLOCK'
+        }
+      }
+    };
+    await fs.writeFile(
+      path.join(cipherpowersDir, 'gates.json'),
+      JSON.stringify(gatesConfig)
+    );
+
+    // Set CLAUDE_PLUGIN_ROOT to point to turboshovel sibling
+    originalEnv = process.env.CLAUDE_PLUGIN_ROOT;
+    process.env.CLAUDE_PLUGIN_ROOT = path.join(mockPluginDir, 'turboshovel');
+  });
+
+  afterEach(async () => {
+    process.env.CLAUDE_PLUGIN_ROOT = originalEnv;
+    await fs.rm(mockPluginDir, { recursive: true, force: true });
+  });
+
+  test('loads gate config from plugin', async () => {
+    const result = await loadPluginGate('cipherpowers', 'plan-compliance');
+
+    expect(result.gateConfig.command).toBe('node dist/gates/plan-compliance.js');
+    expect(result.gateConfig.on_fail).toBe('BLOCK');
+    expect(result.pluginRoot).toBe(path.join(mockPluginDir, 'cipherpowers'));
+  });
+
+  test('throws when plugin gates.json not found', async () => {
+    await expect(loadPluginGate('nonexistent', 'some-gate')).rejects.toThrow(
+      "Cannot find gates.json for plugin 'nonexistent'"
+    );
+  });
+
+  test('throws when gate not found in plugin', async () => {
+    await expect(loadPluginGate('cipherpowers', 'nonexistent-gate')).rejects.toThrow(
+      "Gate 'nonexistent-gate' not found in plugin 'cipherpowers'"
+    );
+  });
+
+  test('validates loaded plugin config structure', async () => {
+    // Create plugin with malformed gates.json
+    const malformedDir = path.join(mockPluginDir, 'malformed', 'hooks');
+    await fs.mkdir(malformedDir, { recursive: true });
+    await fs.writeFile(
+      path.join(malformedDir, 'gates.json'),
+      JSON.stringify({
+        hooks: {},
+        gates: {
+          'bad-gate': {
+            // Missing required fields (no command, plugin, or gate)
+          }
+        }
+      })
+    );
+
+    // This should succeed loading but the gate config is invalid
+    // Validation happens when the gate is used, not when loading
+    const result = await loadPluginGate('malformed', 'bad-gate');
+    expect(result.gateConfig).toBeDefined();
+  });
+
+  test('executeGate handles plugin gate reference', async () => {
+    const gateConfig: GateConfig = {
+      plugin: 'cipherpowers',
+      gate: 'plan-compliance'
+    };
+
+    const mockInput: HookInput = {
+      hook_event_name: 'SubagentStop',
+      cwd: '/some/project'
+    };
+
+    // The command from cipherpowers will be executed in cipherpowers plugin dir
+    // For this test, the mock plugin has 'node dist/gates/plan-compliance.js'
+    // which won't exist, so it will fail - but we can verify the flow
+    const result = await executeGate('my-gate', gateConfig, mockInput);
+
+    // Command execution will fail (file doesn't exist) but flow is correct
+    expect(result.passed).toBe(false);
   });
 });

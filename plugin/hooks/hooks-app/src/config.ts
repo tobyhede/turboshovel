@@ -22,6 +22,27 @@ const KNOWN_HOOK_EVENTS = [
 
 const KNOWN_ACTIONS = ['CONTINUE', 'BLOCK', 'STOP'];
 
+function validateGateConfig(gateName: string, gateConfig: GateConfig): void {
+  const hasPlugin = gateConfig.plugin !== undefined;
+  const hasGate = gateConfig.gate !== undefined;
+  const hasCommand = gateConfig.command !== undefined;
+
+  // plugin requires gate
+  if (hasPlugin && !hasGate) {
+    throw new Error(`Gate '${gateName}' has 'plugin' but missing 'gate' field`);
+  }
+
+  // gate requires plugin
+  if (hasGate && !hasPlugin) {
+    throw new Error(`Gate '${gateName}' has 'gate' but missing 'plugin' field`);
+  }
+
+  // command is mutually exclusive with plugin/gate
+  if (hasCommand && (hasPlugin || hasGate)) {
+    throw new Error(`Gate '${gateName}' cannot have both 'command' and 'plugin/gate'`);
+  }
+}
+
 /**
  * Validate config invariants to catch configuration errors early.
  * Throws descriptive errors when invariants are violated.
@@ -49,6 +70,9 @@ export function validateConfig(config: GatesConfig): void {
 
   // Invariant: Gate actions must be CONTINUE/BLOCK/STOP or reference existing gates
   for (const [gateName, gateConfig] of Object.entries(config.gates)) {
+    // Validate gate structure first
+    validateGateConfig(gateName, gateConfig);
+
     for (const action of [gateConfig.on_pass, gateConfig.on_fail]) {
       if (action && !KNOWN_ACTIONS.includes(action) && !config.gates[action]) {
         throw new Error(
@@ -57,6 +81,38 @@ export function validateConfig(config: GatesConfig): void {
       }
     }
   }
+}
+
+/**
+ * Resolve plugin path using sibling convention.
+ * Assumes plugins are installed as siblings under the same parent directory.
+ *
+ * SECURITY: Plugin names are validated to prevent path traversal attacks.
+ * This does NOT mean untrusted plugins are safe - plugins are trusted by virtue
+ * of being explicitly installed by the user. This validation only prevents
+ * accidental or malicious config entries from accessing arbitrary paths.
+ *
+ * @param pluginName - Name of the plugin to resolve
+ * @returns Absolute path to the plugin root
+ * @throws Error if CLAUDE_PLUGIN_ROOT is not set or plugin name is invalid
+ */
+export function resolvePluginPath(pluginName: string): string {
+  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
+  if (!pluginRoot) {
+    throw new Error('Cannot resolve plugin path: CLAUDE_PLUGIN_ROOT not set');
+  }
+
+  // Security: Reject plugin names with path separators or parent references
+  // Prevents path traversal attacks like "../../../etc" or "foo/bar"
+  if (pluginName.includes('/') || pluginName.includes('\\') || pluginName.includes('..')) {
+    throw new Error(
+      `Invalid plugin name: '${pluginName}' (must not contain path separators)`
+    );
+  }
+
+  // Sibling convention: plugins are in same parent directory
+  // e.g., ~/.claude/plugins/turboshovel -> ~/.claude/plugins/cipherpowers
+  return path.resolve(pluginRoot, '..', pluginName);
 }
 
 /**
@@ -83,7 +139,7 @@ function getPluginRoot(): string | null {
 /**
  * Load a single config file
  */
-async function loadConfigFile(configPath: string): Promise<GatesConfig | null> {
+export async function loadConfigFile(configPath: string): Promise<GatesConfig | null> {
   if (await fileExists(configPath)) {
     const content = await fs.readFile(configPath, 'utf-8');
     return JSON.parse(content);

@@ -37,7 +37,15 @@ export interface GateResult {
 export type GateExecute = (input: HookInput) => Promise<GateResult>;
 
 export interface GateConfig {
+  /** Reference gate from another plugin (requires gate field) */
+  plugin?: string;
+
+  /** Gate name within the plugin's hooks/gates.json (requires plugin field) */
+  gate?: string;
+
+  /** Local shell command (mutually exclusive with plugin/gate) */
   command?: string;
+
   /**
    * Keywords that trigger this gate (UserPromptSubmit hook only).
    * When specified, the gate only runs if the user message contains one of these keywords.

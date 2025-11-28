@@ -207,7 +207,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
 
     // Execute gate
     const gateStartTime = Date.now();
-    const { passed, result } = await executeGate(gateName, gateConfig, input);
+    const { passed, result } = await executeGate(gateName, gateConfig, input, []);
     const gateDuration = Date.now() - gateStartTime;
 
     await logger.event('info', hookEvent, {

@@ -1,5 +1,5 @@
 // plugin/hooks/hooks-app/__tests__/types.test.ts
-import { HookInput, GateResult } from '../src/types';
+import { HookInput, GateResult, GateConfig } from '../src/types';
 
 describe('Types', () => {
   test('HookInput has required fields', () => {
@@ -41,5 +41,23 @@ describe('Types', () => {
     };
     expect(result.decision).toBe('block');
     expect(result.reason).toBe('Test reason');
+  });
+});
+
+describe('GateConfig Type', () => {
+  test('accepts plugin gate reference', () => {
+    const config: GateConfig = {
+      plugin: 'cipherpowers',
+      gate: 'plan-compliance'
+    };
+    expect(config.plugin).toBe('cipherpowers');
+    expect(config.gate).toBe('plan-compliance');
+  });
+
+  test('accepts local command gate', () => {
+    const config: GateConfig = {
+      command: 'npm run lint'
+    };
+    expect(config.command).toBe('npm run lint');
   });
 });

@@ -355,6 +355,106 @@ jq . .claude/gates.json
 # - Unescaped quotes in strings
 ```
 
+## Plugin Gate References
+
+You can reference gates defined in other plugins to reuse quality checks across projects.
+
+### Configuration
+
+Use the `plugin` and `gate` fields to reference external gates:
+
+```json
+{
+  "gates": {
+    "plan-compliance": {
+      "plugin": "cipherpowers",
+      "gate": "plan-compliance",
+      "description": "Verify implementation matches plan"
+    },
+    "check": {
+      "command": "npm run lint",
+      "on_fail": "BLOCK"
+    }
+  },
+  "hooks": {
+    "SubagentStop": {
+      "gates": ["plan-compliance", "check"]
+    }
+  }
+}
+```
+
+### How Plugin Gates Work
+
+**Plugin Discovery:**
+- The `plugin` field uses **sibling convention**
+- Assumes plugins are installed in the same parent directory
+- Example: If your plugin is in `~/.claude/plugins/turboshovel/`, it looks for `~/.claude/plugins/cipherpowers/`
+
+**Execution Context:**
+- Plugin gate commands run in the **plugin's directory**
+- This allows plugin gates to access their own tools and configurations
+- Your project's working directory is still available via environment variables
+
+**Required Fields:**
+- `plugin`: Name of the plugin containing the gate
+- `gate`: Name of the gate defined in the plugin's `gates.json`
+
+**Optional Fields:**
+- `description`: Override the plugin's gate description
+- Other gate fields (like `on_pass`, `on_fail`) use the plugin's defaults
+
+### Mixing Local and Plugin Gates
+
+You can combine local gates (with `command` field) and plugin gates (with `plugin` field) in the same configuration:
+
+```json
+{
+  "gates": {
+    "plan-compliance": {
+      "plugin": "cipherpowers",
+      "gate": "plan-compliance"
+    },
+    "code-review": {
+      "plugin": "cipherpowers",
+      "gate": "code-review"
+    },
+    "check": {
+      "command": "npm run lint"
+    },
+    "test": {
+      "command": "npm test"
+    }
+  },
+  "hooks": {
+    "SubagentStop": {
+      "gates": ["plan-compliance", "check", "test"]
+    },
+    "PostToolUse": {
+      "enabled_tools": ["Edit", "Write"],
+      "gates": ["check"]
+    }
+  }
+}
+```
+
+### Troubleshooting Plugin Gates
+
+**Plugin not found:**
+- Verify plugin is installed in sibling directory
+- Check plugin name matches directory name
+- Example: `"plugin": "cipherpowers"` requires `../cipherpowers/` directory
+
+**Gate not found in plugin:**
+- Verify gate name matches plugin's `gates.json`
+- Check plugin's `gates.json` for available gates
+- Gate names are case-sensitive
+
+**Plugin gate fails:**
+- Plugin gates run in plugin's directory context
+- Check plugin's own configuration and dependencies
+- Review logs for plugin-specific error messages
+
 ## Migration from Plugin Default
 
 If you were using the plugin's default `gates.json`, migrate to project-level:

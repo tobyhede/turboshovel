@@ -5,12 +5,14 @@
   "gates": {
     "check": {
       "description": "Quality checks (warn only)",
+      "comment": "Examples: 'npm run lint' | 'cargo clippy' | 'mise run check'",
       "command": "mise run check",
       "on_pass": "CONTINUE",
       "on_fail": "CONTINUE"
     },
     "test": {
       "description": "Tests (warn only)",
+      "comment": "Examples: 'npm test' | 'cargo test' | 'mise run test'",
       "command": "mise run test",
       "on_pass": "CONTINUE",
       "on_fail": "CONTINUE"

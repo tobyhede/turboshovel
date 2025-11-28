@@ -7,6 +7,10 @@ Generic hook framework for Claude Code providing:
 - TypeScript gate extensibility
 - Session state tracking
 
+## History
+
+Turboshovel was extracted from the [cipherpowers](https://github.com/cipherpowers/cipherpowers) project as a standalone, generic hook framework. The original implementation was tightly coupled to cipherpowers workflows; this extraction makes the hook framework reusable for any Claude Code project.
+
 ## Quick Start
 
 1. Install from local path: `claude plugins install /path/to/turboshovel`
