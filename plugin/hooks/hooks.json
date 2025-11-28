@@ -1,13 +1,13 @@
 {
   "hooks": {
-    "PostToolUse": [{
+    "SessionStart": [{
       "matcher": ".*",
       "hooks": [{
         "type": "command",
         "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
       }]
     }],
-    "SubagentStop": [{
+    "SessionEnd": [{
       "matcher": ".*",
       "hooks": [{
         "type": "command",
@@ -21,7 +21,63 @@
         "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
       }]
     }],
-    "SessionStart": [{
+    "SlashCommandStart": [{
+      "matcher": ".*",
+      "hooks": [{
+        "type": "command",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
+      }]
+    }],
+    "SlashCommandEnd": [{
+      "matcher": ".*",
+      "hooks": [{
+        "type": "command",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
+      }]
+    }],
+    "SkillStart": [{
+      "matcher": ".*",
+      "hooks": [{
+        "type": "command",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
+      }]
+    }],
+    "SkillEnd": [{
+      "matcher": ".*",
+      "hooks": [{
+        "type": "command",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
+      }]
+    }],
+    "SubagentStop": [{
+      "matcher": ".*",
+      "hooks": [{
+        "type": "command",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
+      }]
+    }],
+    "PreToolUse": [{
+      "matcher": ".*",
+      "hooks": [{
+        "type": "command",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
+      }]
+    }],
+    "PostToolUse": [{
+      "matcher": ".*",
+      "hooks": [{
+        "type": "command",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
+      }]
+    }],
+    "Stop": [{
+      "matcher": ".*",
+      "hooks": [{
+        "type": "command",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
+      }]
+    }],
+    "Notification": [{
       "matcher": ".*",
       "hooks": [{
         "type": "command",
