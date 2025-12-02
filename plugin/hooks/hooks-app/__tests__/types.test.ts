@@ -60,4 +60,23 @@ describe('GateConfig Type', () => {
     };
     expect(config.command).toBe('npm run lint');
   });
+
+  test('allows file_patterns field', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['packages/cts/**', 'src/**/*.ts'],
+      on_pass: 'CONTINUE'
+    };
+
+    expect(config.file_patterns).toEqual(['packages/cts/**', 'src/**/*.ts']);
+  });
+
+  test('allows file_patterns to be undefined', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      on_pass: 'CONTINUE'
+    };
+
+    expect(config.file_patterns).toBeUndefined();
+  });
 });

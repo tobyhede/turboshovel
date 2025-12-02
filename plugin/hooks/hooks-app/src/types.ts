@@ -53,6 +53,20 @@ export interface GateConfig {
    * Gates without keywords always run (backwards compatible).
    */
   keywords?: string[];
+
+  /**
+   * File path glob patterns that trigger this gate (PostToolUse hook only).
+   * When specified, the gate only runs if the modified file matches one of these patterns.
+   * Patterns are matched against relative paths from project root using minimatch.
+   * Multiple patterns use OR logic - gate runs if file matches ANY pattern.
+   * For all other hooks (SubagentStop, UserPromptSubmit, etc.), this field is ignored.
+   * Gates without patterns always run (backwards compatible).
+   *
+   * @example
+   * file_patterns: ["packages/cts/**", "src/**&#47;*.ts", "*.json"]
+   */
+  file_patterns?: string[];
+
   on_pass?: string;
   on_fail?: string;
 }
