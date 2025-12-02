@@ -22,6 +22,29 @@ const KNOWN_HOOK_EVENTS = [
 
 const KNOWN_ACTIONS = ['CONTINUE', 'BLOCK', 'STOP'];
 
+/**
+ * Validate file patterns in gate configuration.
+ * Validates types only - does not validate glob syntax (matches Jest/ESLint behavior).
+ * Called during config loading for fail-fast type checking.
+ *
+ * @param gateConfig - Gate configuration to validate
+ * @throws Error if any pattern is not a string
+ */
+export function validateFilePatterns(gateConfig: GateConfig): void {
+  if (!gateConfig.file_patterns || gateConfig.file_patterns.length === 0) {
+    return; // No patterns to validate
+  }
+
+  for (const pattern of gateConfig.file_patterns) {
+    if (typeof pattern !== 'string') {
+      throw new Error(
+        `Invalid file pattern: expected string, got ${typeof pattern}`
+      );
+    }
+    // No syntax validation - matches ecosystem patterns (Jest, ESLint, Webpack)
+  }
+}
+
 function validateGateConfig(gateName: string, gateConfig: GateConfig): void {
   const hasPlugin = gateConfig.plugin !== undefined;
   const hasGate = gateConfig.gate !== undefined;
@@ -72,6 +95,13 @@ export function validateConfig(config: GatesConfig): void {
   for (const [gateName, gateConfig] of Object.entries(config.gates)) {
     // Validate gate structure first
     validateGateConfig(gateName, gateConfig);
+
+    // Validate file patterns if specified
+    try {
+      validateFilePatterns(gateConfig);
+    } catch (error) {
+      throw new Error(`Gate "${gateName}" has invalid configuration: ${error instanceof Error ? error.message : String(error)}`);
+    }
 
     for (const action of [gateConfig.on_pass, gateConfig.on_fail]) {
       if (action && !KNOWN_ACTIONS.includes(action) && !config.gates[action]) {

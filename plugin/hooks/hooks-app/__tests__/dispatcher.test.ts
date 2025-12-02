@@ -1,5 +1,6 @@
 // plugin/hooks/hooks-app/__tests__/dispatcher.test.ts
 import { shouldProcessHook, dispatch, gateMatchesKeywords } from '../src/dispatcher';
+import { validateFilePatterns } from '../src/config';
 import { HookInput, HookConfig, GateConfig } from '../src/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -182,6 +183,34 @@ describe('Dispatcher - Gate Chaining', () => {
     // Should hit circuit breaker
     expect(result.blockReason).toContain('Exceeded max gate chain depth');
     expect(result.blockReason).toContain('circular');
+  });
+});
+
+describe('validateFilePatterns', () => {
+  it('should accept valid patterns', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['packages/cts/**', 'src/**/*.ts', '*.json'],
+      on_pass: 'CONTINUE'
+    };
+    expect(() => validateFilePatterns(config)).not.toThrow();
+  });
+
+  it('should throw error for non-string pattern', () => {
+    const config = {
+      command: 'echo test',
+      file_patterns: ['valid', 123, 'also-valid'],
+      on_pass: 'CONTINUE'
+    } as GateConfig;
+    expect(() => validateFilePatterns(config)).toThrow(/expected string/);
+  });
+
+  it('should skip validation when no patterns specified', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      on_pass: 'CONTINUE'
+    };
+    expect(() => validateFilePatterns(config)).not.toThrow();
   });
 });
 
