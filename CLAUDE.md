@@ -7,6 +7,7 @@ Turboshovel is a Claude Code plugin providing a generic hook framework for quali
 - **Quality Gates**: Automatically enforce project checks (lint, test, build) at hook points (PostToolUse, SubagentStop, UserPromptSubmit)
 - **Context Injection**: Convention-based `.claude/context/{name}-{stage}.md` files auto-inject into conversations
 - **Keyword Triggers**: Gates automatically fire based on conversation keywords
+- **File Pattern Filtering**: Run gates only for specific files/directories (perfect for monorepos)
 - **Session Tracking**: Session state persists across hook invocations
 - **TypeScript Gates**: Custom gates via TypeScript for complex logic
 
@@ -23,16 +24,28 @@ Create `.claude/gates.json` with your project commands:
       "command": "npm run lint",
       "on_pass": "CONTINUE",
       "on_fail": "BLOCK"
+    },
+    "backend:test": {
+      "description": "Run backend tests (only when backend files modified)",
+      "command": "npm run test:backend",
+      "file_patterns": ["packages/backend/**"],
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
     }
   },
   "hooks": {
     "PostToolUse": {
       "enabled_tools": ["Edit", "Write"],
+      "gates": ["check", "backend:test"]
+    },
+    "UserPromptSubmit": {
       "gates": ["check"]
     }
   }
 }
 ```
+
+This example shows both keyword-based filtering (check gate) and file pattern filtering (backend:test gate).
 
 ## Development Commands
 
