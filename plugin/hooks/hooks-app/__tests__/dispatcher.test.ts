@@ -440,3 +440,223 @@ describe('gateMatchesFilePattern', () => {
     expect(result).toBeDefined();
   });
 });
+
+describe('File pattern filtering integration', () => {
+  let testDir: string;
+
+  beforeEach(async () => {
+    // Create temporary directory for test config
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'gates-test-'));
+  });
+
+  afterEach(async () => {
+    // Clean up
+    await fs.rm(testDir, { recursive: true, force: true });
+  });
+
+  it('should run gate when file matches pattern', async () => {
+    const mockConfig = {
+      gates: {
+        'cts:test': {
+          command: 'echo "cts test"',
+          file_patterns: ['packages/cts/**'],
+          on_pass: 'CONTINUE'
+        },
+        'shared:test': {
+          command: 'echo "shared test"',
+          file_patterns: ['packages/shared/**', 'lib/common/**'],
+          on_pass: 'CONTINUE'
+        },
+        'no-pattern': {
+          command: 'echo "no pattern"',
+          on_pass: 'CONTINUE'
+        }
+      },
+      hooks: {
+        PostToolUse: {
+          enabled_tools: ['Edit', 'Write'],
+          gates: ['cts:test', 'shared:test', 'no-pattern']
+        }
+      }
+    };
+
+    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(mockConfig, null, 2));
+
+    const input: HookInput = {
+      hook_event_name: 'PostToolUse',
+      cwd: testDir,
+      tool_name: 'Edit',
+      file_path: path.join(testDir, 'packages/cts/src/index.ts')
+    };
+
+    const result = await dispatch(input);
+
+    expect(result.context).toContain('cts test');
+    expect(result.context).toContain('no pattern');
+    expect(result.context).not.toContain('shared test');
+  });
+
+  it('should skip gate when file does not match pattern', async () => {
+    const mockConfig = {
+      gates: {
+        'cts:test': {
+          command: 'echo "cts test"',
+          file_patterns: ['packages/cts/**'],
+          on_pass: 'CONTINUE'
+        },
+        'shared:test': {
+          command: 'echo "shared test"',
+          file_patterns: ['packages/shared/**', 'lib/common/**'],
+          on_pass: 'CONTINUE'
+        },
+        'no-pattern': {
+          command: 'echo "no pattern"',
+          on_pass: 'CONTINUE'
+        }
+      },
+      hooks: {
+        PostToolUse: {
+          enabled_tools: ['Edit', 'Write'],
+          gates: ['cts:test', 'shared:test', 'no-pattern']
+        }
+      }
+    };
+
+    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(mockConfig, null, 2));
+
+    const input: HookInput = {
+      hook_event_name: 'PostToolUse',
+      cwd: testDir,
+      tool_name: 'Edit',
+      file_path: path.join(testDir, 'packages/other/src/index.ts')
+    };
+
+    const result = await dispatch(input);
+
+    expect(result.context).toContain('no pattern');
+    expect(result.context).not.toContain('cts test');
+    expect(result.context).not.toContain('shared test');
+  });
+
+  it('should run gate when file matches any pattern (OR logic)', async () => {
+    const mockConfig = {
+      gates: {
+        'cts:test': {
+          command: 'echo "cts test"',
+          file_patterns: ['packages/cts/**'],
+          on_pass: 'CONTINUE'
+        },
+        'shared:test': {
+          command: 'echo "shared test"',
+          file_patterns: ['packages/shared/**', 'lib/common/**'],
+          on_pass: 'CONTINUE'
+        },
+        'no-pattern': {
+          command: 'echo "no pattern"',
+          on_pass: 'CONTINUE'
+        }
+      },
+      hooks: {
+        PostToolUse: {
+          enabled_tools: ['Edit', 'Write'],
+          gates: ['cts:test', 'shared:test', 'no-pattern']
+        }
+      }
+    };
+
+    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(mockConfig, null, 2));
+
+    const input: HookInput = {
+      hook_event_name: 'PostToolUse',
+      cwd: testDir,
+      tool_name: 'Edit',
+      file_path: path.join(testDir, 'lib/common/utils.ts')
+    };
+
+    const result = await dispatch(input);
+
+    expect(result.context).toContain('shared test');
+    expect(result.context).toContain('no pattern');
+    expect(result.context).not.toContain('cts test');
+  });
+
+  it('should not apply file pattern filtering to non-PostToolUse hooks', async () => {
+    const mockConfig = {
+      gates: {
+        'test-gate': {
+          command: 'echo "test gate"',
+          file_patterns: ['packages/cts/**'],
+          on_pass: 'CONTINUE'
+        }
+      },
+      hooks: {
+        UserPromptSubmit: {
+          gates: ['test-gate']
+        }
+      }
+    };
+
+    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(mockConfig, null, 2));
+
+    const input: HookInput = {
+      hook_event_name: 'UserPromptSubmit',
+      cwd: testDir,
+      user_message: 'test message'
+    };
+
+    const result = await dispatch(input);
+
+    // File patterns should be ignored for UserPromptSubmit
+    // Gate should run (no keywords = always run)
+    expect(result.context).toContain('test gate');
+  });
+
+  it('should filter multiple gates independently based on patterns', async () => {
+    const multiGateConfig = {
+      gates: {
+        'gate-a': {
+          command: 'echo "gate-a output"',
+          file_patterns: ['packages/a/**'],
+          on_pass: 'CONTINUE'
+        },
+        'gate-b': {
+          command: 'echo "gate-b output"',
+          file_patterns: ['packages/b/**'],
+          on_pass: 'CONTINUE'
+        },
+        'gate-c': {
+          command: 'echo "gate-c output"',
+          file_patterns: ['packages/c/**'],
+          on_pass: 'CONTINUE'
+        },
+        'gate-all': {
+          command: 'echo "gate-all output"',
+          on_pass: 'CONTINUE'
+        }
+      },
+      hooks: {
+        PostToolUse: {
+          enabled_tools: ['Edit'],
+          gates: ['gate-a', 'gate-b', 'gate-c', 'gate-all']
+        }
+      }
+    };
+
+    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(multiGateConfig, null, 2));
+
+    const input: HookInput = {
+      hook_event_name: 'PostToolUse',
+      cwd: testDir,
+      tool_name: 'Edit',
+      file_path: path.join(testDir, 'packages/b/index.ts')
+    };
+
+    const result = await dispatch(input);
+
+    // Only gate-b and gate-all should run
+    expect(result.context).toContain('gate-b output');
+    expect(result.context).toContain('gate-all output');
+    expect(result.context).not.toContain('gate-a output');
+    expect(result.context).not.toContain('gate-c output');
+  });
+});

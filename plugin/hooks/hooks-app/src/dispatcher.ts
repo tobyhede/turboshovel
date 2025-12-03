@@ -258,6 +258,12 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
       continue;
     }
 
+    // File pattern filtering for PostToolUse
+    if (hookEvent === 'PostToolUse' && !gateMatchesFilePattern(gateConfig, input.file_path, input.cwd)) {
+      await logger.debug('Gate skipped - no file pattern match', { gate: gateName });
+      continue;
+    }
+
     gatesExecuted++;
 
     // Execute gate
