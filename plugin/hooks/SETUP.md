@@ -123,6 +123,135 @@ Edit your project's `gates.json` to match your build tooling:
 - **keywords**: Optional array of trigger words. Only applies to `UserPromptSubmit` hook - ignored for other hooks. Gates with keywords only run when user message contains matching terms.
 - **command**: Shell command to execute. Mutually exclusive with `plugin`/`gate` fields (use one or the other, not both).
 
+### File Pattern Filtering
+
+Gates can be configured to run only for specific files or directories using the `file_patterns` field. This is especially useful for monorepo projects where different packages have different tasks.
+
+**Configuration:**
+
+```json
+{
+  "gates": {
+    "backend:test": {
+      "description": "Run backend tests",
+      "command": "npm run test:backend",
+      "file_patterns": ["packages/backend/**"],
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
+    },
+    "frontend:lint": {
+      "description": "Lint frontend code",
+      "command": "npm run lint:frontend",
+      "file_patterns": ["packages/frontend/**", "shared/ui/**"],
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
+    }
+  },
+  "hooks": {
+    "PostToolUse": {
+      "enabled_tools": ["Edit", "Write"],
+      "gates": ["backend:test", "frontend:lint"]
+    }
+  }
+}
+```
+
+**Pattern Syntax:**
+
+File patterns use glob syntax (similar to `.gitignore`, but with some differences):
+
+- `**` - Matches any number of directories (including zero)
+- `*` - Matches any characters except `/`
+- `?` - Matches a single character
+- `[abc]` - Matches any character in brackets
+
+**Pattern Examples:**
+
+| Pattern | Matches | Doesn't Match |
+|---------|---------|---------------|
+| `packages/cts/**` | `packages/cts/src/index.ts`<br>`packages/cts/lib/utils.ts` | `packages/shared/index.ts`<br>`src/index.ts` |
+| `src/**/*.ts` | `src/index.ts`<br>`src/lib/utils.ts` | `src/index.js`<br>`tests/index.ts` |
+| `*.json` | `package.json`<br>`tsconfig.json` | `src/config.json`<br>`lib/data.json` |
+| `.config/**` | `.config/settings.json`<br>`.config/app/theme.json` | `config/settings.json` |
+| `lib/*/index.ts` | `lib/utils/index.ts`<br>`lib/core/index.ts` | `lib/index.ts`<br>`lib/utils/helper.ts` |
+
+**Behavior:**
+
+- **Multiple patterns:** OR logic - gate runs if file matches ANY pattern
+- **No patterns:** Gate always runs (backwards compatible)
+- **Path matching:** Patterns are matched against relative paths from project root
+- **Hook scope:** Only applies to `PostToolUse` hook (which has `file_path`)
+- **Dotfiles:** Patterns can match dotfiles (e.g., `.config/**`)
+
+**Monorepo Example:**
+
+For a monorepo with separate test suites per package:
+
+```json
+{
+  "gates": {
+    "cts:test": {
+      "description": "Run CTS tests",
+      "command": "npm run test:cts",
+      "file_patterns": ["packages/cts/**"],
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
+    },
+    "api:test": {
+      "description": "Run API tests",
+      "command": "npm run test:api",
+      "file_patterns": ["packages/api/**"],
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
+    },
+    "shared:test": {
+      "description": "Run shared tests",
+      "command": "npm run test:shared",
+      "file_patterns": ["packages/shared/**"],
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
+    }
+  },
+  "hooks": {
+    "PostToolUse": {
+      "enabled_tools": ["Edit", "Write"],
+      "gates": ["cts:test", "api:test", "shared:test"]
+    }
+  }
+}
+```
+
+When you edit `packages/cts/src/index.ts`, only the `cts:test` gate runs.
+When you edit `packages/shared/utils.ts`, only the `shared:test` gate runs.
+
+**Pattern Library:**
+
+Patterns use the [minimatch library](https://www.npmjs.com/package/minimatch) (same as npm/glob). Supports advanced features:
+- Brace expansion: `{a,b,c}` matches any of a, b, or c
+- Extglob patterns: `@(pattern)`, `!(pattern)`, etc.
+- See minimatch docs for full syntax reference
+
+**Performance Considerations:**
+
+Pattern matching uses O(n*m) complexity where n=number of patterns, m=pattern complexity. For large monorepos:
+- Use early-exit optimization (patterns checked in order, stops at first match)
+- Consider consolidating gates if you have >100 patterns
+- Keep patterns simple where possible
+
+**Debugging:**
+
+Enable debug logging to see which patterns are matching:
+
+```bash
+TURBOSHOVEL_LOG_LEVEL=debug npx claude-code
+```
+
+Debug logs will show:
+- Which gate was evaluated
+- File path (absolute and relative)
+- Pattern that matched
+- Whether gate was skipped
+
 ### Common Command Patterns
 
 **Node.js/TypeScript:**
