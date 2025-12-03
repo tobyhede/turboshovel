@@ -170,6 +170,37 @@ See **[CONVENTIONS.md](./CONVENTIONS.md)** for full documentation.
 
 Gates are defined in `gates.json` and can be:
 
+### Monorepo Support
+
+Configure different gates for different packages using file pattern filtering:
+
+```json
+{
+  "gates": {
+    "backend:check": {
+      "description": "Backend quality checks",
+      "command": "npm run check:backend",
+      "file_patterns": ["packages/backend/**"],
+      "on_fail": "BLOCK"
+    },
+    "frontend:check": {
+      "description": "Frontend quality checks",
+      "command": "npm run check:frontend",
+      "file_patterns": ["packages/frontend/**"],
+      "on_fail": "BLOCK"
+    }
+  },
+  "hooks": {
+    "PostToolUse": {
+      "enabled_tools": ["Edit", "Write"],
+      "gates": ["backend:check", "frontend:check"]
+    }
+  }
+}
+```
+
+Only the relevant package's checks run based on which files you edit.
+
 ## Plugin Gate References
 
 Reference gates defined in other plugins:
