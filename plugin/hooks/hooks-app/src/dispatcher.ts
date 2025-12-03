@@ -6,6 +6,8 @@ import { executeGate } from './gate-loader';
 import { handleAction } from './action-handler';
 import { Session } from './session';
 import { logger } from './logger';
+import { minimatch } from 'minimatch';
+import path from 'path';
 
 export function shouldProcessHook(input: HookInput, hookConfig: HookConfig): boolean {
   const hookEvent = input.hook_event_name;
@@ -69,6 +71,59 @@ export function gateMatchesKeywords(gateConfig: GateConfig, userMessage: string 
   return gateConfig.keywords.some(keyword =>
     lowerMessage.includes(keyword.toLowerCase())
   );
+}
+
+/**
+ * Check if gate should run based on file pattern matching (PostToolUse only).
+ * Gates without patterns always run (backwards compatible).
+ *
+ * Uses glob patterns matched against relative paths from project root.
+ * Multiple patterns use OR logic - gate runs if file matches ANY pattern.
+ *
+ * @param gateConfig - Gate configuration
+ * @param filePath - Absolute path to file being modified (from HookInput.file_path)
+ * @param cwd - Current working directory (project root)
+ * @returns true if gate should run, false otherwise
+ */
+export function gateMatchesFilePattern(
+  gateConfig: GateConfig,
+  filePath: string | undefined,
+  cwd: string
+): boolean {
+  // No patterns = always run (backwards compatible)
+  if (!gateConfig.file_patterns || gateConfig.file_patterns.length === 0) {
+    return true;
+  }
+
+  // No file path = skip pattern matching
+  if (!filePath) {
+    return false;
+  }
+
+  // FIX: Normalize relative paths to absolute paths before conversion
+  // If filePath is already relative, path.relative may produce incorrect results
+  const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(cwd, filePath);
+
+  // Convert absolute path to relative path from cwd
+  const relativePath = path.relative(cwd, absolutePath);
+
+  // Check if file matches ANY pattern (OR logic)
+  try {
+    return gateConfig.file_patterns.some((pattern) =>
+      minimatch(relativePath, pattern, {
+        matchBase: false,  // Match full path, not just basename (packages/cts/** shouldn't match unrelated/cts/)
+        dot: true,         // Allow patterns to match dotfiles like .config/settings.json
+      })
+    );
+  } catch (error) {
+    // FIX: Invalid glob pattern - log warning and skip gate
+    logger.warn('Invalid file pattern - gate skipped', {
+      pattern: gateConfig.file_patterns,
+      error: error instanceof Error ? error.message : String(error),
+      relativePath
+    }).catch(() => {}); // Ignore async logging errors
+    return false;
+  }
 }
 
 async function updateSessionState(input: HookInput): Promise<void> {

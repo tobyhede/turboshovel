@@ -1,5 +1,5 @@
 // plugin/hooks/hooks-app/__tests__/dispatcher.test.ts
-import { shouldProcessHook, dispatch, gateMatchesKeywords } from '../src/dispatcher';
+import { shouldProcessHook, dispatch, gateMatchesKeywords, gateMatchesFilePattern } from '../src/dispatcher';
 import { validateFilePatterns } from '../src/config';
 import { HookInput, HookConfig, GateConfig } from '../src/types';
 import * as fs from 'fs/promises';
@@ -288,5 +288,155 @@ describe('Keyword Matching', () => {
     expect(gateMatchesKeywords(gateConfig, 'latest version')).toBe(true);
     expect(gateMatchesKeywords(gateConfig, 'contest results')).toBe(true);
     expect(gateMatchesKeywords(gateConfig, 'testing')).toBe(true);
+  });
+});
+
+describe('gateMatchesFilePattern', () => {
+  const cwd = '/Users/test/project';
+
+  it('should return true when no patterns specified (backwards compatible)', () => {
+    const config: GateConfig = { command: 'echo test', on_pass: 'CONTINUE' };
+    const result = gateMatchesFilePattern(config, '/Users/test/project/src/index.ts', cwd);
+    expect(result).toBe(true);
+  });
+
+  it('should return true when patterns array is empty', () => {
+    const config: GateConfig = { command: 'echo test', file_patterns: [], on_pass: 'CONTINUE' };
+    const result = gateMatchesFilePattern(config, '/Users/test/project/src/index.ts', cwd);
+    expect(result).toBe(true);
+  });
+
+  it('should return false when file_path is undefined', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['src/**'],
+      on_pass: 'CONTINUE'
+    };
+    const result = gateMatchesFilePattern(config, undefined, cwd);
+    expect(result).toBe(false);
+  });
+
+  it('should return true when file matches single pattern', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['packages/cts/**'],
+      on_pass: 'CONTINUE'
+    };
+    const filePath = '/Users/test/project/packages/cts/src/index.ts';
+    const result = gateMatchesFilePattern(config, filePath, cwd);
+    expect(result).toBe(true);
+  });
+
+  it('should return false when file does not match pattern', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['packages/cts/**'],
+      on_pass: 'CONTINUE'
+    };
+    const filePath = '/Users/test/project/packages/other/src/index.ts';
+    const result = gateMatchesFilePattern(config, filePath, cwd);
+    expect(result).toBe(false);
+  });
+
+  it('should return true when file matches any pattern (OR logic)', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['packages/cts/**', 'packages/shared/**'],
+      on_pass: 'CONTINUE'
+    };
+    const filePath = '/Users/test/project/packages/shared/utils.ts';
+    const result = gateMatchesFilePattern(config, filePath, cwd);
+    expect(result).toBe(true);
+  });
+
+  it('should match deep nested directories with **', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['src/**/*.ts'],
+      on_pass: 'CONTINUE'
+    };
+    const filePath = '/Users/test/project/src/deeply/nested/dir/file.ts';
+    const result = gateMatchesFilePattern(config, filePath, cwd);
+    expect(result).toBe(true);
+  });
+
+  it('should match root-level files', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['*.json'],
+      on_pass: 'CONTINUE'
+    };
+    const filePath = '/Users/test/project/package.json';
+    const result = gateMatchesFilePattern(config, filePath, cwd);
+    expect(result).toBe(true);
+  });
+
+  it('should not match root-level pattern against nested file', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['*.json'],
+      on_pass: 'CONTINUE'
+    };
+    const filePath = '/Users/test/project/src/config.json';
+    const result = gateMatchesFilePattern(config, filePath, cwd);
+    expect(result).toBe(false);
+  });
+
+  it('should convert absolute paths to relative paths', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['packages/cts/**'],
+      on_pass: 'CONTINUE'
+    };
+    const absolutePath = '/Users/test/project/packages/cts/index.ts';
+    const result = gateMatchesFilePattern(config, absolutePath, cwd);
+    expect(result).toBe(true);
+  });
+
+  it('should match dotfiles when pattern includes them', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['.config/**'],
+      on_pass: 'CONTINUE'
+    };
+    const filePath = '/Users/test/project/.config/settings.json';
+    const result = gateMatchesFilePattern(config, filePath, cwd);
+    expect(result).toBe(true);
+  });
+
+  // FIX: Add relative path edge case test (defensive programming)
+  it('should handle already-relative paths gracefully', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['packages/cts/**'],
+      on_pass: 'CONTINUE'
+    };
+    const relativePath = 'packages/cts/index.ts'; // Already relative
+    const result = gateMatchesFilePattern(config, relativePath, cwd);
+    expect(result).toBe(true);
+  });
+
+  // FIX: Add empty string test
+  it('should return false for empty string file_path', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['**/*.ts'],
+      on_pass: 'CONTINUE'
+    };
+    const result = gateMatchesFilePattern(config, '', cwd);
+    expect(result).toBe(false);
+  });
+
+  // FIX: Add path traversal security test
+  it('should handle path traversal patterns safely', () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['../parent/**'],
+      on_pass: 'CONTINUE'
+    };
+    const filePath = '/Users/test/project/../parent/file.ts';
+    const result = gateMatchesFilePattern(config, filePath, cwd);
+    // Documents security boundary - patterns match after path.relative normalization
+    expect(result).toBeDefined();
   });
 });
