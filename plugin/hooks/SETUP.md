@@ -160,7 +160,7 @@ Gates can be configured to run only for specific files or directories using the 
 
 File patterns use glob syntax (similar to `.gitignore`, but with some differences):
 
-- `**` - Matches any number of directories (including zero)
+- `**` - Matches zero or more directories (e.g., `src/**/*.ts` matches both `src/file.ts` and `src/nested/deep/file.ts`)
 - `*` - Matches any characters except `/`
 - `?` - Matches a single character
 - `[abc]` - Matches any character in brackets
@@ -235,7 +235,7 @@ Patterns use the [minimatch library](https://www.npmjs.com/package/minimatch) (s
 
 Pattern matching uses O(n*m) complexity where n=number of patterns, m=pattern complexity. For large monorepos:
 - Use early-exit optimization (patterns checked in order, stops at first match)
-- Consider consolidating gates if you have >100 patterns
+- Consider consolidating gates if you have >100 patterns across all gates that run on a single PostToolUse event
 - Keep patterns simple where possible
 
 **Debugging:**

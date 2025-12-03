@@ -181,12 +181,14 @@ Configure different gates for different packages using file pattern filtering:
       "description": "Backend quality checks",
       "command": "npm run check:backend",
       "file_patterns": ["packages/backend/**"],
+      "on_pass": "CONTINUE",
       "on_fail": "BLOCK"
     },
     "frontend:check": {
       "description": "Frontend quality checks",
       "command": "npm run check:frontend",
       "file_patterns": ["packages/frontend/**"],
+      "on_pass": "CONTINUE",
       "on_fail": "BLOCK"
     }
   },
