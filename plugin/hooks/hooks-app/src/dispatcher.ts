@@ -85,11 +85,11 @@ export function gateMatchesKeywords(gateConfig: GateConfig, userMessage: string 
  * @param cwd - Current working directory (project root)
  * @returns true if gate should run, false otherwise
  */
-export function gateMatchesFilePattern(
+export async function gateMatchesFilePattern(
   gateConfig: GateConfig,
   filePath: string | undefined,
   cwd: string
-): boolean {
+): Promise<boolean> {
   // No patterns = always run (backwards compatible)
   if (!gateConfig.file_patterns || gateConfig.file_patterns.length === 0) {
     return true;
@@ -107,21 +107,39 @@ export function gateMatchesFilePattern(
   // Convert absolute path to relative path from cwd
   const relativePath = path.relative(cwd, absolutePath);
 
+  // FIX: Keep .some() implementation from Task 3, add logging separately
+  let matchedPattern: string | undefined;
+
   // Check if file matches ANY pattern (OR logic)
   try {
-    return gateConfig.file_patterns.some((pattern) =>
-      minimatch(relativePath, pattern, {
+    const matches = gateConfig.file_patterns.some((pattern) => {
+      const result = minimatch(relativePath, pattern, {
         matchBase: false,  // Match full path, not just basename (packages/cts/** shouldn't match unrelated/cts/)
         dot: true,         // Allow patterns to match dotfiles like .config/settings.json
-      })
-    );
+      });
+      if (result) {
+        matchedPattern = pattern;
+      }
+      return result;
+    });
+
+    // FIX: Use await logger.debug() pattern (consistent with existing code)
+    if (matches && matchedPattern) {
+      await logger.debug('File pattern matched', {
+        relativePath,
+        pattern: matchedPattern,
+        absolutePath: filePath
+      });
+    }
+
+    return matches;
   } catch (error) {
     // FIX: Invalid glob pattern - log warning and skip gate
-    logger.warn('Invalid file pattern - gate skipped', {
+    await logger.warn('Invalid file pattern - gate skipped', {
       pattern: gateConfig.file_patterns,
       error: error instanceof Error ? error.message : String(error),
       relativePath
-    }).catch(() => {}); // Ignore async logging errors
+    });
     return false;
   }
 }
@@ -259,7 +277,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
     }
 
     // File pattern filtering for PostToolUse
-    if (hookEvent === 'PostToolUse' && !gateMatchesFilePattern(gateConfig, input.file_path, input.cwd)) {
+    if (hookEvent === 'PostToolUse' && !(await gateMatchesFilePattern(gateConfig, input.file_path, input.cwd))) {
       await logger.debug('Gate skipped - no file pattern match', { gate: gateName });
       continue;
     }

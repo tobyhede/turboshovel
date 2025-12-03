@@ -294,148 +294,148 @@ describe('Keyword Matching', () => {
 describe('gateMatchesFilePattern', () => {
   const cwd = '/Users/test/project';
 
-  it('should return true when no patterns specified (backwards compatible)', () => {
+  it('should return true when no patterns specified (backwards compatible)', async () => {
     const config: GateConfig = { command: 'echo test', on_pass: 'CONTINUE' };
-    const result = gateMatchesFilePattern(config, '/Users/test/project/src/index.ts', cwd);
+    const result = await gateMatchesFilePattern(config, '/Users/test/project/src/index.ts', cwd);
     expect(result).toBe(true);
   });
 
-  it('should return true when patterns array is empty', () => {
+  it('should return true when patterns array is empty', async () => {
     const config: GateConfig = { command: 'echo test', file_patterns: [], on_pass: 'CONTINUE' };
-    const result = gateMatchesFilePattern(config, '/Users/test/project/src/index.ts', cwd);
+    const result = await gateMatchesFilePattern(config, '/Users/test/project/src/index.ts', cwd);
     expect(result).toBe(true);
   });
 
-  it('should return false when file_path is undefined', () => {
+  it('should return false when file_path is undefined', async () => {
     const config: GateConfig = {
       command: 'echo test',
       file_patterns: ['src/**'],
       on_pass: 'CONTINUE'
     };
-    const result = gateMatchesFilePattern(config, undefined, cwd);
+    const result = await gateMatchesFilePattern(config, undefined, cwd);
     expect(result).toBe(false);
   });
 
-  it('should return true when file matches single pattern', () => {
+  it('should return true when file matches single pattern', async () => {
     const config: GateConfig = {
       command: 'echo test',
       file_patterns: ['packages/cts/**'],
       on_pass: 'CONTINUE'
     };
     const filePath = '/Users/test/project/packages/cts/src/index.ts';
-    const result = gateMatchesFilePattern(config, filePath, cwd);
+    const result = await gateMatchesFilePattern(config, filePath, cwd);
     expect(result).toBe(true);
   });
 
-  it('should return false when file does not match pattern', () => {
+  it('should return false when file does not match pattern', async () => {
     const config: GateConfig = {
       command: 'echo test',
       file_patterns: ['packages/cts/**'],
       on_pass: 'CONTINUE'
     };
     const filePath = '/Users/test/project/packages/other/src/index.ts';
-    const result = gateMatchesFilePattern(config, filePath, cwd);
+    const result = await gateMatchesFilePattern(config, filePath, cwd);
     expect(result).toBe(false);
   });
 
-  it('should return true when file matches any pattern (OR logic)', () => {
+  it('should return true when file matches any pattern (OR logic)', async () => {
     const config: GateConfig = {
       command: 'echo test',
       file_patterns: ['packages/cts/**', 'packages/shared/**'],
       on_pass: 'CONTINUE'
     };
     const filePath = '/Users/test/project/packages/shared/utils.ts';
-    const result = gateMatchesFilePattern(config, filePath, cwd);
+    const result = await gateMatchesFilePattern(config, filePath, cwd);
     expect(result).toBe(true);
   });
 
-  it('should match deep nested directories with **', () => {
+  it('should match deep nested directories with **', async () => {
     const config: GateConfig = {
       command: 'echo test',
       file_patterns: ['src/**/*.ts'],
       on_pass: 'CONTINUE'
     };
     const filePath = '/Users/test/project/src/deeply/nested/dir/file.ts';
-    const result = gateMatchesFilePattern(config, filePath, cwd);
+    const result = await gateMatchesFilePattern(config, filePath, cwd);
     expect(result).toBe(true);
   });
 
-  it('should match root-level files', () => {
+  it('should match root-level files', async () => {
     const config: GateConfig = {
       command: 'echo test',
       file_patterns: ['*.json'],
       on_pass: 'CONTINUE'
     };
     const filePath = '/Users/test/project/package.json';
-    const result = gateMatchesFilePattern(config, filePath, cwd);
+    const result = await gateMatchesFilePattern(config, filePath, cwd);
     expect(result).toBe(true);
   });
 
-  it('should not match root-level pattern against nested file', () => {
+  it('should not match root-level pattern against nested file', async () => {
     const config: GateConfig = {
       command: 'echo test',
       file_patterns: ['*.json'],
       on_pass: 'CONTINUE'
     };
     const filePath = '/Users/test/project/src/config.json';
-    const result = gateMatchesFilePattern(config, filePath, cwd);
+    const result = await gateMatchesFilePattern(config, filePath, cwd);
     expect(result).toBe(false);
   });
 
-  it('should convert absolute paths to relative paths', () => {
+  it('should convert absolute paths to relative paths', async () => {
     const config: GateConfig = {
       command: 'echo test',
       file_patterns: ['packages/cts/**'],
       on_pass: 'CONTINUE'
     };
     const absolutePath = '/Users/test/project/packages/cts/index.ts';
-    const result = gateMatchesFilePattern(config, absolutePath, cwd);
+    const result = await gateMatchesFilePattern(config, absolutePath, cwd);
     expect(result).toBe(true);
   });
 
-  it('should match dotfiles when pattern includes them', () => {
+  it('should match dotfiles when pattern includes them', async () => {
     const config: GateConfig = {
       command: 'echo test',
       file_patterns: ['.config/**'],
       on_pass: 'CONTINUE'
     };
     const filePath = '/Users/test/project/.config/settings.json';
-    const result = gateMatchesFilePattern(config, filePath, cwd);
+    const result = await gateMatchesFilePattern(config, filePath, cwd);
     expect(result).toBe(true);
   });
 
   // FIX: Add relative path edge case test (defensive programming)
-  it('should handle already-relative paths gracefully', () => {
+  it('should handle already-relative paths gracefully', async () => {
     const config: GateConfig = {
       command: 'echo test',
       file_patterns: ['packages/cts/**'],
       on_pass: 'CONTINUE'
     };
     const relativePath = 'packages/cts/index.ts'; // Already relative
-    const result = gateMatchesFilePattern(config, relativePath, cwd);
+    const result = await gateMatchesFilePattern(config, relativePath, cwd);
     expect(result).toBe(true);
   });
 
   // FIX: Add empty string test
-  it('should return false for empty string file_path', () => {
+  it('should return false for empty string file_path', async () => {
     const config: GateConfig = {
       command: 'echo test',
       file_patterns: ['**/*.ts'],
       on_pass: 'CONTINUE'
     };
-    const result = gateMatchesFilePattern(config, '', cwd);
+    const result = await gateMatchesFilePattern(config, '', cwd);
     expect(result).toBe(false);
   });
 
   // FIX: Add path traversal security test
-  it('should handle path traversal patterns safely', () => {
+  it('should handle path traversal patterns safely', async () => {
     const config: GateConfig = {
       command: 'echo test',
       file_patterns: ['../parent/**'],
       on_pass: 'CONTINUE'
     };
     const filePath = '/Users/test/project/../parent/file.ts';
-    const result = gateMatchesFilePattern(config, filePath, cwd);
+    const result = await gateMatchesFilePattern(config, filePath, cwd);
     // Documents security boundary - patterns match after path.relative normalization
     expect(result).toBeDefined();
   });
@@ -658,5 +658,101 @@ describe('File pattern filtering integration', () => {
     expect(result.context).toContain('gate-all output');
     expect(result.context).not.toContain('gate-a output');
     expect(result.context).not.toContain('gate-c output');
+  });
+});
+
+describe('gateMatchesFilePattern - debug logging', () => {
+  const cwd = '/Users/test/project';
+
+  // Mock logger to capture debug calls
+  let mockDebugCalls: Array<{ message: string; data?: Record<string, unknown> }> = [];
+
+  beforeEach(async () => {
+    mockDebugCalls = [];
+
+    // Mock logger.debug to capture calls
+    const { logger } = await import('../src/logger');
+    jest.spyOn(logger, 'debug').mockImplementation(async (message: string, data?: Record<string, unknown>) => {
+      mockDebugCalls.push({ message, data });
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('should log debug message when pattern matches', async () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['packages/cts/**'],
+      on_pass: 'CONTINUE'
+    };
+    const filePath = '/Users/test/project/packages/cts/src/index.ts';
+
+    const result = await gateMatchesFilePattern(config, filePath, cwd);
+
+    expect(result).toBe(true);
+    expect(mockDebugCalls).toHaveLength(1);
+    expect(mockDebugCalls[0].message).toBe('File pattern matched');
+    expect(mockDebugCalls[0].data).toMatchObject({
+      relativePath: 'packages/cts/src/index.ts',
+      pattern: 'packages/cts/**',
+      absolutePath: filePath
+    });
+  });
+
+  it('should not log when pattern does not match', async () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['packages/cts/**'],
+      on_pass: 'CONTINUE'
+    };
+    const filePath = '/Users/test/project/packages/other/src/index.ts';
+
+    const result = await gateMatchesFilePattern(config, filePath, cwd);
+
+    expect(result).toBe(false);
+    expect(mockDebugCalls).toHaveLength(0);
+  });
+
+  it('should log with correct pattern when multiple patterns present', async () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['packages/cts/**', 'packages/shared/**'],
+      on_pass: 'CONTINUE'
+    };
+    const filePath = '/Users/test/project/packages/shared/utils.ts';
+
+    const result = await gateMatchesFilePattern(config, filePath, cwd);
+
+    expect(result).toBe(true);
+    expect(mockDebugCalls).toHaveLength(1);
+    expect(mockDebugCalls[0].data?.pattern).toBe('packages/shared/**');
+  });
+
+  it('should not log when no patterns specified', async () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      on_pass: 'CONTINUE'
+    };
+    const filePath = '/Users/test/project/src/index.ts';
+
+    const result = await gateMatchesFilePattern(config, filePath, cwd);
+
+    expect(result).toBe(true);
+    expect(mockDebugCalls).toHaveLength(0);
+  });
+
+  it('should not log when file_path is undefined', async () => {
+    const config: GateConfig = {
+      command: 'echo test',
+      file_patterns: ['**/*.ts'],
+      on_pass: 'CONTINUE'
+    };
+
+    const result = await gateMatchesFilePattern(config, undefined, cwd);
+
+    expect(result).toBe(false);
+    expect(mockDebugCalls).toHaveLength(0);
   });
 });
