@@ -331,6 +331,34 @@ Merged Configuration        (project takes precedence)
 
 **Plugin provides defaults. Projects override what they need.**
 
+## Multi-Plugin Best Practices
+
+When using turboshovel alongside other Claude Code plugins:
+
+**✅ DO:**
+- Enable plugins in `.claude/settings.local.json` using `enabledPlugins`
+- Let Claude Code handle `${CLAUDE_PLUGIN_ROOT}` automatically per-plugin
+- Reference cross-plugin gates using the `plugin` field in gates.json
+
+**❌ DON'T:**
+- Set `CLAUDE_PLUGIN_ROOT` in project-level `env` configuration
+- Hardcode plugin paths in your project settings
+- Override automatic plugin path resolution
+
+**Example correct configuration:**
+```json
+{
+  "enabledPlugins": {
+    "turboshovel@turboshovel": true,
+    "cipherpowers@cipherpowers-dev": true
+  }
+}
+```
+
+Claude Code automatically sets the correct `${CLAUDE_PLUGIN_ROOT}` for each plugin during hook execution. Project-level environment variable overrides break this mechanism.
+
+See **[SETUP.md](./SETUP.md#hooks-not-running-in-multi-plugin-projects)** for troubleshooting multi-plugin issues.
+
 ## Debugging
 
 Logs are written to `$TMPDIR/turboshovel/hooks-YYYY-MM-DD.log`:

@@ -62,6 +62,31 @@ See plugin/hooks/ARCHITECTURE.md for system design.
 - `TURBOSHOVEL_LOG=0` - Disable logging (enabled by default)
 - `TURBOSHOVEL_LOG_LEVEL=debug|info|warn|error` - Set log verbosity (default: info)
 
+## Multi-Plugin Configuration
+
+When using turboshovel alongside other Claude Code plugins (like cipherpowers), **do not** set `CLAUDE_PLUGIN_ROOT` in your project's `.claude/settings.local.json`.
+
+**Incorrect** (breaks multi-plugin support):
+```json
+{
+  "env": {
+    "CLAUDE_PLUGIN_ROOT": "/path/to/some/plugin"
+  }
+}
+```
+
+**Correct** (let Claude Code handle paths automatically):
+```json
+{
+  "enabledPlugins": {
+    "turboshovel@turboshovel": true,
+    "other-plugin@marketplace": true
+  }
+}
+```
+
+Claude Code automatically sets `${CLAUDE_PLUGIN_ROOT}` to the correct path for each plugin during hook execution. Project-level overrides break this mechanism.
+
 ## Documentation
 
 - [README.md](plugin/hooks/README.md) - Quick start and examples

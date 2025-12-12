@@ -440,6 +440,41 @@ Add to `.gitignore`:
    jq '.hooks.PostToolUse.enabled_tools' .claude/gates.json
    ```
 
+### Hooks Not Running in Multi-Plugin Projects
+
+**Symptom:** Hooks don't execute when multiple plugins are installed.
+
+**Cause:** Project-level `CLAUDE_PLUGIN_ROOT` environment variable override in `.claude/settings.local.json`.
+
+**Example of problematic configuration:**
+```json
+{
+  "env": {
+    "CLAUDE_PLUGIN_ROOT": "/Users/username/src/some-plugin"
+  },
+  "enabledPlugins": {
+    "plugin-a": true,
+    "plugin-b": true
+  }
+}
+```
+
+**Solution:** Remove `env.CLAUDE_PLUGIN_ROOT` from `.claude/settings.local.json`. Claude Code sets this automatically per-plugin during hook execution.
+
+**Why:** Setting `CLAUDE_PLUGIN_ROOT` at the project level overrides Claude Code's automatic per-plugin path resolution. Each plugin needs its own path when hooks execute, but the project-level override forces all plugins to use the same path, breaking any plugin that doesn't match the hardcoded path.
+
+**Correct configuration:**
+```json
+{
+  "enabledPlugins": {
+    "plugin-a": true,
+    "plugin-b": true
+  }
+}
+```
+
+Let Claude Code handle `${CLAUDE_PLUGIN_ROOT}` dynamically - it will set the correct path for each plugin automatically.
+
 ### Gate Fails for Verification-Only Agents
 
 **Symptom:** SubagentStop gates fail for agents that only read files (technical-writer in verification mode, research-agent).
