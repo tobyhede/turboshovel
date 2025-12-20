@@ -506,7 +506,7 @@ npm test
 
 #### IF/ELSE Conditionals
 
-> **⚠️ NOT YET IMPLEMENTED:** IF/ELSE conditionals are planned but not currently supported by the parser. The parser only handles PASS/FAIL conditions. Use PASS/FAIL patterns for now.
+> **⚠️ NOT YET IMPLEMENTED:** IF/ELSE conditionals are planned but not currently supported by the parser. The parser only handles PASS/FAIL conditions. Use the agent-controlled branching pattern below instead.
 
 The planned syntax for variable-based conditional branching:
 
@@ -518,7 +518,52 @@ The planned syntax for variable-based conditional branching:
 - ELSE: CONTINUE
 ```
 
-Variables are set programmatically by agents or workflow logic.
+Variables would be set programmatically by agents or workflow logic.
+
+##### Agent-Controlled Branching (Current Workaround)
+
+Since IF/ELSE is not yet implemented, use agent-driven decisions with the `--step` flag to create loops and conditional branching:
+
+```markdown
+## 5. Check remaining tasks
+
+**Prompt:** Check TodoWrite for remaining tasks.
+
+If more tasks remain → `workflow next --step 3`
+If all done → `workflow next`
+
+- PASS: CONTINUE
+```
+
+**How it works:**
+1. Agent reads the step guidance with decision instructions
+2. Agent evaluates the condition (e.g., checks TodoWrite for remaining tasks)
+3. Agent executes the appropriate CLI command:
+   - **Loop back:** `workflow next --step 3` (jumps to step 3)
+   - **Continue forward:** `workflow next` (proceeds to step 6)
+
+**Advantages over parsed IF/ELSE:**
+- Agent can apply contextual judgment
+- More flexible than rigid conditionals
+- Works with existing workflow infrastructure
+- Supports complex multi-condition decisions
+
+**Example patterns:**
+
+```markdown
+## 3. Execute batch
+
+**Prompt:** Execute next 3 tasks from plan.
+
+After batch completes, check remaining work:
+- If more batches needed → `workflow next --step 2` (review + loop)
+- If all tasks complete → `workflow next` (continue to finalization)
+
+- PASS: CONTINUE
+- FAIL: RETRY 3
+```
+
+This pattern is the **recommended approach** until native IF/ELSE support is implemented.
 
 #### Actions Reference
 
@@ -539,7 +584,7 @@ Variables are set programmatically by agents or workflow logic.
 
 #### Complete Example
 
-> **Note:** This example uses IF/ELSE syntax which is planned but not yet implemented. Currently, use PASS/FAIL conditions instead.
+This example demonstrates agent-controlled branching for loops (the current workaround pattern):
 
 ```markdown
 # Execute Workflow
@@ -548,53 +593,50 @@ Execute implementation plans in controlled batches.
 
 ## 1. Load plan
 
-Load plan from path or discover in `.work/` directory.
-
-Read plan file and review critically for questions or concerns.
+**Prompt:** Load plan from path or discover in `.work/` directory. Read plan file and review critically for questions or concerns.
 
 - PASS: CONTINUE
 - FAIL: STOP "No plan file found."
 
 ## 2. Create tracking
 
-\`\`\`bash
-echo "Creating task tracking..."
-\`\`\`
+**Prompt:** Create TodoWrite tracking items for plan tasks.
 
 - PASS: CONTINUE
 - FAIL: STOP "Could not create task tracking."
 
 ## 3. Execute batch
 
-Execute next batch of tasks (3 tasks per batch).
-
-Dispatch subagent for each task with embedded following-plans skill.
+**Prompt:** Execute next batch of tasks (3 tasks per batch). Dispatch subagent for each task with embedded following-plans skill.
 
 - PASS: CONTINUE
 - FAIL: RETRY 3
 
 ## 4. Review batch
 
-Dispatch code-review-agent to review batch implementation.
+**Prompt:** Dispatch code-review-agent to review batch implementation.
 
 - PASS: CONTINUE
 - FAIL: STOP "BLOCKING issues found. Fix before continuing."
 
 ## 5. Report progress
 
-Show what was implemented. Say: "Ready for feedback."
+**Prompt:** Show what was implemented. Say: "Ready for feedback."
 
 - PASS: CONTINUE
 
-## 6. Check progress
+## 6. Check remaining work
 
-- IF: more_batches
-  - GOTO: 3
-- ELSE: CONTINUE
+**Prompt:** Check TodoWrite for remaining tasks.
+
+If more batches needed → `workflow next --step 3`
+If all tasks complete → `workflow next`
+
+- PASS: CONTINUE
 
 ## 7. Complete
 
-Verify tests pass. Present completion options.
+**Prompt:** Verify tests pass. Present completion options.
 
 - PASS: DONE
 - FAIL: STOP "Tests failing. Fix before completing."
@@ -906,11 +948,14 @@ Execute implementation plans in controlled batches with review checkpoints.
 
 - PASS: CONTINUE
 
-## 6. Check progress
+## 6. Check remaining work
 
-- IF: more_batches
-  - GOTO: 3
-- ELSE: CONTINUE
+**Prompt:** Check TodoWrite for remaining tasks.
+
+If more batches needed → `workflow next --step 3`
+If all tasks complete → `workflow next`
+
+- PASS: CONTINUE
 
 ## 7. Complete
 
@@ -951,15 +996,19 @@ Execute implementation plans in controlled batches with review checkpoints.
 - PASS: DONE
 ```
 
-**Loop with condition check**:
+**Loop with agent-controlled branching**:
 ```markdown
 ## 1. Process batch
 - PASS: CONTINUE
 
 ## 2. Check remaining
-- IF: has_more
-  - GOTO: 1
-- ELSE: DONE
+
+**Prompt:** Check if more items remain.
+
+If more items → `workflow next --step 1`
+If complete → `workflow next`
+
+- PASS: CONTINUE
 ```
 
 **Retry with backoff**:
@@ -1002,24 +1051,33 @@ npm run test:integration
 - Resets to 0 on step change
 - State persists between retries
 
-#### Using GOTO for Loops
+#### Agent-Controlled Loops
 
-**Safe loop pattern** (with exit condition):
+**Safe loop pattern** (agent evaluates condition):
 
 ```markdown
 ## 1. Process item
+
+**Prompt:** Process next item from queue.
+
 - PASS: CONTINUE
+- FAIL: RETRY 3
 
 ## 2. Check queue
-- IF: queue_empty
-  - DONE
-- ELSE: GOTO 1
+
+**Prompt:** Check if queue has more items.
+
+If queue not empty → `workflow next --step 1`
+If queue empty → `workflow next`
+
+- PASS: CONTINUE
 ```
 
-**Infinite loop protection:**
-- Parser validates GOTO targets exist
-- Rejects GOTO self (use RETRY instead)
-- No runtime loop detection (design workflows carefully)
+**Loop safety:**
+- Agent applies judgment to exit conditions
+- More flexible than rigid GOTO conditionals
+- Can handle complex multi-condition decisions
+- Works with current workflow infrastructure
 
 ### Migration Guide for Cipherpowers Agents
 
@@ -1042,24 +1100,40 @@ Execute implementation plans in batches.
 # Execute Workflow
 
 ## 1. Load plan
+
 **Prompt:** Load plan from `.work/` directory.
+
 - PASS: CONTINUE
 - FAIL: STOP "No plan found"
 
 ## 2. Execute batch
+
 **Prompt:** Execute 3 tasks.
+
 - PASS: CONTINUE
 - FAIL: RETRY 3
 
 ## 3. Review batch
+
 **Prompt:** Dispatch code-review-agent.
+
 - PASS: CONTINUE
 - FAIL: STOP "BLOCKING issues"
 
-## 4. Check progress
-- IF: more_batches
-  - GOTO: 2
-- ELSE: DONE
+## 4. Check remaining tasks
+
+**Prompt:** Check if more batches remain.
+
+If more batches → `workflow next --step 2`
+If complete → `workflow next`
+
+- PASS: CONTINUE
+
+## 5. Complete
+
+**Prompt:** All batches complete.
+
+- PASS: DONE
 ```
 
 **Advantages gained:**
