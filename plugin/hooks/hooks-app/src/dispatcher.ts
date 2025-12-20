@@ -6,6 +6,8 @@ import { executeGate } from './gate-loader';
 import { handleAction } from './action-handler';
 import { Session } from './session';
 import { logger } from './logger';
+import { getWorkflowContext } from './workflow/context';
+import { trackTaskDispatch, handleSubagentStop } from './workflow/hooks';
 import { minimatch } from 'minimatch';
 import path from 'path';
 
@@ -221,6 +223,24 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
   // This discovers .claude/context/{name}-{stage}.md files
   const contextContent = await injectContext(hookEvent, input);
   let accumulatedContext = contextContent || '';
+
+  // Inject workflow context if active
+  const workflowContext = await getWorkflowContext(input.cwd);
+  if (workflowContext) {
+    accumulatedContext += '\n\n' + workflowContext;
+  }
+
+  // Workflow hooks
+  if (input.hook_event_name === 'PostToolUse' && input.tool_name === 'Task') {
+    await trackTaskDispatch(input);
+  }
+
+  if (input.hook_event_name === 'SubagentStop') {
+    const subagentContext = await handleSubagentStop(input);
+    if (subagentContext) {
+      accumulatedContext += '\n\n' + subagentContext;
+    }
+  }
 
   // 2. Load config for additional gates (optional)
   const config = await loadConfig(cwd);
