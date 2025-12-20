@@ -80,7 +80,7 @@ export class WorkflowStateManager {
     const updated: WorkflowState = {
       ...existing,
       ...updates,
-      variables: { ...existing.variables, ...updates.variables },
+      variables: { ...existing.variables, ...(updates.variables ?? {}) },
       updatedAt: new Date().toISOString(),
     };
 
