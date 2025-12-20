@@ -388,7 +388,17 @@ ls $TMPDIR/turboshovel/hooks-*.log
 
 ## Workflow System
 
-Turboshovel includes an executable workflow system that makes skills enforceable.
+Turboshovel includes an executable workflow system that makes skills enforceable. Workflows provide structured, repeatable processes with state tracking, conditional logic, and task management.
+
+### Why Workflows?
+
+Traditional skills and agents are guidance-only. Workflows enforce process:
+
+- **State Persistence**: Survives context clears and session restarts
+- **Conditional Logic**: PASS/FAIL branches, IF/ELSE conditions, GOTO loops
+- **Task Tracking**: Monitor progress across multiple subtasks
+- **Retry Management**: Automatic retry counts and limits
+- **Variable Storage**: Pass data between workflow steps
 
 ### Quick Start
 
@@ -402,13 +412,81 @@ workflow status
 # Advance to next step
 workflow next
 
+# Jump to specific step
+workflow next --step 3
+
+# List all workflows
+workflow list
+
 # Stop workflow
 workflow stop
 ```
 
-### Workflow Syntax
+### Complete Workflow Syntax Reference
 
-Workflows are markdown files with numbered steps:
+#### Step Format
+
+Steps must use H2 headers (`##`) with sequential numbering:
+
+```markdown
+## 1. Step title
+
+Step content here.
+
+## 2. Next step
+
+More content.
+```
+
+**Invalid formats:**
+- H1 headers (`#`) - rejected with error
+- Non-sequential numbering (1, 3, 4) - rejected with error
+- Zero or negative numbers - rejected with error
+
+#### Code Blocks (Commands)
+
+Bash code blocks execute as shell commands:
+
+```markdown
+## 1. Run tests
+
+\`\`\`bash
+npm test
+\`\`\`
+```
+
+**Rules:**
+- Only `bash` language supported
+- One code block per step (multiple blocks rejected)
+- Combine multiple commands with `&&` or `;`
+- No code block means step is prompt-only
+
+#### Prompts
+
+Prompts guide agent behavior. Two types:
+
+**Explicit prompts** (using `**Prompt:**` marker):
+
+```markdown
+## 1. Review code
+
+**Prompt:** Review the implementation for security issues.
+```
+
+**Implicit prompts** (step description becomes prompt):
+
+```markdown
+## 1. Review code
+
+Review the implementation for security issues.
+Check for SQL injection, XSS, and auth bypasses.
+```
+
+If no code block and no explicit prompt, all step text becomes the implicit prompt.
+
+#### Conditions (PASS/FAIL)
+
+Define what happens based on command or agent outcome:
 
 ```markdown
 ## 1. Run tests
@@ -419,26 +497,602 @@ npm test
 
 - PASS: CONTINUE
 - FAIL: STOP "Tests failed"
-
-## 2. Check coverage
-
-Review coverage report.
-
-- PASS: CONTINUE
-- FAIL: GOTO 1
 ```
 
-### Actions
+**Condition patterns:**
+- List items (`- PASS: action`)
+- Paragraphs (`PASS: action`)
+- Defaults if omitted: `PASS: CONTINUE`, `FAIL: STOP`
 
-| Action | Description |
-|--------|-------------|
-| `CONTINUE` | Proceed to next step |
-| `STOP [message]` | End workflow with failure |
-| `DONE` | End workflow with success |
-| `GOTO N` | Jump to step N |
-| `RETRY [N]` | Retry current step (max N times) |
+#### IF/ELSE Conditionals
 
-See `examples/execute.workflow.md` and `examples/code-review.workflow.md` for full workflow examples.
+> **⚠️ NOT YET IMPLEMENTED:** IF/ELSE conditionals are planned but not currently supported by the parser. The parser only handles PASS/FAIL conditions. Use PASS/FAIL patterns for now.
+
+The planned syntax for variable-based conditional branching:
+
+```markdown
+## 6. Check progress
+
+- IF: more_batches
+  - GOTO: 3
+- ELSE: CONTINUE
+```
+
+Variables are set programmatically by agents or workflow logic.
+
+#### Actions Reference
+
+| Action | Syntax | Description |
+|--------|--------|-------------|
+| `CONTINUE` | `PASS: CONTINUE` | Proceed to next step |
+| `STOP` | `FAIL: STOP` | End workflow with failure |
+| `STOP` with message | `FAIL: STOP "Tests failed"` | End workflow with error message |
+| `DONE` | `PASS: DONE` | End workflow with success |
+| `GOTO` | `FAIL: GOTO 1` | Jump to specific step number |
+| `RETRY` | `FAIL: RETRY` | Retry current step (default max 3) |
+| `RETRY` with max | `FAIL: RETRY 5` | Retry with custom max attempts |
+
+**Action validation:**
+- GOTO targets must exist (validated at parse time)
+- GOTO self creates infinite loop (rejected)
+- Step numbers 1-indexed (not zero-based)
+
+#### Complete Example
+
+> **Note:** This example uses IF/ELSE syntax which is planned but not yet implemented. Currently, use PASS/FAIL conditions instead.
+
+```markdown
+# Execute Workflow
+
+Execute implementation plans in controlled batches.
+
+## 1. Load plan
+
+Load plan from path or discover in `.work/` directory.
+
+Read plan file and review critically for questions or concerns.
+
+- PASS: CONTINUE
+- FAIL: STOP "No plan file found."
+
+## 2. Create tracking
+
+\`\`\`bash
+echo "Creating task tracking..."
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP "Could not create task tracking."
+
+## 3. Execute batch
+
+Execute next batch of tasks (3 tasks per batch).
+
+Dispatch subagent for each task with embedded following-plans skill.
+
+- PASS: CONTINUE
+- FAIL: RETRY 3
+
+## 4. Review batch
+
+Dispatch code-review-agent to review batch implementation.
+
+- PASS: CONTINUE
+- FAIL: STOP "BLOCKING issues found. Fix before continuing."
+
+## 5. Report progress
+
+Show what was implemented. Say: "Ready for feedback."
+
+- PASS: CONTINUE
+
+## 6. Check progress
+
+- IF: more_batches
+  - GOTO: 3
+- ELSE: CONTINUE
+
+## 7. Complete
+
+Verify tests pass. Present completion options.
+
+- PASS: DONE
+- FAIL: STOP "Tests failing. Fix before completing."
+```
+
+### State Management
+
+#### Persistence
+
+Workflow state persists to `.claude/turboshovel/workflows/{id}.json`:
+
+```json
+{
+  "id": "wf-2025-01-15-abc123",
+  "workflow": "execute.workflow.md",
+  "step": 3,
+  "stepName": "Execute batch",
+  "retryCount": 0,
+  "retryMax": 3,
+  "variables": {
+    "more_batches": true,
+    "has_blocked_task": false
+  },
+  "tasks": [
+    {
+      "id": "task-001",
+      "status": "complete",
+      "startedAt": "2025-01-15T10:00:00Z",
+      "completedAt": "2025-01-15T10:05:00Z"
+    }
+  ],
+  "startedAt": "2025-01-15T10:00:00Z",
+  "updatedAt": "2025-01-15T10:05:00Z"
+}
+```
+
+#### Active Workflow Tracking
+
+The active workflow ID is stored in `.claude/turboshovel/session.json`. This survives context clears and session restarts.
+
+#### Variables
+
+Variables are key-value pairs stored in workflow state:
+
+```typescript
+variables: Record<string, boolean | number | string>
+```
+
+**Common patterns:**
+- `has_blocked_task: true` - Agent encountered blocker
+- `more_batches: true` - Batch processing incomplete
+- `tests_passing: false` - Test status
+
+Variables are set by:
+- Workflow hooks (SubagentStop tracking)
+- Agent logic during step execution
+- Manual updates via CLI (future)
+
+#### Task Tracking
+
+Tasks represent parallel work items within a workflow step:
+
+```typescript
+interface TaskState {
+  id: string;
+  status: 'pending' | 'running' | 'complete' | 'blocked';
+  subagentType?: string;
+  startedAt?: string;
+  completedAt?: string;
+}
+```
+
+**SubagentStop hook integration:**
+- Automatically detects task completion
+- Parses `STATUS: OK` or `STATUS: BLOCKED` from agent output
+- Updates task state and workflow variables
+- Suggests next action (`workflow next`)
+
+### CLI Commands
+
+#### `workflow start <file>`
+
+Start a new workflow from a markdown file.
+
+```bash
+# Start from relative path
+workflow start execute.workflow.md
+
+# Start from absolute path
+workflow start /path/to/workflow.md
+
+# Start from examples
+workflow start plugin/hooks/examples/code-review.workflow.md
+```
+
+**Behavior:**
+- Parses workflow markdown
+- Validates syntax (numbering, GOTO targets)
+- Creates state file
+- Sets as active workflow
+- Displays Step 1 guidance
+
+#### `workflow next`
+
+Advance to the next step (step + 1).
+
+```bash
+workflow next
+```
+
+**Behavior:**
+- Loads active workflow
+- Increments step number
+- Resets retry count
+- Displays step guidance
+- Auto-completes if past final step
+
+#### `workflow next --step N`
+
+Jump to a specific step (for GOTO actions).
+
+```bash
+workflow next --step 3
+```
+
+**Use cases:**
+- GOTO action execution
+- Manual navigation for debugging
+- Skipping optional steps
+
+#### `workflow status`
+
+Show current workflow state.
+
+```bash
+workflow status
+```
+
+**Output:**
+```
+Workflow: execute.workflow.md
+ID: wf-2025-01-15-abc123
+Step 3: Execute batch
+Retry: 0/3
+Variables: {
+  "more_batches": true
+}
+Tasks: 3
+  - task-001: complete
+  - task-002: running
+  - task-003: pending
+```
+
+#### `workflow stop`
+
+Abort the current workflow.
+
+```bash
+workflow stop
+```
+
+**Behavior:**
+- Deletes workflow state file
+- Clears active workflow
+- Cannot be undone
+
+#### `workflow list`
+
+List all workflows (active and inactive).
+
+```bash
+workflow list
+```
+
+**Output:**
+```
+wf-2025-01-15-abc123 (active): execute.workflow.md - Step 3
+wf-2025-01-14-def456: code-review.workflow.md - Step 2
+```
+
+### Writing Workflows for Agents
+
+#### Agent Interpretation
+
+Agents should:
+1. **Read step description** - Understand the goal
+2. **Execute command** (if present) - Run bash block
+3. **Follow prompt** (if present) - Agent-driven task
+4. **Evaluate outcome** - Determine PASS/FAIL
+5. **Apply action** - CONTINUE, STOP, GOTO, etc.
+
+#### Variable Usage
+
+Set variables during step execution:
+
+```markdown
+## 3. Execute batch
+
+Execute next batch of tasks (3 tasks per batch).
+
+**Prompt:** After completing batch, set `more_batches` variable based on remaining tasks.
+```
+
+Access variables in conditionals:
+
+```markdown
+## 6. Check progress
+
+- IF: more_batches
+  - GOTO: 3
+- ELSE: CONTINUE
+```
+
+#### Integration with Cipherpowers Skills
+
+Workflows can reference existing skills:
+
+```markdown
+## 1. Review code
+
+**Prompt:** Use `/cipherpowers:code-review` skill to review implementation.
+
+- PASS: CONTINUE
+- FAIL: STOP "Review found BLOCKING issues"
+```
+
+**Workflow advantages over skills:**
+- Enforces execution order
+- Tracks completion state
+- Provides retry logic
+- Survives context clears
+
+#### Example: Code Review Workflow
+
+```markdown
+# Code Review Workflow
+
+Dispatch code-review-agent to review implementation.
+
+## 1. Dispatch reviewer
+
+\`\`\`bash
+echo "Dispatching code-review-agent..."
+\`\`\`
+
+**Prompt:** Dispatch code-review-agent subagent with current changes.
+
+- PASS: CONTINUE
+- FAIL: RETRY 1
+
+## 2. Categorize issues
+
+**Prompt:** Categorize feedback as BLOCKING or NON-BLOCKING.
+
+- PASS: CONTINUE
+- FAIL: STOP "Could not categorize issues."
+
+## 3. Handle blocking issues
+
+- IF: has_blocking_issues
+  - STOP "BLOCKING issues found. Fix before continuing."
+- ELSE: CONTINUE
+
+## 4. Address feedback
+
+**Prompt:** Address NON-BLOCKING feedback or defer with justification.
+
+- PASS: DONE
+```
+
+#### Example: Execute Workflow with Batch Processing
+
+```markdown
+# Execute Workflow
+
+Execute implementation plans in controlled batches with review checkpoints.
+
+## 1. Load plan
+
+**Prompt:** Load plan from path or discover in `.work/` directory. Read plan file and review critically for questions or concerns.
+
+- PASS: CONTINUE
+- FAIL: STOP "No plan file found."
+
+## 2. Create tracking
+
+**Prompt:** Create TodoWrite tracking items for plan tasks.
+
+- PASS: CONTINUE
+- FAIL: STOP "Could not create task tracking."
+
+## 3. Execute batch
+
+**Prompt:** Execute next batch of tasks (3 tasks per batch). Dispatch subagent for each task with embedded following-plans skill.
+
+- PASS: CONTINUE
+- FAIL: RETRY 3
+
+## 4. Review batch
+
+**Prompt:** Dispatch code-review-agent to review batch implementation.
+
+- PASS: CONTINUE
+- FAIL: STOP "BLOCKING issues found. Fix before continuing."
+
+## 5. Report progress
+
+**Prompt:** Show what was implemented. Say: "Ready for feedback."
+
+- PASS: CONTINUE
+
+## 6. Check progress
+
+- IF: more_batches
+  - GOTO: 3
+- ELSE: CONTINUE
+
+## 7. Complete
+
+**Prompt:** Verify tests pass. Present completion options.
+
+- PASS: DONE
+- FAIL: STOP "Tests failing. Fix before completing."
+```
+
+### Best Practices
+
+#### When to Use Workflows vs Gates
+
+**Use workflows when:**
+- Multi-step processes with branching
+- State must persist across sessions
+- Retry logic needed
+- Progress tracking important
+- Agent-driven execution
+
+**Use gates when:**
+- Single quality check (lint, test, build)
+- Immediate enforcement needed
+- No state tracking required
+- Triggered by file edits or keywords
+
+#### Workflow Composition Patterns
+
+**Sequential steps** (most common):
+```markdown
+## 1. Setup
+- PASS: CONTINUE
+
+## 2. Execute
+- PASS: CONTINUE
+
+## 3. Verify
+- PASS: DONE
+```
+
+**Loop with condition check**:
+```markdown
+## 1. Process batch
+- PASS: CONTINUE
+
+## 2. Check remaining
+- IF: has_more
+  - GOTO: 1
+- ELSE: DONE
+```
+
+**Retry with backoff**:
+```markdown
+## 1. Flaky operation
+- PASS: CONTINUE
+- FAIL: RETRY 5
+```
+
+**Error recovery**:
+```markdown
+## 1. Deploy
+- PASS: CONTINUE
+- FAIL: GOTO 99
+
+## 2. Verify
+- PASS: DONE
+
+## 99. Rollback
+**Prompt:** Rollback deployment and report error.
+- PASS: STOP "Deployment failed, rolled back"
+```
+
+#### Error Recovery with RETRY
+
+```markdown
+## 3. Run integration tests
+
+\`\`\`bash
+npm run test:integration
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: RETRY 3
+```
+
+**Retry behavior:**
+- Increments `retryCount` on each failure
+- Stops after `retryMax` attempts (default 3)
+- Resets to 0 on step change
+- State persists between retries
+
+#### Using GOTO for Loops
+
+**Safe loop pattern** (with exit condition):
+
+```markdown
+## 1. Process item
+- PASS: CONTINUE
+
+## 2. Check queue
+- IF: queue_empty
+  - DONE
+- ELSE: GOTO 1
+```
+
+**Infinite loop protection:**
+- Parser validates GOTO targets exist
+- Rejects GOTO self (use RETRY instead)
+- No runtime loop detection (design workflows carefully)
+
+### Migration Guide for Cipherpowers Agents
+
+#### Converting Skills to Workflows
+
+**Before (skill):**
+```markdown
+# /cipherpowers:execute
+
+Execute implementation plans in batches.
+
+1. Load plan
+2. Execute batch
+3. Review batch
+4. Repeat until done
+```
+
+**After (workflow):**
+```markdown
+# Execute Workflow
+
+## 1. Load plan
+**Prompt:** Load plan from `.work/` directory.
+- PASS: CONTINUE
+- FAIL: STOP "No plan found"
+
+## 2. Execute batch
+**Prompt:** Execute 3 tasks.
+- PASS: CONTINUE
+- FAIL: RETRY 3
+
+## 3. Review batch
+**Prompt:** Dispatch code-review-agent.
+- PASS: CONTINUE
+- FAIL: STOP "BLOCKING issues"
+
+## 4. Check progress
+- IF: more_batches
+  - GOTO: 2
+- ELSE: DONE
+```
+
+**Advantages gained:**
+- State survives context clears
+- Retry logic built-in
+- Progress visible via `workflow status`
+- Can resume after interruption
+
+#### Workflow Hooks Integration
+
+Workflows automatically integrate with hook system:
+
+**SubagentStop hook:**
+- Detects task completion
+- Updates task status
+- Sets variables (`has_blocked_task`)
+- Suggests `workflow next`
+
+**SessionStart hook:**
+- Auto-injects active workflow context
+- Shows current step and progress
+- Displays variables and tasks
+
+**No configuration needed** - works automatically when workflow is active.
+
+### Examples
+
+Full workflow examples in `plugin/hooks/examples/`:
+
+- **`execute.workflow.md`** - Batch execution with review checkpoints (7 steps)
+- **`code-review.workflow.md`** - Code review dispatch and triage (4 steps)
+
+See these files for complete, production-ready workflow patterns.
 
 ## Examples
 
