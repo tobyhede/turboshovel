@@ -37,12 +37,12 @@ program
         process.exit(1);
       }
 
-      // Create workflow state
-      const workflowName = path.basename(file);
-      const state = await manager.create(workflowName, steps[0].description);
+      // Create workflow state - store relative path for later lookup
+      const workflowPath = path.isAbsolute(file) ? path.relative(cwd, file) : file;
+      const state = await manager.create(workflowPath, steps[0].description);
       await manager.setActive(state.id);
 
-      console.log(`Started workflow: ${workflowName}`);
+      console.log(`Started workflow: ${workflowPath}`);
       console.log(`ID: ${state.id}`);
       console.log(`Step 1: ${steps[0].description}`);
       printStepGuidance(steps[0]);
@@ -266,17 +266,18 @@ function formatAction(action: Action): string {
 }
 
 async function findWorkflowFile(cwd: string, filename: string): Promise<string | null> {
-  // Check current directory
-  const direct = path.join(cwd, filename);
+  // Check if filename is a relative path from cwd (e.g., "plugin/hooks/examples/code-review.workflow.md")
+  const directPath = path.join(cwd, filename);
   try {
-    await fs.access(direct);
-    return direct;
+    await fs.access(directPath);
+    return directPath;
   } catch {
-    // Not found
+    // Not found at direct path
   }
 
-  // Check .claude/workflows/
-  const claudeDir = path.join(cwd, '.claude/workflows', filename);
+  // Check .claude/workflows/ for basename only (fallback for workflows stored there)
+  const basename = path.basename(filename);
+  const claudeDir = path.join(cwd, '.claude/workflows', basename);
   try {
     await fs.access(claudeDir);
     return claudeDir;
