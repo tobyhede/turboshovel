@@ -395,10 +395,43 @@ Turboshovel includes an executable workflow system that makes skills enforceable
 Traditional skills and agents are guidance-only. Workflows enforce process:
 
 - **State Persistence**: Survives context clears and session restarts
-- **Conditional Logic**: PASS/FAIL branches, IF/ELSE conditions, GOTO loops
+- **Conditional Logic**: PASS/FAIL branches, GOTO for loops, agent-controlled decisions
 - **Task Tracking**: Monitor progress across multiple subtasks
 - **Retry Management**: Automatic retry counts and limits
 - **Variable Storage**: Pass data between workflow steps
+
+### Execution Paradigm: Claude Executes, Workflow Tracks
+
+**Critical concept:** Workflows are **state trackers**, not executors. Claude still does all the work using its normal tools.
+
+| Component | Who/What | Role |
+|-----------|----------|------|
+| **Workflow file** | Markdown document | Instructions for Claude (like a skill) |
+| **Workflow CLI** | Human/Claude control | Tracks state: current step, variables, retry count |
+| **Claude** | AI agent | Executes steps using Task, Bash, Edit, etc. |
+
+**What the workflow provides:**
+- **Persistent state** - survives context clears, session restarts
+- **Progress tracking** - current step, retry counts, variables
+- **CLI control** - human can check status, jump steps, stop workflow
+- **Context injection** - active workflow prompt auto-injects into conversation
+
+**What the workflow does NOT do:**
+- Execute bash commands automatically (Claude runs them)
+- Dispatch agents automatically (Claude uses Task tool)
+- Make decisions automatically (Claude interprets PASS/FAIL outcomes)
+
+**Example flow:**
+```
+1. Human: workflow start execute.workflow.md
+2. Workflow: Sets state to Step 1, injects prompt into conversation
+3. Claude: Reads prompt, executes step using tools (Task, Bash, etc.)
+4. Claude: Determines outcome (PASS/FAIL based on results)
+5. Claude: Runs `workflow next` or `workflow next --step N`
+6. Repeat until DONE
+```
+
+**Key insight:** A workflow is essentially a **skill with persistent state + CLI control**. The step text is guidance for Claude, just like skill instructions.
 
 ### Quick Start
 
