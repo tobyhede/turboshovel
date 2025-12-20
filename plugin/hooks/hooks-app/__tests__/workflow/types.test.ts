@@ -1,5 +1,5 @@
 // __tests__/workflow/types.test.ts
-import { createStepNumber, type StepNumber, type Action, type Step } from '../../src/workflow/types';
+import { createStepNumber, type StepNumber, type Action } from '../../src/workflow/types';
 
 describe('StepNumber', () => {
   test('createStepNumber with valid number returns StepNumber', () => {
