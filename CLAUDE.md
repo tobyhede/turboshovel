@@ -87,6 +87,17 @@ When using turboshovel alongside other Claude Code plugins (like cipherpowers), 
 
 Claude Code automatically sets `${CLAUDE_PLUGIN_ROOT}` to the correct path for each plugin during hook execution. Project-level overrides break this mechanism.
 
+## Workflow System
+
+Execute multi-step processes with state tracking:
+
+- `workflow start <file>` - Start workflow
+- `workflow next` - Advance to next step
+- `workflow status` - Show current state
+- `workflow stop` - Abort workflow
+
+State persists in `.claude/turboshovel/workflows/` and survives context clears.
+
 ## Documentation
 
 - [README.md](plugin/hooks/README.md) - Quick start and examples

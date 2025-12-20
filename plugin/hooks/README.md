@@ -386,6 +386,60 @@ ls $TMPDIR/turboshovel/hooks-*.log
 - **[TYPESCRIPT.md](./TYPESCRIPT.md)** - Creating TypeScript gates
 - **[INTEGRATION_TESTS.md](./INTEGRATION_TESTS.md)** - Testing procedures
 
+## Workflow System
+
+Turboshovel includes an executable workflow system that makes skills enforceable.
+
+### Quick Start
+
+```bash
+# Start a workflow
+workflow start execute.workflow.md
+
+# Check status
+workflow status
+
+# Advance to next step
+workflow next
+
+# Stop workflow
+workflow stop
+```
+
+### Workflow Syntax
+
+Workflows are markdown files with numbered steps:
+
+```markdown
+## 1. Run tests
+
+\`\`\`bash
+npm test
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP "Tests failed"
+
+## 2. Check coverage
+
+Review coverage report.
+
+- PASS: CONTINUE
+- FAIL: GOTO 1
+```
+
+### Actions
+
+| Action | Description |
+|--------|-------------|
+| `CONTINUE` | Proceed to next step |
+| `STOP [message]` | End workflow with failure |
+| `DONE` | End workflow with success |
+| `GOTO N` | Jump to step N |
+| `RETRY [N]` | Retry current step (max N times) |
+
+See `examples/execute.workflow.md` and `examples/code-review.workflow.md` for full workflow examples.
+
 ## Examples
 
 See `plugin/hooks/examples/` for ready-to-use configurations:
@@ -394,3 +448,5 @@ See `plugin/hooks/examples/` for ready-to-use configurations:
 - `permissive.json` - Warn only
 - `pipeline.json` - Gate chaining
 - `context/` - Example context files
+- `execute.workflow.md` - Batch execution workflow
+- `code-review.workflow.md` - Code review workflow
