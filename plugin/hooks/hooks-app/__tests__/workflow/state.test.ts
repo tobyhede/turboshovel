@@ -4,6 +4,7 @@ import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
 import { WorkflowStateManager } from '../../src/workflow/state';
 import { createTaskNumber } from '../../src/workflow/types';
+import type { TaskId } from '../../src/workflow/task-id';
 
 describe('WorkflowStateManager', () => {
   let testDir: string;
@@ -127,6 +128,39 @@ describe('WorkflowStateManager', () => {
 
       const loaded = await manager.load(created.id);
       expect(loaded).toBeNull();
+    });
+  });
+
+  describe('WorkflowStateManager.pushPendingTask', () => {
+    it('adds task to empty pending queue', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+      const taskId: TaskId = { task: 3, subtask: 'A' };
+
+      await manager.pushPendingTask(state.id, taskId);
+
+      const updated = await manager.load(state.id);
+      expect(updated?.pendingTasks).toEqual([{ task: 3, subtask: 'A' }]);
+    });
+
+    it('appends to existing pending queue (FIFO)', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+
+      await manager.pushPendingTask(state.id, { task: 1 });
+      await manager.pushPendingTask(state.id, { task: 2 });
+      await manager.pushPendingTask(state.id, { task: 3, subtask: 'A' });
+
+      const updated = await manager.load(state.id);
+      expect(updated?.pendingTasks).toEqual([
+        { task: 1 },
+        { task: 2 },
+        { task: 3, subtask: 'A' },
+      ]);
+    });
+
+    it('throws for non-existent workflow', async () => {
+      await expect(
+        manager.pushPendingTask('non-existent', { task: 1 })
+      ).rejects.toThrow('Workflow non-existent not found');
     });
   });
 });

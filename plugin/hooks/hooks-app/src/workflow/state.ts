@@ -2,6 +2,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { createTaskNumber, type WorkflowState } from './types';
+import type { TaskId } from './task-id';
 
 const STATE_DIR = '.claude/turboshovel/workflows';
 const SESSION_FILE = '.claude/turboshovel/session.json';
@@ -187,5 +188,19 @@ export class WorkflowStateManager {
     } catch {
       return [];
     }
+  }
+
+  /**
+   * Push task to pending queue (FIFO - first in, first out)
+   */
+  async pushPendingTask(id: string, taskId: TaskId): Promise<void> {
+    const state = await this.load(id);
+    if (!state) {
+      throw new Error(`Workflow ${id} not found`);
+    }
+
+    await this.update(id, {
+      pendingTasks: [...(state.pendingTasks || []), taskId],
+    });
   }
 }
