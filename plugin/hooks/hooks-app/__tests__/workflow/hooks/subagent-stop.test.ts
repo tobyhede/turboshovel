@@ -1,85 +1,97 @@
 // __tests__/workflow/hooks/subagent-stop.test.ts
-import { join } from 'path';
-import { tmpdir } from 'os';
-import * as fs from 'fs/promises';
-import { handleSubagentStop } from '../../../src/workflow/hooks/subagent-stop';
+import { handleSubagentStop, type SubagentStopResult } from '../../../src/workflow/hooks/subagent-stop';
 import { WorkflowStateManager } from '../../../src/workflow/state';
 import type { HookInput } from '../../../src/types';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import * as os from 'os';
 
-describe('SubagentStop Hook', () => {
+describe('handleSubagentStop with agent binding', () => {
   let testDir: string;
+  let manager: WorkflowStateManager;
 
   beforeEach(async () => {
-    testDir = join(tmpdir(), `subagent-stop-test-${Date.now()}`);
-    await fs.mkdir(testDir, { recursive: true });
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'subagent-stop-test-'));
+    manager = new WorkflowStateManager(testDir);
   });
 
   afterEach(async () => {
     await fs.rm(testDir, { recursive: true, force: true });
   });
 
-  test('marks running task as complete on STATUS: OK', async () => {
-    const manager = new WorkflowStateManager(testDir);
-    const state = await manager.create('test.workflow.md', 'Execute batch');
-    await manager.update(state.id, {
-      tasks: [{ id: 'task-1', status: 'running', startedAt: new Date().toISOString() }],
-    });
+  it('looks up agent by agent_id and updates binding', async () => {
+    const state = await manager.create('test.workflow.md', 'Test');
     await manager.setActive(state.id);
+    await manager.pushPendingTask(state.id, { task: 2 });
+    await manager.bindAgent(state.id, 'agent-xyz', { task: 2 });
 
     const input: HookInput = {
       hook_event_name: 'SubagentStop',
       cwd: testDir,
-      output: 'Task complete.\n\nSTATUS: OK',
+      agent_id: 'agent-xyz',
+      output: 'STATUS: OK',
     };
 
     const result = await handleSubagentStop(input);
+
+    expect(result.context).toContain('complete');
 
     const updated = await manager.getActive();
-    expect(updated?.tasks[0].status).toBe('complete');
-    expect(result).toContain('complete');
+    const binding = updated?.agentBindings['agent-xyz'];
+    expect(binding?.status).toBe('done');
+    expect(binding?.result).toBe('pass');
   });
 
-  test('marks running task as blocked on STATUS: BLOCKED', async () => {
-    const manager = new WorkflowStateManager(testDir);
-    const state = await manager.create('test.workflow.md', 'Execute batch');
-    await manager.update(state.id, {
-      tasks: [{ id: 'task-1', status: 'running', startedAt: new Date().toISOString() }],
-    });
+  it('marks as fail when STATUS: BLOCKED', async () => {
+    const state = await manager.create('test.workflow.md', 'Test');
+    await manager.setActive(state.id);
+    await manager.bindAgent(state.id, 'agent-abc', { task: 1 });
+
+    const input: HookInput = {
+      hook_event_name: 'SubagentStop',
+      cwd: testDir,
+      agent_id: 'agent-abc',
+      output: 'STATUS: BLOCKED\nCould not complete task.',
+    };
+
+    const result = await handleSubagentStop(input);
+
+    expect(result.context).toContain('FAILED');
+
+    const binding = await manager.getAgentBinding(state.id, 'agent-abc');
+    expect(binding?.result).toBe('fail');
+  });
+
+  it('returns violation for unknown agent', async () => {
+    const state = await manager.create('test.workflow.md', 'Test');
     await manager.setActive(state.id);
 
     const input: HookInput = {
       hook_event_name: 'SubagentStop',
       cwd: testDir,
-      output: 'Cannot proceed.\n\nSTATUS: BLOCKED',
+      agent_id: 'unknown-agent',
     };
 
     const result = await handleSubagentStop(input);
 
-    const updated = await manager.getActive();
-    expect(updated?.tasks[0].status).toBe('blocked');
-    expect(updated?.variables.has_blocked_task).toBe(true);
-    expect(result).toContain('BLOCKED');
+    expect(result.violation).toContain('unknown agent');
   });
 
-  test('returns guidance when all batch tasks done', async () => {
-    const manager = new WorkflowStateManager(testDir);
-    const state = await manager.create('test.workflow.md', 'Execute batch');
-    await manager.update(state.id, {
-      tasks: [
-        { id: 'task-1', status: 'complete' },
-        { id: 'task-2', status: 'running', startedAt: new Date().toISOString() },
-      ],
-    });
+  it('defaults to pass when no STATUS in output', async () => {
+    const state = await manager.create('test.workflow.md', 'Test');
     await manager.setActive(state.id);
+    await manager.bindAgent(state.id, 'agent-xyz', { task: 1 });
 
     const input: HookInput = {
       hook_event_name: 'SubagentStop',
       cwd: testDir,
-      output: 'Done.\n\nSTATUS: OK',
+      agent_id: 'agent-xyz',
+      output: 'Task completed successfully.',
     };
 
-    const result = await handleSubagentStop(input);
+    await handleSubagentStop(input);
 
-    expect(result).toContain('workflow next');
+    const binding = await manager.getAgentBinding(state.id, 'agent-xyz');
+    expect(binding?.result).toBe('pass');
   });
 });
