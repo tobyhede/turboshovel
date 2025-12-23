@@ -6,6 +6,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { WorkflowStateManager } from '../workflow/state';
 import { parseWorkflow, WorkflowSyntaxError } from '../workflow/parser';
+import { parseTaskId, taskIdToString, type TaskId } from '../workflow/task-id';
 import { createTaskNumber, type Action, type Task } from '../workflow/types';
 
 const program = new Command();
@@ -20,32 +21,65 @@ function getCwd(): string {
 }
 
 program
-  .command('start <file>')
-  .description('Start a new workflow from a markdown file')
-  .action(async (file: string) => {
+  .command('start [file]')
+  .description('Start a new workflow or queue a task')
+  .option('--task <taskId>', 'Mark task as started (adds to pending queue)')
+  .option('--agent <agentId>', 'Bind agent to pending task')
+  .action(async (file: string | undefined, options: { task?: string; agent?: string }) => {
     try {
       const cwd = getCwd();
       const manager = new WorkflowStateManager(cwd);
 
-      // Read and parse workflow file
-      const filePath = path.isAbsolute(file) ? file : path.join(cwd, file);
-      const content = await fs.readFile(filePath, 'utf8');
-      const tasks = parseWorkflow(content);
+      // Mode 1: --task - Push task to pending queue
+      if (options.task && !options.agent) {
+        const state = await manager.getActive();
+        if (!state) {
+          console.error('Error: No active workflow');
+          process.exit(1);
+        }
 
-      if (tasks.length === 0) {
-        console.error('Error: Workflow has no tasks');
+        const taskId = parseTaskIdFromArg(options.task);
+        if (!taskId) {
+          console.error(`Error: Invalid task ID format: ${options.task}`);
+          console.error('Expected format: "3" or "3.A"');
+          process.exit(1);
+        }
+
+        await manager.pushPendingTask(state.id, taskId);
+        console.log(`Task ${taskIdToString(taskId)} queued for agent binding`);
+        return;
+      }
+
+      // Mode 2: File start (existing behavior)
+      if (file && !options.task && !options.agent) {
+        // Read and parse workflow file
+        const filePath = path.isAbsolute(file) ? file : path.join(cwd, file);
+        const content = await fs.readFile(filePath, 'utf8');
+        const tasks = parseWorkflow(content);
+
+        if (tasks.length === 0) {
+          console.error('Error: Workflow has no tasks');
+          process.exit(1);
+        }
+
+        // Create workflow state - store relative path for later lookup
+        const workflowPath = path.isAbsolute(file) ? path.relative(cwd, file) : file;
+        const state = await manager.create(workflowPath, tasks[0].description);
+        await manager.setActive(state.id);
+
+        console.log(`Started workflow: ${workflowPath}`);
+        console.log(`ID: ${state.id}`);
+        console.log(`Task 1: ${tasks[0].description}`);
+        printTaskGuidance(tasks[0]);
+        return;
+      }
+
+      // If neither file nor --task specified
+      if (!file && !options.task) {
+        console.error('Error: Workflow file or --task option required');
         process.exit(1);
       }
 
-      // Create workflow state - store relative path for later lookup
-      const workflowPath = path.isAbsolute(file) ? path.relative(cwd, file) : file;
-      const state = await manager.create(workflowPath, tasks[0].description);
-      await manager.setActive(state.id);
-
-      console.log(`Started workflow: ${workflowPath}`);
-      console.log(`ID: ${state.id}`);
-      console.log(`Task 1: ${tasks[0].description}`);
-      printTaskGuidance(tasks[0]);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         console.error(`Error: Workflow file not found: ${file}`);
@@ -286,6 +320,23 @@ async function findWorkflowFile(cwd: string, filename: string): Promise<string |
   }
 
   return null;
+}
+
+/**
+ * Parse TaskId from CLI argument (e.g., "3" or "3.A")
+ */
+function parseTaskIdFromArg(arg: string): TaskId | null {
+  // Match "3" or "3.A" format
+  const match = arg.match(/^(\d+)(?:\.([A-Za-z]))?$/);
+  if (!match) return null;
+
+  const task = parseInt(match[1], 10);
+  if (task <= 0) return null;
+
+  return {
+    task,
+    subtask: match[2]?.toUpperCase(),
+  };
 }
 
 program.parse();

@@ -9,6 +9,13 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
 import { execSync } from 'child_process';
+import { WorkflowStateManager } from '../../src/workflow/state';
+
+interface CliResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+}
 
 describe('workflow CLI', () => {
   let testDir: string;
@@ -22,13 +29,23 @@ describe('workflow CLI', () => {
     await fs.rm(testDir, { recursive: true, force: true });
   });
 
-  const runCli = (args: string): string => {
+  const runCli = async (args: string[]): Promise<CliResult> => {
     const cliPath = join(__dirname, '../../dist/cli/workflow-cli.js');
-    return execSync(`node ${cliPath} ${args}`, {
-      cwd: testDir,
-      encoding: 'utf8',
-      env: { ...process.env, TURBOSHOVEL_LOG: '0' },
-    });
+    try {
+      const stdout = execSync(`node ${cliPath} ${args.join(' ')}`, {
+        cwd: testDir,
+        encoding: 'utf8',
+        env: { ...process.env, TURBOSHOVEL_LOG: '0' },
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      return { stdout, stderr: '', exitCode: 0 };
+    } catch (error: any) {
+      return {
+        stdout: error.stdout || '',
+        stderr: error.stderr || '',
+        exitCode: error.status || 1,
+      };
+    }
   };
 
   describe('workflow start', () => {
@@ -45,14 +62,69 @@ echo "test"
 - FAIL: STOP
 `);
 
-      const output = runCli(`start ${workflowPath}`);
-      expect(output).toContain('Started workflow');
-      expect(output).toContain('Task 1: First step');
+      const result = await runCli(['start', workflowPath]);
+      expect(result.stdout).toContain('Started workflow');
+      expect(result.stdout).toContain('Task 1: First step');
 
       // Verify state file created
       const stateDir = join(testDir, '.claude/turboshovel/workflows');
       const files = await fs.readdir(stateDir);
       expect(files.length).toBe(1);
+    });
+  });
+
+  describe('workflow start --task', () => {
+    it('pushes task to pending queue when workflow active', async () => {
+      // First start a workflow
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(workflowPath, `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+`);
+      await runCli(['start', workflowPath]);
+
+      // Then add a task
+      const result = await runCli(['start', '--task', '3.A']);
+
+      expect(result.stdout).toContain('Task 3.A queued');
+
+      // Verify state
+      const manager = new WorkflowStateManager(testDir);
+      const state = await manager.getActive();
+      expect(state?.pendingTasks).toContainEqual({ task: 3, subtask: 'A' });
+    });
+
+    it('errors when no active workflow', async () => {
+      const result = await runCli(['start', '--task', '1']);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('No active workflow');
+    });
+
+    it('errors for invalid task ID format', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(workflowPath, `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+`);
+      await runCli(['start', workflowPath]);
+
+      const result = await runCli(['start', '--task', 'invalid']);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('Invalid task ID');
     });
   });
 
@@ -67,16 +139,16 @@ echo "test"
 \`\`\`
 `);
 
-      runCli(`start ${workflowPath}`);
-      const output = runCli('status');
+      await runCli(['start', workflowPath]);
+      const result = await runCli(['status']);
 
-      expect(output).toContain('test.workflow.md');
-      expect(output).toContain('Task 1');
+      expect(result.stdout).toContain('test.workflow.md');
+      expect(result.stdout).toContain('Task 1');
     });
 
-    test('shows no active workflow message', () => {
-      const output = runCli('status');
-      expect(output).toContain('No active workflow');
+    test('shows no active workflow message', async () => {
+      const result = await runCli(['status']);
+      expect(result.stdout).toContain('No active workflow');
     });
   });
 
@@ -100,10 +172,10 @@ echo "second"
 \`\`\`
 `);
 
-      runCli(`start ${workflowPath}`);
-      const output = runCli('next');
+      await runCli(['start', workflowPath]);
+      const result = await runCli(['next']);
 
-      expect(output).toContain('Task 2: Second step');
+      expect(result.stdout).toContain('Task 2: Second step');
     });
 
     test('shows done message on final step', async () => {
@@ -116,10 +188,10 @@ echo "done"
 \`\`\`
 `);
 
-      runCli(`start ${workflowPath}`);
-      const output = runCli('next');
+      await runCli(['start', workflowPath]);
+      const result = await runCli(['next']);
 
-      expect(output).toContain('complete');
+      expect(result.stdout).toContain('complete');
     });
   });
 
@@ -134,14 +206,14 @@ echo "test"
 \`\`\`
 `);
 
-      runCli(`start ${workflowPath}`);
-      const output = runCli('stop');
+      await runCli(['start', workflowPath]);
+      const result = await runCli(['stop']);
 
-      expect(output).toContain('Stopped');
+      expect(result.stdout).toContain('Stopped');
 
       // Status should show no active workflow
-      const statusOutput = runCli('status');
-      expect(statusOutput).toContain('No active workflow');
+      const statusResult = await runCli(['status']);
+      expect(statusResult.stdout).toContain('No active workflow');
     });
   });
 });
