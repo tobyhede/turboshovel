@@ -1,5 +1,5 @@
 // __tests__/workflow/parser/helpers.test.ts
-import { stripSeparator, extractStepHeader, parseAction, parseConditional } from '../../../src/workflow/parser/helpers';
+import { stripSeparator, extractTaskHeader, parseAction, parseConditional } from '../../../src/workflow/parser/helpers';
 
 describe('stripSeparator', () => {
   test('strips colon separator', () => {
@@ -23,44 +23,44 @@ describe('stripSeparator', () => {
   });
 });
 
-describe('extractStepHeader', () => {
-  test('parses "1. First step"', () => {
-    const result = extractStepHeader('1. First step');
-    expect(result).toEqual({ number: 1, description: 'First step' });
+describe('extractTaskHeader', () => {
+  test('parses "1. First task"', () => {
+    const result = extractTaskHeader('1. First task');
+    expect(result).toEqual({ number: 1, description: 'First task' });
   });
 
-  test('parses "1: First step"', () => {
-    const result = extractStepHeader('1: First step');
-    expect(result).toEqual({ number: 1, description: 'First step' });
+  test('parses "1: First task"', () => {
+    const result = extractTaskHeader('1: First task');
+    expect(result).toEqual({ number: 1, description: 'First task' });
   });
 
-  test('parses "1) First step"', () => {
-    const result = extractStepHeader('1) First step');
-    expect(result).toEqual({ number: 1, description: 'First step' });
+  test('parses "1) First task"', () => {
+    const result = extractTaskHeader('1) First task');
+    expect(result).toEqual({ number: 1, description: 'First task' });
   });
 
-  test('parses "1 - First step"', () => {
-    const result = extractStepHeader('1 - First step');
-    expect(result).toEqual({ number: 1, description: 'First step' });
+  test('parses "1 - First task"', () => {
+    const result = extractTaskHeader('1 - First task');
+    expect(result).toEqual({ number: 1, description: 'First task' });
   });
 
-  test('parses "1 First step" (space only)', () => {
-    const result = extractStepHeader('1 First step');
-    expect(result).toEqual({ number: 1, description: 'First step' });
+  test('parses "1 First task" (space only)', () => {
+    const result = extractTaskHeader('1 First task');
+    expect(result).toEqual({ number: 1, description: 'First task' });
   });
 
   test('rejects Step keyword', () => {
-    const result = extractStepHeader('Step 1: First step');
+    const result = extractTaskHeader('Step 1: First task');
     expect(result).toBeNull();
   });
 
   test('rejects zero', () => {
-    const result = extractStepHeader('0. Zero step');
+    const result = extractTaskHeader('0. Zero task');
     expect(result).toBeNull();
   });
 
   test('rejects non-numeric start', () => {
-    const result = extractStepHeader('First step');
+    const result = extractTaskHeader('First task');
     expect(result).toBeNull();
   });
 });
@@ -80,7 +80,7 @@ describe('parseAction', () => {
 
   test('parses GOTO N', () => {
     const result = parseAction('GOTO 3');
-    expect(result).toEqual({ type: 'GOTO', step: 3 });
+    expect(result).toEqual({ type: 'GOTO', task: 3 });
   });
 
   test('parses DONE', () => {

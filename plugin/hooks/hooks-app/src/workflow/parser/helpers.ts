@@ -1,6 +1,6 @@
 // src/workflow/parser/helpers.ts
 
-import { createStepNumber, type Action, type StepNumber } from '../types';
+import { createTaskNumber, type Action, type TaskNumber } from '../types';
 import type { ParsedConditional } from './types';
 
 /**
@@ -13,10 +13,10 @@ export function stripSeparator(text: string): string {
 }
 
 /**
- * Extract step number and description from header text
- * Returns null if not a valid step header
+ * Extract task number and description from header text
+ * Returns null if not a valid task header
  */
-export function extractStepHeader(text: string): { number: StepNumber; description: string } | null {
+export function extractTaskHeader(text: string): { number: TaskNumber; description: string } | null {
   const trimmed = text.trim();
 
   // Find where the number ends
@@ -31,15 +31,16 @@ export function extractStepHeader(text: string): { number: StepNumber; descripti
 
   // Parse the number
   const number = parseInt(trimmed.slice(0, numEnd), 10);
-  const stepNumber = createStepNumber(number);
-  if (!stepNumber) {
-    return null; // Invalid step number (zero or negative)
+  const taskNumber = createTaskNumber(number);
+  if (!taskNumber) {
+    return null; // Invalid task number (zero or negative)
   }
 
   // Strip separator and extract description
   const description = stripSeparator(trimmed.slice(numEnd));
 
-  // Reject "Step" keyword explicitly
+  // Keep the guard unchanged - still rejects "Step ..." to discourage old terminology
+  // Descriptions like "Task setup" are legitimate, so don't reject "Task ..."
   if (description.startsWith('Step ') || description === 'Step') {
     return null;
   }
@@ -48,7 +49,7 @@ export function extractStepHeader(text: string): { number: StepNumber; descripti
     return null;
   }
 
-  return { number: stepNumber, description };
+  return { number: taskNumber, description };
 }
 
 /**
@@ -75,13 +76,13 @@ export function parseAction(text: string): Action | null {
   }
 
   if (trimmed.startsWith('GOTO ')) {
-    const stepStr = trimmed.slice(5).trim();
-    const stepNum = parseInt(stepStr, 10);
-    const step = createStepNumber(stepNum);
-    if (!step) {
+    const taskStr = trimmed.slice(5).trim();
+    const taskNum = parseInt(taskStr, 10);
+    const task = createTaskNumber(taskNum);
+    if (!task) {
       return null;
     }
-    return { type: 'GOTO', step };
+    return { type: 'GOTO', task };
   }
 
   if (trimmed === 'RETRY') {
@@ -100,16 +101,6 @@ export function parseAction(text: string): Action | null {
   // Backward compatibility: old syntax
   if (trimmed === 'Continue') {
     return { type: 'CONTINUE' };
-  }
-
-  if (trimmed.startsWith('Go to Step ')) {
-    const stepStr = trimmed.slice(11).trim();
-    const stepNum = parseInt(stepStr, 10);
-    const step = createStepNumber(stepNum);
-    if (!step) {
-      return null;
-    }
-    return { type: 'GOTO', step };
   }
 
   if (trimmed.startsWith('STOP (') && trimmed.endsWith(')')) {
