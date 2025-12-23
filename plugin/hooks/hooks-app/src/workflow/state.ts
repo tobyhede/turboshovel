@@ -324,6 +324,14 @@ export class WorkflowStateManager {
     return state;
   }
 
+  /**
+   * Get the ID of the currently stashed workflow
+   */
+  async getStashedWorkflowId(): Promise<string | null> {
+    const session = await this.loadSession();
+    return session.stashedWorkflowId || null;
+  }
+
   private async loadSession(): Promise<{
     active_workflow: string | null;
     stashedWorkflowId?: string;

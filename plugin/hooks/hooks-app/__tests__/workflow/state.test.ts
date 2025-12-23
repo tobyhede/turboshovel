@@ -362,4 +362,21 @@ describe('WorkflowStateManager', () => {
       expect(restored).toBeNull();
     });
   });
+
+  describe('getStashedWorkflowId', () => {
+    it('returns stashed ID when workflow is stashed', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+      await manager.setActive(state.id);
+      await manager.stash();
+
+      const stashedId = await manager.getStashedWorkflowId();
+
+      expect(stashedId).toBe(state.id);
+    });
+
+    it('returns null when nothing stashed', async () => {
+      const stashedId = await manager.getStashedWorkflowId();
+      expect(stashedId).toBeNull();
+    });
+  });
 });
