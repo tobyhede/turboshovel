@@ -1,6 +1,6 @@
 // src/workflow/parser/types.ts
 
-import type { Action, Step, Conditions, Prompt, Command, StepNumber } from '../types';
+import type { Action, Task, Conditions, Prompt, Command, TaskNumber } from '../types';
 
 export interface ParsedConditional {
   type: 'pass' | 'fail';
