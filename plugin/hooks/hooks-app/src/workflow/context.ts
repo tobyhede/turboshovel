@@ -22,7 +22,7 @@ function formatWorkflowContext(state: WorkflowState): string {
   lines.push('## Active Workflow');
   lines.push('');
   lines.push(`**Workflow:** ${state.workflow}`);
-  lines.push(`**Step ${state.step}:** ${state.stepName}`);
+  lines.push(`**Task ${state.task}:** ${state.taskName}`);
 
   // Show retry info if relevant
   if (state.retryCount > 0) {
@@ -65,7 +65,7 @@ function formatWorkflowContext(state: WorkflowState): string {
   lines.push('');
   lines.push('**Actions:**');
   lines.push('- Continue: `workflow next`');
-  lines.push('- Jump to step: `workflow next --step N`');
+  lines.push('- Jump to task: `workflow next --task N`');
   lines.push('- Abort: `workflow stop`');
 
   return lines.join('\n');
