@@ -455,6 +455,27 @@ workflow list
 workflow stop
 ```
 
+### Orchestration (Subagent Dispatch)
+
+Queue tasks for subagent binding:
+```bash
+workflow start --task 3.A      # Queue task 3.A
+workflow start --agent xyz123  # Bind agent xyz123 to pending task
+```
+
+Mark task completion:
+```bash
+workflow next --pass --agent xyz123  # Mark agent as passed
+workflow next --fail --agent xyz123  # Mark agent as failed
+```
+
+Pause enforcement for ad-hoc work:
+```bash
+workflow stash   # Pause enforcement
+# ... do untracked work ...
+workflow pop     # Resume enforcement
+```
+
 ### Complete Workflow Syntax Reference
 
 #### Task Format
