@@ -398,7 +398,7 @@ Traditional skills and agents are guidance-only. Workflows enforce process:
 - **Conditional Logic**: PASS/FAIL branches, GOTO for loops, agent-controlled decisions
 - **Task Tracking**: Monitor progress across multiple subtasks
 - **Retry Management**: Automatic retry counts and limits
-- **Variable Storage**: Pass data between workflow steps
+- **Variable Storage**: Pass data between workflow tasks
 
 ### Execution Paradigm: Claude Executes, Workflow Tracks
 
@@ -407,13 +407,13 @@ Traditional skills and agents are guidance-only. Workflows enforce process:
 | Component | Who/What | Role |
 |-----------|----------|------|
 | **Workflow file** | Markdown document | Instructions for Claude (like a skill) |
-| **Workflow CLI** | Human/Claude control | Tracks state: current step, variables, retry count |
-| **Claude** | AI agent | Executes steps using Task, Bash, Edit, etc. |
+| **Workflow CLI** | Human/Claude control | Tracks state: current task, variables, retry count |
+| **Claude** | AI agent | Executes tasks using Task, Bash, Edit, etc. |
 
 **What the workflow provides:**
 - **Persistent state** - survives context clears, session restarts
-- **Progress tracking** - current step, retry counts, variables
-- **CLI control** - human can check status, jump steps, stop workflow
+- **Progress tracking** - current task, retry counts, variables
+- **CLI control** - human can check status, jump tasks, stop workflow
 - **Context injection** - active workflow prompt auto-injects into conversation
 
 **What the workflow does NOT do:**
@@ -424,14 +424,14 @@ Traditional skills and agents are guidance-only. Workflows enforce process:
 **Example flow:**
 ```
 1. Human: workflow start execute.workflow.md
-2. Workflow: Sets state to Step 1, injects prompt into conversation
-3. Claude: Reads prompt, executes step using tools (Task, Bash, etc.)
+2. Workflow: Sets state to Task 1, injects prompt into conversation
+3. Claude: Reads prompt, executes task using tools (Task, Bash, Edit, etc.)
 4. Claude: Determines outcome (PASS/FAIL based on results)
-5. Claude: Runs `workflow next` or `workflow next --step N`
+5. Claude: Runs `workflow next` or `workflow next --task N`
 6. Repeat until DONE
 ```
 
-**Key insight:** A workflow is essentially a **skill with persistent state + CLI control**. The step text is guidance for Claude, just like skill instructions.
+**Key insight:** A workflow is essentially a **skill with persistent state + CLI control**. The task text is guidance for Claude, just like skill instructions.
 
 ### Quick Start
 
@@ -442,11 +442,11 @@ workflow start execute.workflow.md
 # Check status
 workflow status
 
-# Advance to next step
+# Advance to next task
 workflow next
 
-# Jump to specific step
-workflow next --step 3
+# Jump to specific task
+workflow next --task 3
 
 # List all workflows
 workflow list
@@ -457,16 +457,16 @@ workflow stop
 
 ### Complete Workflow Syntax Reference
 
-#### Step Format
+#### Task Format
 
-Steps must use H2 headers (`##`) with sequential numbering:
+Tasks must use H2 headers (`##`) with sequential numbering:
 
 ```markdown
-## 1. Step title
+## 1. Task title
 
-Step content here.
+Task content here.
 
-## 2. Next step
+## 2. Next task
 
 More content.
 ```
@@ -490,9 +490,9 @@ npm test
 
 **Rules:**
 - Only `bash` language supported
-- One code block per step (multiple blocks rejected)
+- One code block per task (multiple blocks rejected)
 - Combine multiple commands with `&&` or `;`
-- No code block means step is prompt-only
+- No code block means task is prompt-only
 
 #### Prompts
 
@@ -506,7 +506,7 @@ Prompts guide agent behavior. Two types:
 **Prompt:** Review the implementation for security issues.
 ```
 
-**Implicit prompts** (step description becomes prompt):
+**Implicit prompts** (task description becomes prompt):
 
 ```markdown
 ## 1. Review code
@@ -515,7 +515,7 @@ Review the implementation for security issues.
 Check for SQL injection, XSS, and auth bypasses.
 ```
 
-If no code block and no explicit prompt, all step text becomes the implicit prompt.
+If no code block and no explicit prompt, all task text becomes the implicit prompt.
 
 #### Conditions (PASS/FAIL)
 
@@ -555,25 +555,25 @@ Variables would be set programmatically by agents or workflow logic.
 
 ##### Agent-Controlled Branching (Current Workaround)
 
-Since IF/ELSE is not yet implemented, use agent-driven decisions with the `--step` flag to create loops and conditional branching:
+Since IF/ELSE is not yet implemented, use agent-driven decisions with the `--task` flag to create loops and conditional branching:
 
 ```markdown
 ## 5. Check remaining tasks
 
 **Prompt:** Check TodoWrite for remaining tasks.
 
-If more tasks remain → `workflow next --step 3`
+If more tasks remain → `workflow next --task 3`
 If all done → `workflow next`
 
 - PASS: CONTINUE
 ```
 
 **How it works:**
-1. Agent reads the step guidance with decision instructions
+1. Agent reads the task guidance with decision instructions
 2. Agent evaluates the condition (e.g., checks TodoWrite for remaining tasks)
 3. Agent executes the appropriate CLI command:
-   - **Loop back:** `workflow next --step 3` (jumps to step 3)
-   - **Continue forward:** `workflow next` (proceeds to step 6)
+   - **Loop back:** `workflow next --task 3` (jumps to task 3)
+   - **Continue forward:** `workflow next` (proceeds to task 6)
 
 **Advantages over parsed IF/ELSE:**
 - Agent can apply contextual judgment
@@ -589,7 +589,7 @@ If all done → `workflow next`
 **Prompt:** Execute next 3 tasks from plan.
 
 After batch completes, check remaining work:
-- If more batches needed → `workflow next --step 2` (review + loop)
+- If more batches needed → `workflow next --task 2` (review + loop)
 - If all tasks complete → `workflow next` (continue to finalization)
 
 - PASS: CONTINUE
@@ -602,18 +602,18 @@ This pattern is the **recommended approach** until native IF/ELSE support is imp
 
 | Action | Syntax | Description |
 |--------|--------|-------------|
-| `CONTINUE` | `PASS: CONTINUE` | Proceed to next step |
+| `CONTINUE` | `PASS: CONTINUE` | Proceed to next task |
 | `STOP` | `FAIL: STOP` | End workflow with failure |
 | `STOP` with message | `FAIL: STOP "Tests failed"` | End workflow with error message |
 | `DONE` | `PASS: DONE` | End workflow with success |
-| `GOTO` | `FAIL: GOTO 1` | Jump to specific step number |
-| `RETRY` | `FAIL: RETRY` | Retry current step (default max 3) |
+| `GOTO` | `FAIL: GOTO 1` | Jump to specific task number |
+| `RETRY` | `FAIL: RETRY` | Retry current task (default max 3) |
 | `RETRY` with max | `FAIL: RETRY 5` | Retry with custom max attempts |
 
 **Action validation:**
 - GOTO targets must exist (validated at parse time)
 - GOTO self creates infinite loop (rejected)
-- Step numbers 1-indexed (not zero-based)
+- Task numbers 1-indexed (not zero-based)
 
 #### Complete Example
 
@@ -662,7 +662,7 @@ Execute implementation plans in controlled batches.
 
 **Prompt:** Check TodoWrite for remaining tasks.
 
-If more batches needed → `workflow next --step 3`
+If more batches needed → `workflow next --task 3`
 If all tasks complete → `workflow next`
 
 - PASS: CONTINUE
@@ -685,8 +685,8 @@ Workflow state persists to `.claude/turboshovel/workflows/{id}.json`:
 {
   "id": "wf-2025-01-15-abc123",
   "workflow": "execute.workflow.md",
-  "step": 3,
-  "stepName": "Execute batch",
+  "task": 3,
+  "taskName": "Execute batch",
   "retryCount": 0,
   "retryMax": 3,
   "variables": {
@@ -725,12 +725,12 @@ variables: Record<string, boolean | number | string>
 
 Variables are set by:
 - Workflow hooks (SubagentStop tracking)
-- Agent logic during step execution
+- Agent logic during task execution
 - Manual updates via CLI (future)
 
 #### Task Tracking
 
-Tasks represent parallel work items within a workflow step:
+Tasks represent parallel work items within a workflow task:
 
 ```typescript
 interface TaskState {
@@ -770,11 +770,11 @@ workflow start plugin/hooks/examples/code-review.workflow.md
 - Validates syntax (numbering, GOTO targets)
 - Creates state file
 - Sets as active workflow
-- Displays Step 1 guidance
+- Displays Task 1 guidance
 
 #### `workflow next`
 
-Advance to the next step (step + 1).
+Advance to the next task (task + 1).
 
 ```bash
 workflow next
@@ -782,23 +782,23 @@ workflow next
 
 **Behavior:**
 - Loads active workflow
-- Increments step number
+- Increments task number
 - Resets retry count
-- Displays step guidance
-- Auto-completes if past final step
+- Displays task guidance
+- Auto-completes if past final task
 
-#### `workflow next --step N`
+#### `workflow next --task N`
 
-Jump to a specific step (for GOTO actions).
+Jump to a specific task (for GOTO actions).
 
 ```bash
-workflow next --step 3
+workflow next --task 3
 ```
 
 **Use cases:**
 - GOTO action execution
 - Manual navigation for debugging
-- Skipping optional steps
+- Skipping optional tasks
 
 #### `workflow status`
 
@@ -812,7 +812,7 @@ workflow status
 ```
 Workflow: execute.workflow.md
 ID: wf-2025-01-15-abc123
-Step 3: Execute batch
+Task 3: Execute batch
 Retry: 0/3
 Variables: {
   "more_batches": true
@@ -846,8 +846,8 @@ workflow list
 
 **Output:**
 ```
-wf-2025-01-15-abc123 (active): execute.workflow.md - Step 3
-wf-2025-01-14-def456: code-review.workflow.md - Step 2
+wf-2025-01-15-abc123 (active): execute.workflow.md - Task 3
+wf-2025-01-14-def456: code-review.workflow.md - Task 2
 ```
 
 ### Writing Workflows for Agents
@@ -855,7 +855,7 @@ wf-2025-01-14-def456: code-review.workflow.md - Step 2
 #### Agent Interpretation
 
 Agents should:
-1. **Read step description** - Understand the goal
+1. **Read task description** - Understand the goal
 2. **Execute command** (if present) - Run bash block
 3. **Follow prompt** (if present) - Agent-driven task
 4. **Evaluate outcome** - Determine PASS/FAIL
@@ -863,7 +863,7 @@ Agents should:
 
 #### Variable Usage
 
-Set variables during step execution:
+Set variables during task execution:
 
 ```markdown
 ## 3. Execute batch
@@ -985,7 +985,7 @@ Execute implementation plans in controlled batches with review checkpoints.
 
 **Prompt:** Check TodoWrite for remaining tasks.
 
-If more batches needed → `workflow next --step 3`
+If more batches needed → `workflow next --task 3`
 If all tasks complete → `workflow next`
 
 - PASS: CONTINUE
@@ -1003,7 +1003,7 @@ If all tasks complete → `workflow next`
 #### When to Use Workflows vs Gates
 
 **Use workflows when:**
-- Multi-step processes with branching
+- Multi-task processes with branching
 - State must persist across sessions
 - Retry logic needed
 - Progress tracking important
@@ -1017,7 +1017,7 @@ If all tasks complete → `workflow next`
 
 #### Workflow Composition Patterns
 
-**Sequential steps** (most common):
+**Sequential tasks** (most common):
 ```markdown
 ## 1. Setup
 - PASS: CONTINUE
@@ -1038,7 +1038,7 @@ If all tasks complete → `workflow next`
 
 **Prompt:** Check if more items remain.
 
-If more items → `workflow next --step 1`
+If more items → `workflow next --task 1`
 If complete → `workflow next`
 
 - PASS: CONTINUE
@@ -1081,7 +1081,7 @@ npm run test:integration
 **Retry behavior:**
 - Increments `retryCount` on each failure
 - Stops after `retryMax` attempts (default 3)
-- Resets to 0 on step change
+- Resets to 0 on task change
 - State persists between retries
 
 #### Agent-Controlled Loops
@@ -1100,7 +1100,7 @@ npm run test:integration
 
 **Prompt:** Check if queue has more items.
 
-If queue not empty → `workflow next --step 1`
+If queue not empty → `workflow next --task 1`
 If queue empty → `workflow next`
 
 - PASS: CONTINUE
@@ -1157,7 +1157,7 @@ Execute implementation plans in batches.
 
 **Prompt:** Check if more batches remain.
 
-If more batches → `workflow next --step 2`
+If more batches → `workflow next --task 2`
 If complete → `workflow next`
 
 - PASS: CONTINUE
@@ -1187,7 +1187,7 @@ Workflows automatically integrate with hook system:
 
 **SessionStart hook:**
 - Auto-injects active workflow context
-- Shows current step and progress
+- Shows current task and progress
 - Displays variables and tasks
 
 **No configuration needed** - works automatically when workflow is active.
@@ -1196,8 +1196,8 @@ Workflows automatically integrate with hook system:
 
 Full workflow examples in `plugin/hooks/examples/`:
 
-- **`execute.workflow.md`** - Batch execution with review checkpoints (7 steps)
-- **`code-review.workflow.md`** - Code review dispatch and triage (4 steps)
+- **`execute.workflow.md`** - Batch execution with review checkpoints (7 tasks)
+- **`code-review.workflow.md`** - Code review dispatch and triage (4 tasks)
 
 See these files for complete, production-ready workflow patterns.
 

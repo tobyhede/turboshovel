@@ -92,7 +92,7 @@ Claude Code automatically sets `${CLAUDE_PLUGIN_ROOT}` to the correct path for e
 Execute multi-step processes with state tracking:
 
 - `workflow start <file>` - Start workflow
-- `workflow next` - Advance to next step
+- `workflow next` - Advance to next task
 - `workflow status` - Show current state
 - `workflow stop` - Abort workflow
 
