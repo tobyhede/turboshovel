@@ -15,12 +15,12 @@ Some description
 More description
 `;
 
-      const steps = parseWorkflow(markdown);
-      expect(steps).toHaveLength(2);
-      expect(steps[0].number).toBe(1);
-      expect(steps[0].description).toBe('First step');
-      expect(steps[1].number).toBe(2);
-      expect(steps[1].description).toBe('Second step');
+      const tasks = parseWorkflow(markdown);
+      expect(tasks).toHaveLength(2);
+      expect(tasks[0].number).toBe(1);
+      expect(tasks[0].description).toBe('First step');
+      expect(tasks[1].number).toBe(2);
+      expect(tasks[1].description).toBe('Second step');
     });
 
     test('parses commands in steps', () => {
@@ -38,9 +38,9 @@ git status
 \`\`\`
 `;
 
-      const steps = parseWorkflow(markdown);
-      expect(steps[0].command?.code).toBe('npm test');
-      expect(steps[1].command?.code).toBe('git status');
+      const tasks = parseWorkflow(markdown);
+      expect(tasks[0].command?.code).toBe('npm test');
+      expect(tasks[1].command?.code).toBe('git status');
     });
 
     test('ignores non-bash code blocks', () => {
@@ -52,8 +52,8 @@ print("test")
 \`\`\`
 `;
 
-      const steps = parseWorkflow(markdown);
-      expect(steps[0].command).toBeUndefined();
+      const tasks = parseWorkflow(markdown);
+      expect(tasks[0].command).toBeUndefined();
     });
   });
 
@@ -70,10 +70,10 @@ npm test
 \`\`\`
 `;
 
-      const steps = parseWorkflow(markdown);
-      expect(steps[0].conditions).toBeDefined();
-      expect(steps[0].conditions?.pass).toEqual({ type: 'CONTINUE' });
-      expect(steps[0].conditions?.fail).toEqual({ type: 'STOP', message: 'fix tests' });
+      const tasks = parseWorkflow(markdown);
+      expect(tasks[0].conditions).toBeDefined();
+      expect(tasks[0].conditions?.pass).toEqual({ type: 'CONTINUE' });
+      expect(tasks[0].conditions?.fail).toEqual({ type: 'STOP', message: 'fix tests' });
     });
 
     test('parses list-based conditionals', () => {
@@ -88,9 +88,9 @@ npm test
 - FAIL: STOP fix tests
 `;
 
-      const steps = parseWorkflow(markdown);
-      expect(steps[0].conditions).toBeDefined();
-      expect(steps[0].conditions?.pass).toEqual({ type: 'CONTINUE' });
+      const tasks = parseWorkflow(markdown);
+      expect(tasks[0].conditions).toBeDefined();
+      expect(tasks[0].conditions?.pass).toEqual({ type: 'CONTINUE' });
     });
 
     test('parses GOTO action', () => {
@@ -117,8 +117,8 @@ echo "reached"
 \`\`\`
 `;
 
-      const steps = parseWorkflow(markdown);
-      expect(steps[0].conditions?.pass).toEqual({ type: 'GOTO', step: 3 });
+      const tasks = parseWorkflow(markdown);
+      expect(tasks[0].conditions?.pass).toEqual({ type: 'GOTO', task: 3 });
     });
   });
 
@@ -130,9 +130,9 @@ echo "reached"
 **Prompt:** Do all functions have tests?
 `;
 
-      const steps = parseWorkflow(markdown);
-      expect(steps[0].prompts).toHaveLength(1);
-      expect(steps[0].prompts[0].text).toBe('Do all functions have tests?');
+      const tasks = parseWorkflow(markdown);
+      expect(tasks[0].prompts).toHaveLength(1);
+      expect(tasks[0].prompts[0].text).toBe('Do all functions have tests?');
     });
 
     test('creates implicit prompts for steps without code blocks', () => {
@@ -151,9 +151,9 @@ echo "fix"
 \`\`\`
 `;
 
-      const steps = parseWorkflow(markdown);
-      expect(steps[0].prompts).toHaveLength(1);
-      expect(steps[0].prompts[0].text).toContain('Review the code');
+      const tasks = parseWorkflow(markdown);
+      expect(tasks[0].prompts).toHaveLength(1);
+      expect(tasks[0].prompts[0].text).toContain('Review the code');
     });
 
     test('no implicit prompt when code block exists', () => {
@@ -168,9 +168,9 @@ npm test
 - FAIL: STOP
 `;
 
-      const steps = parseWorkflow(markdown);
-      expect(steps[0].prompts).toHaveLength(0);
-      expect(steps[0].command).toBeDefined();
+      const tasks = parseWorkflow(markdown);
+      expect(tasks[0].prompts).toHaveLength(0);
+      expect(tasks[0].command).toBeDefined();
     });
 
     test('parses multiple explicit prompts per step', () => {
@@ -182,10 +182,10 @@ npm test
 **Prompt:** Is error handling complete?
 `;
 
-      const steps = parseWorkflow(markdown);
-      expect(steps[0].prompts).toHaveLength(2);
-      expect(steps[0].prompts[0].text).toBe('Are all edge cases handled?');
-      expect(steps[0].prompts[1].text).toBe('Is error handling complete?');
+      const tasks = parseWorkflow(markdown);
+      expect(tasks[0].prompts).toHaveLength(2);
+      expect(tasks[0].prompts[0].text).toBe('Are all edge cases handled?');
+      expect(tasks[0].prompts[1].text).toBe('Is error handling complete?');
     });
 
     test('explicit prompts take precedence over implicit text', () => {
@@ -200,17 +200,17 @@ This is some descriptive text that should not become a prompt.
 More descriptive text here.
 `;
 
-      const steps = parseWorkflow(markdown);
+      const tasks = parseWorkflow(markdown);
       // Only the explicit prompt should be captured
-      expect(steps[0].prompts).toHaveLength(1);
-      expect(steps[0].prompts[0].text).toBe('Check for security issues.');
+      expect(tasks[0].prompts).toHaveLength(1);
+      expect(tasks[0].prompts[0].text).toBe('Check for security issues.');
     });
   });
 
   describe('validation', () => {
     test('throws on empty workflow', () => {
       expect(() => parseWorkflow('')).toThrow(WorkflowSyntaxError);
-      expect(() => parseWorkflow('')).toThrow('at least one step');
+      expect(() => parseWorkflow('')).toThrow('at least one task');
     });
 
     test('throws on non-sequential steps', () => {
@@ -303,10 +303,10 @@ echo "test"
 \`\`\`
 `;
 
-      const steps = parseWorkflow(markdown);
-      expect(steps).toHaveLength(1);
-      expect(steps[0].number).toBe(1);
-      expect(steps[0].description).toBe('First step');
+      const tasks = parseWorkflow(markdown);
+      expect(tasks).toHaveLength(1);
+      expect(tasks[0].number).toBe(1);
+      expect(tasks[0].description).toBe('First step');
     });
   });
 });
