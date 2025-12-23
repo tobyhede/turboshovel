@@ -120,6 +120,16 @@ export interface WorkflowState {
   readonly retryMax: number;
   readonly variables: Record<string, boolean | number | string>;
   readonly tasks: readonly TaskState[];
+
+  // Orchestration fields
+  readonly pendingTasks: readonly TaskId[];
+  readonly agentBindings: Readonly<Record<string, AgentBinding>>;
+
+  // Child workflow fields (optional)
+  readonly agentId?: string;
+  readonly parentWorkflowId?: string;
+  readonly parentTaskId?: TaskId;
+
   readonly nested?: {
     readonly workflow: string;
     readonly instanceId: string;

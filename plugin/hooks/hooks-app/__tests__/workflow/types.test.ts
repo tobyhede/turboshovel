@@ -1,5 +1,5 @@
 // __tests__/workflow/types.test.ts
-import { createTaskNumber, type TaskNumber, type Action, type AgentBinding } from '../../src/workflow/types';
+import { createTaskNumber, type TaskNumber, type Action, type WorkflowState } from '../../src/workflow/types';
 
 describe('TaskNumber', () => {
   test('createTaskNumber with valid number returns TaskNumber', () => {
@@ -53,30 +53,63 @@ describe('Action discriminated union', () => {
   });
 });
 
-describe('AgentBinding type', () => {
-  it('accepts valid running binding', () => {
-    const binding: AgentBinding = {
-      taskId: { task: 3, subtask: 'A' },
-      status: 'running',
+describe('WorkflowState orchestration fields', () => {
+  it('includes pendingTasks array', () => {
+    const state: WorkflowState = {
+      id: 'wf-test',
+      workflow: 'test.workflow.md',
+      task: createTaskNumber(1)!,
+      taskName: 'Test',
+      retryCount: 0,
+      retryMax: 3,
+      variables: {},
+      tasks: [],
+      pendingTasks: [{ task: 1 }, { task: 2, subtask: 'A' }],
+      agentBindings: {},
+      startedAt: '2025-01-01T00:00:00Z',
+      updatedAt: '2025-01-01T00:00:00Z',
     };
-    expect(binding.status).toBe('running');
+    expect(state.pendingTasks).toHaveLength(2);
   });
 
-  it('accepts binding with result', () => {
-    const binding: AgentBinding = {
-      taskId: { task: 2 },
-      status: 'done',
-      result: 'pass',
+  it('includes agentBindings map', () => {
+    const state: WorkflowState = {
+      id: 'wf-test',
+      workflow: 'test.workflow.md',
+      task: createTaskNumber(1)!,
+      taskName: 'Test',
+      retryCount: 0,
+      retryMax: 3,
+      variables: {},
+      tasks: [],
+      pendingTasks: [],
+      agentBindings: {
+        'agent-abc': { taskId: { task: 1 }, status: 'running' },
+      },
+      startedAt: '2025-01-01T00:00:00Z',
+      updatedAt: '2025-01-01T00:00:00Z',
     };
-    expect(binding.result).toBe('pass');
+    expect(state.agentBindings['agent-abc']).toBeDefined();
   });
 
-  it('accepts binding with child workflow', () => {
-    const binding: AgentBinding = {
-      taskId: { task: 1 },
-      status: 'running',
-      childWorkflowId: 'wf-2025-01-01-abc123',
+  it('includes optional parent workflow fields', () => {
+    const state: WorkflowState = {
+      id: 'wf-child',
+      workflow: 'child.workflow.md',
+      task: createTaskNumber(1)!,
+      taskName: 'Child Task',
+      retryCount: 0,
+      retryMax: 3,
+      variables: {},
+      tasks: [],
+      pendingTasks: [],
+      agentBindings: {},
+      agentId: 'agent-xyz',
+      parentWorkflowId: 'wf-parent',
+      parentTaskId: { task: 2, subtask: 'B' },
+      startedAt: '2025-01-01T00:00:00Z',
+      updatedAt: '2025-01-01T00:00:00Z',
     };
-    expect(binding.childWorkflowId).toBeDefined();
+    expect(state.parentWorkflowId).toBe('wf-parent');
   });
 });
