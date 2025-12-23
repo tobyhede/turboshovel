@@ -128,6 +128,66 @@ echo "test"
     });
   });
 
+  describe('workflow start --agent', () => {
+    it('binds agent to pending task', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(workflowPath, `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+
+## 2. Second step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+`);
+      await runCli(['start', workflowPath]);
+      await runCli(['start', '--task', '2.A']);
+
+      const result = await runCli(['start', '--agent', 'agent-xyz']);
+
+      expect(result.stdout).toContain('Agent agent-xyz bound to task 2.A');
+
+      const manager = new WorkflowStateManager(testDir);
+      const state = await manager.getActive();
+      expect(state?.agentBindings['agent-xyz']).toBeDefined();
+      expect(state?.pendingTasks).toHaveLength(0); // Popped
+    });
+
+    it('errors when no pending task', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(workflowPath, `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+`);
+      await runCli(['start', workflowPath]);
+
+      const result = await runCli(['start', '--agent', 'agent-xyz']);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('No pending task');
+    });
+
+    it('errors when no active workflow', async () => {
+      const result = await runCli(['start', '--agent', 'agent-xyz']);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('No active workflow');
+    });
+  });
+
   describe('workflow status', () => {
     test('shows current workflow state', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');

@@ -50,6 +50,30 @@ program
         return;
       }
 
+      // Mode 3: --agent - Bind agent to pending task
+      if (options.agent) {
+        const state = await manager.getActive();
+        if (!state) {
+          console.error('Error: No active workflow');
+          process.exit(1);
+        }
+
+        const taskId = await manager.popPendingTask(state.id);
+        if (!taskId) {
+          console.error('Error: No pending task to bind');
+          process.exit(1);
+        }
+
+        await manager.bindAgent(state.id, options.agent, taskId);
+        console.log(`Agent ${options.agent} bound to task ${taskIdToString(taskId)}`);
+
+        // If file also provided, start child workflow (future enhancement)
+        if (file) {
+          console.log(`Child workflow from ${file} not yet implemented`);
+        }
+        return;
+      }
+
       // Mode 2: File start (existing behavior)
       if (file && !options.task && !options.agent) {
         // Read and parse workflow file
@@ -74,9 +98,9 @@ program
         return;
       }
 
-      // If neither file nor --task specified
-      if (!file && !options.task) {
-        console.error('Error: Workflow file or --task option required');
+      // If neither file, --task, nor --agent specified
+      if (!file && !options.task && !options.agent) {
+        console.error('Error: Workflow file, --task, or --agent option required');
         process.exit(1);
       }
 
