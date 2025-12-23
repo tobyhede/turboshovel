@@ -59,3 +59,65 @@ describe('Dispatcher Workflow Integration', () => {
     expect(result.context || '').not.toContain('Active Workflow');
   });
 });
+
+describe('dispatcher with orchestration hooks', () => {
+  let testDir: string;
+  let manager: WorkflowStateManager;
+
+  beforeEach(async () => {
+    testDir = join(tmpdir(), `dispatcher-integration-test-${Date.now()}`);
+    await fs.mkdir(testDir, { recursive: true });
+    manager = new WorkflowStateManager(testDir);
+  });
+
+  afterEach(async () => {
+    await fs.rm(testDir, { recursive: true, force: true });
+  });
+
+  it('returns violation when Task dispatched without TaskId', async () => {
+    const state = await manager.create('test.workflow.md', 'Test');
+    await manager.setActive(state.id);
+
+    const input: HookInput = {
+      hook_event_name: 'PostToolUse',
+      cwd: testDir,
+      tool_name: 'Task',
+      tool_input: { description: 'Missing task prefix' },
+    };
+
+    const result = await dispatch(input);
+
+    expect(result.blockReason).toContain('TaskId');
+  });
+
+  it('injects agent context on SubagentStart', async () => {
+    const state = await manager.create('test.workflow.md', 'Test');
+    await manager.setActive(state.id);
+    await manager.pushPendingTask(state.id, { task: 1 });
+
+    const input: HookInput = {
+      hook_event_name: 'SubagentStart',
+      cwd: testDir,
+      agent_id: 'agent-xyz',
+    };
+
+    const result = await dispatch(input);
+
+    expect(result.context).toContain('AGENT_ID: agent-xyz');
+  });
+
+  it('returns violation on SubagentStop for unknown agent', async () => {
+    const state = await manager.create('test.workflow.md', 'Test');
+    await manager.setActive(state.id);
+
+    const input: HookInput = {
+      hook_event_name: 'SubagentStop',
+      cwd: testDir,
+      agent_id: 'unknown-agent',
+    };
+
+    const result = await dispatch(input);
+
+    expect(result.blockReason).toContain('unknown agent');
+  });
+});

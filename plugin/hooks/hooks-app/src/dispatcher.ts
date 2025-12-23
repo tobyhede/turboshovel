@@ -7,7 +7,7 @@ import { handleAction } from './action-handler';
 import { Session } from './session';
 import { logger } from './logger';
 import { getWorkflowContext } from './workflow/context';
-import { trackTaskDispatch, handleSubagentStop } from './workflow/hooks';
+import { trackTaskDispatch, handleSubagentStart, handleSubagentStop } from './workflow/hooks';
 import { minimatch } from 'minimatch';
 import path from 'path';
 
@@ -230,15 +230,40 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
     accumulatedContext += '\n\n' + workflowContext;
   }
 
-  // Workflow hooks
+  // Workflow orchestration hooks
   if (input.hook_event_name === 'PostToolUse' && input.tool_name === 'Task') {
-    await trackTaskDispatch(input);
+    const result = await trackTaskDispatch(input);
+    if (result.violation) {
+      return {
+        context: accumulatedContext,
+        blockReason: result.violation,
+      };
+    }
+  }
+
+  if (input.hook_event_name === 'SubagentStart') {
+    const result = await handleSubagentStart(input);
+    if (result.violation) {
+      return {
+        context: accumulatedContext,
+        blockReason: result.violation,
+      };
+    }
+    if (result.context) {
+      accumulatedContext += '\n\n' + result.context;
+    }
   }
 
   if (input.hook_event_name === 'SubagentStop') {
-    const subagentContext = await handleSubagentStop(input);
-    if (subagentContext) {
-      accumulatedContext += '\n\n' + subagentContext;
+    const result = await handleSubagentStop(input);
+    if (result.violation) {
+      return {
+        context: accumulatedContext,
+        blockReason: result.violation,
+      };
+    }
+    if (result.context) {
+      accumulatedContext += '\n\n' + result.context;
     }
   }
 
