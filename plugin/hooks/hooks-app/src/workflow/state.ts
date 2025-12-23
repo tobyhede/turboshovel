@@ -240,4 +240,38 @@ export class WorkflowStateManager {
       },
     });
   }
+
+  /**
+   * Get agent binding by agent ID
+   */
+  async getAgentBinding(id: string, agentId: string): Promise<AgentBinding | null> {
+    const state = await this.load(id);
+    return state?.agentBindings?.[agentId] || null;
+  }
+
+  /**
+   * Update agent binding status/result
+   */
+  async updateAgentBinding(
+    id: string,
+    agentId: string,
+    updates: Partial<Pick<AgentBinding, 'status' | 'result' | 'childWorkflowId'>>
+  ): Promise<void> {
+    const state = await this.load(id);
+    if (!state) {
+      throw new Error(`Workflow ${id} not found`);
+    }
+
+    const existing = state.agentBindings?.[agentId];
+    if (!existing) {
+      throw new Error(`No binding for agent ${agentId}`);
+    }
+
+    await this.update(id, {
+      agentBindings: {
+        ...(state.agentBindings || {}),
+        [agentId]: { ...existing, ...updates },
+      },
+    });
+  }
 }

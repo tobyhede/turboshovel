@@ -221,4 +221,65 @@ describe('WorkflowStateManager', () => {
       ).rejects.toThrow('Workflow non-existent not found');
     });
   });
+
+  describe('getAgentBinding', () => {
+    it('returns binding for existing agent', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+      await manager.bindAgent(state.id, 'agent-xyz', { task: 3 });
+
+      const binding = await manager.getAgentBinding(state.id, 'agent-xyz');
+
+      expect(binding).toEqual({
+        taskId: { task: 3 },
+        status: 'running',
+      });
+    });
+
+    it('returns null for non-existent agent', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+
+      const binding = await manager.getAgentBinding(state.id, 'unknown-agent');
+
+      expect(binding).toBeNull();
+    });
+
+    it('returns null for non-existent workflow', async () => {
+      const binding = await manager.getAgentBinding('non-existent', 'agent-x');
+      expect(binding).toBeNull();
+    });
+  });
+
+  describe('updateAgentBinding', () => {
+    it('updates status to done with result', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+      await manager.bindAgent(state.id, 'agent-xyz', { task: 3 });
+
+      await manager.updateAgentBinding(state.id, 'agent-xyz', {
+        status: 'done',
+        result: 'pass',
+      });
+
+      const binding = await manager.getAgentBinding(state.id, 'agent-xyz');
+      expect(binding?.status).toBe('done');
+      expect(binding?.result).toBe('pass');
+    });
+
+    it('preserves taskId when updating', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+      await manager.bindAgent(state.id, 'agent-xyz', { task: 3, subtask: 'A' });
+
+      await manager.updateAgentBinding(state.id, 'agent-xyz', { status: 'done' });
+
+      const binding = await manager.getAgentBinding(state.id, 'agent-xyz');
+      expect(binding?.taskId).toEqual({ task: 3, subtask: 'A' });
+    });
+
+    it('throws for non-existent agent', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+
+      await expect(
+        manager.updateAgentBinding(state.id, 'unknown', { status: 'done' })
+      ).rejects.toThrow('No binding for agent unknown');
+    });
+  });
 });
