@@ -255,6 +255,81 @@ echo "done"
     });
   });
 
+  describe('workflow next --pass/--fail', () => {
+    it('marks agent as passed with --pass --agent', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(workflowPath, `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+`);
+      await runCli(['start', workflowPath]);
+      await runCli(['start', '--task', '1']);
+      await runCli(['start', '--agent', 'agent-xyz']);
+
+      const result = await runCli(['next', '--pass', '--agent', 'agent-xyz']);
+
+      expect(result.stdout).toContain('agent-xyz');
+      expect(result.stdout).toContain('pass');
+
+      const manager = new WorkflowStateManager(testDir);
+      const state = await manager.getActive();
+      const binding = state?.agentBindings['agent-xyz'];
+      expect(binding?.status).toBe('done');
+      expect(binding?.result).toBe('pass');
+    });
+
+    it('marks agent as failed with --fail --agent', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(workflowPath, `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+`);
+      await runCli(['start', workflowPath]);
+      await runCli(['start', '--task', '1']);
+      await runCli(['start', '--agent', 'agent-xyz']);
+
+      const result = await runCli(['next', '--fail', '--agent', 'agent-xyz']);
+
+      expect(result.stdout).toContain('fail');
+
+      const manager = new WorkflowStateManager(testDir);
+      const state = await manager.getActive();
+      expect(state?.agentBindings['agent-xyz'].result).toBe('fail');
+    });
+
+    it('errors for unknown agent', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(workflowPath, `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+`);
+      await runCli(['start', workflowPath]);
+
+      const result = await runCli(['next', '--pass', '--agent', 'unknown']);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('No binding');
+    });
+  });
+
   describe('workflow stop', () => {
     test('aborts current workflow', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');

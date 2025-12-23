@@ -118,9 +118,19 @@ program
 
 program
   .command('next')
-  .description('Advance to the next task')
-  .option('--task <n>', 'Jump to specific task (for GOTO)')
-  .action(async (options: { task?: string }) => {
+  .description('Advance to the next step or mark task complete')
+  .option('--step <n>', 'Jump to specific step (for GOTO)')
+  .option('--pass', 'Mark task as passed')
+  .option('--fail', 'Mark task as failed/blocked')
+  .option('--task <taskId>', 'Specify which task (for parallel tasks)')
+  .option('--agent <agentId>', 'Specify agent completing task')
+  .action(async (options: {
+    step?: string;
+    pass?: boolean;
+    fail?: boolean;
+    task?: string;
+    agent?: string;
+  }) => {
     try {
       const cwd = getCwd();
       const manager = new WorkflowStateManager(cwd);
@@ -128,6 +138,35 @@ program
 
       if (!state) {
         console.log('No active workflow');
+        return;
+      }
+
+      // Handle agent completion with --pass/--fail --agent
+      if ((options.pass || options.fail) && options.agent) {
+        const binding = await manager.getAgentBinding(state.id, options.agent);
+        if (!binding) {
+          console.error(`Error: No binding for agent ${options.agent}`);
+          process.exit(1);
+        }
+
+        const result = options.fail ? 'fail' : 'pass';
+        await manager.updateAgentBinding(state.id, options.agent, {
+          status: 'done',
+          result,
+        });
+
+        console.log(`Agent ${options.agent} marked as ${result}`);
+
+        // Check if all agents done
+        const updated = await manager.load(state.id);
+        const bindings = Object.values(updated?.agentBindings || {});
+        const running = bindings.filter(b => b.status === 'running').length;
+
+        if (running > 0) {
+          console.log(`${running} agent(s) still running`);
+        } else {
+          console.log('All agents complete. Run: workflow next');
+        }
         return;
       }
 
@@ -144,8 +183,8 @@ program
       // Determine next task
       // TaskNumber is a branded number type, so arithmetic works directly
       let nextTaskNum: number;
-      if (options.task) {
-        nextTaskNum = parseInt(options.task, 10);
+      if (options.step) {
+        nextTaskNum = parseInt(options.step, 10);
       } else {
         nextTaskNum = state.task + 1;
       }
