@@ -109,3 +109,27 @@ describe('SessionState stash support', () => {
     expect(session.stashedWorkflowId).toBeUndefined();
   });
 });
+
+describe('HookInput subagent fields', () => {
+  it('includes agent_id field', () => {
+    const input: HookInput = {
+      hook_event_name: 'SubagentStart',
+      cwd: '/test',
+      agent_id: 'agent-abc-123',
+    };
+    expect(input.agent_id).toBe('agent-abc-123');
+  });
+
+  it('includes tool_input for Task tool', () => {
+    const input: HookInput = {
+      hook_event_name: 'PostToolUse',
+      cwd: '/test',
+      tool_name: 'Task',
+      tool_input: {
+        description: '3.A - Review code',
+        subagent_type: 'code-review-agent',
+      },
+    };
+    expect(input.tool_input?.description).toBe('3.A - Review code');
+  });
+});

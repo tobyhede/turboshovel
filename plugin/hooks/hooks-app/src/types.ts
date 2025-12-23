@@ -8,10 +8,19 @@ export interface HookInput {
   tool_name?: string;
   file_path?: string;
 
-  // SubagentStop
+  // PostToolUse - Task tool
+  tool_input?: {
+    description?: string;
+    subagent_type?: string;
+    prompt?: string;
+  };
+
+  // SubagentStart/SubagentStop
+  agent_id?: string;
   agent_name?: string;
   subagent_name?: string;
   output?: string;
+  agent_transcript_path?: string;
 
   // UserPromptSubmit
   user_message?: string;
