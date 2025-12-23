@@ -1,69 +1,92 @@
-// __tests__/workflow/hooks/task-tracker.test.ts
 import { join } from 'path';
 import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
-import { trackTaskDispatch } from '../../../src/workflow/hooks/task-tracker';
+import { trackTaskDispatch, type TaskDispatchResult } from '../../../src/workflow/hooks/task-tracker';
 import { WorkflowStateManager } from '../../../src/workflow/state';
 import type { HookInput } from '../../../src/types';
 
-describe('Task Tracker Hook', () => {
+describe('trackTaskDispatch with TaskId', () => {
   let testDir: string;
+  let manager: WorkflowStateManager;
 
   beforeEach(async () => {
     testDir = join(tmpdir(), `task-tracker-test-${Date.now()}`);
     await fs.mkdir(testDir, { recursive: true });
+    manager = new WorkflowStateManager(testDir);
   });
 
   afterEach(async () => {
     await fs.rm(testDir, { recursive: true, force: true });
   });
 
-  test('registers task when Task tool used', async () => {
-    // Setup active workflow
-    const manager = new WorkflowStateManager(testDir);
-    const state = await manager.create('test.workflow.md', 'Execute batch');
+  it('parses TaskId from description and pushes to queue', async () => {
+    const state = await manager.create('test.workflow.md', 'Test');
     await manager.setActive(state.id);
 
     const input: HookInput = {
       hook_event_name: 'PostToolUse',
       cwd: testDir,
       tool_name: 'Task',
+      tool_input: {
+        description: '3.A - Review code changes',
+        subagent_type: 'code-review-agent',
+      },
     };
 
-    await trackTaskDispatch(input);
+    const result = await trackTaskDispatch(input);
 
-    // Verify task was added
+    expect(result.taskId).toEqual({ task: 3, subtask: 'A' });
+
     const updated = await manager.getActive();
-    expect(updated?.tasks).toHaveLength(1);
-    expect(updated?.tasks[0].status).toBe('running');
-    expect(updated?.tasks[0].id).toMatch(/^task-/);
+    expect(updated?.pendingTasks).toContainEqual({ task: 3, subtask: 'A' });
   });
 
-  test('does nothing when no active workflow', async () => {
-    const input: HookInput = {
-      hook_event_name: 'PostToolUse',
-      cwd: testDir,
-      tool_name: 'Task',
-    };
-
-    // Should not throw
-    await trackTaskDispatch(input);
-  });
-
-  test('does nothing for non-Task tools', async () => {
-    const manager = new WorkflowStateManager(testDir);
-    const state = await manager.create('test.workflow.md', 'Execute batch');
+  it('returns violation for missing TaskId prefix in enforcement mode', async () => {
+    const state = await manager.create('test.workflow.md', 'Test');
     await manager.setActive(state.id);
 
     const input: HookInput = {
       hook_event_name: 'PostToolUse',
       cwd: testDir,
-      tool_name: 'Edit',
+      tool_name: 'Task',
+      tool_input: {
+        description: 'Review the code without task prefix',
+      },
     };
 
-    await trackTaskDispatch(input);
+    const result = await trackTaskDispatch(input);
 
-    const updated = await manager.getActive();
-    expect(updated?.tasks).toHaveLength(0);
+    expect(result.violation).toContain('must start with TaskId');
+  });
+
+  it('passes through when no active workflow', async () => {
+    const input: HookInput = {
+      hook_event_name: 'PostToolUse',
+      cwd: testDir,
+      tool_name: 'Task',
+      tool_input: { description: 'Any description' },
+    };
+
+    const result = await trackTaskDispatch(input);
+
+    expect(result.taskId).toBeUndefined();
+    expect(result.violation).toBeUndefined();
+  });
+
+  it('passes through when workflow is stashed', async () => {
+    const state = await manager.create('test.workflow.md', 'Test');
+    await manager.setActive(state.id);
+    await manager.stash();
+
+    const input: HookInput = {
+      hook_event_name: 'PostToolUse',
+      cwd: testDir,
+      tool_name: 'Task',
+      tool_input: { description: 'No prefix needed when stashed' },
+    };
+
+    const result = await trackTaskDispatch(input);
+
+    expect(result.violation).toBeUndefined();
   });
 });
