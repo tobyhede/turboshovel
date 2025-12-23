@@ -355,6 +355,30 @@ program
     }
   });
 
+program
+  .command('pop')
+  .description('Resume enforcement from stashed workflow')
+  .action(async () => {
+    try {
+      const cwd = getCwd();
+      const manager = new WorkflowStateManager(cwd);
+
+      const state = await manager.pop();
+
+      if (!state) {
+        console.log('No stashed workflow to restore');
+        return;
+      }
+
+      console.log(`Workflow restored: ${state.workflow}`);
+      console.log(`Resuming at step ${state.task}: ${state.taskName}`);
+      console.log('Enforcement active.');
+    } catch (error) {
+      console.error(`Error: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
 function printTaskGuidance(task: Task): void {
   if (task.command) {
     console.log(`\nCommand: ${task.command.code}`);

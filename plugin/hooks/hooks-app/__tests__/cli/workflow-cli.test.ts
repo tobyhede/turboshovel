@@ -386,4 +386,37 @@ echo "test"
       expect(result.stdout).toContain('No active workflow');
     });
   });
+
+  describe('workflow pop', () => {
+    it('restores stashed workflow', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(workflowPath, `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+`);
+      await runCli(['start', workflowPath]);
+      await runCli(['stash']);
+
+      const result = await runCli(['pop']);
+
+      expect(result.stdout).toContain('restored');
+      expect(result.stdout).toContain('Enforcement active');
+
+      const manager = new WorkflowStateManager(testDir);
+      const active = await manager.getActive();
+      expect(active).not.toBeNull();
+    });
+
+    it('reports when nothing to pop', async () => {
+      const result = await runCli(['pop']);
+
+      expect(result.stdout).toContain('No stashed workflow');
+    });
+  });
 });
