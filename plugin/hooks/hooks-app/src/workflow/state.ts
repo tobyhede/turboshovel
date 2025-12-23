@@ -295,6 +295,35 @@ export class WorkflowStateManager {
     return activeId;
   }
 
+  /**
+   * Pop stashed workflow (resume enforcement)
+   * Restores stashedWorkflowId to active_workflow, clears stash
+   * Returns restored workflow state or null if nothing stashed
+   */
+  async pop(): Promise<WorkflowState | null> {
+    const session = await this.loadSession();
+    const stashedId = session.stashedWorkflowId;
+
+    if (!stashedId) {
+      return null;
+    }
+
+    const state = await this.load(stashedId);
+    if (!state) {
+      // Stashed workflow was deleted, clean up
+      session.stashedWorkflowId = undefined;
+      await this.saveSession(session);
+      return null;
+    }
+
+    // Restore to active
+    session.active_workflow = stashedId;
+    session.stashedWorkflowId = undefined;
+    await this.saveSession(session);
+
+    return state;
+  }
+
   private async loadSession(): Promise<{
     active_workflow: string | null;
     stashedWorkflowId?: string;

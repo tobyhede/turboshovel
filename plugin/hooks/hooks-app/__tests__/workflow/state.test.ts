@@ -317,4 +317,49 @@ describe('WorkflowStateManager', () => {
       expect(loaded?.pendingTasks).toEqual([{ task: 3 }]);
     });
   });
+
+  describe('pop', () => {
+    it('restores stashed workflow to active', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+      await manager.setActive(state.id);
+      await manager.stash();
+
+      const restored = await manager.pop();
+
+      expect(restored?.id).toBe(state.id);
+
+      // Should be active again
+      const active = await manager.getActive();
+      expect(active?.id).toBe(state.id);
+    });
+
+    it('returns null when nothing stashed', async () => {
+      const restored = await manager.pop();
+      expect(restored).toBeNull();
+    });
+
+    it('clears stashedWorkflowId after pop', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+      await manager.setActive(state.id);
+      await manager.stash();
+
+      await manager.pop();
+
+      // Trying to pop again should return null
+      const secondPop = await manager.pop();
+      expect(secondPop).toBeNull();
+    });
+
+    it('returns null if stashed workflow was deleted', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+      await manager.setActive(state.id);
+      await manager.stash();
+
+      // Delete the workflow
+      await manager.delete(state.id);
+
+      const restored = await manager.pop();
+      expect(restored).toBeNull();
+    });
+  });
 });
