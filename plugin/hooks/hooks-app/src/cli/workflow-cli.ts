@@ -256,11 +256,22 @@ program
       const cwd = getCwd();
       const manager = new WorkflowStateManager(cwd);
       const state = await manager.getActive();
+      const stashedId = await manager.getStashedWorkflowId();
 
-      if (!state) {
+      if (!state && !stashedId) {
         console.log('No active workflow');
         return;
       }
+
+      // Show stashed status
+      if (stashedId && !state) {
+        const stashed = await manager.load(stashedId);
+        console.log(`Workflow stashed: ${stashed?.workflow || stashedId}`);
+        console.log('Enforcement paused. Use "workflow pop" to resume.');
+        return;
+      }
+
+      if (!state) return;
 
       console.log(`Workflow: ${state.workflow}`);
       console.log(`ID: ${state.id}`);
@@ -271,8 +282,24 @@ program
         console.log('Variables:', JSON.stringify(state.variables, null, 2));
       }
 
+      // Show pending tasks
+      if (state.pendingTasks && state.pendingTasks.length > 0) {
+        console.log(`\nPending Tasks: ${state.pendingTasks.map(taskIdToString).join(', ')}`);
+      }
+
+      // Show agent bindings
+      if (state.agentBindings && Object.keys(state.agentBindings).length > 0) {
+        console.log('\nAgent Bindings:');
+        for (const [agentId, binding] of Object.entries(state.agentBindings)) {
+          const taskStr = taskIdToString(binding.taskId);
+          const resultStr = binding.result ? ` - ${binding.result}` : '';
+          console.log(`  ${agentId}: ${taskStr} [${binding.status}]${resultStr}`);
+        }
+      }
+
+      // Legacy task display
       if (state.tasks.length > 0) {
-        console.log(`Tasks: ${state.tasks.length}`);
+        console.log(`\nTasks: ${state.tasks.length}`);
         for (const task of state.tasks) {
           console.log(`  - ${task.id}: ${task.status}`);
         }

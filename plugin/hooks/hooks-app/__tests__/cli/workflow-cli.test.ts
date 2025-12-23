@@ -212,6 +212,89 @@ echo "test"
     });
   });
 
+  describe('workflow status (orchestration)', () => {
+    it('shows pending tasks', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(workflowPath, `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+
+## 2. Second step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+`);
+      await runCli(['start', workflowPath]);
+      await runCli(['start', '--task', '2.A']);
+      await runCli(['start', '--task', '2.B']);
+
+      const result = await runCli(['status']);
+
+      expect(result.stdout).toContain('Pending Tasks');
+      expect(result.stdout).toContain('2.A');
+      expect(result.stdout).toContain('2.B');
+    });
+
+    it('shows agent bindings', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(workflowPath, `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+
+## 2. Second step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+`);
+      await runCli(['start', workflowPath]);
+      await runCli(['start', '--task', '1']);
+      await runCli(['start', '--agent', 'agent-xyz']);
+
+      const result = await runCli(['status']);
+
+      expect(result.stdout).toContain('Agent Bindings');
+      expect(result.stdout).toContain('agent-xyz');
+      expect(result.stdout).toContain('running');
+    });
+
+    it('shows stashed status', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(workflowPath, `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+`);
+      await runCli(['start', workflowPath]);
+      await runCli(['stash']);
+
+      const result = await runCli(['status']);
+
+      expect(result.stdout).toContain('stashed');
+    });
+  });
+
   describe('workflow next', () => {
     test('advances to next step', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
