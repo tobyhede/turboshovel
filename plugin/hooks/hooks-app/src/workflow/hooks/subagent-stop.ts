@@ -2,6 +2,7 @@
 import { WorkflowStateManager } from '../state';
 import type { HookInput } from '../../types';
 import type { TaskState } from '../types';
+import { logger } from '../../logger';
 
 /**
  * Parse STATUS field from subagent output
@@ -75,7 +76,9 @@ export async function handleSubagentStop(input: HookInput): Promise<string | und
     return `Task complete. ${updatedTasks.filter(t => t.status === 'complete').length}/${updatedTasks.length} tasks done.`;
   } catch (error) {
     // Log error but return graceful message
-    console.error('Failed to handle subagent stop:', error);
+    logger.warn('Failed to handle subagent stop', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return `Warning: Failed to update workflow state. Check logs for details.`;
   }
 }

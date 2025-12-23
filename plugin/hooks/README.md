@@ -423,7 +423,7 @@ Traditional skills and agents are guidance-only. Workflows enforce process:
 
 **Example flow:**
 ```
-1. Human: workflow start execute.workflow.md
+1. Human: workflow start my-workflow.md
 2. Workflow: Sets state to Task 1, injects prompt into conversation
 3. Claude: Reads prompt, executes task using tools (Task, Bash, Edit, etc.)
 4. Claude: Determines outcome (PASS/FAIL based on results)
@@ -437,7 +437,7 @@ Traditional skills and agents are guidance-only. Workflows enforce process:
 
 ```bash
 # Start a workflow
-workflow start execute.workflow.md
+workflow start my-workflow.md
 
 # Check status
 workflow status
@@ -684,7 +684,7 @@ Workflow state persists to `.claude/turboshovel/workflows/{id}.json`:
 ```json
 {
   "id": "wf-2025-01-15-abc123",
-  "workflow": "execute.workflow.md",
+  "workflow": "my-workflow.md",
   "task": 3,
   "taskName": "Execute batch",
   "retryCount": 0,
@@ -756,7 +756,7 @@ Start a new workflow from a markdown file.
 
 ```bash
 # Start from relative path
-workflow start execute.workflow.md
+workflow start my-workflow.md
 
 # Start from absolute path
 workflow start /path/to/workflow.md
@@ -810,7 +810,7 @@ workflow status
 
 **Output:**
 ```
-Workflow: execute.workflow.md
+Workflow: my-workflow.md
 ID: wf-2025-01-15-abc123
 Task 3: Execute batch
 Retry: 0/3
@@ -846,7 +846,7 @@ workflow list
 
 **Output:**
 ```
-wf-2025-01-15-abc123 (active): execute.workflow.md - Task 3
+wf-2025-01-15-abc123 (active): my-workflow.md - Task 3
 wf-2025-01-14-def456: code-review.workflow.md - Task 2
 ```
 
@@ -1196,10 +1196,9 @@ Workflows automatically integrate with hook system:
 
 Full workflow examples in `plugin/hooks/examples/`:
 
-- **`execute.workflow.md`** - Batch execution with review checkpoints (7 tasks)
 - **`code-review.workflow.md`** - Code review dispatch and triage (4 tasks)
 
-See these files for complete, production-ready workflow patterns.
+See this file for a complete, production-ready workflow pattern.
 
 ## Examples
 
@@ -1209,5 +1208,4 @@ See `plugin/hooks/examples/` for ready-to-use configurations:
 - `permissive.json` - Warn only
 - `pipeline.json` - Gate chaining
 - `context/` - Example context files
-- `execute.workflow.md` - Batch execution workflow
 - `code-review.workflow.md` - Code review workflow

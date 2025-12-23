@@ -6,6 +6,18 @@ import { createTaskNumber, type WorkflowState } from './types';
 const STATE_DIR = '.claude/turboshovel/workflows';
 const SESSION_FILE = '.claude/turboshovel/session.json';
 
+/**
+ * Generate a unique workflow ID.
+ *
+ * Format: `wf-{date}-{random}` where:
+ * - date: ISO date YYYY-MM-DD (slice(0,10) extracts date from ISO string)
+ * - random: 6 chars of base36 random (slice(2,8) skips "0." prefix from Math.random)
+ *
+ * Example: `wf-2025-01-15-a1b2c3`
+ *
+ * The date prefix makes IDs human-readable and naturally sortable.
+ * 6-char random gives ~2.2 billion possibilities per day - effectively unique.
+ */
 function generateId(): string {
   const now = new Date();
   const date = now.toISOString().slice(0, 10);
@@ -13,6 +25,26 @@ function generateId(): string {
   return `wf-${date}-${random}`;
 }
 
+/**
+ * Manages persistent workflow state stored in `.claude/turboshovel/workflows/`.
+ *
+ * Each workflow gets a unique JSON state file that persists across conversations.
+ * The active workflow is tracked in `.claude/turboshovel/session.json`.
+ *
+ * @example
+ * ```typescript
+ * const manager = new WorkflowStateManager(process.cwd());
+ *
+ * // Create a new workflow
+ * const state = await manager.create('deploy.workflow.md', 'Build application');
+ *
+ * // Update state
+ * await manager.update(state.id, { task: createTaskNumber(2), taskName: 'Run tests' });
+ *
+ * // Get active workflow
+ * const active = await manager.getActive();
+ * ```
+ */
 export class WorkflowStateManager {
   private readonly cwd: string;
 
@@ -71,6 +103,15 @@ export class WorkflowStateManager {
     await fs.writeFile(this.statePath(state.id), JSON.stringify(updated, null, 2));
   }
 
+  /**
+   * Update workflow state with partial updates.
+   *
+   * **Variables behavior:** Variables are merged additively - existing variables
+   * are preserved and new variables are added/updated. Variables cannot be removed
+   * once set. This is intentional: workflow variables represent accumulated state
+   * (e.g., `has_blocked_task: true`) that should persist through the workflow.
+   * To "clear" a variable, set it to a falsy value like `false` or `0`.
+   */
   async update(id: string, updates: Partial<Omit<WorkflowState, 'id' | 'startedAt'>>): Promise<WorkflowState> {
     const existing = await this.load(id);
     if (!existing) {
@@ -80,6 +121,7 @@ export class WorkflowStateManager {
     const updated: WorkflowState = {
       ...existing,
       ...updates,
+      // Merge variables additively - see JSDoc for rationale
       variables: { ...existing.variables, ...(updates.variables ?? {}) },
       updatedAt: new Date().toISOString(),
     };

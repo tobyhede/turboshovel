@@ -55,10 +55,10 @@ function formatWorkflowContext(state: WorkflowState): string {
     }
   }
 
-  // BLOCKED warning
+  // BLOCKED warning (using ASCII for terminal compatibility)
   if (state.variables.has_blocked_task || state.variables.blocked) {
     lines.push('');
-    lines.push('⚠️ **WORKFLOW BLOCKED** - Present options to user before continuing.');
+    lines.push('*** WORKFLOW BLOCKED *** - Present options to user before continuing.');
   }
 
   // Next action guidance

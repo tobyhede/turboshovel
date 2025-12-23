@@ -18,9 +18,10 @@ Categorize feedback as BLOCKING or NON-BLOCKING.
 
 ## 3. Handle blocking issues
 
-- IF: has_blocking_issues
-  - STOP "BLOCKING issues found. Fix before continuing."
-- ELSE: CONTINUE
+Review categorized issues. If any are BLOCKING, fix them before continuing.
+
+- PASS: CONTINUE
+- FAIL: STOP "BLOCKING issues found. Fix before continuing."
 
 ## 4. Address feedback
 
