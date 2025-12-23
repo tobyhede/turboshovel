@@ -1,5 +1,5 @@
 // plugin/hooks/hooks-app/__tests__/types.test.ts
-import { HookInput, GateResult, GateConfig } from '../src/types';
+import { HookInput, GateResult, GateConfig, SessionState } from '../src/types';
 
 describe('Types', () => {
   test('HookInput has required fields', () => {
@@ -78,5 +78,34 @@ describe('GateConfig Type', () => {
     };
 
     expect(config.file_patterns).toBeUndefined();
+  });
+});
+
+describe('SessionState stash support', () => {
+  it('includes optional stashedWorkflowId', () => {
+    const session: SessionState = {
+      session_id: 'test-123',
+      started_at: '2025-01-01T00:00:00Z',
+      active_command: null,
+      active_skill: null,
+      edited_files: [],
+      file_extensions: [],
+      metadata: {},
+      stashedWorkflowId: 'wf-2025-01-01-abc',
+    };
+    expect(session.stashedWorkflowId).toBe('wf-2025-01-01-abc');
+  });
+
+  it('allows undefined stashedWorkflowId', () => {
+    const session: SessionState = {
+      session_id: 'test-123',
+      started_at: '2025-01-01T00:00:00Z',
+      active_command: null,
+      active_skill: null,
+      edited_files: [],
+      file_extensions: [],
+      metadata: {},
+    };
+    expect(session.stashedWorkflowId).toBeUndefined();
   });
 });

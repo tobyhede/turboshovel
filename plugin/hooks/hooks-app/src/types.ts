@@ -104,6 +104,9 @@ export interface SessionState {
 
   /** Custom metadata for specific workflows */
   metadata: Record<string, any>;
+
+  /** ID of stashed workflow (enforcement paused) */
+  stashedWorkflowId?: string;
 }
 
 // Note: active_agent NOT included - Claude Code does not provide unique
