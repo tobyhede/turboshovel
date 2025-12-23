@@ -77,6 +77,8 @@ export class WorkflowStateManager {
       retryMax: 3,
       variables: {},
       tasks: [],
+      pendingTasks: [],
+      agentBindings: {},
       startedAt: now,
       updatedAt: now,
     };

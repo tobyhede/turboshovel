@@ -50,6 +50,18 @@ describe('WorkflowStateManager', () => {
     });
   });
 
+  describe('create orchestration fields', () => {
+    it('initializes pendingTasks as empty array', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+      expect(state.pendingTasks).toEqual([]);
+    });
+
+    it('initializes agentBindings as empty object', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+      expect(state.agentBindings).toEqual({});
+    });
+  });
+
   describe('load', () => {
     test('loads existing workflow state by ID', async () => {
       const created = await manager.create('test.workflow.md', 'Test task');
