@@ -1,19 +1,19 @@
 // src/workflow/types.ts
 
 /**
- * Branded type for step numbers (1-indexed, never zero)
+ * Branded type for task numbers (1-indexed, never zero)
  */
-export type StepNumber = number & { readonly __brand: 'StepNumber' };
+export type TaskNumber = number & { readonly __brand: 'TaskNumber' };
 
 /**
- * Factory function to create a valid StepNumber
+ * Factory function to create a valid TaskNumber
  * Returns null if the number is invalid (zero, negative, or non-integer)
  */
-export function createStepNumber(n: number): StepNumber | null {
+export function createTaskNumber(n: number): TaskNumber | null {
   if (n <= 0 || !Number.isInteger(n)) {
     return null;
   }
-  return n as StepNumber;
+  return n as TaskNumber;
 }
 
 /**
@@ -23,7 +23,7 @@ export function createStepNumber(n: number): StepNumber | null {
 export type Action =
   | { readonly type: 'CONTINUE' }
   | { readonly type: 'STOP'; readonly message?: string }
-  | { readonly type: 'GOTO'; readonly step: StepNumber }
+  | { readonly type: 'GOTO'; readonly task: TaskNumber }
   | { readonly type: 'DONE' }
   | { readonly type: 'RETRY'; readonly max?: number };
 
@@ -50,10 +50,10 @@ export interface Prompt {
 }
 
 /**
- * A single step in a workflow
+ * A single task in a workflow
  */
-export interface Step {
-  readonly number: StepNumber;
+export interface Task {
+  readonly number: TaskNumber;
   readonly description: string;
   readonly command?: Command;
   readonly prompts: readonly Prompt[];
@@ -67,7 +67,7 @@ export interface Step {
 export interface Workflow {
   readonly name: string;
   readonly description?: string;
-  readonly steps: readonly Step[];
+  readonly tasks: readonly Task[];
 }
 
 /**
@@ -87,8 +87,8 @@ export interface TaskState {
 export interface WorkflowState {
   readonly id: string;
   readonly workflow: string;
-  readonly step: StepNumber;
-  readonly stepName: string;
+  readonly task: TaskNumber;
+  readonly taskName: string;
   readonly retryCount: number;
   readonly retryMax: number;
   readonly variables: Record<string, boolean | number | string>;

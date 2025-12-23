@@ -1,25 +1,25 @@
 // __tests__/workflow/types.test.ts
-import { createStepNumber, type StepNumber, type Action } from '../../src/workflow/types';
+import { createTaskNumber, type TaskNumber, type Action } from '../../src/workflow/types';
 
-describe('StepNumber', () => {
-  test('createStepNumber with valid number returns StepNumber', () => {
-    const result = createStepNumber(1);
+describe('TaskNumber', () => {
+  test('createTaskNumber with valid number returns TaskNumber', () => {
+    const result = createTaskNumber(1);
     expect(result).not.toBeNull();
     expect(result).toBe(1);
   });
 
-  test('createStepNumber with zero returns null', () => {
-    const result = createStepNumber(0);
+  test('createTaskNumber with zero returns null', () => {
+    const result = createTaskNumber(0);
     expect(result).toBeNull();
   });
 
-  test('createStepNumber with negative returns null', () => {
-    const result = createStepNumber(-1);
+  test('createTaskNumber with negative returns null', () => {
+    const result = createTaskNumber(-1);
     expect(result).toBeNull();
   });
 
-  test('createStepNumber with non-integer returns null', () => {
-    const result = createStepNumber(1.5);
+  test('createTaskNumber with non-integer returns null', () => {
+    const result = createTaskNumber(1.5);
     expect(result).toBeNull();
   });
 });
@@ -44,11 +44,11 @@ describe('Action discriminated union', () => {
     }
   });
 
-  test('GOTO action with step number', () => {
-    const action: Action = { type: 'GOTO', step: 3 as StepNumber };
+  test('GOTO action with task number', () => {
+    const action: Action = { type: 'GOTO', task: 3 as TaskNumber };
     expect(action.type).toBe('GOTO');
     if (action.type === 'GOTO') {
-      expect(action.step).toBe(3);
+      expect(action.task).toBe(3);
     }
   });
 });
