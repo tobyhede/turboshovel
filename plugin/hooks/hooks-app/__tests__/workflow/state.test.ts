@@ -163,4 +163,31 @@ describe('WorkflowStateManager', () => {
       ).rejects.toThrow('Workflow non-existent not found');
     });
   });
+
+  describe('popPendingTask', () => {
+    it('returns null for empty queue', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+
+      const popped = await manager.popPendingTask(state.id);
+
+      expect(popped).toBeNull();
+    });
+
+    it('returns and removes first task (FIFO)', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+      await manager.pushPendingTask(state.id, { task: 1 });
+      await manager.pushPendingTask(state.id, { task: 2 });
+
+      const first = await manager.popPendingTask(state.id);
+      expect(first).toEqual({ task: 1 });
+
+      const updated = await manager.load(state.id);
+      expect(updated?.pendingTasks).toEqual([{ task: 2 }]);
+    });
+
+    it('returns null for non-existent workflow', async () => {
+      const result = await manager.popPendingTask('non-existent');
+      expect(result).toBeNull();
+    });
+  });
 });

@@ -203,4 +203,19 @@ export class WorkflowStateManager {
       pendingTasks: [...(state.pendingTasks || []), taskId],
     });
   }
+
+  /**
+   * Pop task from pending queue (FIFO - returns first, removes it)
+   * Returns null if queue is empty or workflow not found
+   */
+  async popPendingTask(id: string): Promise<TaskId | null> {
+    const state = await this.load(id);
+    if (!state || !state.pendingTasks?.length) {
+      return null;
+    }
+
+    const [first, ...rest] = state.pendingTasks;
+    await this.update(id, { pendingTasks: rest });
+    return first;
+  }
 }
