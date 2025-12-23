@@ -47,7 +47,7 @@ echo "test"
 
       const output = runCli(`start ${workflowPath}`);
       expect(output).toContain('Started workflow');
-      expect(output).toContain('Step 1: First step');
+      expect(output).toContain('Task 1: First step');
 
       // Verify state file created
       const stateDir = join(testDir, '.claude/turboshovel/workflows');
@@ -71,7 +71,7 @@ echo "test"
       const output = runCli('status');
 
       expect(output).toContain('test.workflow.md');
-      expect(output).toContain('Step 1');
+      expect(output).toContain('Task 1');
     });
 
     test('shows no active workflow message', () => {
@@ -103,7 +103,7 @@ echo "second"
       runCli(`start ${workflowPath}`);
       const output = runCli('next');
 
-      expect(output).toContain('Step 2: Second step');
+      expect(output).toContain('Task 2: Second step');
     });
 
     test('shows done message on final step', async () => {

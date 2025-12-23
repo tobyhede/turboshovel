@@ -32,7 +32,7 @@ describe('Workflow Context Injection', () => {
     expect(context).not.toBeNull();
     expect(context).toContain('Active Workflow');
     expect(context).toContain('test.workflow.md');
-    expect(context).toContain('Step 1');
+    expect(context).toContain('Task 1');
     expect(context).toContain('Run tests');
   });
 

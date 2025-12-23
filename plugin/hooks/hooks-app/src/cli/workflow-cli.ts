@@ -6,7 +6,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { WorkflowStateManager } from '../workflow/state';
 import { parseWorkflow, WorkflowSyntaxError } from '../workflow/parser';
-import { createStepNumber, type Action, type Step } from '../workflow/types';
+import { createTaskNumber, type Action, type Task } from '../workflow/types';
 
 const program = new Command();
 
@@ -30,22 +30,22 @@ program
       // Read and parse workflow file
       const filePath = path.isAbsolute(file) ? file : path.join(cwd, file);
       const content = await fs.readFile(filePath, 'utf8');
-      const steps = parseWorkflow(content);
+      const tasks = parseWorkflow(content);
 
-      if (steps.length === 0) {
-        console.error('Error: Workflow has no steps');
+      if (tasks.length === 0) {
+        console.error('Error: Workflow has no tasks');
         process.exit(1);
       }
 
       // Create workflow state - store relative path for later lookup
       const workflowPath = path.isAbsolute(file) ? path.relative(cwd, file) : file;
-      const state = await manager.create(workflowPath, steps[0].description);
+      const state = await manager.create(workflowPath, tasks[0].description);
       await manager.setActive(state.id);
 
       console.log(`Started workflow: ${workflowPath}`);
       console.log(`ID: ${state.id}`);
-      console.log(`Step 1: ${steps[0].description}`);
-      printStepGuidance(steps[0]);
+      console.log(`Task 1: ${tasks[0].description}`);
+      printTaskGuidance(tasks[0]);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
         console.error(`Error: Workflow file not found: ${file}`);
@@ -60,9 +60,9 @@ program
 
 program
   .command('next')
-  .description('Advance to the next step')
-  .option('--step <n>', 'Jump to specific step (for GOTO)')
-  .action(async (options: { step?: string }) => {
+  .description('Advance to the next task')
+  .option('--task <n>', 'Jump to specific task (for GOTO)')
+  .action(async (options: { task?: string }) => {
     try {
       const cwd = getCwd();
       const manager = new WorkflowStateManager(cwd);
@@ -73,7 +73,7 @@ program
         return;
       }
 
-      // Load workflow definition to get total steps
+      // Load workflow definition to get total tasks
       const workflowPath = await findWorkflowFile(cwd, state.workflow);
       if (!workflowPath) {
         console.error(`Error: Workflow file ${state.workflow} not found`);
@@ -81,40 +81,40 @@ program
       }
 
       const content = await fs.readFile(workflowPath, 'utf8');
-      const steps = parseWorkflow(content);
+      const tasks = parseWorkflow(content);
 
-      // Determine next step
-      // StepNumber is a branded number type, so arithmetic works directly
-      let nextStepNum: number;
-      if (options.step) {
-        nextStepNum = parseInt(options.step, 10);
+      // Determine next task
+      // TaskNumber is a branded number type, so arithmetic works directly
+      let nextTaskNum: number;
+      if (options.task) {
+        nextTaskNum = parseInt(options.task, 10);
       } else {
-        nextStepNum = state.step + 1;
+        nextTaskNum = state.task + 1;
       }
 
       // Check if workflow is complete
-      if (nextStepNum > steps.length) {
+      if (nextTaskNum > tasks.length) {
         console.log(`Workflow complete: ${state.workflow}`);
         await manager.setActive(null);
         return;
       }
 
-      const nextStep = steps[nextStepNum - 1];
-      const stepNumber = createStepNumber(nextStepNum);
-      if (!stepNumber) {
-        console.error('Error: Invalid step number');
+      const nextTask = tasks[nextTaskNum - 1];
+      const taskNumber = createTaskNumber(nextTaskNum);
+      if (!taskNumber) {
+        console.error('Error: Invalid task number');
         process.exit(1);
       }
 
       // Update state
       await manager.update(state.id, {
-        step: stepNumber,
-        stepName: nextStep.description,
+        task: taskNumber,
+        taskName: nextTask.description,
         retryCount: 0,
       });
 
-      console.log(`Step ${nextStepNum}: ${nextStep.description}`);
-      printStepGuidance(nextStep);
+      console.log(`Task ${nextTaskNum}: ${nextTask.description}`);
+      printTaskGuidance(nextTask);
     } catch (error) {
       console.error(`Error: ${(error as Error).message}`);
       process.exit(1);
@@ -167,7 +167,7 @@ program
 
       console.log(`Workflow: ${state.workflow}`);
       console.log(`ID: ${state.id}`);
-      console.log(`Step ${state.step}: ${state.stepName}`);
+      console.log(`Task ${state.task}: ${state.taskName}`);
       console.log(`Retry: ${state.retryCount}/${state.retryMax}`);
 
       if (Object.keys(state.variables).length > 0) {
@@ -226,7 +226,7 @@ program
 
       for (const state of states) {
         const marker = active?.id === state.id ? ' (active)' : '';
-        console.log(`${state.id}${marker}: ${state.workflow} - Step ${state.step}`);
+        console.log(`${state.id}${marker}: ${state.workflow} - Task ${state.task}`);
       }
     } catch (error) {
       console.error(`Error: ${(error as Error).message}`);
@@ -234,23 +234,23 @@ program
     }
   });
 
-function printStepGuidance(step: Step): void {
-  if (step.command) {
-    console.log(`\nCommand: ${step.command.code}`);
+function printTaskGuidance(task: Task): void {
+  if (task.command) {
+    console.log(`\nCommand: ${task.command.code}`);
   }
 
-  if (step.prompts.length > 0) {
-    console.log(`\nPrompt: ${step.prompts[0].text}`);
+  if (task.prompts.length > 0) {
+    console.log(`\nPrompt: ${task.prompts[0].text}`);
   }
 
-  if (step.conditions) {
+  if (task.conditions) {
     console.log('\nConditions:');
-    console.log(`  PASS: ${formatAction(step.conditions.pass)}`);
-    console.log(`  FAIL: ${formatAction(step.conditions.fail)}`);
+    console.log(`  PASS: ${formatAction(task.conditions.pass)}`);
+    console.log(`  FAIL: ${formatAction(task.conditions.fail)}`);
   }
 
-  if (step.nestedWorkflow) {
-    console.log(`\nNested workflow: ${step.nestedWorkflow}`);
+  if (task.nestedWorkflow) {
+    console.log(`\nNested workflow: ${task.nestedWorkflow}`);
   }
 }
 
@@ -258,7 +258,7 @@ function formatAction(action: Action): string {
   switch (action.type) {
     case 'CONTINUE': return 'CONTINUE';
     case 'STOP': return action.message ? `STOP "${action.message}"` : 'STOP';
-    case 'GOTO': return `GOTO ${action.step}`;
+    case 'GOTO': return `GOTO ${action.task}`;
     case 'DONE': return 'DONE';
     case 'RETRY': return action.max ? `RETRY ${action.max}` : 'RETRY';
     default: return 'UNKNOWN';
