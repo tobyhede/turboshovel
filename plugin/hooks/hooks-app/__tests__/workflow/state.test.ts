@@ -190,4 +190,35 @@ describe('WorkflowStateManager', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('bindAgent', () => {
+    it('creates agent binding with running status', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+      const taskId: TaskId = { task: 3, subtask: 'A' };
+
+      await manager.bindAgent(state.id, 'agent-xyz', taskId);
+
+      const updated = await manager.load(state.id);
+      expect(updated?.agentBindings['agent-xyz']).toEqual({
+        taskId: { task: 3, subtask: 'A' },
+        status: 'running',
+      });
+    });
+
+    it('allows multiple agent bindings', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+
+      await manager.bindAgent(state.id, 'agent-1', { task: 1 });
+      await manager.bindAgent(state.id, 'agent-2', { task: 2 });
+
+      const updated = await manager.load(state.id);
+      expect(Object.keys(updated?.agentBindings || {})).toHaveLength(2);
+    });
+
+    it('throws for non-existent workflow', async () => {
+      await expect(
+        manager.bindAgent('non-existent', 'agent-x', { task: 1 })
+      ).rejects.toThrow('Workflow non-existent not found');
+    });
+  });
 });

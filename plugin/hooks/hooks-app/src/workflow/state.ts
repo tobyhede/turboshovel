@@ -1,7 +1,7 @@
 // src/workflow/state.ts
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { createTaskNumber, type WorkflowState } from './types';
+import { createTaskNumber, type WorkflowState, type AgentBinding } from './types';
 import type { TaskId } from './task-id';
 
 const STATE_DIR = '.claude/turboshovel/workflows';
@@ -217,5 +217,27 @@ export class WorkflowStateManager {
     const [first, ...rest] = state.pendingTasks;
     await this.update(id, { pendingTasks: rest });
     return first;
+  }
+
+  /**
+   * Bind agent to task
+   */
+  async bindAgent(id: string, agentId: string, taskId: TaskId): Promise<void> {
+    const state = await this.load(id);
+    if (!state) {
+      throw new Error(`Workflow ${id} not found`);
+    }
+
+    const binding: AgentBinding = {
+      taskId,
+      status: 'running',
+    };
+
+    await this.update(id, {
+      agentBindings: {
+        ...(state.agentBindings || {}),
+        [agentId]: binding,
+      },
+    });
   }
 }
