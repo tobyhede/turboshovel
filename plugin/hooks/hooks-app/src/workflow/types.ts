@@ -1,5 +1,7 @@
 // src/workflow/types.ts
 
+import type { TaskId } from './task-id';
+
 /**
  * Branded type for task numbers (1-indexed, never zero)
  */
@@ -15,6 +17,11 @@ export function createTaskNumber(n: number): TaskNumber | null {
   }
   return n as TaskNumber;
 }
+
+/**
+ * Re-export TaskId from task-id module
+ */
+export type { TaskId } from './task-id';
 
 /**
  * Discriminated union for workflow actions
@@ -33,6 +40,26 @@ export type Action =
 export interface Conditions {
   readonly pass: Action;
   readonly fail: Action;
+}
+
+/**
+ * Agent binding status
+ */
+export type AgentStatus = 'running' | 'done' | 'stopped';
+
+/**
+ * Agent binding result (for completed agents)
+ */
+export type AgentResult = 'pass' | 'fail';
+
+/**
+ * Agent binding - tracks which task an agent is working on
+ */
+export interface AgentBinding {
+  readonly taskId: TaskId;
+  readonly childWorkflowId?: string;
+  readonly status: AgentStatus;
+  readonly result?: AgentResult;
 }
 
 /**

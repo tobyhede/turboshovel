@@ -1,5 +1,5 @@
 // __tests__/workflow/types.test.ts
-import { createTaskNumber, type TaskNumber, type Action } from '../../src/workflow/types';
+import { createTaskNumber, type TaskNumber, type Action, type AgentBinding } from '../../src/workflow/types';
 
 describe('TaskNumber', () => {
   test('createTaskNumber with valid number returns TaskNumber', () => {
@@ -50,5 +50,33 @@ describe('Action discriminated union', () => {
     if (action.type === 'GOTO') {
       expect(action.task).toBe(3);
     }
+  });
+});
+
+describe('AgentBinding type', () => {
+  it('accepts valid running binding', () => {
+    const binding: AgentBinding = {
+      taskId: { task: 3, subtask: 'A' },
+      status: 'running',
+    };
+    expect(binding.status).toBe('running');
+  });
+
+  it('accepts binding with result', () => {
+    const binding: AgentBinding = {
+      taskId: { task: 2 },
+      status: 'done',
+      result: 'pass',
+    };
+    expect(binding.result).toBe('pass');
+  });
+
+  it('accepts binding with child workflow', () => {
+    const binding: AgentBinding = {
+      taskId: { task: 1 },
+      status: 'running',
+      childWorkflowId: 'wf-2025-01-01-abc123',
+    };
+    expect(binding.childWorkflowId).toBeDefined();
   });
 });
