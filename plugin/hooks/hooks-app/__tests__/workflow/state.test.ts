@@ -33,7 +33,7 @@ describe('WorkflowStateManager', () => {
     });
 
     test('persists state to file', async () => {
-      const state = await manager.create('test.workflow.md', 'Test step');
+      const state = await manager.create('test.workflow.md', 'Test task');
 
       const statePath = join(testDir, '.claude/turboshovel/workflows', `${state.id}.json`);
       const fileContent = await fs.readFile(statePath, 'utf8');
@@ -43,7 +43,7 @@ describe('WorkflowStateManager', () => {
     });
 
     test('state directory matches expected path (.claude/turboshovel/workflows)', async () => {
-      const state = await manager.create('test.workflow.md', 'Test step');
+      const state = await manager.create('test.workflow.md', 'Test task');
       const expectedDir = join(testDir, '.claude/turboshovel/workflows');
       const files = await fs.readdir(expectedDir);
       expect(files).toContain(`${state.id}.json`);
@@ -52,7 +52,7 @@ describe('WorkflowStateManager', () => {
 
   describe('load', () => {
     test('loads existing workflow state by ID', async () => {
-      const created = await manager.create('test.workflow.md', 'Test step');
+      const created = await manager.create('test.workflow.md', 'Test task');
       const loaded = await manager.load(created.id);
 
       expect(loaded).not.toBeNull();
@@ -68,7 +68,7 @@ describe('WorkflowStateManager', () => {
 
   describe('getActive', () => {
     test('returns active workflow from session', async () => {
-      const created = await manager.create('test.workflow.md', 'Test step');
+      const created = await manager.create('test.workflow.md', 'Test task');
       await manager.setActive(created.id);
 
       const active = await manager.getActive();
@@ -83,21 +83,21 @@ describe('WorkflowStateManager', () => {
 
   describe('update', () => {
     test('updates workflow state fields', async () => {
-      const created = await manager.create('test.workflow.md', 'Step 1');
+      const created = await manager.create('test.workflow.md', 'Task 1');
 
       const updated = await manager.update(created.id, {
         task: createTaskNumber(2)!,
-        taskName: 'Step 2',
+        taskName: 'Task 2',
         retryCount: 1,
       });
 
       expect(updated.task).toBe(2);
-      expect(updated.taskName).toBe('Step 2');
+      expect(updated.taskName).toBe('Task 2');
       expect(updated.retryCount).toBe(1);
     });
 
     test('updates variables', async () => {
-      const created = await manager.create('test.workflow.md', 'Step 1');
+      const created = await manager.create('test.workflow.md', 'Task 1');
 
       const updated = await manager.update(created.id, {
         variables: { more_batches: true, completed_batches: 1 },
@@ -110,7 +110,7 @@ describe('WorkflowStateManager', () => {
 
   describe('delete', () => {
     test('removes workflow state file', async () => {
-      const created = await manager.create('test.workflow.md', 'Test step');
+      const created = await manager.create('test.workflow.md', 'Test task');
       await manager.delete(created.id);
 
       const loaded = await manager.load(created.id);

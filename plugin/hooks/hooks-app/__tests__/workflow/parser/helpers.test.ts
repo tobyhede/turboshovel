@@ -49,8 +49,8 @@ describe('extractTaskHeader', () => {
     expect(result).toEqual({ number: 1, description: 'First task' });
   });
 
-  test('rejects Step keyword', () => {
-    const result = extractTaskHeader('Step 1: First task');
+  test('rejects Task keyword', () => {
+    const result = extractTaskHeader('Task 1: First task');
     expect(result).toBeNull();
   });
 
