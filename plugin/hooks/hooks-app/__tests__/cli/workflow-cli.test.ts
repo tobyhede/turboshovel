@@ -351,4 +351,39 @@ echo "test"
       expect(statusResult.stdout).toContain('No active workflow');
     });
   });
+
+  describe('workflow stash', () => {
+    it('stashes active workflow', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(workflowPath, `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+`);
+      await runCli(['start', workflowPath]);
+
+      const result = await runCli(['stash']);
+
+      expect(result.stdout).toContain('stashed');
+      expect(result.stdout).toContain('Enforcement paused');
+
+      const manager = new WorkflowStateManager(testDir);
+      const active = await manager.getActive();
+      expect(active).toBeNull();
+
+      const stashedId = await manager.getStashedWorkflowId();
+      expect(stashedId).not.toBeNull();
+    });
+
+    it('reports when nothing to stash', async () => {
+      const result = await runCli(['stash']);
+
+      expect(result.stdout).toContain('No active workflow');
+    });
+  });
 });

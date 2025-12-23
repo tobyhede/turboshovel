@@ -331,6 +331,30 @@ program
     }
   });
 
+program
+  .command('stash')
+  .description('Pause workflow enforcement, preserve state')
+  .action(async () => {
+    try {
+      const cwd = getCwd();
+      const manager = new WorkflowStateManager(cwd);
+
+      const stashedId = await manager.stash();
+
+      if (!stashedId) {
+        console.log('No active workflow to stash');
+        return;
+      }
+
+      console.log(`Workflow stashed: ${stashedId}`);
+      console.log('Enforcement paused. Run freely.');
+      console.log('Use "workflow pop" to resume.');
+    } catch (error) {
+      console.error(`Error: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
 function printTaskGuidance(task: Task): void {
   if (task.command) {
     console.log(`\nCommand: ${task.command.code}`);
