@@ -274,4 +274,44 @@ export class WorkflowStateManager {
       },
     });
   }
+
+  /**
+   * Stash current workflow (pause enforcement)
+   * Moves active_workflow to stashedWorkflowId, clears active
+   * Returns stashed workflow ID or null if nothing to stash
+   */
+  async stash(): Promise<string | null> {
+    const session = await this.loadSession();
+    const activeId = session.active_workflow;
+
+    if (!activeId) {
+      return null;
+    }
+
+    session.active_workflow = null;
+    session.stashedWorkflowId = activeId;
+    await this.saveSession(session);
+
+    return activeId;
+  }
+
+  private async loadSession(): Promise<{
+    active_workflow: string | null;
+    stashedWorkflowId?: string;
+  }> {
+    try {
+      const content = await fs.readFile(this.sessionPath, 'utf8');
+      return JSON.parse(content);
+    } catch {
+      return { active_workflow: null };
+    }
+  }
+
+  private async saveSession(session: {
+    active_workflow: string | null;
+    stashedWorkflowId?: string;
+  }): Promise<void> {
+    await fs.mkdir(path.dirname(this.sessionPath), { recursive: true });
+    await fs.writeFile(this.sessionPath, JSON.stringify(session, null, 2));
+  }
 }

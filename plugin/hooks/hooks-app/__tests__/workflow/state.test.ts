@@ -282,4 +282,39 @@ describe('WorkflowStateManager', () => {
       ).rejects.toThrow('No binding for agent unknown');
     });
   });
+
+  describe('stash', () => {
+    it('moves active workflow to stashed and clears active', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+      await manager.setActive(state.id);
+
+      const stashedId = await manager.stash();
+
+      expect(stashedId).toBe(state.id);
+
+      // Active should be null
+      const active = await manager.getActive();
+      expect(active).toBeNull();
+    });
+
+    it('returns null when no active workflow', async () => {
+      await manager.setActive(null);
+
+      const stashedId = await manager.stash();
+
+      expect(stashedId).toBeNull();
+    });
+
+    it('preserves workflow state when stashed', async () => {
+      const state = await manager.create('test.workflow.md', 'Test Task');
+      await manager.setActive(state.id);
+      await manager.pushPendingTask(state.id, { task: 3 });
+
+      await manager.stash();
+
+      // Workflow still exists with its state
+      const loaded = await manager.load(state.id);
+      expect(loaded?.pendingTasks).toEqual([{ task: 3 }]);
+    });
+  });
 });
