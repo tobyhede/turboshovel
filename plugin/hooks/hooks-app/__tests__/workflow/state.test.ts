@@ -3,7 +3,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
 import { WorkflowStateManager } from '../../src/workflow/state';
-import { createStepNumber } from '../../src/workflow/types';
+import { createTaskNumber } from '../../src/workflow/types';
 
 describe('WorkflowStateManager', () => {
   let testDir: string;
@@ -25,8 +25,8 @@ describe('WorkflowStateManager', () => {
 
       expect(state.id).toMatch(/^wf-\d{4}-\d{2}-\d{2}-/);
       expect(state.workflow).toBe('execute.workflow.md');
-      expect(state.step).toBe(1);
-      expect(state.stepName).toBe('Execute batch');
+      expect(state.task).toBe(1);
+      expect(state.taskName).toBe('Execute batch');
       expect(state.retryCount).toBe(0);
       expect(state.variables).toEqual({});
       expect(state.tasks).toEqual([]);
@@ -86,13 +86,13 @@ describe('WorkflowStateManager', () => {
       const created = await manager.create('test.workflow.md', 'Step 1');
 
       const updated = await manager.update(created.id, {
-        step: createStepNumber(2)!,
-        stepName: 'Step 2',
+        task: createTaskNumber(2)!,
+        taskName: 'Step 2',
         retryCount: 1,
       });
 
-      expect(updated.step).toBe(2);
-      expect(updated.stepName).toBe('Step 2');
+      expect(updated.task).toBe(2);
+      expect(updated.taskName).toBe('Step 2');
       expect(updated.retryCount).toBe(1);
     });
 

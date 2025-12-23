@@ -1,7 +1,7 @@
 // src/workflow/state.ts
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { createStepNumber, type WorkflowState } from './types';
+import { createTaskNumber, type WorkflowState } from './types';
 
 const STATE_DIR = '.claude/turboshovel/workflows';
 const SESSION_FILE = '.claude/turboshovel/session.json';
@@ -32,15 +32,15 @@ export class WorkflowStateManager {
     return path.join(this.stateDir, `${id}.json`);
   }
 
-  async create(workflow: string, stepName: string): Promise<WorkflowState> {
+  async create(workflow: string, taskName: string): Promise<WorkflowState> {
     const id = generateId();
     const now = new Date().toISOString();
 
     const state: WorkflowState = {
       id,
       workflow,
-      step: createStepNumber(1)!,
-      stepName,
+      task: createTaskNumber(1)!,
+      taskName,
       retryCount: 0,
       retryMax: 3,
       variables: {},
