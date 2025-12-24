@@ -39,10 +39,12 @@ export class Session {
    */
   async append(key: SessionStateArrayKey, value: string): Promise<void> {
     const state = await this.load();
-    const array = state[key];
+    // Defensive: ensure array exists even if validation bypassed
+    const array = state[key] ?? [];
 
     if (!array.includes(value)) {
       array.push(value);
+      state[key] = array;
       await this.save(state);
     }
   }
