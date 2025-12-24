@@ -309,4 +309,73 @@ echo "test"
       expect(tasks[0].description).toBe('First step');
     });
   });
+
+  describe('parseWorkflow with subtasks', () => {
+    it('parses static subtasks', () => {
+      const markdown = `
+## 1. Dispatch reviewers
+
+### 1.A First reviewer (code-review-agent)
+### 1.B Second reviewer (code-agent)
+
+PASS ALL: CONTINUE
+FAIL ANY: STOP
+`;
+      const tasks = parseWorkflow(markdown);
+
+      expect(tasks[0].subtasks).toHaveLength(2);
+      expect(tasks[0].subtasks?.[0]).toEqual({
+        id: 'A',
+        description: 'First reviewer',
+        agentType: 'code-review-agent',
+        isDynamic: false,
+      });
+      expect(tasks[0].subtasks?.[1].id).toBe('B');
+    });
+
+    it('parses dynamic subtask template', () => {
+      const markdown = `
+## 1. Execute batch
+
+### 1.{n} Execute task
+
+PASS ALL: CONTINUE
+FAIL ANY: STOP
+`;
+      const tasks = parseWorkflow(markdown);
+
+      expect(tasks[0].subtasks).toHaveLength(1);
+      expect(tasks[0].subtasks?.[0].isDynamic).toBe(true);
+      expect(tasks[0].subtasks?.[0].id).toBe('{n}');
+    });
+
+    it('errors when subtask prefix doesnt match task', () => {
+      const markdown = `
+## 1. Task one
+
+### 2.A Wrong prefix
+`;
+      expect(() => parseWorkflow(markdown)).toThrow('does not belong');
+    });
+
+    it('errors for duplicate subtask IDs', () => {
+      const markdown = `
+## 1. Task
+
+### 1.A First
+### 1.A Duplicate
+`;
+      expect(() => parseWorkflow(markdown)).toThrow('Duplicate subtask');
+    });
+
+    it('errors when mixing static and dynamic subtasks', () => {
+      const markdown = `
+## 1. Task
+
+### 1.A Static
+### 1.{n} Dynamic
+`;
+      expect(() => parseWorkflow(markdown)).toThrow('Cannot mix');
+    });
+  });
 });

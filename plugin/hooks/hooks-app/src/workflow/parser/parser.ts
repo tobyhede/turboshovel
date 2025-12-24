@@ -3,8 +3,8 @@
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
 import type { Root, Heading, Code, Paragraph, List, ListItem, Strong, Text, PhrasingContent } from 'mdast';
-import type { Task, Action, TaskNumber } from '../types';
-import { extractTaskHeader, parseConditional, convertConditionals } from './helpers';
+import type { Task, Action, TaskNumber, Subtask } from '../types';
+import { extractTaskHeader, extractSubtaskHeader, parseConditional, convertConditionals } from './helpers';
 import { WorkflowSyntaxError, type ParsedConditional } from './types';
 
 /**
@@ -60,6 +60,7 @@ interface TaskBuilder {
   description: string;
   command?: { code: string };
   prompts: { text: string }[];
+  subtasks: Subtask[];
 }
 
 /**
@@ -109,7 +110,48 @@ export function parseWorkflow(markdown: string): Task[] {
           number: parsed.number,
           description: parsed.description,
           prompts: [],
+          subtasks: [],
         };
+      }
+    }
+
+    // Handle H3 headings - these are subtask headers
+    if (node.type === 'heading' && node.depth === 3 && currentTask) {
+      const headingText = extractText(node);
+      const parsed = extractSubtaskHeader(headingText);
+
+      if (parsed) {
+        // Validate subtask prefix matches current task number
+        if (parsed.taskNumber !== currentTask.number) {
+          throw new WorkflowSyntaxError(
+            `Subtask ${headingText} does not belong to task ${currentTask.number} (it belongs to task ${parsed.taskNumber})`
+          );
+        }
+
+        // Check for duplicate subtask IDs
+        const duplicateId = currentTask.subtasks.find(s => s.id === parsed.id);
+        if (duplicateId) {
+          throw new WorkflowSyntaxError(
+            `Duplicate subtask ID '${parsed.id}' in task ${currentTask.number}`
+          );
+        }
+
+        // Check for mixing static and dynamic subtasks
+        const hasStatic = currentTask.subtasks.some(s => !s.isDynamic);
+        const hasDynamic = currentTask.subtasks.some(s => s.isDynamic);
+        if ((hasStatic && parsed.isDynamic) || (hasDynamic && !parsed.isDynamic)) {
+          throw new WorkflowSyntaxError(
+            `Cannot mix static subtasks (like 1.A) and dynamic subtasks (like 1.{n}) in task ${currentTask.number}`
+          );
+        }
+
+        // Add subtask
+        currentTask.subtasks.push({
+          id: parsed.id,
+          description: parsed.description,
+          agentType: parsed.agentType,
+          isDynamic: parsed.isDynamic,
+        });
       }
     }
 
@@ -209,6 +251,7 @@ function finalizeTask(
     command: task.command,
     prompts: task.prompts,
     conditions: conditions || undefined,
+    subtasks: task.subtasks.length > 0 ? task.subtasks : undefined,
   };
 }
 
