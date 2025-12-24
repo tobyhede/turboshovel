@@ -1,5 +1,5 @@
 // plugin/hooks/hooks-app/src/cli.ts
-import { SessionState, SessionStateArrayKey } from './types';
+import { SessionState, SessionStateArrayKey, SESSION_STATE_KEYS } from './types';
 import type { HookInput } from './schemas';
 import { parseHookInput } from './schemas';
 import { dispatch } from './dispatcher';
@@ -43,16 +43,7 @@ async function main(): Promise<void> {
  * Type guard for SessionState keys
  */
 function isSessionStateKey(key: string): key is keyof SessionState {
-  const validKeys = [
-    'session_id',
-    'started_at',
-    'active_command',
-    'active_skill',
-    'edited_files',
-    'file_extensions',
-    'metadata'
-  ] as const;
-  return (validKeys as readonly string[]).includes(key);
+  return (SESSION_STATE_KEYS as readonly string[]).includes(key);
 }
 
 /**
