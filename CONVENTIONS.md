@@ -366,7 +366,7 @@ Look for: `"dispatcher: Context file: /path/to/file.md"`
 
 ## Examples Directory
 
-See `plugin/hooks/examples/context/` for working examples:
+See `plugin/core/examples/context/` for working examples:
 - Code review requirements
 - Planning templates
 - TDD standards

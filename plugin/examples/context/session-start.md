@@ -30,7 +30,7 @@ Copy this file to your project's `.claude/context/` directory to inject plugin e
 
 ```bash
 mkdir -p .claude/context
-cp ${CLAUDE_PLUGIN_ROOT}hooks/examples/context/session-start.md \
+cp ${CLAUDE_PLUGIN_ROOT}/examples/context/session-start.md \
    .claude/context/session-start.md
 ```
 

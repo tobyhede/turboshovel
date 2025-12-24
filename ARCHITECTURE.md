@@ -14,13 +14,13 @@ The Turboshovel hook system is a **self-referential TypeScript application** tha
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                          hooks.json Registration                         │
 │              Routes ALL hook events to TypeScript CLI                    │
-│         node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js          │
+│         node ${CLAUDE_PLUGIN_ROOT}/core/dist/cli.js                     │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           TypeScript CLI                                 │
-│                     plugin/hooks/hooks-app/src/cli.ts                   │
+│                     plugin/core/src/cli.ts                              │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                     ┌───────────────┴───────────────┐
@@ -57,7 +57,7 @@ The Turboshovel hook system is a **self-referential TypeScript application** tha
 The hook system uses **its own gates.json** to configure default behaviors:
 
 ```
-plugin/hooks/gates.json          ← Plugin defaults (TypeScript gates)
+plugin/core/gates.json           ← Plugin defaults (TypeScript gates)
         ↓ merged with
 .claude/gates.json               ← Project overrides (user configuration)
         ↓
@@ -104,53 +104,44 @@ plugin/
 │   ├── subagent-stop.md        # Injects on SubagentStop
 │   └── tool-use.md             # Injects on tool events
 │
-└── hooks/
+└── core/
     ├── hooks.json              # Hook registration (routes to CLI)
     ├── gates.json              # Plugin default gates configuration
-    ├── ARCHITECTURE.md         # This file
-    ├── CONVENTIONS.md          # Context file naming conventions
-    ├── README.md               # Quick start guide
-    ├── SETUP.md                # Detailed setup instructions
-    ├── TYPESCRIPT.md           # TypeScript gate development
-    │
-    ├── hooks-app/              # TypeScript application
-    │   ├── src/
-    │   │   ├── cli.ts          # Entry point
-    │   │   ├── dispatcher.ts   # Main dispatch logic
-    │   │   ├── context.ts      # Context file discovery/injection
-    │   │   ├── config.ts       # Config loading/merging
-    │   │   ├── gate-loader.ts  # Gate execution
-    │   │   ├── action-handler.ts  # Action processing
-    │   │   ├── session.ts      # Session state management
-    │   │   ├── logger.ts       # Debug logging
-    │   │   ├── schemas.ts      # Zod validation schemas
-    │   │   ├── types.ts        # TypeScript interfaces
-    │   │   ├── errors.ts       # Custom error types
-    │   │   ├── utils.ts        # Utility functions
-    │   │   ├── cli/            # CLI subcommands
-    │   │   │   └── workflow-cli.ts  # Workflow CLI entry point
-    │   │   ├── gates/          # Built-in TypeScript gates
-    │   │   │   ├── index.ts    # Gate registry
-    │   │   │   └── plugin-path.ts
-    │   │   └── workflow/       # Workflow system
-    │   │       ├── index.ts    # Workflow exports
-    │   │       ├── state.ts    # Workflow state management
-    │   │       ├── types.ts    # Workflow type definitions
-    │   │       ├── context.ts  # Workflow context injection
-    │   │       ├── evaluation.ts  # Step evaluation
-    │   │       ├── task-id.ts  # Task ID parsing
-    │   │       ├── parser/     # Workflow file parsing
-    │   │       │   ├── index.ts
-    │   │       │   ├── parser.ts
-    │   │       │   ├── helpers.ts
-    │   │       │   └── types.ts
-    │   │       └── hooks/      # Workflow hook handlers
-    │   │           ├── index.ts
-    │   │           ├── subagent-start.ts
-    │   │           ├── subagent-stop.ts
-    │   │           └── task-tracker.ts
-    │   └── dist/               # Compiled JavaScript
-    │
+    ├── src/
+    │   ├── cli.ts              # Entry point
+    │   ├── dispatcher.ts       # Main dispatch logic
+    │   ├── context.ts          # Context file discovery/injection
+    │   ├── config.ts           # Config loading/merging
+    │   ├── gate-loader.ts      # Gate execution
+    │   ├── action-handler.ts   # Action processing
+    │   ├── session.ts          # Session state management
+    │   ├── logger.ts           # Debug logging
+    │   ├── schemas.ts          # Zod validation schemas
+    │   ├── types.ts            # TypeScript interfaces
+    │   ├── errors.ts           # Custom error types
+    │   ├── utils.ts            # Utility functions
+    │   ├── cli/                # CLI subcommands
+    │   │   └── workflow-cli.ts # Workflow CLI entry point
+    │   ├── gates/              # Built-in TypeScript gates
+    │   │   ├── index.ts        # Gate registry
+    │   │   └── plugin-path.ts
+    │   └── workflow/           # Workflow system
+    │       ├── index.ts        # Workflow exports
+    │       ├── state.ts        # Workflow state management
+    │       ├── types.ts        # Workflow type definitions
+    │       ├── context.ts      # Workflow context injection
+    │       ├── evaluation.ts   # Step evaluation
+    │       ├── task-id.ts      # Task ID parsing
+    │       ├── parser/         # Workflow file parsing
+    │       │   ├── index.ts
+    │       │   ├── parser.ts
+    │       │   ├── helpers.ts
+    │       │   └── types.ts
+    │       └── hooks/          # Workflow hook handlers
+    │           ├── index.ts
+    │           ├── subagent-start.ts
+    │           ├── subagent-stop.ts
+    │           └── task-tracker.ts
     └── examples/
         ├── context/            # Example context files
         ├── strict.json         # Example: strict mode
@@ -197,7 +188,7 @@ Loads both configs and merges them:
 
 ```typescript
 // Load plugin defaults first
-const pluginConfig = await loadConfigFile(`${CLAUDE_PLUGIN_ROOT}/hooks/gates.json`);
+const pluginConfig = await loadConfigFile(`${CLAUDE_PLUGIN_ROOT}/core/gates.json`);
 
 // Load project overrides
 const projectConfig = await loadConfigFile('.claude/gates.json');
@@ -379,7 +370,7 @@ All hook invocations are logged to `$TMPDIR/turboshovel/hooks-YYYY-MM-DD.log`:
 
 ```bash
 # View logs
-tail -f $(node plugin/hooks/hooks-app/dist/cli.js log-path)
+tail -f $(node plugin/core/dist/cli.js log-path)
 
 # Or use mise task
 mise run logs

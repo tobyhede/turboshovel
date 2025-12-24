@@ -13,7 +13,7 @@ Manual integration tests to verify quality hooks work with real agents.
 **Setup:**
 ```bash
 # Ensure gates.json has Edit tool enabled
-jq '.hooks.PostToolUse.enabled_tools' plugin/hooks/gates.json
+jq '.hooks.PostToolUse.enabled_tools' plugin/core/gates.json
 # Should include "Edit"
 ```
 
@@ -64,7 +64,7 @@ EOF
 **Setup:**
 ```bash
 # Configure gate chaining
-cat > plugin/hooks/gates.json <<'EOF'
+cat > plugin/core/gates.json <<'EOF'
 {
   "gates": {
     "first": {
@@ -100,7 +100,7 @@ EOF
 **Setup:**
 ```bash
 # Configure gate to fail and block
-cat > plugin/hooks/gates.json <<'EOF'
+cat > plugin/core/gates.json <<'EOF'
 {
   "gates": {
     "block-test": {
@@ -133,7 +133,7 @@ EOF
 **Setup:**
 ```bash
 # Configure gate to fail but continue
-cat > plugin/hooks/gates.json <<'EOF'
+cat > plugin/core/gates.json <<'EOF'
 {
   "gates": {
     "warn-test": {
@@ -166,7 +166,7 @@ EOF
 **Setup:**
 ```bash
 # Configure gates.json with reference to non-existent gate
-cat > plugin/hooks/gates.json <<'EOF'
+cat > plugin/core/gates.json <<'EOF'
 {
   "gates": {},
   "hooks": {
@@ -271,13 +271,13 @@ After running all tests:
 - Check gate configuration in `gates.json`
 
 **JSON parse errors:**
-- Validate `gates.json`: `jq . plugin/hooks/gates.json`
-- Validate `hooks.json`: `jq . plugin/hooks/hooks.json`
+- Validate `gates.json`: `jq . plugin/core/gates.json`
+- Validate `hooks.json`: `jq . plugin/core/hooks.json`
 - Review error messages for formatting issues
 
 **Testing hooks manually:**
 ```bash
 export CLAUDE_PLUGIN_ROOT=/path/to/plugin
 echo '{"hook_event_name": "PostToolUse", "tool_name": "Edit", "cwd": "'$(pwd)'"}' | \
-  node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js
+  node ${CLAUDE_PLUGIN_ROOT}/core/dist/cli.js
 ```

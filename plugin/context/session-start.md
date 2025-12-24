@@ -9,8 +9,8 @@ This context auto-injects at the beginning of each Claude Code session.
 Use this variable when referencing plugin files:
 
 ```markdown
-@${CLAUDE_PLUGIN_ROOT}/hooks/examples/context/session-start.md
-@${CLAUDE_PLUGIN_ROOT}/hooks/README.md
+@${CLAUDE_PLUGIN_ROOT}/examples/context/session-start.md
+@${CLAUDE_PLUGIN_ROOT}/README.md
 ```
 
 ## Hook System Features
@@ -38,4 +38,4 @@ Create `.claude/gates.json` for quality enforcement:
 }
 ```
 
-See [plugin/hooks/README.md](${CLAUDE_PLUGIN_ROOT}/hooks/README.md) for full documentation.
+See [README.md](${CLAUDE_PLUGIN_ROOT}/README.md) for full documentation.

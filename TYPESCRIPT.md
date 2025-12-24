@@ -4,7 +4,7 @@ Guide to creating and working with TypeScript gates in the Turboshovel hook syst
 
 ## Overview
 
-TypeScript gates are gates defined **without a `command` field** in `gates.json`. They're implemented as TypeScript modules in `plugin/hooks/hooks-app/src/gates/`.
+TypeScript gates are gates defined **without a `command` field** in `gates.json`. They're implemented as TypeScript modules in `plugin/core/src/gates/`.
 
 ```json
 {
@@ -18,7 +18,7 @@ TypeScript gates are gates defined **without a `command` field** in `gates.json`
 }
 ```
 
-When this gate runs, the system loads `hooks-app/src/gates/plugin-path.ts` and calls its `execute()` function.
+When this gate runs, the system loads `plugin/core/src/gates/plugin-path.ts` and calls its `execute()` function.
 
 ## Built-in Gates
 
@@ -32,7 +32,7 @@ The plugin includes these TypeScript gates:
 
 ### 1. Create the Gate Module
 
-Create `plugin/hooks/hooks-app/src/gates/my-gate.ts`:
+Create `plugin/core/src/gates/my-gate.ts`:
 
 ```typescript
 import { HookInput, GateResult } from '../types';
@@ -64,7 +64,7 @@ export async function execute(input: HookInput): Promise<GateResult> {
 
 ### 2. Register in Index
 
-Add to `plugin/hooks/hooks-app/src/gates/index.ts`:
+Add to `plugin/core/src/gates/index.ts`:
 
 ```typescript
 export * as pluginPath from './plugin-path';
@@ -97,7 +97,7 @@ Add to `plugin/hooks/gates.json` (for plugin default) or project `.claude/gates.
 ### 4. Build
 
 ```bash
-cd plugin/hooks/hooks-app
+cd plugin/core
 npm run build
 ```
 
@@ -225,7 +225,7 @@ Logs go to `$TMPDIR/turboshovel/hooks-YYYY-MM-DD.log`.
 
 ## Example: Plugin Path Gate
 
-The built-in `plugin-path` gate shows a complete implementation. See `plugin/hooks/hooks-app/src/gates/plugin-path.ts` for the full source code.
+The built-in `plugin-path` gate shows a complete implementation. See `plugin/core/src/gates/plugin-path.ts` for the full source code.
 
 This gate verifies that plugin paths are correctly resolved in subagent contexts, ensuring the `CLAUDE_PLUGIN_ROOT` environment variable is properly set and accessible.
 
@@ -244,18 +244,20 @@ npm run build
 # Test a hook event
 echo '{"hook_event_name": "UserPromptSubmit", "cwd": "/path/to/project", "user_message": "Run project test command"}' | \
   CLAUDE_PLUGIN_ROOT=/path/to/plugin \
-  node dist/cli.js
+  node plugin/core/dist/cli.js
 ```
 
 ### Run Tests
 
 ```bash
+cd plugin/core
 npm test
 ```
 
 ### Watch Mode
 
 ```bash
+cd plugin/core
 npm run build -- --watch
 ```
 
