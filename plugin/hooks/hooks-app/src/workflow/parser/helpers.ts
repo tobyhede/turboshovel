@@ -4,6 +4,14 @@ import { createTaskNumber, type Action, type TaskNumber } from '../types';
 import type { ParsedConditional, AggregationModifier } from './types';
 import { WorkflowSyntaxError } from './types';
 
+export interface ParsedSubtaskHeader {
+  taskNumber: number;
+  id: string;  // A, B, or {n}
+  description: string;
+  agentType?: string;
+  isDynamic: boolean;
+}
+
 /**
  * Strip common separators and whitespace
  */
@@ -51,6 +59,35 @@ export function extractTaskHeader(text: string): { number: TaskNumber; descripti
   }
 
   return { number: taskNumber, description };
+}
+
+/**
+ * Extract subtask header from H3 text
+ * Patterns:
+ *   "1.A First reviewer (code-agent)" -> { taskNumber: 1, id: "A", ... }
+ *   "3.{n} Execute task" -> { taskNumber: 3, id: "{n}", isDynamic: true }
+ */
+export function extractSubtaskHeader(text: string): ParsedSubtaskHeader | null {
+  const trimmed = text.trim();
+
+  // Match: "N.A description" or "N.{n} description" with optional (agent-type)
+  const match = trimmed.match(/^(\d+)\.(\{n\}|[A-Za-z])\s+(.+?)(?:\s+\(([^)]+)\))?$/);
+  if (!match) return null;
+
+  const [, taskStr, subtaskId, desc, agent] = match;
+  const taskNumber = parseInt(taskStr, 10);
+  if (taskNumber <= 0) return null;
+
+  const isDynamic = subtaskId === '{n}';
+  const id = isDynamic ? '{n}' : subtaskId.toUpperCase();
+
+  return {
+    taskNumber,
+    id,
+    description: desc.trim(),
+    agentType: agent?.trim(),
+    isDynamic,
+  };
 }
 
 /**

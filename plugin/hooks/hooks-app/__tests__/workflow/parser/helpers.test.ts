@@ -1,5 +1,5 @@
 // __tests__/workflow/parser/helpers.test.ts
-import { stripSeparator, extractTaskHeader, parseAction, parseConditional, convertConditionals } from '../../../src/workflow/parser/helpers';
+import { stripSeparator, extractTaskHeader, parseAction, parseConditional, convertConditionals, extractSubtaskHeader } from '../../../src/workflow/parser/helpers';
 
 describe('stripSeparator', () => {
   test('strips colon separator', () => {
@@ -246,5 +246,51 @@ describe('convertConditionals with aggregation', () => {
         { type: 'fail', action: { type: 'STOP' }, modifier: 'ANY' },
       ])
     ).toThrow('Invalid aggregation');
+  });
+});
+
+describe('extractSubtaskHeader', () => {
+  it('parses static subtask: 1.A First reviewer', () => {
+    const result = extractSubtaskHeader('1.A First reviewer');
+    expect(result).toEqual({
+      taskNumber: 1,
+      id: 'A',
+      description: 'First reviewer',
+      agentType: undefined,
+      isDynamic: false,
+    });
+  });
+
+  it('parses subtask with agent type: 2.B Second (code-agent)', () => {
+    const result = extractSubtaskHeader('2.B Second reviewer (code-agent)');
+    expect(result).toEqual({
+      taskNumber: 2,
+      id: 'B',
+      description: 'Second reviewer',
+      agentType: 'code-agent',
+      isDynamic: false,
+    });
+  });
+
+  it('parses dynamic subtask: 3.{n} Execute task', () => {
+    const result = extractSubtaskHeader('3.{n} Execute task');
+    expect(result).toEqual({
+      taskNumber: 3,
+      id: '{n}',
+      description: 'Execute task',
+      agentType: undefined,
+      isDynamic: true,
+    });
+  });
+
+  it('normalizes lowercase id to uppercase', () => {
+    const result = extractSubtaskHeader('1.a First');
+    expect(result?.id).toBe('A');
+  });
+
+  it('returns null for invalid format', () => {
+    expect(extractSubtaskHeader('Not a subtask')).toBeNull();
+    expect(extractSubtaskHeader('1 Missing dot')).toBeNull();
+    expect(extractSubtaskHeader('.A No number')).toBeNull();
   });
 });
