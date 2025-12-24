@@ -102,6 +102,10 @@ Execute multi-step processes with state tracking:
 
 State persists in `.claude/turboshovel/workflows/` (workflow files) and `.claude/turboshovel/session.json` (active workflow tracking). Both survive context clears.
 
+## Commands
+
+- `/turboshovel:verify` - N-Verification with consensus-based collation
+
 ## Documentation
 
 - [README.md](plugin/hooks/README.md) - Quick start and examples

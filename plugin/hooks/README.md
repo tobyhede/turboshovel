@@ -454,6 +454,34 @@ tail -f $TMPDIR/turboshovel/hooks-$(date +%Y-%m-%d).log
 - Gates executed
 - Actions taken
 
+## N-Verification
+
+Dispatch N independent agents to review, collate by consensus, cross-check exclusive findings.
+
+### Usage
+
+```bash
+/turboshovel:verify                    # Default: 2 agents
+/turboshovel:verify --count 3          # Use 3 agents
+/turboshovel:verify --agents "Explore,Plan"  # Specify agents
+```
+
+### Phases
+
+1. **Dispatch** - N agents review independently in parallel
+2. **Collate** - Compare findings:
+   - Common (N/N): All agree → implement immediately
+   - Exclusive (<N/N): Some found → pending cross-check
+3. **Cross-check** - Validate all exclusive findings
+4. **Present** - Summary with confidence levels
+
+### Output
+
+Files saved to `.work/`:
+- `{date}-verify-{index}-{time}.md` - Individual reviews
+- `{date}-verify-collated-{time}.md` - Collation report
+- `{date}-verify-crosscheck-{time}.md` - Cross-check results
+
 ## Documentation
 
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System design and data flow
