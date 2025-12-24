@@ -92,11 +92,15 @@ Claude Code automatically sets `${CLAUDE_PLUGIN_ROOT}` to the correct path for e
 Execute multi-step processes with state tracking:
 
 - `workflow start <file>` - Start workflow
-- `workflow next` - Advance to next task
+- `workflow next` - Advance to next task (use `--step N` to jump to specific step)
+- `workflow complete` - Mark workflow as complete
 - `workflow status` - Show current state
 - `workflow stop` - Abort workflow
+- `workflow list` - List all workflows (active and inactive)
+- `workflow stash` - Pause workflow enforcement for ad-hoc work
+- `workflow pop` - Resume workflow enforcement
 
-State persists in `.claude/turboshovel/workflows/` and survives context clears.
+State persists in `.claude/turboshovel/workflows/` (workflow files) and `.claude/turboshovel/session.json` (active workflow tracking). Both survive context clears.
 
 ## Documentation
 

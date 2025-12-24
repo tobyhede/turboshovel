@@ -123,11 +123,32 @@ plugin/
     │   │   ├── action-handler.ts  # Action processing
     │   │   ├── session.ts      # Session state management
     │   │   ├── logger.ts       # Debug logging
+    │   │   ├── schemas.ts      # Zod validation schemas
     │   │   ├── types.ts        # TypeScript interfaces
+    │   │   ├── errors.ts       # Custom error types
     │   │   ├── utils.ts        # Utility functions
-    │   │   └── gates/          # Built-in TypeScript gates
-    │   │       ├── index.ts    # Gate registry
-    │   │       └── plugin-path.ts
+    │   │   ├── cli/            # CLI subcommands
+    │   │   │   └── workflow-cli.ts  # Workflow CLI entry point
+    │   │   ├── gates/          # Built-in TypeScript gates
+    │   │   │   ├── index.ts    # Gate registry
+    │   │   │   └── plugin-path.ts
+    │   │   └── workflow/       # Workflow system
+    │   │       ├── index.ts    # Workflow exports
+    │   │       ├── state.ts    # Workflow state management
+    │   │       ├── types.ts    # Workflow type definitions
+    │   │       ├── context.ts  # Workflow context injection
+    │   │       ├── evaluation.ts  # Step evaluation
+    │   │       ├── task-id.ts  # Task ID parsing
+    │   │       ├── parser/     # Workflow file parsing
+    │   │       │   ├── index.ts
+    │   │       │   ├── parser.ts
+    │   │       │   ├── helpers.ts
+    │   │       │   └── types.ts
+    │   │       └── hooks/      # Workflow hook handlers
+    │   │           ├── index.ts
+    │   │           ├── subagent-start.ts
+    │   │           ├── subagent-stop.ts
+    │   │           └── task-tracker.ts
     │   └── dist/               # Compiled JavaScript
     │
     └── examples/

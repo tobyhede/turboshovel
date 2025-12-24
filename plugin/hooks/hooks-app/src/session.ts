@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 import { SessionState, SessionStateArrayKey } from './types';
 import { SessionStateSchema } from './schemas';
-import { SessionLoadResult, isNodeError } from './errors';
+import { SessionLoadResult, isNodeError, isFileNotFoundError } from './errors';
 import { logger } from './logger';
 
 /**
@@ -132,14 +132,16 @@ export class Session {
 
     const error = result.error;
 
-    if (error.type === 'file_not_found') {
+    if (isFileNotFoundError(error)) {
       return this.initState();
     }
 
+    // error has message field (parse_error or validation_error types)
+    const message = 'message' in error ? error.message : 'unknown error';
     await logger.warn('Session state corrupted, reinitializing', {
       path: error.path,
       error_type: error.type,
-      message: error.message,
+      message,
     });
 
     return this.initState();
@@ -181,20 +183,12 @@ export class Session {
   /**
    * Initialize new session state
    *
+   * Uses SessionStateSchema as single source of truth for default values.
    * Session ID format: ISO timestamp with punctuation replaced (e.g., "2025-11-23T14-30-45")
    * Unique per millisecond. Collisions possible if multiple sessions start in same millisecond,
    * but unlikely in practice due to hook serialization.
    */
   private initState(): SessionState {
-    const now = new Date();
-    return {
-      session_id: now.toISOString().replace(/[:.]/g, '-').substring(0, 19),
-      started_at: now.toISOString(),
-      active_command: null,
-      active_skill: null,
-      edited_files: [],
-      file_extensions: [],
-      metadata: {}
-    };
+    return SessionStateSchema.parse({});
   }
 }

@@ -1,0 +1,12 @@
+{
+  "id": "wf-2025-12-20-vrc0xw",
+  "workflow": "plugin/hooks/examples/code-review.workflow.md",
+  "step": 4,
+  "stepName": "Address feedback",
+  "retryCount": 0,
+  "retryMax": 3,
+  "variables": {},
+  "tasks": [],
+  "startedAt": "2025-12-20T09:49:51.878Z",
+  "updatedAt": "2025-12-20T09:50:05.566Z"
+}

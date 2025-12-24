@@ -25,17 +25,21 @@ Conventions allow project-specific hook behavior without editing `gates.json`. P
 - Plan review agent: `.claude/context/plan-review-agent-verify-start.md`
 
 **Registered hooks (11 total):**
-- `SessionStart` - At beginning of Claude Code session
-- `SessionEnd` - At end of Claude Code session
-- `UserPromptSubmit` - Before user prompt is processed
-- `SubagentStart` - Before agent starts
-- `SubagentStop` - After agent completes (supports agent-command scoping)
-- `PreToolUse` - Before a tool is used
-- `PostToolUse` - After a tool is used
-- `Stop` - When agent stops
-- `Notification` - When notification is received
-- `PreCompact` - Before context compaction
-- `PermissionRequest` - When permission dialog is shown
+
+Context injection supported:
+- `SessionStart` - At beginning of Claude Code session ✅
+- `SessionEnd` - At end of Claude Code session ✅
+- `UserPromptSubmit` - Before user prompt is processed ✅
+- `SubagentStop` - After agent completes (supports agent-command scoping) ✅
+- `PreToolUse` - Before a tool is used ✅
+- `PostToolUse` - After a tool is used ✅
+- `Stop` - When agent stops ✅
+- `Notification` - When notification is received ✅
+
+Gates only (context injection not implemented):
+- `SubagentStart` - Before agent starts (gates work, context files not discovered)
+- `PreCompact` - Before context compaction (gates work, context files not discovered)
+- `PermissionRequest` - When permission dialog is shown (gates work, context files not discovered)
 
 **Planned hooks:** SlashCommandStart, SlashCommandEnd, SkillStart, SkillEnd - recognized by config validation but not yet registered in `hooks.json` for Claude Code routing. Context patterns exist for future use.
 

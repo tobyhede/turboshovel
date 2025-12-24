@@ -90,4 +90,14 @@ describe('SessionStateSchema', () => {
     const result = SessionStateSchema.safeParse(invalid);
     expect(result.success).toBe(false);
   });
+
+  it('generates valid session_id format', () => {
+    const result = SessionStateSchema.safeParse({});
+    expect(result.success).toBe(true);
+    if (result.success) {
+      // Format: 2025-12-24T14-30-45 (19 chars, dashes instead of colons)
+      expect(result.data.session_id).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}$/);
+      expect(result.data.started_at).toMatch(/^\d{4}-\d{2}-\d{2}T.*Z$/);
+    }
+  });
 });
