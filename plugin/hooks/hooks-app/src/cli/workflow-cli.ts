@@ -6,7 +6,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { WorkflowStateManager } from '../workflow/state';
 import { parseWorkflow, WorkflowSyntaxError } from '../workflow/parser';
-import { taskIdToString, type TaskId } from '../workflow/task-id';
+import { taskIdToString, parseTaskIdFromString, type TaskId } from '../workflow/task-id';
 import { createTaskNumber, type Action, type Task } from '../workflow/types';
 
 const program = new Command();
@@ -38,7 +38,7 @@ program
           process.exit(1);
         }
 
-        const taskId = parseTaskIdFromArg(options.task);
+        const taskId = parseTaskIdFromString(options.task);
         if (!taskId) {
           console.error(`Error: Invalid task ID format: ${options.task}`);
           console.error('Expected format: "3" or "3.A"');
@@ -458,23 +458,6 @@ async function findWorkflowFile(cwd: string, filename: string): Promise<string |
   }
 
   return null;
-}
-
-/**
- * Parse TaskId from CLI argument (e.g., "3" or "3.A")
- */
-function parseTaskIdFromArg(arg: string): TaskId | null {
-  // Match "3" or "3.A" format
-  const match = arg.match(/^(\d+)(?:\.([A-Za-z]))?$/);
-  if (!match) return null;
-
-  const task = parseInt(match[1], 10);
-  if (task <= 0) return null;
-
-  return {
-    task,
-    subtask: match[2]?.toUpperCase(),
-  };
 }
 
 program.parse();

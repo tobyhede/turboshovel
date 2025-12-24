@@ -7,22 +7,37 @@ export interface TaskId {
   readonly subtask?: string;
 }
 
-/**
- * Parse TaskId from Task tool description
- *
- * Valid formats:
- *   "3 - Review code" -> { task: 3 }
- *   "3.A - First reviewer" -> { task: 3, subtask: 'A' }
- *   "3.a - lowercase" -> { task: 3, subtask: 'A' } (normalized)
- *   "5: Execute" -> { task: 5 }
- *
- * Returns null if no valid TaskId prefix found
- */
-export function parseTaskId(description: string): TaskId | null {
-  if (!description) return null;
+export interface ParseTaskIdOptions {
+  /** Require a separator after the task ID (space, dash, colon) */
+  readonly requireSeparator?: boolean;
+}
 
-  // Match: "3" or "3.A" at start, followed by separator (space, dash, colon)
-  const match = description.match(/^(\d+)(?:\.([A-Za-z]))?[\s\-:]/);
+/**
+ * Parse TaskId from string with configurable behavior
+ *
+ * Without requireSeparator:
+ *   "3" -> { task: 3 }
+ *   "3.A" -> { task: 3, subtask: 'A' }
+ *
+ * With requireSeparator:
+ *   "3 - Review" -> { task: 3 }
+ *   "3.A: Task" -> { task: 3, subtask: 'A' }
+ *   "3" -> null (no separator)
+ */
+export function parseTaskIdFromString(
+  input: string,
+  options?: ParseTaskIdOptions
+): TaskId | null {
+  if (!input) return null;
+
+  const requireSeparator = options?.requireSeparator ?? false;
+
+  // Build regex based on options
+  const pattern = requireSeparator
+    ? /^(\d+)(?:\.([A-Za-z]))?[\s\-:]/  // Must have separator
+    : /^(\d+)(?:\.([A-Za-z]))?$/;        // Must match entire string
+
+  const match = input.match(pattern);
   if (!match) return null;
 
   const task = parseInt(match[1], 10);
@@ -32,6 +47,14 @@ export function parseTaskId(description: string): TaskId | null {
     task,
     subtask: match[2]?.toUpperCase(),
   };
+}
+
+/**
+ * Parse TaskId from Task tool description (requires separator)
+ * @deprecated Use parseTaskIdFromString with { requireSeparator: true }
+ */
+export function parseTaskId(description: string): TaskId | null {
+  return parseTaskIdFromString(description, { requireSeparator: true });
 }
 
 /**

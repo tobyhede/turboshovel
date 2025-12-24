@@ -1,4 +1,4 @@
-import { parseTaskId, taskIdToString, taskIdEquals } from '../../src/workflow/task-id';
+import { parseTaskId, parseTaskIdFromString, taskIdToString, taskIdEquals } from '../../src/workflow/task-id';
 
 describe('parseTaskId', () => {
   it('parses simple task number from description', () => {
@@ -71,5 +71,43 @@ describe('taskIdEquals', () => {
 
   it('returns false when one has subtask and other does not', () => {
     expect(taskIdEquals({ task: 3 }, { task: 3, subtask: 'A' })).toBe(false);
+  });
+});
+
+describe('parseTaskIdFromString', () => {
+  describe('without separator requirement', () => {
+    it('parses simple task number', () => {
+      const result = parseTaskIdFromString('3');
+      expect(result).toEqual({ task: 3 });
+    });
+
+    it('parses task with subtask', () => {
+      const result = parseTaskIdFromString('3.A');
+      expect(result).toEqual({ task: 3, subtask: 'A' });
+    });
+
+    it('normalizes lowercase subtask', () => {
+      const result = parseTaskIdFromString('2.b');
+      expect(result).toEqual({ task: 2, subtask: 'B' });
+    });
+
+    it('returns null for invalid format', () => {
+      expect(parseTaskIdFromString('abc')).toBeNull();
+      expect(parseTaskIdFromString('')).toBeNull();
+      expect(parseTaskIdFromString('0')).toBeNull();
+      expect(parseTaskIdFromString('-1')).toBeNull();
+    });
+  });
+
+  describe('with separator requirement', () => {
+    it('parses when separator present', () => {
+      const result = parseTaskIdFromString('3 - Review', { requireSeparator: true });
+      expect(result).toEqual({ task: 3 });
+    });
+
+    it('returns null when separator missing', () => {
+      const result = parseTaskIdFromString('3', { requireSeparator: true });
+      expect(result).toBeNull();
+    });
   });
 });
