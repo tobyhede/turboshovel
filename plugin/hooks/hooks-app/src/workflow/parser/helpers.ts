@@ -150,6 +150,33 @@ export function parseAction(text: string): Action | null {
 }
 
 /**
+ * Parse conditional line starting with given prefix (PASS or FAIL)
+ * Returns action and modifier, or null if parsing fails
+ */
+function parseConditionalPrefix(
+  rest: string,
+  type: 'pass' | 'fail'
+): ParsedConditional | null {
+  // Check for aggregation modifier (ALL or ANY)
+  let modifier: AggregationModifier = null;
+  let remaining = rest;
+
+  // Match modifier: space + (ALL|ANY) + (space or colon or arrow or dash)
+  const modifierMatch = remaining.match(/^\s+(ALL|ANY)[\s:→\-]/);
+  if (modifierMatch) {
+    modifier = modifierMatch[1] as 'ALL' | 'ANY';
+    remaining = remaining.slice(modifierMatch[0].length);
+  }
+
+  const actionStr = stripSeparator(remaining);
+  const action = parseAction(actionStr);
+  if (!action) {
+    return null;
+  }
+  return { type, action, modifier };
+}
+
+/**
  * Parse a conditional line (PASS [ALL|ANY]: action or FAIL [ALL|ANY]: action)
  * Supports new syntax with aggregation modifiers and backward compatibility
  */
@@ -158,47 +185,11 @@ export function parseConditional(text: string): ParsedConditional | null {
 
   // Try ALLCAPS first (new syntax)
   if (trimmed.startsWith('PASS')) {
-    const rest = trimmed.slice(4);
-
-    // Check for aggregation modifier (ALL or ANY)
-    let modifier: AggregationModifier = null;
-    let remaining = rest;
-
-    // Match modifier: space + (ALL|ANY) + (space or colon or arrow or dash)
-    const modifierMatch = remaining.match(/^\s+(ALL|ANY)[\s:→\-]/);
-    if (modifierMatch) {
-      modifier = modifierMatch[1] as 'ALL' | 'ANY';
-      remaining = remaining.slice(modifierMatch[0].length);
-    }
-
-    const actionStr = stripSeparator(remaining);
-    const action = parseAction(actionStr);
-    if (!action) {
-      return null;
-    }
-    return { type: 'pass', action, modifier };
+    return parseConditionalPrefix(trimmed.slice(4), 'pass');
   }
 
   if (trimmed.startsWith('FAIL')) {
-    const rest = trimmed.slice(4);
-
-    // Check for aggregation modifier (ALL or ANY)
-    let modifier: AggregationModifier = null;
-    let remaining = rest;
-
-    // Match modifier: space + (ALL|ANY) + (space or colon or arrow or dash)
-    const modifierMatch = remaining.match(/^\s+(ALL|ANY)[\s:→\-]/);
-    if (modifierMatch) {
-      modifier = modifierMatch[1] as 'ALL' | 'ANY';
-      remaining = remaining.slice(modifierMatch[0].length);
-    }
-
-    const actionStr = stripSeparator(remaining);
-    const action = parseAction(actionStr);
-    if (!action) {
-      return null;
-    }
-    return { type: 'fail', action, modifier };
+    return parseConditionalPrefix(trimmed.slice(4), 'fail');
   }
 
   // Backward compatibility: old syntax (Pass: / Fail:)
