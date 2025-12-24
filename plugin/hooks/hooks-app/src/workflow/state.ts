@@ -27,6 +27,15 @@ function generateId(): string {
 }
 
 /**
+ * Session data stored in session.json
+ * Tracks active and stashed workflows
+ */
+interface SessionData {
+  active_workflow: string | null;
+  stashedWorkflowId?: string;
+}
+
+/**
  * Manages persistent workflow state stored in `.claude/turboshovel/workflows/`.
  *
  * Each workflow gets a unique JSON state file that persists across conversations.
@@ -332,10 +341,7 @@ export class WorkflowStateManager {
     return session.stashedWorkflowId || null;
   }
 
-  private async loadSession(): Promise<{
-    active_workflow: string | null;
-    stashedWorkflowId?: string;
-  }> {
+  private async loadSession(): Promise<SessionData> {
     try {
       const content = await fs.readFile(this.sessionPath, 'utf8');
       return JSON.parse(content);
@@ -344,10 +350,7 @@ export class WorkflowStateManager {
     }
   }
 
-  private async saveSession(session: {
-    active_workflow: string | null;
-    stashedWorkflowId?: string;
-  }): Promise<void> {
+  private async saveSession(session: SessionData): Promise<void> {
     await fs.mkdir(path.dirname(this.sessionPath), { recursive: true });
     await fs.writeFile(this.sessionPath, JSON.stringify(session, null, 2));
   }
