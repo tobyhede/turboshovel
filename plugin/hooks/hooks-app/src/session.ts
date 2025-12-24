@@ -1,6 +1,9 @@
 import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 import { SessionState, SessionStateArrayKey } from './types';
+import { SessionStateSchema } from './schemas';
+import { SessionLoadResult, isNodeError } from './errors';
+import { logger } from './logger';
 
 /**
  * Manages session state with atomic file updates.
@@ -64,16 +67,82 @@ export class Session {
   }
 
   /**
-   * Load state from file or initialize new state
+   * Load state from file with detailed error handling
+   * Returns result object with success/error discriminant
    */
-  private async load(): Promise<SessionState> {
+  private async loadWithError(): Promise<SessionLoadResult<SessionState>> {
     try {
       const content = await fs.readFile(this.stateFile, 'utf-8');
-      return JSON.parse(content);
+
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(content);
+      } catch (e) {
+        return {
+          success: false,
+          error: {
+            type: 'parse_error',
+            path: this.stateFile,
+            message: e instanceof Error ? e.message : String(e),
+          },
+        };
+      }
+
+      const result = SessionStateSchema.safeParse(parsed);
+      if (!result.success) {
+        return {
+          success: false,
+          error: {
+            type: 'validation_error',
+            path: this.stateFile,
+            message: result.error.issues.map(i => i.message).join(', '),
+          },
+        };
+      }
+
+      return { success: true, data: result.data };
     } catch (error) {
-      // File doesn't exist or is corrupt, initialize new state
+      if (isNodeError(error) && error.code === 'ENOENT') {
+        return {
+          success: false,
+          error: { type: 'file_not_found', path: this.stateFile },
+        };
+      }
+      return {
+        success: false,
+        error: {
+          type: 'parse_error',
+          path: this.stateFile,
+          message: error instanceof Error ? error.message : String(error),
+        },
+      };
+    }
+  }
+
+  /**
+   * Load state from file or initialize new state
+   * Handles errors silently: missing file initialized, corrupted data logged and reinitialized
+   */
+  private async load(): Promise<SessionState> {
+    const result = await this.loadWithError();
+
+    if (result.success) {
+      return result.data;
+    }
+
+    const error = result.error;
+
+    if (error.type === 'file_not_found') {
       return this.initState();
     }
+
+    await logger.warn('Session state corrupted, reinitializing', {
+      path: error.path,
+      error_type: error.type,
+      message: error.message,
+    });
+
+    return this.initState();
   }
 
   /**

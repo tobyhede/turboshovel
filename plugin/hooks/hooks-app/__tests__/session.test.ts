@@ -195,4 +195,38 @@ describe('Session', () => {
       expect(files.length).toBeGreaterThan(0);
     });
   });
+
+  describe('load error handling', () => {
+    it('initializes silently for missing file', async () => {
+      const session = new Session(testDir);
+      const value = await session.get('active_command');
+      expect(value).toBeNull();
+    });
+
+    it('logs warning for corrupted JSON', async () => {
+      const session = new Session(testDir);
+      const stateFile = join(testDir, '.claude', 'session', 'state.json');
+      await fs.mkdir(dirname(stateFile), { recursive: true });
+      await fs.writeFile(stateFile, '{invalid json}', 'utf-8');
+
+      const value = await session.get('active_command');
+      expect(value).toBeNull(); // Should recover
+    });
+
+    it('merges partial state with defaults', async () => {
+      const session = new Session(testDir);
+      const stateFile = join(testDir, '.claude', 'session', 'state.json');
+      await fs.mkdir(dirname(stateFile), { recursive: true });
+      await fs.writeFile(stateFile, JSON.stringify({
+        session_id: 'existing-123',
+        active_command: '/execute',
+      }), 'utf-8');
+
+      const command = await session.get('active_command');
+      expect(command).toBe('/execute');
+
+      const files = await session.get('edited_files');
+      expect(files).toEqual([]); // Default applied
+    });
+  });
 });
