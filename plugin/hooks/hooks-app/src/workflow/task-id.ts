@@ -35,7 +35,6 @@ export interface ParseTaskIdOptions {
  *   "5: Execute" -> { task: 5 }
  *   "3" -> null (fails because no separator found)
  *
- * @see parseTaskId for a convenience wrapper with requireSeparator: true
  */
 export function parseTaskIdFromString(
   input: string,
@@ -61,29 +60,6 @@ export function parseTaskIdFromString(
     task,
     subtask: match[2]?.toUpperCase(),
   };
-}
-
-/**
- * Parse TaskId from Task tool description (requires separator after ID)
- *
- * This function is used when parsing TaskIds from agent task descriptions where
- * additional text follows the ID. The separator requirement prevents false matches
- * on text that happens to start with a number.
- *
- * Valid formats:
- *   "3 - Review code" -> { task: 3 }
- *   "3.A - First reviewer" -> { task: 3, subtask: 'A' }
- *   "5: Execute" -> { task: 5 }
- *
- * Invalid (no separator):
- *   "3Review" -> null
- *   "3.A" -> null (use parseTaskIdFromString without requireSeparator for raw IDs)
- *
- * @see parseTaskIdFromString with { requireSeparator: false } for CLI argument parsing (no separator)
- * @deprecated Use parseTaskIdFromString with { requireSeparator: true }
- */
-export function parseTaskId(description: string): TaskId | null {
-  return parseTaskIdFromString(description, { requireSeparator: true });
 }
 
 /**

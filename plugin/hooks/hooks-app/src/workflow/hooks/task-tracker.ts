@@ -1,6 +1,6 @@
 // src/workflow/hooks/task-tracker.ts
 import { WorkflowStateManager } from '../state';
-import { parseTaskId, taskIdToString, type TaskId } from '../task-id';
+import { parseTaskIdFromString, taskIdToString, type TaskId } from '../task-id';
 import type { HookInput } from '../../types';
 
 /** Maximum characters to show in task description before truncation */
@@ -45,7 +45,7 @@ export async function trackTaskDispatch(input: HookInput): Promise<TaskDispatchR
 
     // Parse TaskId from description
     const description = input.tool_input?.description || '';
-    const taskId = parseTaskId(description);
+    const taskId = parseTaskIdFromString(description, { requireSeparator: true });
 
     // VIOLATION: Task without TaskId prefix
     if (!taskId) {
