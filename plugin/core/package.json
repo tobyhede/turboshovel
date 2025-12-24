@@ -1,5 +1,5 @@
 {
-  "name": "@turboshovel/hooks-app",
+  "name": "@turboshovel/core",
   "version": "1.0.0",
   "description": "TypeScript hooks dispatcher for Turboshovel",
   "main": "dist/cli.js",
