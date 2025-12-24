@@ -7,7 +7,13 @@ import * as path from 'path';
 import { WorkflowStateManager } from '../workflow/state';
 import { parseWorkflow, WorkflowSyntaxError } from '../workflow/parser';
 import { taskIdToString, parseTaskIdFromString } from '../workflow/task-id';
-import { createTaskNumber, type Action, type Task } from '../workflow/types';
+import {
+  createTaskNumber,
+  incrementTaskNumber,
+  type TaskNumber,
+  type Action,
+  type Task
+} from '../workflow/types';
 import { isNodeError, getErrorMessage } from '../errors';
 
 const program = new Command();
@@ -182,36 +188,35 @@ program
       const tasks = parseWorkflow(content);
 
       // Determine next task
-      // TaskNumber is a branded number type, so arithmetic works directly
-      let nextTaskNum: number;
+      let nextTaskNumber: TaskNumber | null;
       if (options.step) {
-        nextTaskNum = parseInt(options.step, 10);
+        nextTaskNumber = createTaskNumber(parseInt(options.step, 10));
       } else {
-        nextTaskNum = state.task + 1;
+        nextTaskNumber = incrementTaskNumber(state.task);
+      }
+
+      if (!nextTaskNumber) {
+        console.error('Error: Invalid task number');
+        process.exit(1);
       }
 
       // Check if workflow is complete
-      if (nextTaskNum > tasks.length) {
+      if (nextTaskNumber > tasks.length) {
         console.log(`Workflow complete: ${state.workflow}`);
         await manager.setActive(null);
         return;
       }
 
-      const nextTask = tasks[nextTaskNum - 1];
-      const taskNumber = createTaskNumber(nextTaskNum);
-      if (!taskNumber) {
-        console.error('Error: Invalid task number');
-        process.exit(1);
-      }
+      const nextTask = tasks[nextTaskNumber - 1];
 
-      // Update state
+      // Update state (taskNumber already validated)
       await manager.update(state.id, {
-        task: taskNumber,
+        task: nextTaskNumber,
         taskName: nextTask.description,
         retryCount: 0,
       });
 
-      console.log(`Task ${nextTaskNum}: ${nextTask.description}`);
+      console.log(`Task ${nextTaskNumber}: ${nextTask.description}`);
       printTaskGuidance(nextTask);
     } catch (error) {
       console.error(`Error: ${getErrorMessage(error)}`);
