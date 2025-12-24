@@ -1,6 +1,6 @@
 // src/workflow/parser/helpers.ts
 
-import { createTaskNumber, type Action, type TaskNumber } from '../types';
+import { createTaskNumber, type Action, type Conditions, type TaskNumber } from '../types';
 import type { ParsedConditional, AggregationModifier } from './types';
 import { WorkflowSyntaxError } from './types';
 
@@ -247,7 +247,7 @@ function resolveAggregationMode(
  * Convert pending conditionals to Conditions object
  * Defaults to all: true (PASS ALL + FAIL ANY, pessimistic)
  */
-export function convertConditionals(conditionals: ParsedConditional[]): { all: boolean; pass: Action; fail: Action } | null {
+export function convertConditionals(conditionals: ParsedConditional[]): Conditions | null {
   if (conditionals.length === 0) {
     return null;
   }
