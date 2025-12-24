@@ -453,7 +453,7 @@ function formatAction(action: Action): string {
 }
 
 async function findWorkflowFile(cwd: string, filename: string): Promise<string | null> {
-  // Check if filename is a relative path from cwd (e.g., "plugin/hooks/examples/code-review.workflow.md")
+  // Check if filename is a relative path from cwd (e.g., "plugin/examples/code-review.workflow.md")
   const directPath = path.join(cwd, filename);
   try {
     await fs.access(directPath);

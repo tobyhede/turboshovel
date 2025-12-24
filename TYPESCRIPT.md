@@ -75,7 +75,7 @@ export * as myGate from './my-gate';  // Add this line
 
 ### 3. Add to gates.json
 
-Add to `plugin/hooks/gates.json` (for plugin default) or project `.claude/gates.json`:
+Add to `plugin/gates.json` (for plugin default) or project `.claude/gates.json`:
 
 ```json
 {
@@ -234,7 +234,7 @@ This gate verifies that plugin paths are correctly resolved in subagent contexts
 ### Build
 
 ```bash
-cd plugin/hooks/hooks-app
+cd plugin/core
 npm run build
 ```
 

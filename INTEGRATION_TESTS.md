@@ -238,7 +238,7 @@ EOF
 - rust-agent: Hook executes when agent completes
 - code-review-agent: No hook execution (not in enabled_agents)
 
-**Note:** Use `.claude/gates.json` for project-specific overrides. Never modify `plugin/hooks/gates.json` directly.
+**Note:** Use `.claude/gates.json` for project-specific overrides. Never modify `plugin/gates.json` directly.
 
 ## Verification Checklist
 

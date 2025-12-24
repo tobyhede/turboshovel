@@ -1,6 +1,6 @@
 {
   "id": "wf-2025-12-20-vrc0xw",
-  "workflow": "plugin/hooks/examples/code-review.workflow.md",
+  "workflow": "plugin/examples/code-review.workflow.md",
   "step": 4,
   "stepName": "Address feedback",
   "retryCount": 0,
