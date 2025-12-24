@@ -110,6 +110,26 @@ describe('parseAction', () => {
   });
 });
 
+describe('parseAction edge cases', () => {
+  test('returns null for RETRY with invalid max', () => {
+    expect(parseAction('RETRY abc')).toBeNull();
+  });
+
+  test('returns null for GOTO with invalid task number', () => {
+    expect(parseAction('GOTO 0')).toBeNull();
+    expect(parseAction('GOTO -1')).toBeNull();
+  });
+
+  test('parses old syntax Continue', () => {
+    expect(parseAction('Continue')).toEqual({ type: 'CONTINUE' });
+  });
+
+  test('parses old syntax STOP with parentheses', () => {
+    // NOTE: Implementation preserves parentheses in message
+    expect(parseAction('STOP (error message)')).toEqual({ type: 'STOP', message: '(error message)' });
+  });
+});
+
 describe('parseConditional', () => {
   test('parses PASS: CONTINUE', () => {
     expect(parseConditional('PASS: CONTINUE')).toEqual({
