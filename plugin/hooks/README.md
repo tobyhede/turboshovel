@@ -9,6 +9,54 @@ Automated quality enforcement and context injection via Claude Code's hook syste
 >
 > The `gates.json` file is ONLY for optional quality enforcement (lint, test, build checks).
 
+## Installation
+
+### Prerequisites
+
+- Node.js 18+ installed
+- Claude Code CLI installed and working
+
+### Setup
+
+1. **Clone or download turboshovel:**
+   ```bash
+   git clone https://github.com/your-org/turboshovel.git
+   # Or download and extract the release
+   ```
+
+2. **Build the hooks app:**
+   ```bash
+   cd turboshovel/plugin/hooks/hooks-app
+   npm install
+   npm run build
+   ```
+
+3. **Enable the plugin in your Claude Code settings:**
+
+   Add to `~/.claude/settings.local.json`:
+   ```json
+   {
+     "enabledPlugins": {
+       "turboshovel@turboshovel": true
+     }
+   }
+   ```
+
+4. **Verify installation:**
+
+   Start a new Claude Code session. You should see the SessionStart hook fire with environment context.
+
+### Optional: Workflow CLI
+
+If you want to use the workflow system:
+
+```bash
+cd plugin/hooks/hooks-app
+npm link
+```
+
+After linking, the `workflow` command is available globally. See [Workflow System](#workflow-system) for usage.
+
 ## Quick Start
 
 ### Zero-Config Context Injection (Recommended)
@@ -79,21 +127,23 @@ See **[ARCHITECTURE.md](./ARCHITECTURE.md)** for detailed system design.
 
 All 11 registered Claude Code hook types are supported:
 
-| Event | Context Pattern | Default Behavior |
-|-------|----------------|------------------|
-| `SessionStart` | `session-start.md` | Plugin provides environment context |
-| `SessionEnd` | `session-end.md` | - |
-| `UserPromptSubmit` | `prompt-submit.md` | Keyword-triggered gates (check, test, build) |
-| `SubagentStart` | `{agent}-start.md` | - |
-| `SubagentStop` | `{agent}-end.md` | - |
-| `PreToolUse` | `{tool}-pre.md` | - |
-| `PostToolUse` | `{tool}-post.md` | - |
-| `Stop` | `agent-stop.md` | - |
-| `Notification` | `notification-receive.md` | - |
-| `PreCompact` | `pre-compact.md` | - |
-| `PermissionRequest` | `permission-request.md` | - |
+| Event | Context Pattern | Context Injection | Default Behavior |
+|-------|----------------|-------------------|------------------|
+| `SessionStart` | `session-start.md` | ✅ Supported | Plugin provides environment context |
+| `SessionEnd` | `session-end.md` | ✅ Supported | - |
+| `UserPromptSubmit` | `prompt-submit.md` | ✅ Supported | Keyword-triggered gates (check, test, build) |
+| `SubagentStart` | `{agent}-start.md` | ❌ Not implemented | Gates only |
+| `SubagentStop` | `{agent}-end.md` | ✅ Supported | - |
+| `PreToolUse` | `{tool}-pre.md` | ✅ Supported | - |
+| `PostToolUse` | `{tool}-post.md` | ✅ Supported | - |
+| `Stop` | `agent-stop.md` | ✅ Supported | - |
+| `Notification` | `notification-receive.md` | ✅ Supported | - |
+| `PreCompact` | `pre-compact.md` | ❌ Not implemented | Gates only |
+| `PermissionRequest` | `permission-request.md` | ❌ Not implemented | Gates only |
 
 **Note:** SessionStart fires at the beginning of each Claude Code session and injects context from `session-start.md`.
+
+**Note:** SubagentStart, PreCompact, and PermissionRequest are registered hooks but context injection is not yet implemented for them. Gates still work for these hooks.
 
 **Planned hooks (not yet registered):** SlashCommandStart, SlashCommandEnd, SkillStart, SkillEnd - context patterns exist but hooks are not registered in `hooks.json`.
 
@@ -158,8 +208,8 @@ The security checklist appears in the conversation automatically. **No configura
 | `UserPromptSubmit` | `prompt-submit.md` | User sends message |
 | `SubagentStart` | `{agent}-start.md` | `rust-agent-start.md` |
 | `SubagentStop` | `{agent}-end.md` | `rust-agent-end.md` |
-| `PreToolUse` | `{tool}-pre.md` | `Edit-pre.md` |
-| `PostToolUse` | `{tool}-post.md` | `Edit-post.md` |
+| `PreToolUse` | `{tool}-pre.md` | `edit-pre.md` |
+| `PostToolUse` | `{tool}-post.md` | `edit-post.md` |
 | `Stop` | `agent-stop.md` | Agent stops |
 | `Notification` | `notification-receive.md` | Notification received |
 | `PreCompact` | `pre-compact.md` | Before context compaction |
@@ -389,11 +439,12 @@ See **[SETUP.md](./SETUP.md#hooks-not-running-in-multi-plugin-projects)** for tr
 Logs are written to `$TMPDIR/turboshovel/hooks-YYYY-MM-DD.log`:
 
 ```bash
-# View logs in real-time
-tail -f $(node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js log-path)
-
-# Or find the log file
+# Find and view the log file (works anywhere)
 ls $TMPDIR/turboshovel/hooks-*.log
+tail -f $TMPDIR/turboshovel/hooks-$(date +%Y-%m-%d).log
+
+# Alternative: Use the CLI to get log path (only works during hook execution)
+# tail -f $(node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js log-path)
 ```
 
 **What gets logged:**
@@ -466,6 +517,13 @@ The workflow CLI is available via the hooks-app package:
 # Option 1: Link the package globally (recommended)
 cd plugin/hooks/hooks-app && npm link
 
+# Verify the link worked:
+which workflow
+# Should output: /usr/local/bin/workflow (or similar)
+
+workflow --help
+# Should show available commands
+
 # After linking, use the simple command:
 workflow start my-workflow.md
 workflow status
@@ -476,6 +534,11 @@ node plugin/hooks/hooks-app/dist/cli/workflow-cli.js <command>
 ```
 
 **Note:** After `npm link`, the `workflow` command is available globally. All examples in this documentation assume the package has been linked.
+
+**Troubleshooting:** If `which workflow` returns nothing, the link may have failed. Try:
+1. Ensure you ran `npm link` from the `hooks-app` directory
+2. Check npm's global bin directory is in your PATH: `npm config get prefix`
+3. On macOS/Linux, you may need to add `$(npm config get prefix)/bin` to your PATH
 
 ### Quick Start
 
@@ -774,6 +837,12 @@ Workflow state persists to `.claude/turboshovel/workflows/{id}.json`:
 #### Active Workflow Tracking
 
 The active workflow ID is stored in `.claude/turboshovel/session.json`. This survives context clears and session restarts.
+
+**Note on dual session architecture:** The plugin maintains two separate session mechanisms:
+- **Hook session** (`.claude/session/state.json`) - Tracks hook execution state, modified files, and gate results within a Claude Code session
+- **Workflow session** (`.claude/turboshovel/session.json`) - Tracks active workflow and persists across sessions
+
+See ARCHITECTURE.md for detailed session architecture.
 
 #### Variables
 
@@ -1281,6 +1350,5 @@ See `plugin/hooks/examples/` for ready-to-use configurations:
 - `strict.json` - Block on all failures
 - `permissive.json` - Warn only
 - `pipeline.json` - Gate chaining
-- `convention-based.json` - Zero-config context injection patterns
 - `context/` - Example context files
 - `code-review.workflow.md` - Code review workflow
