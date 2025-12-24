@@ -1,4 +1,4 @@
-import { HookInputSchema, parseHookInput } from '../src/schemas';
+import { HookInputSchema, parseHookInput, SessionStateSchema } from '../src/schemas';
 
 describe('HookInputSchema', () => {
   it('parses valid minimal input', () => {
@@ -56,6 +56,38 @@ describe('parseHookInput', () => {
 
   it('returns error for invalid schema', () => {
     const result = parseHookInput('{"foo":"bar"}');
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('SessionStateSchema', () => {
+  it('parses valid complete state', () => {
+    const state = {
+      session_id: 'test-123',
+      started_at: '2025-01-01T00:00:00Z',
+      active_command: '/execute',
+      active_skill: null,
+      edited_files: ['main.ts'],
+      file_extensions: ['ts'],
+      metadata: { key: 'value' },
+    };
+    const result = SessionStateSchema.safeParse(state);
+    expect(result.success).toBe(true);
+  });
+
+  it('applies defaults for missing fields', () => {
+    const result = SessionStateSchema.safeParse({});
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.active_command).toBeNull();
+      expect(result.data.edited_files).toEqual([]);
+      expect(result.data.metadata).toEqual({});
+    }
+  });
+
+  it('rejects invalid types', () => {
+    const invalid = { active_command: 123 };
+    const result = SessionStateSchema.safeParse(invalid);
     expect(result.success).toBe(false);
   });
 });

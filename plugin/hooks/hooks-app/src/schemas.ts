@@ -69,3 +69,28 @@ export function parseHookInput(json: string): ParseResult<HookInput> {
 
   return { success: true, data: result.data };
 }
+
+/**
+ * Session State Schema - Runtime Validation for Persisted State
+ *
+ * API Contract:
+ * - All fields have defaults for backward compatibility
+ * - File not found: Silent initialization (expected on first run)
+ * - Parse/validation error: Log warning, reinitialize
+ * - metadata uses Record<string, unknown> - callers must narrow types
+ * - stashedWorkflowId NOT included - workflow-specific, lives in WorkflowStateManager
+ */
+export const SessionStateSchema = z.object({
+  session_id: z.string().default(() => {
+    const now = new Date();
+    return now.toISOString().replace(/[:.]/g, '-').substring(0, 19);
+  }),
+  started_at: z.string().default(() => new Date().toISOString()),
+  active_command: z.string().nullable().default(null),
+  active_skill: z.string().nullable().default(null),
+  edited_files: z.array(z.string()).default([]),
+  file_extensions: z.array(z.string()).default([]),
+  metadata: z.record(z.string(), z.unknown()).default({}),
+});
+
+export type ValidatedSessionState = z.infer<typeof SessionStateSchema>;
