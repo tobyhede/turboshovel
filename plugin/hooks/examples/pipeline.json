@@ -2,29 +2,29 @@
   "gates": {
     "format": {
       "description": "Auto-format code",
-      "comment": "Examples: 'npm run format' | 'cargo fmt' | 'mise run format'",
-      "command": "mise run format",
+      "comment": "Customize for your project: 'npm run format' | 'cargo fmt' | your command",
+      "command": "npm run format",
       "on_pass": "check",
       "on_fail": "STOP"
     },
     "check": {
       "description": "Quality checks",
-      "comment": "Examples: 'npm run lint' | 'cargo clippy' | 'mise run check'",
-      "command": "mise run check",
+      "comment": "Customize for your project: 'npm run lint' | 'cargo clippy' | your command",
+      "command": "npm run lint",
       "on_pass": "test",
       "on_fail": "BLOCK"
     },
     "test": {
       "description": "Run tests",
-      "comment": "Examples: 'npm test' | 'cargo test' | 'mise run test'",
-      "command": "mise run test",
+      "comment": "Customize for your project: 'npm test' | 'cargo test' | your command",
+      "command": "npm test",
       "on_pass": "build",
       "on_fail": "BLOCK"
     },
     "build": {
       "description": "Build project",
-      "comment": "Examples: 'npm run build' | 'cargo build' | 'mise run build'",
-      "command": "mise run build",
+      "comment": "Customize for your project: 'npm run build' | 'cargo build' | your command",
+      "command": "npm run build",
       "on_pass": "CONTINUE",
       "on_fail": "BLOCK"
     }

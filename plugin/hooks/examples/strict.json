@@ -5,22 +5,22 @@
   "gates": {
     "check": {
       "description": "Quality checks must pass",
-      "comment": "Examples: 'npm run lint' | 'cargo clippy' | 'mise run check'",
-      "command": "mise run check",
+      "comment": "Customize for your project: 'npm run lint' | 'cargo clippy' | your command",
+      "command": "npm run lint",
       "on_pass": "CONTINUE",
       "on_fail": "BLOCK"
     },
     "test": {
       "description": "All tests must pass",
-      "comment": "Examples: 'npm test' | 'cargo test' | 'mise run test'",
-      "command": "mise run test",
+      "comment": "Customize for your project: 'npm test' | 'cargo test' | your command",
+      "command": "npm test",
       "on_pass": "CONTINUE",
       "on_fail": "BLOCK"
     },
     "build": {
       "description": "Build must succeed",
-      "comment": "Examples: 'npm run build' | 'cargo build' | 'mise run build'",
-      "command": "mise run build",
+      "comment": "Customize for your project: 'npm run build' | 'cargo build' | your command",
+      "command": "npm run build",
       "on_pass": "CONTINUE",
       "on_fail": "BLOCK"
     }
