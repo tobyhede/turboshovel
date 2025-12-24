@@ -404,7 +404,7 @@ program
       }
 
       console.log(`Workflow restored: ${state.workflow}`);
-      console.log(`Resuming at step ${state.task}: ${state.taskName}`);
+      console.log(`Resuming at Task ${state.task}: ${state.taskName}`);
       console.log('Enforcement active.');
     } catch (error) {
       console.error(`Error: ${getErrorMessage(error)}`);
