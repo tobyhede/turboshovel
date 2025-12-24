@@ -67,8 +67,7 @@ export async function handleSubagentStop(input: HookInput): Promise<SubagentStop
     if (!binding) {
       return {
         violation:
-          `SubagentStop for unknown agent ${agentId}. ` +
-          `Agent was not bound at SubagentStart.`,
+          `SubagentStop for unknown agent ${agentId}. ` + `Agent was not bound at SubagentStart.`
       };
     }
 
@@ -78,7 +77,7 @@ export async function handleSubagentStop(input: HookInput): Promise<SubagentStop
     // Update binding
     await manager.updateAgentBinding(state.id, agentId, {
       status: 'done',
-      result,
+      result
     });
 
     // Generate completion context
@@ -110,9 +109,9 @@ async function formatCompletionContext(
   const state = await manager.load(workflowId);
   if (state) {
     const bindings = Object.values(state.agentBindings || {});
-    const running = bindings.filter(b => b.status === 'running').length;
-    const done = bindings.filter(b => b.status === 'done').length;
-    const failed = bindings.filter(b => b.result === 'fail').length;
+    const running = bindings.filter((b) => b.status === 'running').length;
+    const done = bindings.filter((b) => b.status === 'done').length;
+    const failed = bindings.filter((b) => b.result === 'fail').length;
 
     if (running > 0) {
       lines.push(`${done}/${done + running} tasks done. Waiting for ${running} more.`);
@@ -140,7 +139,7 @@ async function handleLegacySubagentStop(input: HookInput): Promise<SubagentStopR
   if (!state) return {};
 
   // Find running task
-  const runningIndex = state.tasks.findIndex(t => t.status === 'running');
+  const runningIndex = state.tasks.findIndex((t) => t.status === 'running');
   if (runningIndex === -1) return {};
 
   const isBlocked = parseAgentStatus(input.output) === 'fail';
@@ -149,7 +148,7 @@ async function handleLegacySubagentStop(input: HookInput): Promise<SubagentStopR
   updatedTasks[runningIndex] = {
     ...updatedTasks[runningIndex],
     status: isBlocked ? 'blocked' : 'complete',
-    completedAt: new Date().toISOString(),
+    completedAt: new Date().toISOString()
   };
 
   await manager.update(state.id, { tasks: updatedTasks });
@@ -158,12 +157,12 @@ async function handleLegacySubagentStop(input: HookInput): Promise<SubagentStopR
     return { context: 'Task BLOCKED. Present options to user.' };
   }
 
-  const allDone = updatedTasks.every(t => t.status !== 'running' && t.status !== 'pending');
+  const allDone = updatedTasks.every((t) => t.status !== 'running' && t.status !== 'pending');
   if (allDone) {
     return { context: 'All tasks complete. Run: workflow next' };
   }
 
   return {
-    context: `Task complete. ${updatedTasks.filter(t => t.status === 'complete').length}/${updatedTasks.length} done.`,
+    context: `Task complete. ${updatedTasks.filter((t) => t.status === 'complete').length}/${updatedTasks.length} done.`
   };
 }

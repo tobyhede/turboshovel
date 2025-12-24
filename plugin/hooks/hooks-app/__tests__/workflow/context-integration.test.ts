@@ -40,7 +40,7 @@ describe('Workflow Context Injection', () => {
     const manager = new WorkflowStateManager(testDir);
     const state = await manager.create('test.workflow.md', 'Run tests');
     await manager.update(state.id, {
-      variables: { has_blocked_task: true },
+      variables: { has_blocked_task: true }
     });
     await manager.setActive(state.id);
 
@@ -56,8 +56,8 @@ describe('Workflow Context Injection', () => {
       tasks: [
         { id: 'task-1', status: 'complete' },
         { id: 'task-2', status: 'running' },
-        { id: 'task-3', status: 'pending' },
-      ],
+        { id: 'task-3', status: 'pending' }
+      ]
     });
     await manager.setActive(state.id);
 

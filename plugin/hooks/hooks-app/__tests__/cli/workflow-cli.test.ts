@@ -37,7 +37,7 @@ describe('workflow CLI', () => {
         cwd: testDir,
         encoding: 'utf8',
         env: { ...process.env, TURBOSHOVEL_LOG: '0' },
-        stdio: ['pipe', 'pipe', 'pipe'],
+        stdio: ['pipe', 'pipe', 'pipe']
       });
       return { stdout, stderr: '', exitCode: 0 };
     } catch (error) {
@@ -45,7 +45,7 @@ describe('workflow CLI', () => {
       return {
         stdout: err.stdout || '',
         stderr: err.stderr || '',
-        exitCode: err.status || 1,
+        exitCode: err.status || 1
       };
     }
   };
@@ -53,7 +53,9 @@ describe('workflow CLI', () => {
   describe('workflow start', () => {
     test('creates workflow state from file', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
@@ -62,7 +64,8 @@ echo "test"
 
 - PASS: CONTINUE
 - FAIL: STOP
-`);
+`
+      );
 
       const result = await runCli(['start', workflowPath]);
       expect(result.stdout).toContain('Started workflow');
@@ -79,7 +82,9 @@ echo "test"
     it('pushes task to pending queue when workflow active', async () => {
       // First start a workflow
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
@@ -88,7 +93,8 @@ echo "test"
 
 - PASS: CONTINUE
 - FAIL: STOP
-`);
+`
+      );
       await runCli(['start', workflowPath]);
 
       // Then add a task
@@ -111,7 +117,9 @@ echo "test"
 
     it('errors for invalid task ID format', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
@@ -120,7 +128,8 @@ echo "test"
 
 - PASS: CONTINUE
 - FAIL: STOP
-`);
+`
+      );
       await runCli(['start', workflowPath]);
 
       const result = await runCli(['start', '--task', 'invalid']);
@@ -133,7 +142,9 @@ echo "test"
   describe('workflow start --agent', () => {
     it('binds agent to pending task', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
@@ -148,7 +159,8 @@ echo "test"
 \`\`\`bash
 echo "test"
 \`\`\`
-`);
+`
+      );
       await runCli(['start', workflowPath]);
       await runCli(['start', '--task', '2.A']);
 
@@ -164,7 +176,9 @@ echo "test"
 
     it('errors when no pending task', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
@@ -173,7 +187,8 @@ echo "test"
 
 - PASS: CONTINUE
 - FAIL: STOP
-`);
+`
+      );
       await runCli(['start', workflowPath]);
 
       const result = await runCli(['start', '--agent', 'agent-xyz']);
@@ -193,13 +208,16 @@ echo "test"
   describe('workflow status', () => {
     test('shows current workflow state', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
 echo "test"
 \`\`\`
-`);
+`
+      );
 
       await runCli(['start', workflowPath]);
       const result = await runCli(['status']);
@@ -217,7 +235,9 @@ echo "test"
   describe('workflow status (orchestration)', () => {
     it('shows pending tasks', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
@@ -235,7 +255,8 @@ echo "test"
 
 - PASS: CONTINUE
 - FAIL: STOP
-`);
+`
+      );
       await runCli(['start', workflowPath]);
       await runCli(['start', '--task', '2.A']);
       await runCli(['start', '--task', '2.B']);
@@ -249,7 +270,9 @@ echo "test"
 
     it('shows agent bindings', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
@@ -264,7 +287,8 @@ echo "test"
 \`\`\`bash
 echo "test"
 \`\`\`
-`);
+`
+      );
       await runCli(['start', workflowPath]);
       await runCli(['start', '--task', '1']);
       await runCli(['start', '--agent', 'agent-xyz']);
@@ -278,7 +302,9 @@ echo "test"
 
     it('shows stashed status', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
@@ -287,7 +313,8 @@ echo "test"
 
 - PASS: CONTINUE
 - FAIL: STOP
-`);
+`
+      );
       await runCli(['start', workflowPath]);
       await runCli(['stash']);
 
@@ -300,7 +327,9 @@ echo "test"
   describe('workflow next', () => {
     test('advances to next step', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
@@ -315,7 +344,8 @@ echo "first"
 \`\`\`bash
 echo "second"
 \`\`\`
-`);
+`
+      );
 
       await runCli(['start', workflowPath]);
       const result = await runCli(['next']);
@@ -325,13 +355,16 @@ echo "second"
 
     test('shows done message on final step', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. Only step
 
 \`\`\`bash
 echo "done"
 \`\`\`
-`);
+`
+      );
 
       await runCli(['start', workflowPath]);
       const result = await runCli(['next']);
@@ -343,7 +376,9 @@ echo "done"
   describe('workflow next --pass/--fail', () => {
     it('marks agent as passed with --pass --agent', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
@@ -352,7 +387,8 @@ echo "test"
 
 - PASS: CONTINUE
 - FAIL: STOP
-`);
+`
+      );
       await runCli(['start', workflowPath]);
       await runCli(['start', '--task', '1']);
       await runCli(['start', '--agent', 'agent-xyz']);
@@ -371,7 +407,9 @@ echo "test"
 
     it('marks agent as failed with --fail --agent', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
@@ -380,7 +418,8 @@ echo "test"
 
 - PASS: CONTINUE
 - FAIL: STOP
-`);
+`
+      );
       await runCli(['start', workflowPath]);
       await runCli(['start', '--task', '1']);
       await runCli(['start', '--agent', 'agent-xyz']);
@@ -396,7 +435,9 @@ echo "test"
 
     it('errors for unknown agent', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
@@ -405,7 +446,8 @@ echo "test"
 
 - PASS: CONTINUE
 - FAIL: STOP
-`);
+`
+      );
       await runCli(['start', workflowPath]);
 
       const result = await runCli(['next', '--pass', '--agent', 'unknown']);
@@ -418,13 +460,16 @@ echo "test"
   describe('workflow stop', () => {
     test('aborts current workflow', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
 echo "test"
 \`\`\`
-`);
+`
+      );
 
       await runCli(['start', workflowPath]);
       const result = await runCli(['stop']);
@@ -440,7 +485,9 @@ echo "test"
   describe('workflow stash', () => {
     it('stashes active workflow', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
@@ -449,7 +496,8 @@ echo "test"
 
 - PASS: CONTINUE
 - FAIL: STOP
-`);
+`
+      );
       await runCli(['start', workflowPath]);
 
       const result = await runCli(['stash']);
@@ -475,7 +523,9 @@ echo "test"
   describe('workflow pop', () => {
     it('restores stashed workflow', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
-      await fs.writeFile(workflowPath, `
+      await fs.writeFile(
+        workflowPath,
+        `
 ## 1. First step
 
 \`\`\`bash
@@ -484,7 +534,8 @@ echo "test"
 
 - PASS: CONTINUE
 - FAIL: STOP
-`);
+`
+      );
       await runCli(['start', workflowPath]);
       await runCli(['stash']);
 

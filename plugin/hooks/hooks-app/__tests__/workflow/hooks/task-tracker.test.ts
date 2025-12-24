@@ -1,7 +1,10 @@
 import { join } from 'path';
 import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
-import { trackTaskDispatch, type TaskDispatchResult } from '../../../src/workflow/hooks/task-tracker';
+import {
+  trackTaskDispatch,
+  type TaskDispatchResult
+} from '../../../src/workflow/hooks/task-tracker';
 import { WorkflowStateManager } from '../../../src/workflow/state';
 import type { HookInput } from '../../../src/types';
 import { createTaskNumber } from '../../../src/workflow/types';
@@ -30,8 +33,8 @@ describe('trackTaskDispatch with TaskId', () => {
       tool_name: 'Task',
       tool_input: {
         description: '3.A - Review code changes',
-        subagent_type: 'code-review-agent',
-      },
+        subagent_type: 'code-review-agent'
+      }
     };
 
     const result = await trackTaskDispatch(input);
@@ -51,8 +54,8 @@ describe('trackTaskDispatch with TaskId', () => {
       cwd: testDir,
       tool_name: 'Task',
       tool_input: {
-        description: 'Review the code without task prefix',
-      },
+        description: 'Review the code without task prefix'
+      }
     };
 
     const result = await trackTaskDispatch(input);
@@ -65,7 +68,7 @@ describe('trackTaskDispatch with TaskId', () => {
       hook_event_name: 'PostToolUse',
       cwd: testDir,
       tool_name: 'Task',
-      tool_input: { description: 'Any description' },
+      tool_input: { description: 'Any description' }
     };
 
     const result = await trackTaskDispatch(input);
@@ -83,7 +86,7 @@ describe('trackTaskDispatch with TaskId', () => {
       hook_event_name: 'PostToolUse',
       cwd: testDir,
       tool_name: 'Task',
-      tool_input: { description: 'No prefix needed when stashed' },
+      tool_input: { description: 'No prefix needed when stashed' }
     };
 
     const result = await trackTaskDispatch(input);

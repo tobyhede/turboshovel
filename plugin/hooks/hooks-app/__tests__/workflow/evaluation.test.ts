@@ -11,7 +11,7 @@ describe('evaluateConditions', () => {
     it('returns pass when all complete', () => {
       const tasks = [
         { id: '1', status: 'complete' },
-        { id: '2', status: 'complete' },
+        { id: '2', status: 'complete' }
       ] as TaskState[];
       expect(evaluateConditions(tasks, conditions)).toEqual(passAction);
     });
@@ -19,7 +19,7 @@ describe('evaluateConditions', () => {
     it('returns fail when any blocked', () => {
       const tasks = [
         { id: '1', status: 'complete' },
-        { id: '2', status: 'blocked' },
+        { id: '2', status: 'blocked' }
       ] as TaskState[];
       expect(evaluateConditions(tasks, conditions)).toEqual(failAction);
     });
@@ -31,7 +31,7 @@ describe('evaluateConditions', () => {
     it('returns pass when any complete', () => {
       const tasks = [
         { id: '1', status: 'complete' },
-        { id: '2', status: 'blocked' },
+        { id: '2', status: 'blocked' }
       ] as TaskState[];
       expect(evaluateConditions(tasks, conditions)).toEqual(passAction);
     });
@@ -39,7 +39,7 @@ describe('evaluateConditions', () => {
     it('returns fail when all blocked', () => {
       const tasks = [
         { id: '1', status: 'blocked' },
-        { id: '2', status: 'blocked' },
+        { id: '2', status: 'blocked' }
       ] as TaskState[];
       expect(evaluateConditions(tasks, conditions)).toEqual(failAction);
     });

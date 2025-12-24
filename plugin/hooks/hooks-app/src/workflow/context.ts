@@ -31,9 +31,9 @@ function formatWorkflowContext(state: WorkflowState): string {
 
   // Show task progress if there are tasks
   if (state.tasks.length > 0) {
-    const complete = state.tasks.filter(t => t.status === 'complete').length;
-    const running = state.tasks.filter(t => t.status === 'running').length;
-    const blocked = state.tasks.filter(t => t.status === 'blocked').length;
+    const complete = state.tasks.filter((t) => t.status === 'complete').length;
+    const running = state.tasks.filter((t) => t.status === 'running').length;
+    const blocked = state.tasks.filter((t) => t.status === 'blocked').length;
 
     lines.push('');
     lines.push(`**Tasks:** ${complete}/${state.tasks.length} complete`);

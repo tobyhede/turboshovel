@@ -2,12 +2,9 @@ import fc from 'fast-check';
 import {
   createTaskNumber,
   incrementTaskNumber,
-  decrementTaskNumber,
+  decrementTaskNumber
 } from '../../src/workflow/types';
-import {
-  taskIdToString,
-  parseTaskIdFromString,
-} from '../../src/workflow/task-id';
+import { taskIdToString, parseTaskIdFromString } from '../../src/workflow/task-id';
 
 describe('TaskId Property Tests', () => {
   // Generator for valid task numbers (1-999999)

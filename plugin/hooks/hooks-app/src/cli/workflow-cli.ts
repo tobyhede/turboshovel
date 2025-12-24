@@ -18,10 +18,7 @@ import { isNodeError, getErrorMessage } from '../errors';
 
 const program = new Command();
 
-program
-  .name('workflow')
-  .description('Manage workflow execution')
-  .version('1.0.0');
+program.name('workflow').description('Manage workflow execution').version('1.0.0');
 
 function getCwd(): string {
   return process.cwd();
@@ -115,7 +112,6 @@ program
         console.error('Error: Workflow file, --task, or --agent option required');
         process.exit(1);
       }
-
     } catch (error) {
       if (isNodeError(error) && error.code === 'ENOENT') {
         console.error(`Error: Workflow file not found: ${file}`);
@@ -136,98 +132,100 @@ program
   .option('--fail', 'Mark task as failed/blocked')
   .option('--task <taskId>', 'Specify which task (for parallel tasks)')
   .option('--agent <agentId>', 'Specify agent completing task')
-  .action(async (options: {
-    step?: string;
-    pass?: boolean;
-    fail?: boolean;
-    task?: string;
-    agent?: string;
-  }) => {
-    try {
-      const cwd = getCwd();
-      const manager = new WorkflowStateManager(cwd);
-      const state = await manager.getActive();
+  .action(
+    async (options: {
+      step?: string;
+      pass?: boolean;
+      fail?: boolean;
+      task?: string;
+      agent?: string;
+    }) => {
+      try {
+        const cwd = getCwd();
+        const manager = new WorkflowStateManager(cwd);
+        const state = await manager.getActive();
 
-      if (!state) {
-        console.log('No active workflow');
-        return;
-      }
+        if (!state) {
+          console.log('No active workflow');
+          return;
+        }
 
-      // Handle agent completion with --pass/--fail --agent
-      if ((options.pass || options.fail) && options.agent) {
-        const binding = await manager.getAgentBinding(state.id, options.agent);
-        if (!binding) {
-          console.error(`Error: No binding for agent ${options.agent}`);
+        // Handle agent completion with --pass/--fail --agent
+        if ((options.pass || options.fail) && options.agent) {
+          const binding = await manager.getAgentBinding(state.id, options.agent);
+          if (!binding) {
+            console.error(`Error: No binding for agent ${options.agent}`);
+            process.exit(1);
+          }
+
+          const result = options.fail ? 'fail' : 'pass';
+          await manager.updateAgentBinding(state.id, options.agent, {
+            status: 'done',
+            result
+          });
+
+          console.log(`Agent ${options.agent} marked as ${result}`);
+
+          // Check if all agents done
+          const updated = await manager.load(state.id);
+          const bindings = Object.values(updated?.agentBindings || {});
+          const running = bindings.filter((b) => b.status === 'running').length;
+
+          if (running > 0) {
+            console.log(`${running} agent(s) still running`);
+          } else {
+            console.log('All agents complete. Run: workflow next');
+          }
+          return;
+        }
+
+        // Load workflow definition to get total tasks
+        const workflowPath = await findWorkflowFile(cwd, state.workflow);
+        if (!workflowPath) {
+          console.error(`Error: Workflow file ${state.workflow} not found`);
           process.exit(1);
         }
 
-        const result = options.fail ? 'fail' : 'pass';
-        await manager.updateAgentBinding(state.id, options.agent, {
-          status: 'done',
-          result,
+        const content = await fs.readFile(workflowPath, 'utf8');
+        const tasks = parseWorkflow(content);
+
+        // Determine next task
+        let nextTaskNumber: TaskNumber | null;
+        if (options.step) {
+          nextTaskNumber = createTaskNumber(parseInt(options.step, 10));
+        } else {
+          nextTaskNumber = incrementTaskNumber(state.task);
+        }
+
+        if (!nextTaskNumber) {
+          console.error('Error: Invalid task number');
+          process.exit(1);
+        }
+
+        // Check if workflow is complete
+        if (nextTaskNumber > tasks.length) {
+          console.log(`Workflow complete: ${state.workflow}`);
+          await manager.setActive(null);
+          return;
+        }
+
+        const nextTask = tasks[nextTaskNumber - 1];
+
+        // Update state (taskNumber already validated)
+        await manager.update(state.id, {
+          task: nextTaskNumber,
+          taskName: nextTask.description,
+          retryCount: 0
         });
 
-        console.log(`Agent ${options.agent} marked as ${result}`);
-
-        // Check if all agents done
-        const updated = await manager.load(state.id);
-        const bindings = Object.values(updated?.agentBindings || {});
-        const running = bindings.filter(b => b.status === 'running').length;
-
-        if (running > 0) {
-          console.log(`${running} agent(s) still running`);
-        } else {
-          console.log('All agents complete. Run: workflow next');
-        }
-        return;
-      }
-
-      // Load workflow definition to get total tasks
-      const workflowPath = await findWorkflowFile(cwd, state.workflow);
-      if (!workflowPath) {
-        console.error(`Error: Workflow file ${state.workflow} not found`);
+        console.log(`Task ${nextTaskNumber}: ${nextTask.description}`);
+        printTaskGuidance(nextTask);
+      } catch (error) {
+        console.error(`Error: ${getErrorMessage(error)}`);
         process.exit(1);
       }
-
-      const content = await fs.readFile(workflowPath, 'utf8');
-      const tasks = parseWorkflow(content);
-
-      // Determine next task
-      let nextTaskNumber: TaskNumber | null;
-      if (options.step) {
-        nextTaskNumber = createTaskNumber(parseInt(options.step, 10));
-      } else {
-        nextTaskNumber = incrementTaskNumber(state.task);
-      }
-
-      if (!nextTaskNumber) {
-        console.error('Error: Invalid task number');
-        process.exit(1);
-      }
-
-      // Check if workflow is complete
-      if (nextTaskNumber > tasks.length) {
-        console.log(`Workflow complete: ${state.workflow}`);
-        await manager.setActive(null);
-        return;
-      }
-
-      const nextTask = tasks[nextTaskNumber - 1];
-
-      // Update state (taskNumber already validated)
-      await manager.update(state.id, {
-        task: nextTaskNumber,
-        taskName: nextTask.description,
-        retryCount: 0,
-      });
-
-      console.log(`Task ${nextTaskNumber}: ${nextTask.description}`);
-      printTaskGuidance(nextTask);
-    } catch (error) {
-      console.error(`Error: ${getErrorMessage(error)}`);
-      process.exit(1);
     }
-  });
+  );
 
 program
   .command('complete')
@@ -246,7 +244,7 @@ program
 
       if (options.status === 'blocked') {
         await manager.update(state.id, {
-          variables: { ...state.variables, blocked: true },
+          variables: { ...state.variables, blocked: true }
         });
         console.log(`Workflow BLOCKED: ${state.workflow}`);
       } else {
@@ -439,12 +437,18 @@ function printTaskGuidance(task: Task): void {
 
 function formatAction(action: Action): string {
   switch (action.type) {
-    case 'CONTINUE': return 'CONTINUE';
-    case 'STOP': return action.message ? `STOP "${action.message}"` : 'STOP';
-    case 'GOTO': return `GOTO ${action.task}`;
-    case 'DONE': return 'DONE';
-    case 'RETRY': return action.max ? `RETRY ${action.max}` : 'RETRY';
-    default: return 'UNKNOWN';
+    case 'CONTINUE':
+      return 'CONTINUE';
+    case 'STOP':
+      return action.message ? `STOP "${action.message}"` : 'STOP';
+    case 'GOTO':
+      return `GOTO ${action.task}`;
+    case 'DONE':
+      return 'DONE';
+    case 'RETRY':
+      return action.max ? `RETRY ${action.max}` : 'RETRY';
+    default:
+      return 'UNKNOWN';
   }
 }
 

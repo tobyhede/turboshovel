@@ -58,7 +58,10 @@ const MAX_GATES_PER_DISPATCH = 10;
  * If word-boundary matching is needed in the future, consider using regex like:
  * /\b${keyword}\b/i.test(message)
  */
-export function gateMatchesKeywords(gateConfig: GateConfig, userMessage: string | undefined): boolean {
+export function gateMatchesKeywords(
+  gateConfig: GateConfig,
+  userMessage: string | undefined
+): boolean {
   // No keywords = always run (backwards compatible)
   if (!gateConfig.keywords || gateConfig.keywords.length === 0) {
     return true;
@@ -70,9 +73,7 @@ export function gateMatchesKeywords(gateConfig: GateConfig, userMessage: string 
   }
 
   const lowerMessage = userMessage.toLowerCase();
-  return gateConfig.keywords.some(keyword =>
-    lowerMessage.includes(keyword.toLowerCase())
-  );
+  return gateConfig.keywords.some((keyword) => lowerMessage.includes(keyword.toLowerCase()));
 }
 
 /**
@@ -116,8 +117,8 @@ export async function gateMatchesFilePattern(
   try {
     const matches = gateConfig.file_patterns.some((pattern) => {
       const result = minimatch(relativePath, pattern, {
-        matchBase: false,  // Match full path, not just basename (packages/cts/** shouldn't match unrelated/cts/)
-        dot: true,         // Allow patterns to match dotfiles like .config/settings.json
+        matchBase: false, // Match full path, not just basename (packages/cts/** shouldn't match unrelated/cts/)
+        dot: true // Allow patterns to match dotfiles like .config/settings.json
       });
       if (result) {
         matchedPattern = pattern;
@@ -213,7 +214,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
     tool: input.tool_name,
     agent: input.agent_name || input.subagent_name,
     file: input.file_path,
-    cwd,
+    cwd
   });
 
   // Update session state (best-effort)
@@ -236,7 +237,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
     if (result.violation) {
       return {
         context: accumulatedContext,
-        blockReason: result.violation,
+        blockReason: result.violation
       };
     }
   }
@@ -246,7 +247,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
     if (result.violation) {
       return {
         context: accumulatedContext,
-        blockReason: result.violation,
+        blockReason: result.violation
       };
     }
     if (result.context) {
@@ -259,7 +260,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
     if (result.violation) {
       return {
         context: accumulatedContext,
-        blockReason: result.violation,
+        blockReason: result.violation
       };
     }
     if (result.context) {
@@ -288,7 +289,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
     await logger.debug('Hook filtered out by enabled list', {
       event: hookEvent,
       tool: input.tool_name,
-      agent: input.agent_name,
+      agent: input.agent_name
     });
     // Still return context injection result
     return accumulatedContext ? { context: accumulatedContext } : {};
@@ -322,7 +323,10 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
     }
 
     // File pattern filtering for PostToolUse
-    if (hookEvent === 'PostToolUse' && !(await gateMatchesFilePattern(gateConfig, input.file_path, input.cwd))) {
+    if (
+      hookEvent === 'PostToolUse' &&
+      !(await gateMatchesFilePattern(gateConfig, input.file_path, input.cwd))
+    ) {
       await logger.debug('Gate skipped - no file pattern match', { gate: gateName });
       continue;
     }
@@ -338,7 +342,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
       gate: gateName,
       passed,
       duration_ms: gateDuration,
-      tool: input.tool_name,
+      tool: input.tool_name
     });
 
     // Determine action
@@ -357,7 +361,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
         action,
         blocked: !!actionResult.blockReason,
         stopped: !!actionResult.stopMessage,
-        duration_ms: Date.now() - startTime,
+        duration_ms: Date.now() - startTime
       });
       return {
         context: accumulatedContext,
@@ -375,7 +379,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
   await logger.event('debug', hookEvent, {
     status: 'completed',
     gates_executed: gatesExecuted,
-    duration_ms: Date.now() - startTime,
+    duration_ms: Date.now() - startTime
   });
 
   return {

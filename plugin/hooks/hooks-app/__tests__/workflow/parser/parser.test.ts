@@ -293,7 +293,7 @@ echo "test"
       ['1: First step', 'colon'],
       ['1 - First step', 'dash'],
       ['1) First step', 'paren'],
-      ['1 First step', 'space'],
+      ['1 First step', 'space']
     ])('parses header with %s separator', (header) => {
       const markdown = `
 ## ${header}
@@ -328,7 +328,7 @@ FAIL ANY: STOP
         id: 'A',
         description: 'First reviewer',
         agentType: 'code-review-agent',
-        isDynamic: false,
+        isDynamic: false
       });
       expect(tasks[0].subtasks?.[1].id).toBe('B');
     });

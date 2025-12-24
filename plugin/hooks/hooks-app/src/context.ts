@@ -34,7 +34,12 @@ function getPluginRoot(): string | null {
  * Returns array of paths following priority order:
  * flat > slash-command subdir > slash-command nested > skill subdir > skill nested
  */
-function buildContextPaths(baseDir: string, contextDir: string, name: string, stage: string): string[] {
+function buildContextPaths(
+  baseDir: string,
+  contextDir: string,
+  name: string,
+  stage: string
+): string[] {
   return [
     path.join(baseDir, contextDir, `${name}-${stage}.md`),
     path.join(baseDir, contextDir, 'slash-command', `${name}-${stage}.md`),
@@ -106,13 +111,19 @@ async function discoverAgentCommandContext(
   // Project-level paths (highest priority)
   const projectPaths: string[] = [];
   if (contextName) {
-    projectPaths.push(path.join(cwd, '.claude', 'context', `${agentName}-${contextName}-${stage}.md`));
+    projectPaths.push(
+      path.join(cwd, '.claude', 'context', `${agentName}-${contextName}-${stage}.md`)
+    );
   }
   projectPaths.push(path.join(cwd, '.claude', 'context', `${agentName}-${stage}.md`));
 
   for (const filePath of projectPaths) {
     if (await fileExists(filePath)) {
-      await logger.debug('Found project agent context file', { path: filePath, agent: agentName, stage });
+      await logger.debug('Found project agent context file', {
+        path: filePath,
+        agent: agentName,
+        stage
+      });
       return filePath;
     }
   }
@@ -128,7 +139,11 @@ async function discoverAgentCommandContext(
 
     for (const filePath of pluginPaths) {
       if (await fileExists(filePath)) {
-        await logger.debug('Found plugin agent context file', { path: filePath, agent: agentName, stage });
+        await logger.debug('Found plugin agent context file', {
+          path: filePath,
+          agent: agentName,
+          stage
+        });
         return filePath;
       }
     }

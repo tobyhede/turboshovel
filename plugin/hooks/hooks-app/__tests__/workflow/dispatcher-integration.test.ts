@@ -35,7 +35,7 @@ describe('Dispatcher Workflow Integration', () => {
     const input: HookInput = {
       hook_event_name: 'UserPromptSubmit',
       cwd: testDir,
-      user_message: 'test prompt',
+      user_message: 'test prompt'
     };
 
     const result = await dispatch(input);
@@ -50,7 +50,7 @@ describe('Dispatcher Workflow Integration', () => {
     const input: HookInput = {
       hook_event_name: 'UserPromptSubmit',
       cwd: testDir,
-      user_message: 'test prompt',
+      user_message: 'test prompt'
     };
 
     const result = await dispatch(input);
@@ -83,7 +83,7 @@ describe('dispatcher with orchestration hooks', () => {
       hook_event_name: 'PostToolUse',
       cwd: testDir,
       tool_name: 'Task',
-      tool_input: { description: 'Missing task prefix' },
+      tool_input: { description: 'Missing task prefix' }
     };
 
     const result = await dispatch(input);
@@ -99,7 +99,7 @@ describe('dispatcher with orchestration hooks', () => {
     const input: HookInput = {
       hook_event_name: 'SubagentStart',
       cwd: testDir,
-      agent_id: 'agent-xyz',
+      agent_id: 'agent-xyz'
     };
 
     const result = await dispatch(input);
@@ -114,7 +114,7 @@ describe('dispatcher with orchestration hooks', () => {
     const input: HookInput = {
       hook_event_name: 'SubagentStop',
       cwd: testDir,
-      agent_id: 'unknown-agent',
+      agent_id: 'unknown-agent'
     };
 
     const result = await dispatch(input);

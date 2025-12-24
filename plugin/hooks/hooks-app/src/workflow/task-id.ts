@@ -36,29 +36,26 @@ export interface ParseTaskIdOptions {
  *   "3" -> null (fails because no separator found)
  *
  */
-export function parseTaskIdFromString(
-  input: string,
-  options?: ParseTaskIdOptions
-): TaskId | null {
+export function parseTaskIdFromString(input: string, options?: ParseTaskIdOptions): TaskId | null {
   if (!input) return null;
 
   const requireSeparator = options?.requireSeparator ?? false;
 
   // Build regex based on options
   const pattern = requireSeparator
-    ? /^(\d+)(?:\.([A-Za-z]))?[\s\-:]/  // Must have separator
-    : /^(\d+)(?:\.([A-Za-z]))?$/;        // Must match entire string
+    ? /^(\d+)(?:\.([A-Za-z]))?[\s\-:]/ // Must have separator
+    : /^(\d+)(?:\.([A-Za-z]))?$/; // Must match entire string
 
   const match = input.match(pattern);
   if (!match) return null;
 
   const taskNum = parseInt(match[1], 10);
   const task = createTaskNumber(taskNum);
-  if (!task) return null;  // Invalid task number (0, negative, or too large)
+  if (!task) return null; // Invalid task number (0, negative, or too large)
 
   return {
     task,
-    subtask: match[2]?.toUpperCase(),
+    subtask: match[2]?.toUpperCase()
   };
 }
 

@@ -2,9 +2,24 @@
 
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
-import type { Root, Heading, Code, Paragraph, List, ListItem, Strong, Text, PhrasingContent } from 'mdast';
+import type {
+  Root,
+  Heading,
+  Code,
+  Paragraph,
+  List,
+  ListItem,
+  Strong,
+  Text,
+  PhrasingContent
+} from 'mdast';
 import type { Task, Action, TaskNumber, Subtask } from '../types';
-import { extractTaskHeader, extractSubtaskHeader, parseConditional, convertConditionals } from './helpers';
+import {
+  extractTaskHeader,
+  extractSubtaskHeader,
+  parseConditional,
+  convertConditionals
+} from './helpers';
 import { WorkflowSyntaxError, type ParsedConditional } from './types';
 
 /**
@@ -110,7 +125,7 @@ export function parseWorkflow(markdown: string): Task[] {
           number: parsed.number,
           description: parsed.description,
           prompts: [],
-          subtasks: [],
+          subtasks: []
         };
       }
     }
@@ -129,7 +144,7 @@ export function parseWorkflow(markdown: string): Task[] {
         }
 
         // Check for duplicate subtask IDs
-        const duplicateId = currentTask.subtasks.find(s => s.id === parsed.id);
+        const duplicateId = currentTask.subtasks.find((s) => s.id === parsed.id);
         if (duplicateId) {
           throw new WorkflowSyntaxError(
             `Duplicate subtask ID '${parsed.id}' in task ${currentTask.number}`
@@ -137,8 +152,8 @@ export function parseWorkflow(markdown: string): Task[] {
         }
 
         // Check for mixing static and dynamic subtasks
-        const hasStatic = currentTask.subtasks.some(s => !s.isDynamic);
-        const hasDynamic = currentTask.subtasks.some(s => s.isDynamic);
+        const hasStatic = currentTask.subtasks.some((s) => !s.isDynamic);
+        const hasDynamic = currentTask.subtasks.some((s) => s.isDynamic);
         if ((hasStatic && parsed.isDynamic) || (hasDynamic && !parsed.isDynamic)) {
           throw new WorkflowSyntaxError(
             `Cannot mix static subtasks (like 1.A) and dynamic subtasks (like 1.{n}) in task ${currentTask.number}`
@@ -150,7 +165,7 @@ export function parseWorkflow(markdown: string): Task[] {
           id: parsed.id,
           description: parsed.description,
           agentType: parsed.agentType,
-          isDynamic: parsed.isDynamic,
+          isDynamic: parsed.isDynamic
         });
       }
     }
@@ -164,7 +179,7 @@ export function parseWorkflow(markdown: string): Task[] {
         if (currentTask.command) {
           throw new WorkflowSyntaxError(
             `Multiple code blocks per task not allowed. Task ${currentTask.number} already has a command block. ` +
-            `Suggestion: (1) Combine commands using && or ; operators, or (2) Split into separate tasks.`
+              `Suggestion: (1) Combine commands using && or ; operators, or (2) Split into separate tasks.`
           );
         }
         currentTask.command = { code: codeNode.value };
@@ -210,7 +225,7 @@ export function parseWorkflow(markdown: string): Task[] {
     if (node.type === 'listItem' && currentTask) {
       const listItemNode = node as ListItem;
       // Get text from first paragraph child
-      const firstParagraph = listItemNode.children.find(c => c.type === 'paragraph');
+      const firstParagraph = listItemNode.children.find((c) => c.type === 'paragraph');
       if (firstParagraph) {
         const text = extractText(firstParagraph as Paragraph);
         const conditional = parseConditional(text);
@@ -251,7 +266,7 @@ function finalizeTask(
     command: task.command,
     prompts: task.prompts,
     conditions: conditions || undefined,
-    subtasks: task.subtasks.length > 0 ? task.subtasks : undefined,
+    subtasks: task.subtasks.length > 0 ? task.subtasks : undefined
   };
 }
 
@@ -269,7 +284,7 @@ function validateWorkflow(tasks: Task[]): void {
     if (tasks[i].number !== expected) {
       throw new WorkflowSyntaxError(
         `Tasks must be numbered sequentially. Expected task ${expected}, found task ${tasks[i].number}.\n` +
-        `Workflows must have exactly one algorithm with continuous numbering (1, 2, 3...).`
+          `Workflows must have exactly one algorithm with continuous numbering (1, 2, 3...).`
       );
     }
   }

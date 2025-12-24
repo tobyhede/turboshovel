@@ -86,7 +86,7 @@ describe('HookInput subagent fields', () => {
     const input: HookInput = {
       hook_event_name: 'SubagentStart',
       cwd: '/test',
-      agent_id: 'agent-abc-123',
+      agent_id: 'agent-abc-123'
     };
     expect(input.agent_id).toBe('agent-abc-123');
   });
@@ -98,8 +98,8 @@ describe('HookInput subagent fields', () => {
       tool_name: 'Task',
       tool_input: {
         description: '3.A - Review code',
-        subagent_type: 'code-review-agent',
-      },
+        subagent_type: 'code-review-agent'
+      }
     };
     expect(input.tool_input?.description).toBe('3.A - Review code');
   });

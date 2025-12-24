@@ -40,9 +40,7 @@ export function validateFilePatterns(gateConfig: GateConfig): void {
 
   for (const pattern of gateConfig.file_patterns) {
     if (typeof pattern !== 'string') {
-      throw new Error(
-        `Invalid file pattern: expected string, got ${typeof pattern}`
-      );
+      throw new Error(`Invalid file pattern: expected string, got ${typeof pattern}`);
     }
     // No syntax validation - matches ecosystem patterns (Jest, ESLint, Webpack)
   }
@@ -103,7 +101,9 @@ export function validateConfig(config: GatesConfig): void {
     try {
       validateFilePatterns(gateConfig);
     } catch (error) {
-      throw new Error(`Gate "${gateName}" has invalid configuration: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Gate "${gateName}" has invalid configuration: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     for (const action of [gateConfig.on_pass, gateConfig.on_fail]) {
@@ -138,9 +138,7 @@ export function resolvePluginPath(pluginName: string): string {
   // Security: Reject plugin names with path separators or parent references
   // Prevents path traversal attacks like "../../../etc" or "foo/bar"
   if (pluginName.includes('/') || pluginName.includes('\\') || pluginName.includes('..')) {
-    throw new Error(
-      `Invalid plugin name: '${pluginName}' (must not contain path separators)`
-    );
+    throw new Error(`Invalid plugin name: '${pluginName}' (must not contain path separators)`);
   }
 
   // Sibling convention: plugins are in same parent directory
@@ -224,10 +222,7 @@ export async function loadConfig(cwd: string): Promise<GatesConfig | null> {
   }
 
   // Load project config (overrides)
-  const projectPaths = [
-    path.join(cwd, '.claude', 'gates.json'),
-    path.join(cwd, 'gates.json')
-  ];
+  const projectPaths = [path.join(cwd, '.claude', 'gates.json'), path.join(cwd, 'gates.json')];
 
   for (const configPath of projectPaths) {
     const projectConfig = await loadConfigFile(configPath);

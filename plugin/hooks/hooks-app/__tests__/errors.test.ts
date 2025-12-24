@@ -1,4 +1,10 @@
-import { isNodeError, isError, getErrorMessage, SessionLoadError, isFileNotFoundError } from '../src/errors';
+import {
+  isNodeError,
+  isError,
+  getErrorMessage,
+  SessionLoadError,
+  isFileNotFoundError
+} from '../src/errors';
 
 describe('isNodeError', () => {
   it('returns true for NodeJS.ErrnoException', () => {
@@ -48,12 +54,20 @@ describe('SessionLoadError', () => {
   });
 
   it('isFileNotFoundError returns false for parse_error', () => {
-    const error: SessionLoadError = { type: 'parse_error', path: '/test', message: 'Unexpected token' };
+    const error: SessionLoadError = {
+      type: 'parse_error',
+      path: '/test',
+      message: 'Unexpected token'
+    };
     expect(isFileNotFoundError(error)).toBe(false);
   });
 
   it('isFileNotFoundError returns false for validation_error', () => {
-    const error: SessionLoadError = { type: 'validation_error', path: '/test', message: 'Invalid type' };
+    const error: SessionLoadError = {
+      type: 'validation_error',
+      path: '/test',
+      message: 'Invalid type'
+    };
     expect(isFileNotFoundError(error)).toBe(false);
   });
 });

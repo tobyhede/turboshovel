@@ -1,4 +1,7 @@
-import { handleSubagentStart, type SubagentStartResult } from '../../../src/workflow/hooks/subagent-start';
+import {
+  handleSubagentStart,
+  type SubagentStartResult
+} from '../../../src/workflow/hooks/subagent-start';
 import { WorkflowStateManager } from '../../../src/workflow/state';
 import type { HookInput } from '../../../src/types';
 import { createTaskNumber } from '../../../src/workflow/types';
@@ -27,7 +30,7 @@ describe('handleSubagentStart', () => {
     const input: HookInput = {
       hook_event_name: 'SubagentStart',
       cwd: testDir,
-      agent_id: 'agent-xyz-123',
+      agent_id: 'agent-xyz-123'
     };
 
     const result = await handleSubagentStart(input);
@@ -48,7 +51,7 @@ describe('handleSubagentStart', () => {
     const input: HookInput = {
       hook_event_name: 'SubagentStart',
       cwd: testDir,
-      agent_id: 'agent-xyz',
+      agent_id: 'agent-xyz'
     };
 
     const result = await handleSubagentStart(input);
@@ -60,7 +63,7 @@ describe('handleSubagentStart', () => {
     const input: HookInput = {
       hook_event_name: 'SubagentStart',
       cwd: testDir,
-      agent_id: 'agent-xyz',
+      agent_id: 'agent-xyz'
     };
 
     const result = await handleSubagentStart(input);
@@ -75,7 +78,7 @@ describe('handleSubagentStart', () => {
 
     const input: HookInput = {
       hook_event_name: 'SubagentStart',
-      cwd: testDir,
+      cwd: testDir
       // No agent_id
     };
 
@@ -92,7 +95,7 @@ describe('handleSubagentStart', () => {
     const input: HookInput = {
       hook_event_name: 'SubagentStart',
       cwd: testDir,
-      agent_id: 'agent-xyz',
+      agent_id: 'agent-xyz'
     };
 
     const result = await handleSubagentStart(input);

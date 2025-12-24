@@ -6,7 +6,7 @@ import { WorkflowSyntaxError } from './types';
 
 export interface ParsedSubtaskHeader {
   taskNumber: number;
-  id: string;  // A, B, or {n}
+  id: string; // A, B, or {n}
   description: string;
   agentType?: string;
   isDynamic: boolean;
@@ -16,16 +16,16 @@ export interface ParsedSubtaskHeader {
  * Strip common separators and whitespace
  */
 export function stripSeparator(text: string): string {
-  return text
-    .replace(/^[.:—→\-)\s]+/, '')
-    .trim();
+  return text.replace(/^[.:—→\-)\s]+/, '').trim();
 }
 
 /**
  * Extract task number and description from header text
  * Returns null if not a valid task header
  */
-export function extractTaskHeader(text: string): { number: TaskNumber; description: string } | null {
+export function extractTaskHeader(
+  text: string
+): { number: TaskNumber; description: string } | null {
   const trimmed = text.trim();
 
   // Find where the number ends
@@ -86,7 +86,7 @@ export function extractSubtaskHeader(text: string): ParsedSubtaskHeader | null {
     id,
     description: desc.trim(),
     agentType: agent?.trim(),
-    isDynamic,
+    isDynamic
   };
 }
 
@@ -153,10 +153,7 @@ export function parseAction(text: string): Action | null {
  * Parse conditional line starting with given prefix (PASS or FAIL)
  * Returns action and modifier, or null if parsing fails
  */
-function parseConditionalPrefix(
-  rest: string,
-  type: 'pass' | 'fail'
-): ParsedConditional | null {
+function parseConditionalPrefix(rest: string, type: 'pass' | 'fail'): ParsedConditional | null {
   // Check for aggregation modifier (ALL or ANY)
   let modifier: AggregationModifier = null;
   let remaining = rest;
@@ -229,7 +226,7 @@ function resolveAggregationMode(
     if (passModifier === 'ANY' && failModifier === 'ALL') return false;
     throw new WorkflowSyntaxError(
       `Invalid aggregation combination: PASS ${passModifier} + FAIL ${failModifier}. ` +
-      `Valid: PASS ALL + FAIL ANY (pessimistic) or PASS ANY + FAIL ALL (optimistic)`
+        `Valid: PASS ALL + FAIL ANY (pessimistic) or PASS ANY + FAIL ALL (optimistic)`
     );
   }
 

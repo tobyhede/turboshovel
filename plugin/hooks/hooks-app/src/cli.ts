@@ -206,12 +206,12 @@ async function handleHookDispatch(): Promise<void> {
       await logger.error('CLI input validation failed', {
         input_length: inputStr.length,
         input_preview: inputStr.substring(0, 200),
-        error: parseResult.error,
+        error: parseResult.error
       });
       console.error(
         JSON.stringify({
           continue: false,
-          message: parseResult.error,
+          message: parseResult.error
         })
       );
       process.exit(1);

@@ -99,10 +99,7 @@ describe('Plugin Gate Loading', () => {
         }
       }
     };
-    await fs.writeFile(
-      path.join(cipherpowersDir, 'gates.json'),
-      JSON.stringify(gatesConfig)
-    );
+    await fs.writeFile(path.join(cipherpowersDir, 'gates.json'), JSON.stringify(gatesConfig));
 
     // Set CLAUDE_PLUGIN_ROOT to point to turboshovel sibling
     originalEnv = process.env.CLAUDE_PLUGIN_ROOT;

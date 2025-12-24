@@ -101,7 +101,7 @@ describe('WorkflowStateManager', () => {
       const updated = await manager.update(created.id, {
         task: createTaskNumber(2)!,
         taskName: 'Task 2',
-        retryCount: 1,
+        retryCount: 1
       });
 
       expect(updated.task).toBe(2);
@@ -113,7 +113,7 @@ describe('WorkflowStateManager', () => {
       const created = await manager.create('test.workflow.md', 'Task 1');
 
       const updated = await manager.update(created.id, {
-        variables: { more_batches: true, completed_batches: 1 },
+        variables: { more_batches: true, completed_batches: 1 }
       });
 
       expect(updated.variables.more_batches).toBe(true);
@@ -153,7 +153,7 @@ describe('WorkflowStateManager', () => {
       expect(updated?.pendingTasks).toEqual([
         { task: createTaskNumber(1)! },
         { task: createTaskNumber(2)! },
-        { task: createTaskNumber(3)!, subtask: 'A' },
+        { task: createTaskNumber(3)!, subtask: 'A' }
       ]);
     });
 
@@ -201,7 +201,7 @@ describe('WorkflowStateManager', () => {
       const updated = await manager.load(state.id);
       expect(updated?.agentBindings['agent-xyz']).toEqual({
         taskId: { task: createTaskNumber(3)!, subtask: 'A' },
-        status: 'running',
+        status: 'running'
       });
     });
 
@@ -231,7 +231,7 @@ describe('WorkflowStateManager', () => {
 
       expect(binding).toEqual({
         taskId: { task: createTaskNumber(3)! },
-        status: 'running',
+        status: 'running'
       });
     });
 
@@ -244,9 +244,9 @@ describe('WorkflowStateManager', () => {
     });
 
     it('throws when workflow not found', async () => {
-      await expect(
-        manager.getAgentBinding('nonexistent-wf', 'agent-1')
-      ).rejects.toThrow('Workflow nonexistent-wf not found');
+      await expect(manager.getAgentBinding('nonexistent-wf', 'agent-1')).rejects.toThrow(
+        'Workflow nonexistent-wf not found'
+      );
     });
   });
 
@@ -257,7 +257,7 @@ describe('WorkflowStateManager', () => {
 
       await manager.updateAgentBinding(state.id, 'agent-xyz', {
         status: 'done',
-        result: 'pass',
+        result: 'pass'
       });
 
       const binding = await manager.getAgentBinding(state.id, 'agent-xyz');

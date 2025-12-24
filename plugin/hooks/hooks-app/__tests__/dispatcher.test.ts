@@ -1,5 +1,10 @@
 // plugin/hooks/hooks-app/__tests__/dispatcher.test.ts
-import { shouldProcessHook, dispatch, gateMatchesKeywords, gateMatchesFilePattern } from '../src/dispatcher';
+import {
+  shouldProcessHook,
+  dispatch,
+  gateMatchesKeywords,
+  gateMatchesFilePattern
+} from '../src/dispatcher';
 import { validateFilePatterns } from '../src/config';
 import { HookInput, HookConfig, GateConfig } from '../src/types';
 import * as fs from 'fs/promises';
@@ -672,9 +677,11 @@ describe('gateMatchesFilePattern - debug logging', () => {
 
     // Mock logger.debug to capture calls
     const { logger } = await import('../src/logger');
-    jest.spyOn(logger, 'debug').mockImplementation(async (message: string, data?: Record<string, unknown>) => {
-      mockDebugCalls.push({ message, data });
-    });
+    jest
+      .spyOn(logger, 'debug')
+      .mockImplementation(async (message: string, data?: Record<string, unknown>) => {
+        mockDebugCalls.push({ message, data });
+      });
   });
 
   afterEach(() => {

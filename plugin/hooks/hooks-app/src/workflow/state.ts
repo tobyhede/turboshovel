@@ -90,7 +90,7 @@ export class WorkflowStateManager {
       pendingTasks: [],
       agentBindings: {},
       startedAt: now,
-      updatedAt: now,
+      updatedAt: now
     };
 
     await this.save(state);
@@ -110,7 +110,7 @@ export class WorkflowStateManager {
     await fs.mkdir(this.stateDir, { recursive: true });
     const updated: WorkflowState = {
       ...state,
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     await fs.writeFile(this.statePath(state.id), JSON.stringify(updated, null, 2));
   }
@@ -124,7 +124,10 @@ export class WorkflowStateManager {
    * (e.g., `has_blocked_task: true`) that should persist through the workflow.
    * To "clear" a variable, set it to a falsy value like `false` or `0`.
    */
-  async update(id: string, updates: Partial<Omit<WorkflowState, 'id' | 'startedAt'>>): Promise<WorkflowState> {
+  async update(
+    id: string,
+    updates: Partial<Omit<WorkflowState, 'id' | 'startedAt'>>
+  ): Promise<WorkflowState> {
     const existing = await this.load(id);
     if (!existing) {
       throw new Error(`Workflow ${id} not found`);
@@ -135,7 +138,7 @@ export class WorkflowStateManager {
       ...updates,
       // Merge variables additively - see JSDoc for rationale
       variables: { ...existing.variables, ...(updates.variables ?? {}) },
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     await this.save(updated);
@@ -209,7 +212,7 @@ export class WorkflowStateManager {
     }
 
     await this.update(id, {
-      pendingTasks: [...(state.pendingTasks || []), taskId],
+      pendingTasks: [...(state.pendingTasks || []), taskId]
     });
   }
 
@@ -239,14 +242,14 @@ export class WorkflowStateManager {
 
     const binding: AgentBinding = {
       taskId,
-      status: 'running',
+      status: 'running'
     };
 
     await this.update(id, {
       agentBindings: {
         ...(state.agentBindings || {}),
-        [agentId]: binding,
-      },
+        [agentId]: binding
+      }
     });
   }
 
@@ -283,8 +286,8 @@ export class WorkflowStateManager {
     await this.update(id, {
       agentBindings: {
         ...(state.agentBindings || {}),
-        [agentId]: { ...existing, ...updates },
-      },
+        [agentId]: { ...existing, ...updates }
+      }
     });
   }
 

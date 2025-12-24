@@ -88,7 +88,7 @@ describe('WorkflowState orchestration fields', () => {
       pendingTasks: [{ task: createTaskNumber(1)! }, { task: createTaskNumber(2)!, subtask: 'A' }],
       agentBindings: {},
       startedAt: '2025-01-01T00:00:00Z',
-      updatedAt: '2025-01-01T00:00:00Z',
+      updatedAt: '2025-01-01T00:00:00Z'
     };
     expect(state.pendingTasks).toHaveLength(2);
   });
@@ -105,10 +105,10 @@ describe('WorkflowState orchestration fields', () => {
       tasks: [],
       pendingTasks: [],
       agentBindings: {
-        'agent-abc': { taskId: { task: createTaskNumber(1)! }, status: 'running' },
+        'agent-abc': { taskId: { task: createTaskNumber(1)! }, status: 'running' }
       },
       startedAt: '2025-01-01T00:00:00Z',
-      updatedAt: '2025-01-01T00:00:00Z',
+      updatedAt: '2025-01-01T00:00:00Z'
     };
     expect(state.agentBindings['agent-abc']).toBeDefined();
   });
@@ -129,7 +129,7 @@ describe('WorkflowState orchestration fields', () => {
       parentWorkflowId: 'wf-parent',
       parentTaskId: { task: createTaskNumber(2)!, subtask: 'B' },
       startedAt: '2025-01-01T00:00:00Z',
-      updatedAt: '2025-01-01T00:00:00Z',
+      updatedAt: '2025-01-01T00:00:00Z'
     };
     expect(state.parentWorkflowId).toBe('wf-parent');
   });
@@ -140,7 +140,7 @@ describe('Subtask type', () => {
     const subtask: Subtask = {
       id: 'A',
       description: 'First reviewer',
-      isDynamic: false,
+      isDynamic: false
     };
     expect(subtask.isDynamic).toBe(false);
   });
@@ -150,7 +150,7 @@ describe('Subtask type', () => {
       id: 'B',
       description: 'Second reviewer',
       agentType: 'code-review-agent',
-      isDynamic: false,
+      isDynamic: false
     };
     expect(subtask.agentType).toBe('code-review-agent');
   });
@@ -159,7 +159,7 @@ describe('Subtask type', () => {
     const subtask: Subtask = {
       id: '{n}',
       description: 'Execute task',
-      isDynamic: true,
+      isDynamic: true
     };
     expect(subtask.isDynamic).toBe(true);
   });
@@ -173,8 +173,8 @@ describe('Task with subtasks', () => {
       prompts: [],
       subtasks: [
         { id: 'A', description: 'First', isDynamic: false },
-        { id: 'B', description: 'Second', isDynamic: false },
-      ],
+        { id: 'B', description: 'Second', isDynamic: false }
+      ]
     };
     expect(task.subtasks).toHaveLength(2);
   });
@@ -185,7 +185,7 @@ describe('Conditions discriminated union', () => {
     const conditions: Conditions = {
       all: true,
       pass: { type: 'CONTINUE' },
-      fail: { type: 'STOP' },
+      fail: { type: 'STOP' }
     };
     expect(conditions.all).toBe(true);
   });
@@ -194,19 +194,25 @@ describe('Conditions discriminated union', () => {
     const conditions: Conditions = {
       all: false,
       pass: { type: 'CONTINUE' },
-      fail: { type: 'STOP', message: 'All failed' },
+      fail: { type: 'STOP', message: 'All failed' }
     };
     expect(conditions.all).toBe(false);
   });
 
   it('works with exhaustive switch', () => {
-    const conditions: Conditions = { all: true, pass: { type: 'CONTINUE' }, fail: { type: 'STOP' } };
+    const conditions: Conditions = {
+      all: true,
+      pass: { type: 'CONTINUE' },
+      fail: { type: 'STOP' }
+    };
 
     // TypeScript exhaustiveness check
     function checkAll(c: Conditions): string {
       switch (c.all) {
-        case true: return 'pessimistic';
-        case false: return 'optimistic';
+        case true:
+          return 'pessimistic';
+        case false:
+          return 'optimistic';
       }
     }
 

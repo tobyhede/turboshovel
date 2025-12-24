@@ -1,5 +1,8 @@
 // __tests__/workflow/hooks/subagent-stop.test.ts
-import { handleSubagentStop, type SubagentStopResult } from '../../../src/workflow/hooks/subagent-stop';
+import {
+  handleSubagentStop,
+  type SubagentStopResult
+} from '../../../src/workflow/hooks/subagent-stop';
 import { WorkflowStateManager } from '../../../src/workflow/state';
 import type { HookInput } from '../../../src/types';
 import { createTaskNumber } from '../../../src/workflow/types';
@@ -30,7 +33,7 @@ describe('handleSubagentStop with agent binding', () => {
       hook_event_name: 'SubagentStop',
       cwd: testDir,
       agent_id: 'agent-xyz',
-      output: 'STATUS: OK',
+      output: 'STATUS: OK'
     };
 
     const result = await handleSubagentStop(input);
@@ -52,7 +55,7 @@ describe('handleSubagentStop with agent binding', () => {
       hook_event_name: 'SubagentStop',
       cwd: testDir,
       agent_id: 'agent-abc',
-      output: 'STATUS: BLOCKED\nCould not complete task.',
+      output: 'STATUS: BLOCKED\nCould not complete task.'
     };
 
     const result = await handleSubagentStop(input);
@@ -70,7 +73,7 @@ describe('handleSubagentStop with agent binding', () => {
     const input: HookInput = {
       hook_event_name: 'SubagentStop',
       cwd: testDir,
-      agent_id: 'unknown-agent',
+      agent_id: 'unknown-agent'
     };
 
     const result = await handleSubagentStop(input);
@@ -87,7 +90,7 @@ describe('handleSubagentStop with agent binding', () => {
       hook_event_name: 'SubagentStop',
       cwd: testDir,
       agent_id: 'agent-xyz',
-      output: 'Task completed successfully.',
+      output: 'Task completed successfully.'
     };
 
     await handleSubagentStop(input);

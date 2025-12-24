@@ -17,7 +17,7 @@ const LOG_LEVELS: Record<LogLevel, number> = {
   debug: 0,
   info: 1,
   warn: 2,
-  error: 3,
+  error: 3
 };
 
 /**
@@ -107,16 +107,12 @@ async function writeLogAlways(entry: LogEntry): Promise<void> {
 /**
  * Create a log entry with timestamp.
  */
-function createEntry(
-  level: LogLevel,
-  message: string,
-  data?: Record<string, unknown>
-): LogEntry {
+function createEntry(level: LogLevel, message: string, data?: Record<string, unknown>): LogEntry {
   return {
     ts: new Date().toISOString(),
     level,
     message,
-    ...data,
+    ...data
   };
 }
 
@@ -156,16 +152,12 @@ export const logger = {
    * Log a hook event with structured data.
    * Convenience method for common hook logging pattern.
    */
-  event: (
-    level: LogLevel,
-    event: string,
-    data?: Record<string, unknown>
-  ) =>
+  event: (level: LogLevel, event: string, data?: Record<string, unknown>) =>
     writeLog({
       ts: new Date().toISOString(),
       level,
       event,
-      ...data,
+      ...data
     }),
 
   /**
@@ -176,5 +168,5 @@ export const logger = {
   /**
    * Get the log directory path (for mise tasks).
    */
-  getLogDir,
+  getLogDir
 };

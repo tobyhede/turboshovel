@@ -57,7 +57,7 @@ describe('Plugin Gate Composition Integration', () => {
             plugin: 'cipherpowers',
             gate: 'plan-compliance'
           },
-          'check': {
+          check: {
             command: 'echo "project check passed"'
           }
         }
@@ -134,7 +134,7 @@ describe('Plugin Gate Composition Integration', () => {
       JSON.stringify({
         hooks: {},
         gates: {
-          'gateA': {
+          gateA: {
             plugin: 'pluginB',
             gate: 'gateB'
           }
@@ -148,7 +148,7 @@ describe('Plugin Gate Composition Integration', () => {
       JSON.stringify({
         hooks: {},
         gates: {
-          'gateB': {
+          gateB: {
             plugin: 'pluginA',
             gate: 'gateA'
           }
@@ -195,10 +195,10 @@ describe('Plugin Gate Composition Integration', () => {
       JSON.stringify({
         hooks: {},
         gates: {
-          'gate1': {
+          gate1: {
             command: 'echo "gate1"'
           },
-          'gate2': {
+          gate2: {
             plugin: 'selfref',
             gate: 'gate1'
           }

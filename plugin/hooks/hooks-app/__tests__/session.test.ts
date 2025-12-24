@@ -217,10 +217,14 @@ describe('Session', () => {
       const session = new Session(testDir);
       const stateFile = join(testDir, '.claude', 'session', 'state.json');
       await fs.mkdir(dirname(stateFile), { recursive: true });
-      await fs.writeFile(stateFile, JSON.stringify({
-        session_id: 'existing-123',
-        active_command: '/execute',
-      }), 'utf-8');
+      await fs.writeFile(
+        stateFile,
+        JSON.stringify({
+          session_id: 'existing-123',
+          active_command: '/execute'
+        }),
+        'utf-8'
+      );
 
       const command = await session.get('active_command');
       expect(command).toBe('/execute');

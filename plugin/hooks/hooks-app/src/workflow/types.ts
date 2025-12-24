@@ -64,14 +64,14 @@ export type Action =
  */
 interface PassAllConditions {
   readonly all: true;
-  readonly pass: Action;  // triggers when ALL complete
-  readonly fail: Action;  // triggers when ANY blocked
+  readonly pass: Action; // triggers when ALL complete
+  readonly fail: Action; // triggers when ANY blocked
 }
 
 interface PassAnyConditions {
   readonly all: false;
-  readonly pass: Action;  // triggers when ANY complete
-  readonly fail: Action;  // triggers when ALL blocked
+  readonly pass: Action; // triggers when ANY complete
+  readonly fail: Action; // triggers when ALL blocked
 }
 
 export type Conditions = PassAllConditions | PassAnyConditions;
@@ -114,10 +114,10 @@ export interface Prompt {
  * A subtask within a task (H3 header)
  */
 export interface Subtask {
-  readonly id: string;  // A, B, C or {n} for dynamic
+  readonly id: string; // A, B, C or {n} for dynamic
   readonly description: string;
-  readonly agentType?: string;  // e.g., "code-review-agent" from "(code-review-agent)"
-  readonly isDynamic: boolean;  // true for ### N.{n}, false for ### N.A
+  readonly agentType?: string; // e.g., "code-review-agent" from "(code-review-agent)"
+  readonly isDynamic: boolean; // true for ### N.{n}, false for ### N.A
 }
 
 /**

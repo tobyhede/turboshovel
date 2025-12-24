@@ -2,7 +2,8 @@ import { parseTaskIdFromString, taskIdToString, taskIdEquals } from '../../src/w
 import { createTaskNumber } from '../../src/workflow/types';
 
 describe('parseTaskIdFromString with requireSeparator', () => {
-  const parse = (s: string): ReturnType<typeof parseTaskIdFromString> => parseTaskIdFromString(s, { requireSeparator: true });
+  const parse = (s: string): ReturnType<typeof parseTaskIdFromString> =>
+    parseTaskIdFromString(s, { requireSeparator: true });
 
   it('parses simple task number from description', () => {
     const result = parse('3 - Review code');
@@ -61,19 +62,33 @@ describe('taskIdEquals', () => {
   });
 
   it('returns true for equal tasks with subtasks', () => {
-    expect(taskIdEquals({ task: createTaskNumber(3)!, subtask: 'A' }, { task: createTaskNumber(3)!, subtask: 'A' })).toBe(true);
+    expect(
+      taskIdEquals(
+        { task: createTaskNumber(3)!, subtask: 'A' },
+        { task: createTaskNumber(3)!, subtask: 'A' }
+      )
+    ).toBe(true);
   });
 
   it('returns false for different task numbers', () => {
-    expect(taskIdEquals({ task: createTaskNumber(3)! }, { task: createTaskNumber(4)! })).toBe(false);
+    expect(taskIdEquals({ task: createTaskNumber(3)! }, { task: createTaskNumber(4)! })).toBe(
+      false
+    );
   });
 
   it('returns false for different subtasks', () => {
-    expect(taskIdEquals({ task: createTaskNumber(3)!, subtask: 'A' }, { task: createTaskNumber(3)!, subtask: 'B' })).toBe(false);
+    expect(
+      taskIdEquals(
+        { task: createTaskNumber(3)!, subtask: 'A' },
+        { task: createTaskNumber(3)!, subtask: 'B' }
+      )
+    ).toBe(false);
   });
 
   it('returns false when one has subtask and other does not', () => {
-    expect(taskIdEquals({ task: createTaskNumber(3)! }, { task: createTaskNumber(3)!, subtask: 'A' })).toBe(false);
+    expect(
+      taskIdEquals({ task: createTaskNumber(3)! }, { task: createTaskNumber(3)!, subtask: 'A' })
+    ).toBe(false);
   });
 });
 

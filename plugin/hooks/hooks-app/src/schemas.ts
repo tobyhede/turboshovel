@@ -3,11 +3,13 @@ import { z } from 'zod';
 /**
  * Zod schema for tool_input in Task tool calls
  */
-const ToolInputSchema = z.object({
-  description: z.string().optional(),
-  subagent_type: z.string().optional(),
-  prompt: z.string().optional(),
-}).optional();
+const ToolInputSchema = z
+  .object({
+    description: z.string().optional(),
+    subagent_type: z.string().optional(),
+    prompt: z.string().optional()
+  })
+  .optional();
 
 /**
  * Zod schema for HookInput - validates external input at system boundary
@@ -33,7 +35,7 @@ export const HookInputSchema = z.object({
 
   // SlashCommand/Skill
   command: z.string().optional(),
-  skill: z.string().optional(),
+  skill: z.string().optional()
 });
 
 export type HookInput = z.infer<typeof HookInputSchema>;
@@ -41,9 +43,7 @@ export type HookInput = z.infer<typeof HookInputSchema>;
 /**
  * Result type for parseHookInput
  */
-export type ParseResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+export type ParseResult<T> = { success: true; data: T } | { success: false; error: string };
 
 /**
  * Parse and validate HookInput from JSON string
@@ -55,7 +55,7 @@ export function parseHookInput(json: string): ParseResult<HookInput> {
   } catch (e) {
     return {
       success: false,
-      error: `Invalid JSON input: ${e instanceof Error ? e.message : String(e)}`,
+      error: `Invalid JSON input: ${e instanceof Error ? e.message : String(e)}`
     };
   }
 
@@ -63,7 +63,7 @@ export function parseHookInput(json: string): ParseResult<HookInput> {
   if (!result.success) {
     return {
       success: false,
-      error: `Invalid input: ${result.error.issues.map(i => i.message).join(', ')}`,
+      error: `Invalid input: ${result.error.issues.map((i) => i.message).join(', ')}`
     };
   }
 
@@ -90,7 +90,7 @@ export const SessionStateSchema = z.object({
   active_skill: z.string().nullable().default(null),
   edited_files: z.array(z.string()).default([]),
   file_extensions: z.array(z.string()).default([]),
-  metadata: z.record(z.string(), z.unknown()).default({}),
+  metadata: z.record(z.string(), z.unknown()).default({})
 });
 
 export type ValidatedSessionState = z.infer<typeof SessionStateSchema>;

@@ -50,7 +50,7 @@ export async function handleSubagentStart(input: HookInput): Promise<SubagentSta
         violation:
           `SubagentStart with no pending task. ` +
           `Task dispatch must precede agent start. ` +
-          `Ensure Task tool is used before subagent starts.`,
+          `Ensure Task tool is used before subagent starts.`
       };
     }
 
@@ -77,6 +77,6 @@ function formatAgentContext(agentId: string, taskId: TaskId): string {
     'If you need to run workflow commands, use:',
     `  workflow next --pass --agent ${agentId}`,
     `  workflow next --fail --agent ${agentId}`,
-    '',
+    ''
   ].join('\n');
 }

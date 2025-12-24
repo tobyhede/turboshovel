@@ -1,5 +1,12 @@
 // __tests__/workflow/parser/helpers.test.ts
-import { stripSeparator, extractTaskHeader, parseAction, parseConditional, convertConditionals, extractSubtaskHeader } from '../../../src/workflow/parser/helpers';
+import {
+  stripSeparator,
+  extractTaskHeader,
+  parseAction,
+  parseConditional,
+  convertConditionals,
+  extractSubtaskHeader
+} from '../../../src/workflow/parser/helpers';
 
 describe('stripSeparator', () => {
   test('strips colon separator', () => {
@@ -75,7 +82,10 @@ describe('parseAction', () => {
   });
 
   test('parses STOP with message', () => {
-    expect(parseAction('STOP fix tests first')).toEqual({ type: 'STOP', message: 'fix tests first' });
+    expect(parseAction('STOP fix tests first')).toEqual({
+      type: 'STOP',
+      message: 'fix tests first'
+    });
   });
 
   test('parses GOTO N', () => {
@@ -105,7 +115,7 @@ describe('parseConditional', () => {
     expect(parseConditional('PASS: CONTINUE')).toEqual({
       type: 'pass',
       action: { type: 'CONTINUE' },
-      modifier: null,
+      modifier: null
     });
   });
 
@@ -113,7 +123,7 @@ describe('parseConditional', () => {
     expect(parseConditional('FAIL: STOP fix tests')).toEqual({
       type: 'fail',
       action: { type: 'STOP', message: 'fix tests' },
-      modifier: null,
+      modifier: null
     });
   });
 
@@ -121,7 +131,7 @@ describe('parseConditional', () => {
     expect(parseConditional('PASS CONTINUE')).toEqual({
       type: 'pass',
       action: { type: 'CONTINUE' },
-      modifier: null,
+      modifier: null
     });
   });
 
@@ -129,7 +139,7 @@ describe('parseConditional', () => {
     expect(parseConditional('FAIL - STOP')).toEqual({
       type: 'fail',
       action: { type: 'STOP' },
-      modifier: null,
+      modifier: null
     });
   });
 
@@ -148,7 +158,7 @@ describe('parseConditional with aggregation', () => {
     expect(result).toEqual({
       type: 'pass',
       action: { type: 'CONTINUE' },
-      modifier: 'ALL',
+      modifier: 'ALL'
     });
   });
 
@@ -157,7 +167,7 @@ describe('parseConditional with aggregation', () => {
     expect(result).toEqual({
       type: 'fail',
       action: { type: 'STOP' },
-      modifier: 'ANY',
+      modifier: 'ANY'
     });
   });
 
@@ -166,7 +176,7 @@ describe('parseConditional with aggregation', () => {
     expect(result).toEqual({
       type: 'pass',
       action: { type: 'CONTINUE' },
-      modifier: null,
+      modifier: null
     });
   });
 
@@ -175,7 +185,7 @@ describe('parseConditional with aggregation', () => {
     expect(result).toEqual({
       type: 'pass',
       action: { type: 'CONTINUE' },
-      modifier: 'ANY',
+      modifier: 'ANY'
     });
   });
 
@@ -184,7 +194,7 @@ describe('parseConditional with aggregation', () => {
     expect(result).toEqual({
       type: 'fail',
       action: { type: 'STOP', message: 'All approaches failed' },
-      modifier: 'ALL',
+      modifier: 'ALL'
     });
   });
 });
@@ -193,7 +203,7 @@ describe('convertConditionals with aggregation', () => {
   it('returns all: true for PASS ALL', () => {
     const result = convertConditionals([
       { type: 'pass', action: { type: 'CONTINUE' }, modifier: 'ALL' },
-      { type: 'fail', action: { type: 'STOP' }, modifier: null },
+      { type: 'fail', action: { type: 'STOP' }, modifier: null }
     ]);
     expect(result?.all).toBe(true);
   });
@@ -201,7 +211,7 @@ describe('convertConditionals with aggregation', () => {
   it('returns all: false for PASS ANY', () => {
     const result = convertConditionals([
       { type: 'pass', action: { type: 'CONTINUE' }, modifier: 'ANY' },
-      { type: 'fail', action: { type: 'STOP' }, modifier: null },
+      { type: 'fail', action: { type: 'STOP' }, modifier: null }
     ]);
     expect(result?.all).toBe(false);
   });
@@ -209,7 +219,7 @@ describe('convertConditionals with aggregation', () => {
   it('infers all: true from FAIL ANY', () => {
     const result = convertConditionals([
       { type: 'pass', action: { type: 'CONTINUE' }, modifier: null },
-      { type: 'fail', action: { type: 'STOP' }, modifier: 'ANY' },
+      { type: 'fail', action: { type: 'STOP' }, modifier: 'ANY' }
     ]);
     expect(result?.all).toBe(true);
   });
@@ -217,7 +227,7 @@ describe('convertConditionals with aggregation', () => {
   it('infers all: false from FAIL ALL', () => {
     const result = convertConditionals([
       { type: 'pass', action: { type: 'CONTINUE' }, modifier: null },
-      { type: 'fail', action: { type: 'STOP' }, modifier: 'ALL' },
+      { type: 'fail', action: { type: 'STOP' }, modifier: 'ALL' }
     ]);
     expect(result?.all).toBe(false);
   });
@@ -225,7 +235,7 @@ describe('convertConditionals with aggregation', () => {
   it('defaults to all: true (pessimistic)', () => {
     const result = convertConditionals([
       { type: 'pass', action: { type: 'CONTINUE' }, modifier: null },
-      { type: 'fail', action: { type: 'STOP' }, modifier: null },
+      { type: 'fail', action: { type: 'STOP' }, modifier: null }
     ]);
     expect(result?.all).toBe(true);
   });
@@ -234,7 +244,7 @@ describe('convertConditionals with aggregation', () => {
     expect(() =>
       convertConditionals([
         { type: 'pass', action: { type: 'CONTINUE' }, modifier: 'ALL' },
-        { type: 'fail', action: { type: 'STOP' }, modifier: 'ALL' },
+        { type: 'fail', action: { type: 'STOP' }, modifier: 'ALL' }
       ])
     ).toThrow('Invalid aggregation');
   });
@@ -243,7 +253,7 @@ describe('convertConditionals with aggregation', () => {
     expect(() =>
       convertConditionals([
         { type: 'pass', action: { type: 'CONTINUE' }, modifier: 'ANY' },
-        { type: 'fail', action: { type: 'STOP' }, modifier: 'ANY' },
+        { type: 'fail', action: { type: 'STOP' }, modifier: 'ANY' }
       ])
     ).toThrow('Invalid aggregation');
   });
@@ -257,7 +267,7 @@ describe('extractSubtaskHeader', () => {
       id: 'A',
       description: 'First reviewer',
       agentType: undefined,
-      isDynamic: false,
+      isDynamic: false
     });
   });
 
@@ -268,7 +278,7 @@ describe('extractSubtaskHeader', () => {
       id: 'B',
       description: 'Second reviewer',
       agentType: 'code-agent',
-      isDynamic: false,
+      isDynamic: false
     });
   });
 
@@ -279,7 +289,7 @@ describe('extractSubtaskHeader', () => {
       id: '{n}',
       description: 'Execute task',
       agentType: undefined,
-      isDynamic: true,
+      isDynamic: true
     });
   });
 

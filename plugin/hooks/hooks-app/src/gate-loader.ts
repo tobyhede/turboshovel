@@ -134,9 +134,7 @@ export async function executeGate(
       // Plugin gate references another plugin gate - recurse
       return executeGate(gateRef, pluginGateConfig, input, newStack);
     } else {
-      throw new Error(
-        `Plugin gate '${gateConfig.plugin}:${gateConfig.gate}' has no command`
-      );
+      throw new Error(`Plugin gate '${gateConfig.plugin}:${gateConfig.gate}' has no command`);
     }
   }
 

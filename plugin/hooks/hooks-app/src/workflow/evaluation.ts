@@ -11,12 +11,9 @@ import type { Action, Conditions, TaskState } from './types';
  *   - Any complete -> pass action
  *   - All blocked -> fail action
  */
-export function evaluateConditions(
-  tasks: readonly TaskState[],
-  conditions: Conditions
-): Action {
-  const anyBlocked = tasks.some(t => t.status === 'blocked');
-  const anyComplete = tasks.some(t => t.status === 'complete');
+export function evaluateConditions(tasks: readonly TaskState[], conditions: Conditions): Action {
+  const anyBlocked = tasks.some((t) => t.status === 'blocked');
+  const anyComplete = tasks.some((t) => t.status === 'complete');
 
   // Exhaustive switch on discriminant
   switch (conditions.all) {

@@ -15,40 +15,35 @@ describe('Schema Property Tests', () => {
     );
 
     // Generator for valid tool names
-    const toolNameArb = fc.constantFrom(
-      'Edit',
-      'Write',
-      'Read',
-      'Bash',
-      'Glob',
-      'Grep',
-      'Task'
-    );
+    const toolNameArb = fc.constantFrom('Edit', 'Write', 'Read', 'Bash', 'Glob', 'Grep', 'Task');
 
     // Generator for valid tool_input object
     const toolInputArb = fc.option(
-      fc.record({
-        description: fc.option(fc.string({ maxLength: 500 }), { nil: undefined }),
-        subagent_type: fc.option(fc.string({ maxLength: 100 }), { nil: undefined }),
-        prompt: fc.option(fc.string({ maxLength: 1000 }), { nil: undefined }),
-      }, { requiredKeys: [] }),
+      fc.record(
+        {
+          description: fc.option(fc.string({ maxLength: 500 }), { nil: undefined }),
+          subagent_type: fc.option(fc.string({ maxLength: 100 }), { nil: undefined }),
+          prompt: fc.option(fc.string({ maxLength: 1000 }), { nil: undefined })
+        },
+        { requiredKeys: [] }
+      ),
       { nil: undefined }
     );
 
     // Generator for valid HookInput (PostToolUse variant)
     const postToolUseInputArb = fc.record({
       hook_event_name: fc.constant('PostToolUse'),
-      cwd: fc.string({ minLength: 1, maxLength: 200 }).filter(s => !s.includes('\0')),
+      cwd: fc.string({ minLength: 1, maxLength: 200 }).filter((s) => !s.includes('\0')),
       tool_name: toolNameArb,
       tool_input: toolInputArb,
       tool_output: fc.option(fc.string({ maxLength: 1000 }), { nil: undefined }),
-      file_path: fc.option(fc.string({ maxLength: 200 }), { nil: undefined }),
+      file_path: fc.option(fc.string({ maxLength: 200 }), { nil: undefined })
     });
 
     // Generator for minimal HookInput
     const minimalInputArb = fc.record({
       hook_event_name: hookEventArb,
-      cwd: fc.string({ minLength: 1, maxLength: 200 }).filter(s => !s.includes('\0')),
+      cwd: fc.string({ minLength: 1, maxLength: 200 }).filter((s) => !s.includes('\0'))
     });
 
     it('accepts all valid PostToolUse inputs', () => {
@@ -74,7 +69,7 @@ describe('Schema Property Tests', () => {
     it('rejects inputs missing required fields', () => {
       // Missing hook_event_name
       const missingEventArb = fc.record({
-        cwd: fc.string({ minLength: 1, maxLength: 100 }),
+        cwd: fc.string({ minLength: 1, maxLength: 100 })
       });
 
       fc.assert(
@@ -87,7 +82,7 @@ describe('Schema Property Tests', () => {
 
       // Missing cwd
       const missingCwdArb = fc.record({
-        hook_event_name: hookEventArb,
+        hook_event_name: hookEventArb
       });
 
       fc.assert(
@@ -104,7 +99,9 @@ describe('Schema Property Tests', () => {
     it('parseHookInput(JSON.stringify(valid)) succeeds', () => {
       const validInputArb = fc.record({
         hook_event_name: fc.constantFrom('PostToolUse', 'UserPromptSubmit'),
-        cwd: fc.string({ minLength: 1, maxLength: 100 }).filter(s => !s.includes('\0') && !s.includes('"')),
+        cwd: fc
+          .string({ minLength: 1, maxLength: 100 })
+          .filter((s) => !s.includes('\0') && !s.includes('"'))
       });
 
       fc.assert(
@@ -124,9 +121,13 @@ describe('Schema Property Tests', () => {
         fc.constant('not json'),
         fc.constant('{'),
         fc.constant('{"unclosed": '),
-        fc.string().filter(s => {
-          try { JSON.parse(s); return false; }
-          catch { return true; }
+        fc.string().filter((s) => {
+          try {
+            JSON.parse(s);
+            return false;
+          } catch {
+            return true;
+          }
         })
       );
 

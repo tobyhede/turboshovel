@@ -189,7 +189,7 @@ describe('Gate Config Validation', () => {
     const configObj = {
       hooks: { PostToolUse: { gates: ['test'] } },
       gates: {
-        test: { plugin: 'cipherpowers' }  // Missing gate field
+        test: { plugin: 'cipherpowers' } // Missing gate field
       }
     };
 
@@ -203,7 +203,7 @@ describe('Gate Config Validation', () => {
     const configObj = {
       hooks: { PostToolUse: { gates: ['test'] } },
       gates: {
-        test: { gate: 'plan-compliance' }  // Missing plugin field
+        test: { gate: 'plan-compliance' } // Missing plugin field
       }
     };
 
@@ -220,7 +220,7 @@ describe('Gate Config Validation', () => {
         test: {
           plugin: 'cipherpowers',
           gate: 'plan-compliance',
-          command: 'npm run lint'  // Conflicting
+          command: 'npm run lint' // Conflicting
         }
       }
     };
