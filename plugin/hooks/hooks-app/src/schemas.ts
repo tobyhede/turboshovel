@@ -55,7 +55,7 @@ export function parseHookInput(json: string): ParseResult<HookInput> {
   } catch (e) {
     return {
       success: false,
-      error: `Invalid JSON: ${e instanceof Error ? e.message : String(e)}`,
+      error: `Invalid JSON input: ${e instanceof Error ? e.message : String(e)}`,
     };
   }
 
