@@ -8,6 +8,7 @@ import { logger } from './logger';
 const KNOWN_HOOK_EVENTS = [
   'PreToolUse',
   'PostToolUse',
+  'SubagentStart',
   'SubagentStop',
   'UserPromptSubmit',
   'SlashCommandStart',
@@ -17,7 +18,9 @@ const KNOWN_HOOK_EVENTS = [
   'SessionStart',
   'SessionEnd',
   'Stop',
-  'Notification'
+  'Notification',
+  'PreCompact',
+  'PermissionRequest'
 ];
 
 const KNOWN_ACTIONS = ['CONTINUE', 'BLOCK', 'STOP'];
