@@ -35,12 +35,25 @@ export type Action =
   | { readonly type: 'RETRY'; readonly max?: number };
 
 /**
- * Conditional branch (PASS or FAIL)
+ * Aggregation conditions for subtasks
+ *
+ * Valid combinations only:
+ * - all: true  = PASS ALL + FAIL ANY (pessimistic, default)
+ * - all: false = PASS ANY + FAIL ALL (optimistic)
  */
-export interface Conditions {
-  readonly pass: Action;
-  readonly fail: Action;
+interface PassAllConditions {
+  readonly all: true;
+  readonly pass: Action;  // triggers when ALL complete
+  readonly fail: Action;  // triggers when ANY blocked
 }
+
+interface PassAnyConditions {
+  readonly all: false;
+  readonly pass: Action;  // triggers when ANY complete
+  readonly fail: Action;  // triggers when ALL blocked
+}
+
+export type Conditions = PassAllConditions | PassAnyConditions;
 
 /**
  * Agent binding status

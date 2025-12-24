@@ -162,8 +162,9 @@ export function parseConditional(text: string): ParsedConditional | null {
 
 /**
  * Convert pending conditionals to Conditions object
+ * Defaults to all: true (PASS ALL + FAIL ANY, pessimistic)
  */
-export function convertConditionals(conditionals: ParsedConditional[]): { pass: Action; fail: Action } | null {
+export function convertConditionals(conditionals: ParsedConditional[]): { all: true; pass: Action; fail: Action } | null {
   if (conditionals.length === 0) {
     return null;
   }
@@ -181,15 +182,15 @@ export function convertConditionals(conditionals: ParsedConditional[]): { pass: 
 
   // If we have both, create Conditions
   if (passAction && failAction) {
-    return { pass: passAction, fail: failAction };
+    return { all: true, pass: passAction, fail: failAction };
   }
 
   if (passAction && !failAction) {
-    return { pass: passAction, fail: { type: 'STOP' } };
+    return { all: true, pass: passAction, fail: { type: 'STOP' } };
   }
 
   if (!passAction && failAction) {
-    return { pass: { type: 'CONTINUE' }, fail: failAction };
+    return { all: true, pass: { type: 'CONTINUE' }, fail: failAction };
   }
 
   return null;

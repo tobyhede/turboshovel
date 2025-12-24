@@ -1,5 +1,5 @@
 // __tests__/workflow/types.test.ts
-import { createTaskNumber, type TaskNumber, type Action, type Subtask, type Task, type WorkflowState } from '../../src/workflow/types';
+import { createTaskNumber, type TaskNumber, type Action, type Subtask, type Task, type WorkflowState, type Conditions } from '../../src/workflow/types';
 
 describe('TaskNumber', () => {
   test('createTaskNumber with valid number returns TaskNumber', () => {
@@ -156,5 +156,39 @@ describe('Task with subtasks', () => {
       ],
     };
     expect(task.subtasks).toHaveLength(2);
+  });
+});
+
+describe('Conditions discriminated union', () => {
+  it('accepts PASS ALL + FAIL ANY (all: true)', () => {
+    const conditions: Conditions = {
+      all: true,
+      pass: { type: 'CONTINUE' },
+      fail: { type: 'STOP' },
+    };
+    expect(conditions.all).toBe(true);
+  });
+
+  it('accepts PASS ANY + FAIL ALL (all: false)', () => {
+    const conditions: Conditions = {
+      all: false,
+      pass: { type: 'CONTINUE' },
+      fail: { type: 'STOP', message: 'All failed' },
+    };
+    expect(conditions.all).toBe(false);
+  });
+
+  it('works with exhaustive switch', () => {
+    const conditions: Conditions = { all: true, pass: { type: 'CONTINUE' }, fail: { type: 'STOP' } };
+
+    // TypeScript exhaustiveness check
+    function checkAll(c: Conditions): string {
+      switch (c.all) {
+        case true: return 'pessimistic';
+        case false: return 'optimistic';
+      }
+    }
+
+    expect(checkAll(conditions)).toBe('pessimistic');
   });
 });
