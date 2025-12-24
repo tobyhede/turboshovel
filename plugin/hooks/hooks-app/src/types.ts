@@ -1,34 +1,10 @@
 // plugin/hooks/hooks-app/src/types.ts
 
-export interface HookInput {
-  hook_event_name: string;
-  cwd: string;
+// Import HookInput from schemas (single source of truth for validation)
+import type { HookInput as SchemaHookInput } from './schemas';
 
-  // PostToolUse
-  tool_name?: string;
-  file_path?: string;
-
-  // PostToolUse - Task tool
-  tool_input?: {
-    description?: string;
-    subagent_type?: string;
-    prompt?: string;
-  };
-
-  // SubagentStart/SubagentStop
-  agent_id?: string;
-  agent_name?: string;
-  subagent_name?: string;
-  output?: string;
-  agent_transcript_path?: string;
-
-  // UserPromptSubmit
-  user_message?: string;
-
-  // SlashCommand/Skill
-  command?: string;
-  skill?: string;
-}
+// Re-export for consumers
+export type HookInput = SchemaHookInput;
 
 export interface GateResult {
   // Success - add context and continue

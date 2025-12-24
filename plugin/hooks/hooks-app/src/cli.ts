@@ -1,5 +1,7 @@
 // plugin/hooks/hooks-app/src/cli.ts
-import { HookInput, SessionState, SessionStateArrayKey } from './types';
+import { SessionState, SessionStateArrayKey } from './types';
+import type { HookInput } from './schemas';
+import { parseHookInput } from './schemas';
 import { dispatch } from './dispatcher';
 import { Session } from './session';
 import { logger } from './logger';
@@ -182,36 +184,37 @@ async function handleHookDispatch(): Promise<void> {
       input_preview: inputStr.substring(0, 200)
     });
 
-    // Parse input
-    let input: HookInput;
-    try {
-      if (inputStr.length === 0) {
-        await logger.error('CLI received empty input', {
-          reason: 'stdin was empty - possible CLI race condition or cancelled operation'
-        });
-        console.error(
-          JSON.stringify({
-            continue: false,
-            message: 'Empty input received'
-          })
-        );
-        process.exit(1);
-      }
-      input = JSON.parse(inputStr);
-    } catch (error) {
-      await logger.error('CLI failed to parse invalid JSON', {
-        input_length: inputStr.length,
-        input_preview: inputStr.substring(0, 200),
-        error: error instanceof Error ? error.message : String(error)
+    // Parse and validate input
+    if (inputStr.length === 0) {
+      await logger.error('CLI received empty input', {
+        reason: 'stdin was empty - possible CLI race condition or cancelled operation'
       });
       console.error(
         JSON.stringify({
           continue: false,
-          message: 'Invalid JSON input'
+          message: 'Empty input received'
         })
       );
       process.exit(1);
     }
+
+    const parseResult = parseHookInput(inputStr);
+    if (!parseResult.success) {
+      await logger.error('CLI input validation failed', {
+        input_length: inputStr.length,
+        input_preview: inputStr.substring(0, 200),
+        error: parseResult.error,
+      });
+      console.error(
+        JSON.stringify({
+          continue: false,
+          message: parseResult.error,
+        })
+      );
+      process.exit(1);
+    }
+
+    const input = parseResult.data;
 
     // Log parsed hook event
     await logger.info('CLI dispatching hook', {
