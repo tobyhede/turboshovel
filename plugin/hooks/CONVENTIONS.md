@@ -24,21 +24,22 @@ Conventions allow project-specific hook behavior without editing `gates.json`. P
 - Agent with different command: `.claude/context/rust-agent-execute-end.md`
 - Plan review agent: `.claude/context/plan-review-agent-verify-start.md`
 
-**Supported hooks (12 total):**
+**Registered hooks (11 total):**
 - `SessionStart` - At beginning of Claude Code session
 - `SessionEnd` - At end of Claude Code session
 - `UserPromptSubmit` - Before user prompt is processed
-- `SlashCommandStart` - Before command executes
-- `SlashCommandEnd` - After command completes
-- `SkillStart` - When skill loads
-- `SkillEnd` - When skill completes
+- `SubagentStart` - Before agent starts
 - `SubagentStop` - After agent completes (supports agent-command scoping)
 - `PreToolUse` - Before a tool is used
 - `PostToolUse` - After a tool is used
 - `Stop` - When agent stops
 - `Notification` - When notification is received
+- `PreCompact` - Before context compaction
+- `PermissionRequest` - When permission dialog is shown
 
-**All Claude Code hook types are supported.** Plugin provides default context for `SessionStart` via `${CLAUDE_PLUGIN_ROOT}/context/session-start.md`.
+**Planned hooks:** SlashCommandStart, SlashCommandEnd, SkillStart, SkillEnd - recognized by config validation but not yet registered in `hooks.json` for Claude Code routing. Context patterns exist for future use.
+
+Plugin provides default context for `SessionStart` via `${CLAUDE_PLUGIN_ROOT}/context/session-start.md`.
 
 **Note:** SessionStart fires at the beginning of each Claude Code session and injects context from `session-start.md`.
 
@@ -151,9 +152,15 @@ Search order:
 - Example: `code-review-agent`
 - Example: `review-collation-agent`
 
+### Tool Names (for PreToolUse/PostToolUse)
+- Tool names are **lowercased** for context file discovery
+- `Edit` tool → `edit-pre.md`, `edit-post.md`
+- `Write` tool → `write-pre.md`, `write-post.md`
+- `Task` tool → `task-pre.md`, `task-post.md`
+
 ### Stage Names
-- `start` - Before execution
-- `end` - After completion
+- `start` / `pre` - Before execution
+- `end` / `post` - After completion
 - Lowercase only
 
 ## Content Format
@@ -209,18 +216,18 @@ echo "## Requirements..." > .claude/context/code-review-start.md
 # Convention file for injection
 .claude/context/code-review-start.md
 
-# Plus explicit gates for verification
+# Plus explicit gates for verification after agent completes
 {
   "hooks": {
-    "SlashCommandEnd": {
-      "enabled_commands": ["/code-review"],
+    "SubagentStop": {
+      "enabled_agents": ["code-review-agent"],
       "gates": ["verify-structure", "test"]
     }
   }
 }
 ```
 
-Execution: Inject context → Run verify-structure → Run test
+Execution: Inject context → Agent runs → Run verify-structure → Run test
 
 ## Control and Disabling
 
@@ -334,11 +341,18 @@ Zero scripting needed.
 
 **Check if file discovered:**
 ```bash
-export TURBOSHOVEL_HOOK_DEBUG=true
-tail -f $TMPDIR/turboshovel-hooks-$(date +%Y%m%d).log
+# Enable debug logging
+export TURBOSHOVEL_LOG_LEVEL=debug
+
+# View logs in real-time
+tail -f $TMPDIR/turboshovel/hooks-$(date +%Y-%m-%d).log
 ```
 
 Look for: `"dispatcher: Context file: /path/to/file.md"`
+
+**Environment variables:**
+- `TURBOSHOVEL_LOG=0` - Disable logging entirely (enabled by default)
+- `TURBOSHOVEL_LOG_LEVEL=debug|info|warn|error` - Set log verbosity (default: info)
 
 **Common issues:**
 - Wrong file name (check exact command/skill name)

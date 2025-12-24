@@ -54,11 +54,13 @@ Quality hooks support optional **project-level** `gates.json` configuration for 
 
 ### gates.json Search Priority
 
-The hooks search for `gates.json` in this order:
+The hooks search for `gates.json` and use **only the first match found**:
 
 1. **`.claude/gates.json`** - Project-specific configuration (recommended)
 2. **`gates.json`** - Project root configuration
 3. **`${CLAUDE_PLUGIN_ROOT}hooks/gates.json`** - Plugin default (fallback)
+
+**Note:** If `.claude/gates.json` exists, `gates.json` in project root is NOT loaded. The plugin default is always merged as a base, with the first project config found as overrides.
 
 ### Quick gates.json Setup
 
@@ -381,16 +383,16 @@ Remove from enabled lists:
 ## Testing Your Configuration
 
 ```bash
-# Test gate execution manually
-source ${CLAUDE_PLUGIN_ROOT}hooks/shared-functions.sh
-run_gate "check" ".claude/gates.json"
-
 # Verify JSON is valid
 jq . .claude/gates.json
 
-# Test with mock hook input
+# Test with mock hook input via TypeScript CLI
 export CLAUDE_PLUGIN_ROOT=/path/to/plugin
-echo '{"tool_name": "Edit", "cwd": "'$(pwd)'"}' | ${CLAUDE_PLUGIN_ROOT}hooks/post-tool-use.sh
+echo '{"hook_event_name": "PostToolUse", "tool_name": "Edit", "cwd": "'$(pwd)'"}' | \
+  node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js
+
+# View logs for debugging
+tail -f $TMPDIR/turboshovel/hooks-$(date +%Y-%m-%d).log
 ```
 
 ## Version Control

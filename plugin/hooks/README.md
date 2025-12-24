@@ -77,24 +77,25 @@ See **[ARCHITECTURE.md](./ARCHITECTURE.md)** for detailed system design.
 
 ## Supported Hook Events
 
-All 12 Claude Code hook types are supported:
+All 11 registered Claude Code hook types are supported:
 
 | Event | Context Pattern | Default Behavior |
 |-------|----------------|------------------|
 | `SessionStart` | `session-start.md` | Plugin provides environment context |
 | `SessionEnd` | `session-end.md` | - |
 | `UserPromptSubmit` | `prompt-submit.md` | Keyword-triggered gates (check, test, build) |
-| `SlashCommandStart` | `{command}-start.md` | - |
-| `SlashCommandEnd` | `{command}-end.md` | - |
-| `SkillStart` | `{skill}-start.md` | - |
-| `SkillEnd` | `{skill}-end.md` | - |
+| `SubagentStart` | `{agent}-start.md` | - |
 | `SubagentStop` | `{agent}-end.md` | - |
 | `PreToolUse` | `{tool}-pre.md` | - |
 | `PostToolUse` | `{tool}-post.md` | - |
 | `Stop` | `agent-stop.md` | - |
 | `Notification` | `notification-receive.md` | - |
+| `PreCompact` | `pre-compact.md` | - |
+| `PermissionRequest` | `permission-request.md` | - |
 
 **Note:** SessionStart fires at the beginning of each Claude Code session and injects context from `session-start.md`.
+
+**Planned hooks (not yet registered):** SlashCommandStart, SlashCommandEnd, SkillStart, SkillEnd - context patterns exist but hooks are not registered in `hooks.json`.
 
 ## Context Injection
 
@@ -153,14 +154,16 @@ The security checklist appears in the conversation automatically. **No configura
 | Hook Type | File Pattern | Example |
 |-----------|--------------|---------|
 | `SessionStart` | `session-start.md` | Session begins |
+| `SessionEnd` | `session-end.md` | Session ends |
 | `UserPromptSubmit` | `prompt-submit.md` | User sends message |
-| `SlashCommandStart` | `{command}-start.md` | `/code-review-start.md` |
-| `SlashCommandEnd` | `{command}-end.md` | `/code-review-end.md` |
-| `SkillStart` | `{skill}-start.md` | `test-driven-development-start.md` |
-| `SkillEnd` | `{skill}-end.md` | `test-driven-development-end.md` |
+| `SubagentStart` | `{agent}-start.md` | `rust-agent-start.md` |
 | `SubagentStop` | `{agent}-end.md` | `rust-agent-end.md` |
 | `PreToolUse` | `{tool}-pre.md` | `Edit-pre.md` |
 | `PostToolUse` | `{tool}-post.md` | `Edit-post.md` |
+| `Stop` | `agent-stop.md` | Agent stops |
+| `Notification` | `notification-receive.md` | Notification received |
+| `PreCompact` | `pre-compact.md` | Before context compaction |
+| `PermissionRequest` | `permission-request.md` | Permission dialog |
 
 See **[CONVENTIONS.md](./CONVENTIONS.md)** for full documentation.
 
@@ -259,6 +262,28 @@ Gates without `command` field are TypeScript modules in `src/gates/`:
 ```
 
 See **[TYPESCRIPT.md](./TYPESCRIPT.md)** for creating TypeScript gates.
+
+### Default Shell Gates
+
+The plugin provides placeholder shell gates that you can override with your project's actual commands:
+
+| Gate | Description | Keywords | Default Command |
+|------|-------------|----------|-----------------|
+| `check` | Quality checks (lint, format, types) | lint, check, format, quality, clippy, typecheck | Placeholder (configure) |
+| `test` | Run test suite | test, testing, spec, verify | Placeholder (configure) |
+| `build` | Build project | build, compile, package | Placeholder (configure) |
+
+**To configure:** Override in your `.claude/gates.json`:
+
+```json
+{
+  "gates": {
+    "check": { "command": "npm run lint && npm run typecheck" },
+    "test": { "command": "npm test" },
+    "build": { "command": "npm run build" }
+  }
+}
+```
 
 ### Keyword-Triggered Gates
 
@@ -427,11 +452,30 @@ Traditional skills and agents are guidance-only. Workflows enforce process:
 2. Workflow: Sets state to Task 1, injects prompt into conversation
 3. Claude: Reads prompt, executes task using tools (Task, Bash, Edit, etc.)
 4. Claude: Determines outcome (PASS/FAIL based on results)
-5. Claude: Runs `workflow next` or `workflow next --task N`
+5. Claude: Runs `workflow next` or `workflow next --step N` (to jump to step N)
 6. Repeat until DONE
 ```
 
 **Key insight:** A workflow is essentially a **skill with persistent state + CLI control**. The task text is guidance for Claude, just like skill instructions.
+
+### Workflow CLI Setup
+
+The workflow CLI is available via the hooks-app package:
+
+```bash
+# Option 1: Link the package globally (recommended)
+cd plugin/hooks/hooks-app && npm link
+
+# After linking, use the simple command:
+workflow start my-workflow.md
+workflow status
+workflow next
+
+# Option 2: Direct invocation (without linking)
+node plugin/hooks/hooks-app/dist/cli/workflow-cli.js <command>
+```
+
+**Note:** After `npm link`, the `workflow` command is available globally. All examples in this documentation assume the package has been linked.
 
 ### Quick Start
 
@@ -445,8 +489,8 @@ workflow status
 # Advance to next task
 workflow next
 
-# Jump to specific task
-workflow next --task 3
+# Jump to specific step
+workflow next --step 3
 
 # List all workflows
 workflow list
@@ -576,14 +620,14 @@ Variables would be set programmatically by agents or workflow logic.
 
 ##### Agent-Controlled Branching (Current Workaround)
 
-Since IF/ELSE is not yet implemented, use agent-driven decisions with the `--task` flag to create loops and conditional branching:
+Since IF/ELSE is not yet implemented, use agent-driven decisions with the `--step` flag to create loops and conditional branching:
 
 ```markdown
 ## 5. Check remaining tasks
 
 **Prompt:** Check TodoWrite for remaining tasks.
 
-If more tasks remain → `workflow next --task 3`
+If more tasks remain → `workflow next --step 3`
 If all done → `workflow next`
 
 - PASS: CONTINUE
@@ -593,8 +637,8 @@ If all done → `workflow next`
 1. Agent reads the task guidance with decision instructions
 2. Agent evaluates the condition (e.g., checks TodoWrite for remaining tasks)
 3. Agent executes the appropriate CLI command:
-   - **Loop back:** `workflow next --task 3` (jumps to task 3)
-   - **Continue forward:** `workflow next` (proceeds to task 6)
+   - **Loop back:** `workflow next --step 3` (jumps to step 3)
+   - **Continue forward:** `workflow next` (proceeds to step 6)
 
 **Advantages over parsed IF/ELSE:**
 - Agent can apply contextual judgment
@@ -610,7 +654,7 @@ If all done → `workflow next`
 **Prompt:** Execute next 3 tasks from plan.
 
 After batch completes, check remaining work:
-- If more batches needed → `workflow next --task 2` (review + loop)
+- If more batches needed → `workflow next --step 2` (review + loop)
 - If all tasks complete → `workflow next` (continue to finalization)
 
 - PASS: CONTINUE
@@ -683,7 +727,7 @@ Execute implementation plans in controlled batches.
 
 **Prompt:** Check TodoWrite for remaining tasks.
 
-If more batches needed → `workflow next --task 3`
+If more batches needed → `workflow next --step 3`
 If all tasks complete → `workflow next`
 
 - PASS: CONTINUE
@@ -808,18 +852,22 @@ workflow next
 - Displays task guidance
 - Auto-completes if past final task
 
-#### `workflow next --task N`
+#### `workflow next --step N`
 
-Jump to a specific task (for GOTO actions).
+Jump to a specific step (for GOTO actions).
 
 ```bash
-workflow next --task 3
+workflow next --step 3
 ```
 
 **Use cases:**
 - GOTO action execution
 - Manual navigation for debugging
-- Skipping optional tasks
+- Skipping optional steps
+
+**Flag clarification:**
+- `--step N` jumps to workflow step N (for GOTO/loops)
+- `--task <id>` specifies which parallel subtask (e.g., 3.A, 3.B) when multiple tasks run concurrently
 
 #### `workflow status`
 
@@ -894,7 +942,7 @@ Execute next batch of tasks (3 tasks per batch).
 **Prompt:** After completing batch, set `more_batches` variable based on remaining tasks.
 ```
 
-Access variables in conditionals:
+Access variables in conditionals (planned syntax, not yet implemented):
 
 ```markdown
 ## 6. Check progress
@@ -903,6 +951,8 @@ Access variables in conditionals:
   - GOTO: 3
 - ELSE: CONTINUE
 ```
+
+> **Note:** IF/ELSE conditionals are not yet implemented. Use agent-controlled branching instead (see above).
 
 #### Integration with Cipherpowers Skills
 
@@ -950,9 +1000,12 @@ echo "Dispatching code-review-agent..."
 
 ## 3. Handle blocking issues
 
-- IF: has_blocking_issues
-  - STOP "BLOCKING issues found. Fix before continuing."
-- ELSE: CONTINUE
+**Prompt:** Check if blocking issues were found.
+
+If blocking issues → `workflow stop "BLOCKING issues found"`
+If no blocking issues → `workflow next`
+
+- PASS: CONTINUE
 
 ## 4. Address feedback
 
@@ -1006,7 +1059,7 @@ Execute implementation plans in controlled batches with review checkpoints.
 
 **Prompt:** Check TodoWrite for remaining tasks.
 
-If more batches needed → `workflow next --task 3`
+If more batches needed → `workflow next --step 3`
 If all tasks complete → `workflow next`
 
 - PASS: CONTINUE
@@ -1059,7 +1112,7 @@ If all tasks complete → `workflow next`
 
 **Prompt:** Check if more items remain.
 
-If more items → `workflow next --task 1`
+If more items → `workflow next --step 1`
 If complete → `workflow next`
 
 - PASS: CONTINUE
@@ -1121,7 +1174,7 @@ npm run test:integration
 
 **Prompt:** Check if queue has more items.
 
-If queue not empty → `workflow next --task 1`
+If queue not empty → `workflow next --step 1`
 If queue empty → `workflow next`
 
 - PASS: CONTINUE
@@ -1178,7 +1231,7 @@ Execute implementation plans in batches.
 
 **Prompt:** Check if more batches remain.
 
-If more batches → `workflow next --task 2`
+If more batches → `workflow next --step 2`
 If complete → `workflow next`
 
 - PASS: CONTINUE
@@ -1228,5 +1281,6 @@ See `plugin/hooks/examples/` for ready-to-use configurations:
 - `strict.json` - Block on all failures
 - `permissive.json` - Warn only
 - `pipeline.json` - Gate chaining
+- `convention-based.json` - Zero-config context injection patterns
 - `context/` - Example context files
 - `code-review.workflow.md` - Code review workflow

@@ -69,16 +69,22 @@ Merged Configuration             ← Project takes precedence
 ```json
 {
   "gates": {
-    "commands": {
-      "description": "Context-aware command injection",
+    "plugin-path": {
+      "description": "Verify plugin path resolution in subagents",
       "on_pass": "CONTINUE",
       "on_fail": "CONTINUE"
     },
-    "plugin-path": { ... }
+    "check": {
+      "description": "Run project quality checks",
+      "keywords": ["lint", "check", "format"],
+      "command": "echo '[PLACEHOLDER] Configure with actual command'",
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
+    }
   },
   "hooks": {
     "UserPromptSubmit": {
-      "gates": ["commands"]
+      "gates": ["check"]
     }
   }
 }
@@ -91,40 +97,44 @@ Merged Configuration             ← Project takes precedence
 ## Directory Structure
 
 ```
-plugin/hooks/
-├── hooks.json                  # Hook registration (routes to CLI)
-├── gates.json                  # Plugin default gates configuration
-├── ARCHITECTURE.md             # This file
-├── CONVENTIONS.md              # Context file naming conventions
-├── README.md                   # Quick start guide
-├── SETUP.md                    # Detailed setup instructions
-├── TYPESCRIPT.md               # TypeScript gate development
+plugin/
+├── context/                    # Plugin-level context files
+│   ├── session-start.md        # Injects on SessionStart
+│   ├── prompt-submit.md        # Injects on UserPromptSubmit
+│   ├── subagent-stop.md        # Injects on SubagentStop
+│   └── tool-use.md             # Injects on tool events
 │
-├── context/                    # Plugin-level context files (NEW)
-│   └── session-start.md        # Injects on SessionStart
-│
-├── hooks-app/                  # TypeScript application
-│   ├── src/
-│   │   ├── cli.ts              # Entry point
-│   │   ├── dispatcher.ts       # Main dispatch logic
-│   │   ├── context.ts          # Context file discovery/injection
-│   │   ├── config.ts           # Config loading/merging
-│   │   ├── gate-loader.ts      # Gate execution
-│   │   ├── action-handler.ts   # Action processing
-│   │   ├── session.ts          # Session state management
-│   │   ├── logger.ts           # Debug logging
-│   │   ├── types.ts            # TypeScript interfaces
-│   │   ├── utils.ts            # Utility functions
-│   │   └── gates/              # Built-in TypeScript gates
-│   │       ├── index.ts        # Gate registry
-│   │       └── plugin-path.ts
-│   └── dist/                   # Compiled JavaScript
-│
-└── examples/
-    ├── context/                # Example context files
-    ├── strict.json             # Example: strict mode
-    ├── permissive.json         # Example: warn only
-    └── pipeline.json           # Example: gate chaining
+└── hooks/
+    ├── hooks.json              # Hook registration (routes to CLI)
+    ├── gates.json              # Plugin default gates configuration
+    ├── ARCHITECTURE.md         # This file
+    ├── CONVENTIONS.md          # Context file naming conventions
+    ├── README.md               # Quick start guide
+    ├── SETUP.md                # Detailed setup instructions
+    ├── TYPESCRIPT.md           # TypeScript gate development
+    │
+    ├── hooks-app/              # TypeScript application
+    │   ├── src/
+    │   │   ├── cli.ts          # Entry point
+    │   │   ├── dispatcher.ts   # Main dispatch logic
+    │   │   ├── context.ts      # Context file discovery/injection
+    │   │   ├── config.ts       # Config loading/merging
+    │   │   ├── gate-loader.ts  # Gate execution
+    │   │   ├── action-handler.ts  # Action processing
+    │   │   ├── session.ts      # Session state management
+    │   │   ├── logger.ts       # Debug logging
+    │   │   ├── types.ts        # TypeScript interfaces
+    │   │   ├── utils.ts        # Utility functions
+    │   │   └── gates/          # Built-in TypeScript gates
+    │   │       ├── index.ts    # Gate registry
+    │   │       └── plugin-path.ts
+    │   └── dist/               # Compiled JavaScript
+    │
+    └── examples/
+        ├── context/            # Example context files
+        ├── strict.json         # Example: strict mode
+        ├── permissive.json     # Example: warn only
+        └── pipeline.json       # Example: gate chaining
 ```
 
 ## Execution Flow
@@ -184,9 +194,9 @@ For each gate in the hook's `gates` array:
 
 **TypeScript Gate** (no `command` field):
 ```typescript
-// Gate name maps to module: "commands" → gates/commands.ts
+// Gate name maps to module: "plugin-path" → gates/plugin-path.ts
 const gates = await import('./gates');
-const result = await gates.commands.execute(input);
+const result = await gates.pluginPath.execute(input);
 ```
 
 **Shell Command Gate** (has `command` field):
@@ -211,24 +221,25 @@ If a gate chain exceeds this limit, execution stops with a block reason indicati
 
 ## Supported Hook Events
 
-All 12 Claude Code hook types are supported:
+All 11 registered Claude Code hook types are supported:
 
 | Event | Context Pattern | Description |
 |-------|----------------|-------------|
 | `SessionStart` | `session-start.md` | Beginning of Claude session |
 | `SessionEnd` | `session-end.md` | End of Claude session |
 | `UserPromptSubmit` | `prompt-submit.md` | User submits prompt |
-| `SlashCommandStart` | `{command}-start.md` | Command begins |
-| `SlashCommandEnd` | `{command}-end.md` | Command completes |
-| `SkillStart` | `{skill}-start.md` | Skill loads |
-| `SkillEnd` | `{skill}-end.md` | Skill completes |
+| `SubagentStart` | `{agent}-start.md` | Agent begins |
 | `SubagentStop` | `{agent}-end.md` | Agent completes |
 | `PreToolUse` | `{tool}-pre.md` | Before tool executes |
 | `PostToolUse` | `{tool}-post.md` | After tool executes |
 | `Stop` | `agent-stop.md` | Agent stops |
 | `Notification` | `notification-receive.md` | Notification received |
+| `PreCompact` | `pre-compact.md` | Before context compaction |
+| `PermissionRequest` | `permission-request.md` | Permission dialog |
 
 **Note:** SessionStart fires at the beginning of each Claude Code session and injects context from `session-start.md`.
+
+**Planned hooks (not yet registered):** SlashCommandStart, SlashCommandEnd, SkillStart, SkillEnd.
 
 ## TypeScript Gates
 
@@ -257,7 +268,7 @@ Register in `src/gates/index.ts`:
 export * as pluginPath from './plugin-path';
 ```
 
-Gate name maps to export: `"commands"` → `gates.commands.execute()`
+Gate name maps to export: `"plugin-path"` → `gates.pluginPath.execute()`
 
 ## Configuration Merging
 
@@ -267,11 +278,11 @@ Gate name maps to export: `"commands"` → `gates.commands.execute()`
 // Plugin gates.json (defaults)
 {
   "hooks": {
-    "UserPromptSubmit": { "gates": ["commands"] },
+    "UserPromptSubmit": { "gates": ["check"] },
     "PostToolUse": { "gates": ["check"] }
   },
   "gates": {
-    "commands": { "on_pass": "CONTINUE" },
+    "plugin-path": { "on_pass": "CONTINUE" },
     "check": { "command": "echo placeholder" }
   }
 }
@@ -291,11 +302,11 @@ Gate name maps to export: `"commands"` → `gates.commands.execute()`
 // Merged result
 {
   "hooks": {
-    "UserPromptSubmit": { "gates": ["commands"] }, // From plugin
+    "UserPromptSubmit": { "gates": ["check"] },    // From plugin
     "PostToolUse": { "gates": ["lint", "test"] }   // From project (replaced)
   },
   "gates": {
-    "commands": { "on_pass": "CONTINUE" },         // From plugin
+    "plugin-path": { "on_pass": "CONTINUE" },      // From plugin
     "check": { "command": "npm run lint" },        // From project (replaced)
     "lint": { "command": "eslint ." },             // From project (new)
     "test": { "command": "npm test" }              // From project (new)
@@ -305,7 +316,11 @@ Gate name maps to export: `"commands"` → `gates.commands.execute()`
 
 ## Session State
 
-The hook system maintains session state for cross-hook coordination:
+The hook system maintains two separate session state mechanisms:
+
+### Hook Session State
+
+Cross-hook coordination state for context tracking:
 
 ```typescript
 interface SessionState {
@@ -319,7 +334,23 @@ interface SessionState {
 }
 ```
 
-State persists in `$TMPDIR/turboshovel/session-{cwd-hash}.json`.
+State persists in `.claude/session/state.json`.
+
+### Workflow Session State
+
+Active workflow tracking (separate from hook session):
+
+State persists in `.claude/turboshovel/session.json` and tracks:
+- Active workflow ID
+- Stashed workflow ID (for paused enforcement)
+- Current task
+- Workflow variables
+
+**Workflow stashing:** Use `workflow stash` to pause enforcement for ad-hoc work, then `workflow pop` to resume. When stashed, workflow hooks pass through silently without enforcing task prefixes.
+
+**Important:** These are two distinct session mechanisms:
+- **Hook session** (`.claude/session/state.json`) - tracks active commands, edited files, etc.
+- **Workflow session** (`.claude/turboshovel/session.json`) - tracks active workflow state
 
 ## Logging
 

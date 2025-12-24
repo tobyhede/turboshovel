@@ -32,9 +32,18 @@ jq '.hooks.PostToolUse.enabled_tools' plugin/hooks/gates.json
 
 **Setup:**
 ```bash
-# Ensure gates.json has rust-agent enabled
-jq '.hooks.SubagentStop.enabled_agents' plugin/hooks/gates.json
-# Should include "rust-agent"
+# Configure SubagentStop for specific agents (default is empty array = all agents)
+# To test with a specific agent, update your .claude/gates.json:
+cat > .claude/gates.json <<'EOF'
+{
+  "hooks": {
+    "SubagentStop": {
+      "enabled_agents": ["rust-agent"],
+      "gates": ["check", "test"]
+    }
+  }
+}
+EOF
 ```
 
 **Test:**
@@ -47,6 +56,8 @@ jq '.hooks.SubagentStop.enabled_agents' plugin/hooks/gates.json
 - Both check and test gates execute
 - Gates run in sequence
 - Results appear in agent's context
+
+**Note:** Default `enabled_agents: []` means the hook runs for ALL agents. Specify agent names to restrict to specific agents.
 
 ## Test 3: Gate Chaining
 
@@ -181,9 +192,17 @@ EOF
 
 **Setup:**
 ```bash
-# Configure PostToolUse for Edit only (not Read)
-jq '.hooks.PostToolUse.enabled_tools = ["Edit"]' plugin/hooks/gates.json > /tmp/gates.json
-mv /tmp/gates.json plugin/hooks/gates.json
+# Configure PostToolUse for Edit only (not Read) in project config
+cat > .claude/gates.json <<'EOF'
+{
+  "hooks": {
+    "PostToolUse": {
+      "enabled_tools": ["Edit"],
+      "gates": ["check"]
+    }
+  }
+}
+EOF
 ```
 
 **Test:**
@@ -198,9 +217,17 @@ mv /tmp/gates.json plugin/hooks/gates.json
 
 **Setup:**
 ```bash
-# Configure SubagentStop for rust-agent only
-jq '.hooks.SubagentStop.enabled_agents = ["rust-agent"]' plugin/hooks/gates.json > /tmp/gates.json
-mv /tmp/gates.json plugin/hooks/gates.json
+# Configure SubagentStop for rust-agent only in project config
+cat > .claude/gates.json <<'EOF'
+{
+  "hooks": {
+    "SubagentStop": {
+      "enabled_agents": ["rust-agent"],
+      "gates": ["check", "test"]
+    }
+  }
+}
+EOF
 ```
 
 **Test:**
@@ -210,6 +237,8 @@ mv /tmp/gates.json plugin/hooks/gates.json
 **Expected:**
 - rust-agent: Hook executes when agent completes
 - code-review-agent: No hook execution (not in enabled_agents)
+
+**Note:** Use `.claude/gates.json` for project-specific overrides. Never modify `plugin/hooks/gates.json` directly.
 
 ## Verification Checklist
 
@@ -234,6 +263,7 @@ After running all tests:
 - Check `hooks.json` registered correctly
 - Verify `CLAUDE_PLUGIN_ROOT` is set
 - Check tool/agent is in enabled list
+- View logs: `tail -f $TMPDIR/turboshovel/hooks-$(date +%Y-%m-%d).log`
 
 **Gate command fails:**
 - Verify command exists: `which <command>`
@@ -242,5 +272,12 @@ After running all tests:
 
 **JSON parse errors:**
 - Validate `gates.json`: `jq . plugin/hooks/gates.json`
-- Check hook script syntax: `bash -n plugin/hooks/*.sh`
+- Validate `hooks.json`: `jq . plugin/hooks/hooks.json`
 - Review error messages for formatting issues
+
+**Testing hooks manually:**
+```bash
+export CLAUDE_PLUGIN_ROOT=/path/to/plugin
+echo '{"hook_event_name": "PostToolUse", "tool_name": "Edit", "cwd": "'$(pwd)'"}' | \
+  node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js
+```

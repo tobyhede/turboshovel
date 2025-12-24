@@ -4,7 +4,7 @@ Guide to creating and working with TypeScript gates in the Turboshovel hook syst
 
 ## Overview
 
-TypeScript gates are gates defined **without a `command` field** in `gates.json`. They're implemented as TypeScript modules in `hooks-app/src/gates/`.
+TypeScript gates are gates defined **without a `command` field** in `gates.json`. They're implemented as TypeScript modules in `plugin/hooks/hooks-app/src/gates/`.
 
 ```json
 {
@@ -18,7 +18,7 @@ TypeScript gates are gates defined **without a `command` field** in `gates.json`
 }
 ```
 
-When this gate runs, the system loads `src/gates/plugin-path.ts` and calls its `execute()` function.
+When this gate runs, the system loads `hooks-app/src/gates/plugin-path.ts` and calls its `execute()` function.
 
 ## Built-in Gates
 
@@ -32,7 +32,7 @@ The plugin includes these TypeScript gates:
 
 ### 1. Create the Gate Module
 
-Create `hooks-app/src/gates/my-gate.ts`:
+Create `plugin/hooks/hooks-app/src/gates/my-gate.ts`:
 
 ```typescript
 import { HookInput, GateResult } from '../types';
@@ -64,7 +64,7 @@ export async function execute(input: HookInput): Promise<GateResult> {
 
 ### 2. Register in Index
 
-Add to `hooks-app/src/gates/index.ts`:
+Add to `plugin/hooks/hooks-app/src/gates/index.ts`:
 
 ```typescript
 export * as pluginPath from './plugin-path';
@@ -108,19 +108,26 @@ interface HookInput {
   hook_event_name: string;  // "PostToolUse", "UserPromptSubmit", etc.
   cwd: string;              // Current working directory
 
-  // PostToolUse
-  tool_name?: string;       // "Edit", "Write", etc.
+  // PostToolUse / PreToolUse
+  tool_name?: string;       // "Edit", "Write", "Task", etc.
   file_path?: string;       // File being edited
+  tool_input?: {            // Task tool input (for workflow tracking)
+    description?: string;   // Task description
+    subagent_type?: string; // Agent type being spawned
+    prompt?: string;        // Prompt sent to agent
+  };
 
-  // SubagentStop
+  // SubagentStart / SubagentStop
+  agent_id?: string;        // Unique agent identifier (for binding tasks)
   agent_name?: string;      // "rust-agent", "code-review-agent", etc.
   subagent_name?: string;   // Alternative agent name field
-  output?: string;          // Agent output
+  output?: string;          // Agent output (SubagentStop only)
+  agent_transcript_path?: string;  // Path to agent transcript
 
   // UserPromptSubmit
   user_message?: string;    // User's prompt text
 
-  // SlashCommand/Skill
+  // SlashCommand/Skill (planned - not yet registered)
   command?: string;         // "/code-review", etc.
   skill?: string;           // "executing-plans", etc.
 }
@@ -218,7 +225,7 @@ Logs go to `$TMPDIR/turboshovel/hooks-YYYY-MM-DD.log`.
 
 ## Example: Plugin Path Gate
 
-The built-in `plugin-path` gate shows a complete implementation. See `hooks-app/src/gates/plugin-path.ts` for the full source code.
+The built-in `plugin-path` gate shows a complete implementation. See `plugin/hooks/hooks-app/src/gates/plugin-path.ts` for the full source code.
 
 This gate verifies that plugin paths are correctly resolved in subagent contexts, ensuring the `CLAUDE_PLUGIN_ROOT` environment variable is properly set and accessible.
 
