@@ -1,5 +1,5 @@
 // __tests__/workflow/types.test.ts
-import { createTaskNumber, type TaskNumber, type Action, type WorkflowState } from '../../src/workflow/types';
+import { createTaskNumber, type TaskNumber, type Action, type Subtask, type Task, type WorkflowState } from '../../src/workflow/types';
 
 describe('TaskNumber', () => {
   test('createTaskNumber with valid number returns TaskNumber', () => {
@@ -111,5 +111,50 @@ describe('WorkflowState orchestration fields', () => {
       updatedAt: '2025-01-01T00:00:00Z',
     };
     expect(state.parentWorkflowId).toBe('wf-parent');
+  });
+});
+
+describe('Subtask type', () => {
+  it('accepts static subtask', () => {
+    const subtask: Subtask = {
+      id: 'A',
+      description: 'First reviewer',
+      isDynamic: false,
+    };
+    expect(subtask.isDynamic).toBe(false);
+  });
+
+  it('accepts subtask with agent type', () => {
+    const subtask: Subtask = {
+      id: 'B',
+      description: 'Second reviewer',
+      agentType: 'code-review-agent',
+      isDynamic: false,
+    };
+    expect(subtask.agentType).toBe('code-review-agent');
+  });
+
+  it('accepts dynamic subtask template', () => {
+    const subtask: Subtask = {
+      id: '{n}',
+      description: 'Execute task',
+      isDynamic: true,
+    };
+    expect(subtask.isDynamic).toBe(true);
+  });
+});
+
+describe('Task with subtasks', () => {
+  it('accepts task with subtasks array', () => {
+    const task: Task = {
+      number: createTaskNumber(1)!,
+      description: 'Dispatch reviewers',
+      prompts: [],
+      subtasks: [
+        { id: 'A', description: 'First', isDynamic: false },
+        { id: 'B', description: 'Second', isDynamic: false },
+      ],
+    };
+    expect(task.subtasks).toHaveLength(2);
   });
 });

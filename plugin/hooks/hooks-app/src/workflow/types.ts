@@ -77,6 +77,16 @@ export interface Prompt {
 }
 
 /**
+ * A subtask within a task (H3 header)
+ */
+export interface Subtask {
+  readonly id: string;  // A, B, C or {n} for dynamic
+  readonly description: string;
+  readonly agentType?: string;  // e.g., "code-review-agent" from "(code-review-agent)"
+  readonly isDynamic: boolean;  // true for ### N.{n}, false for ### N.A
+}
+
+/**
  * A single task in a workflow
  */
 export interface Task {
@@ -85,6 +95,7 @@ export interface Task {
   readonly command?: Command;
   readonly prompts: readonly Prompt[];
   readonly conditions?: Conditions;
+  readonly subtasks?: readonly Subtask[];
   readonly nestedWorkflow?: string; // Reference to nested workflow file
 }
 
