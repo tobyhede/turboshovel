@@ -45,6 +45,11 @@ program
           process.exit(1);
         }
 
+        // Parse TaskId from CLI argument (raw ID, no separator required)
+        // Used for command-line arguments like `--task 3` or `--task 3.A`
+        // Note: This uses parseTaskIdFromString without requireSeparator option
+        // to parse raw task IDs without trailing description text.
+        // @see task-id.ts parseTaskIdFromString with requireSeparator: true for description parsing
         const taskId = parseTaskIdFromString(options.task);
         if (!taskId) {
           console.error(`Error: Invalid task ID format: ${options.task}`);

@@ -17,14 +17,25 @@ export interface ParseTaskIdOptions {
 /**
  * Parse TaskId from string with configurable behavior
  *
- * Without requireSeparator:
+ * The requireSeparator option controls parsing strictness:
+ *
+ * Without requireSeparator (CLI argument parsing):
+ *   Used when parsing TaskIds from CLI arguments like `--task 3` or `--task 3.A`
+ *   Expects the entire string to be the task ID with no trailing text
  *   "3" -> { task: 3 }
  *   "3.A" -> { task: 3, subtask: 'A' }
+ *   "3 - description" -> null (fails because of space)
  *
- * With requireSeparator:
- *   "3 - Review" -> { task: 3 }
- *   "3.A: Task" -> { task: 3, subtask: 'A' }
- *   "3" -> null (no separator)
+ * With requireSeparator (Task description parsing):
+ *   Used when parsing TaskIds from agent task descriptions where additional text
+ *   follows the ID. The separator requirement prevents false matches on text
+ *   that happens to start with a number.
+ *   "3 - Review code" -> { task: 3 }
+ *   "3.A - First reviewer" -> { task: 3, subtask: 'A' }
+ *   "5: Execute" -> { task: 5 }
+ *   "3" -> null (fails because no separator found)
+ *
+ * @see parseTaskId for a convenience wrapper with requireSeparator: true
  */
 export function parseTaskIdFromString(
   input: string,
@@ -53,7 +64,22 @@ export function parseTaskIdFromString(
 }
 
 /**
- * Parse TaskId from Task tool description (requires separator)
+ * Parse TaskId from Task tool description (requires separator after ID)
+ *
+ * This function is used when parsing TaskIds from agent task descriptions where
+ * additional text follows the ID. The separator requirement prevents false matches
+ * on text that happens to start with a number.
+ *
+ * Valid formats:
+ *   "3 - Review code" -> { task: 3 }
+ *   "3.A - First reviewer" -> { task: 3, subtask: 'A' }
+ *   "5: Execute" -> { task: 5 }
+ *
+ * Invalid (no separator):
+ *   "3Review" -> null
+ *   "3.A" -> null (use parseTaskIdFromString without requireSeparator for raw IDs)
+ *
+ * @see parseTaskIdFromString with { requireSeparator: false } for CLI argument parsing (no separator)
  * @deprecated Use parseTaskIdFromString with { requireSeparator: true }
  */
 export function parseTaskId(description: string): TaskId | null {
