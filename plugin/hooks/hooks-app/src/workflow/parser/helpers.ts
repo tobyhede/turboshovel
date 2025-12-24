@@ -1,14 +1,14 @@
 // src/workflow/parser/helpers.ts
 
 import { createTaskNumber, type Action, type TaskNumber } from '../types';
-import type { ParsedConditional } from './types';
+import type { ParsedConditional, AggregationModifier } from './types';
 
 /**
  * Strip common separators and whitespace
  */
 export function stripSeparator(text: string): string {
   return text
-    .replace(/^[.:—\-)\s]+/, '')
+    .replace(/^[.:—→\-)\s]+/, '')
     .trim();
 }
 
@@ -112,7 +112,8 @@ export function parseAction(text: string): Action | null {
 }
 
 /**
- * Parse a conditional line (PASS: action or FAIL: action)
+ * Parse a conditional line (PASS [ALL|ANY]: action or FAIL [ALL|ANY]: action)
+ * Supports new syntax with aggregation modifiers and backward compatibility
  */
 export function parseConditional(text: string): ParsedConditional | null {
   const trimmed = text.trim();
@@ -120,22 +121,46 @@ export function parseConditional(text: string): ParsedConditional | null {
   // Try ALLCAPS first (new syntax)
   if (trimmed.startsWith('PASS')) {
     const rest = trimmed.slice(4);
-    const actionStr = stripSeparator(rest);
+
+    // Check for aggregation modifier (ALL or ANY)
+    let modifier: AggregationModifier = null;
+    let remaining = rest;
+
+    // Match modifier: space + (ALL|ANY) + (space or colon or arrow or dash)
+    const modifierMatch = remaining.match(/^\s+(ALL|ANY)[\s:→\-]/);
+    if (modifierMatch) {
+      modifier = modifierMatch[1] as 'ALL' | 'ANY';
+      remaining = remaining.slice(modifierMatch[0].length);
+    }
+
+    const actionStr = stripSeparator(remaining);
     const action = parseAction(actionStr);
     if (!action) {
       return null;
     }
-    return { type: 'pass', action };
+    return { type: 'pass', action, modifier };
   }
 
   if (trimmed.startsWith('FAIL')) {
     const rest = trimmed.slice(4);
-    const actionStr = stripSeparator(rest);
+
+    // Check for aggregation modifier (ALL or ANY)
+    let modifier: AggregationModifier = null;
+    let remaining = rest;
+
+    // Match modifier: space + (ALL|ANY) + (space or colon or arrow or dash)
+    const modifierMatch = remaining.match(/^\s+(ALL|ANY)[\s:→\-]/);
+    if (modifierMatch) {
+      modifier = modifierMatch[1] as 'ALL' | 'ANY';
+      remaining = remaining.slice(modifierMatch[0].length);
+    }
+
+    const actionStr = stripSeparator(remaining);
     const action = parseAction(actionStr);
     if (!action) {
       return null;
     }
-    return { type: 'fail', action };
+    return { type: 'fail', action, modifier };
   }
 
   // Backward compatibility: old syntax (Pass: / Fail:)
@@ -145,7 +170,7 @@ export function parseConditional(text: string): ParsedConditional | null {
     if (!action) {
       return null;
     }
-    return { type: 'pass', action };
+    return { type: 'pass', action, modifier: null };
   }
 
   if (trimmed.startsWith('Fail:')) {
@@ -154,7 +179,7 @@ export function parseConditional(text: string): ParsedConditional | null {
     if (!action) {
       return null;
     }
-    return { type: 'fail', action };
+    return { type: 'fail', action, modifier: null };
   }
 
   return null;

@@ -105,6 +105,7 @@ describe('parseConditional', () => {
     expect(parseConditional('PASS: CONTINUE')).toEqual({
       type: 'pass',
       action: { type: 'CONTINUE' },
+      modifier: null,
     });
   });
 
@@ -112,6 +113,7 @@ describe('parseConditional', () => {
     expect(parseConditional('FAIL: STOP fix tests')).toEqual({
       type: 'fail',
       action: { type: 'STOP', message: 'fix tests' },
+      modifier: null,
     });
   });
 
@@ -119,6 +121,7 @@ describe('parseConditional', () => {
     expect(parseConditional('PASS CONTINUE')).toEqual({
       type: 'pass',
       action: { type: 'CONTINUE' },
+      modifier: null,
     });
   });
 
@@ -126,6 +129,7 @@ describe('parseConditional', () => {
     expect(parseConditional('FAIL - STOP')).toEqual({
       type: 'fail',
       action: { type: 'STOP' },
+      modifier: null,
     });
   });
 
@@ -135,5 +139,52 @@ describe('parseConditional', () => {
 
   test('rejects lowercase pass/fail', () => {
     expect(parseConditional('pass: CONTINUE')).toBeNull();
+  });
+});
+
+describe('parseConditional with aggregation', () => {
+  it('parses PASS ALL: CONTINUE', () => {
+    const result = parseConditional('PASS ALL: CONTINUE');
+    expect(result).toEqual({
+      type: 'pass',
+      action: { type: 'CONTINUE' },
+      modifier: 'ALL',
+    });
+  });
+
+  it('parses FAIL ANY: STOP', () => {
+    const result = parseConditional('FAIL ANY: STOP');
+    expect(result).toEqual({
+      type: 'fail',
+      action: { type: 'STOP' },
+      modifier: 'ANY',
+    });
+  });
+
+  it('parses PASS: CONTINUE (no modifier)', () => {
+    const result = parseConditional('PASS: CONTINUE');
+    expect(result).toEqual({
+      type: 'pass',
+      action: { type: 'CONTINUE' },
+      modifier: null,
+    });
+  });
+
+  it('parses with arrow syntax: PASS ANY → CONTINUE', () => {
+    const result = parseConditional('PASS ANY → CONTINUE');
+    expect(result).toEqual({
+      type: 'pass',
+      action: { type: 'CONTINUE' },
+      modifier: 'ANY',
+    });
+  });
+
+  it('parses FAIL ALL → STOP "message"', () => {
+    const result = parseConditional('FAIL ALL → STOP All approaches failed');
+    expect(result).toEqual({
+      type: 'fail',
+      action: { type: 'STOP', message: 'All approaches failed' },
+      modifier: 'ALL',
+    });
   });
 });
