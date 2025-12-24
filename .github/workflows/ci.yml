@@ -42,13 +42,3 @@ jobs:
 
       - name: Test with coverage
         run: npm test -- --coverage
-
-      - name: Upload coverage to Codecov
-        if: matrix.node-version == 20
-        uses: codecov/codecov-action@v4
-        with:
-          directory: plugin/hooks/hooks-app/coverage
-          flags: unittests
-          fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
