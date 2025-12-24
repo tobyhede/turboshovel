@@ -97,7 +97,19 @@ async function handleSessionCommand(args: string[]): Promise<void> {
         if (key === 'active_command' || key === 'active_skill') {
           await session.set(key, value === 'null' ? null : value);
         } else if (key === 'metadata') {
-          await session.set(key, JSON.parse(value));
+          let parsed: unknown;
+          try {
+            parsed = JSON.parse(value);
+          } catch (e) {
+            const message = e instanceof Error ? e.message : String(e);
+            console.error(`Invalid JSON for metadata: ${message}`);
+            process.exit(1);
+          }
+          if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+            console.error('Metadata must be a JSON object');
+            process.exit(1);
+          }
+          await session.set(key, parsed as Record<string, unknown>);
         } else {
           console.error(`Cannot set ${key} via CLI (use get, append, or contains)`);
           process.exit(1);

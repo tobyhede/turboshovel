@@ -151,6 +151,23 @@ describe('CLI Integration', () => {
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Unknown session command');
     });
+
+    test('should reject invalid JSON for metadata', async () => {
+      const result = await runCLI(['session', 'set', 'metadata', '{not valid json}', testDir]);
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('Invalid JSON for metadata');
+    });
+
+    test('should reject non-object metadata', async () => {
+      const result = await runCLI(['session', 'set', 'metadata', '"just a string"', testDir]);
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('Metadata must be a JSON object');
+    });
+
+    test('should accept valid JSON object for metadata', async () => {
+      const result = await runCLI(['session', 'set', 'metadata', '{"key":"value"}', testDir]);
+      expect(result.exitCode).toBe(0);
+    });
   });
 
   describe('Hook Dispatch Mode', () => {
