@@ -8,14 +8,35 @@ import type { TaskId } from './task-id';
 export type TaskNumber = number & { readonly __brand: 'TaskNumber' };
 
 /**
+ * Maximum valid task number (prevent overflow, keep IDs reasonable)
+ */
+const MAX_TASK_NUMBER = 999999;
+
+/**
  * Factory function to create a valid TaskNumber
- * Returns null if the number is invalid (zero, negative, or non-integer)
+ * Returns null if the number is invalid (zero, negative, non-integer, or too large)
  */
 export function createTaskNumber(n: number): TaskNumber | null {
-  if (n <= 0 || !Number.isInteger(n)) {
+  if (n <= 0 || !Number.isInteger(n) || n > MAX_TASK_NUMBER) {
     return null;
   }
   return n as TaskNumber;
+}
+
+/**
+ * Increment a TaskNumber, preserving the brand
+ * Returns null if result would exceed maximum
+ */
+export function incrementTaskNumber(tn: TaskNumber): TaskNumber | null {
+  return createTaskNumber(tn + 1);
+}
+
+/**
+ * Decrement a TaskNumber, preserving the brand
+ * Returns null if result would be less than 1
+ */
+export function decrementTaskNumber(tn: TaskNumber): TaskNumber | null {
+  return createTaskNumber(tn - 1);
 }
 
 /**

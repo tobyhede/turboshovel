@@ -1,5 +1,15 @@
 // __tests__/workflow/types.test.ts
-import { createTaskNumber, type TaskNumber, type Action, type Subtask, type Task, type WorkflowState, type Conditions } from '../../src/workflow/types';
+import {
+  createTaskNumber,
+  incrementTaskNumber,
+  decrementTaskNumber,
+  type TaskNumber,
+  type Action,
+  type Subtask,
+  type Task,
+  type WorkflowState,
+  type Conditions
+} from '../../src/workflow/types';
 
 describe('TaskNumber', () => {
   test('createTaskNumber with valid number returns TaskNumber', () => {
@@ -190,5 +200,36 @@ describe('Conditions discriminated union', () => {
     }
 
     expect(checkAll(conditions)).toBe('pessimistic');
+  });
+});
+
+describe('incrementTaskNumber', () => {
+  it('increments valid TaskNumber', () => {
+    const tn = createTaskNumber(3)!;
+    const result = incrementTaskNumber(tn);
+    expect(result).toBe(4);
+    // Verify brand preserved by using where TaskNumber expected
+    const next: TaskNumber = result!;
+    expect(next).toBe(4);
+  });
+
+  it('returns null when increment would overflow reasonable bounds', () => {
+    const tn = createTaskNumber(999999)!;
+    const result = incrementTaskNumber(tn);
+    expect(result).toBeNull();
+  });
+});
+
+describe('decrementTaskNumber', () => {
+  it('decrements valid TaskNumber', () => {
+    const tn = createTaskNumber(3)!;
+    const result = decrementTaskNumber(tn);
+    expect(result).toBe(2);
+  });
+
+  it('returns null when decrement would go below 1', () => {
+    const tn = createTaskNumber(1)!;
+    const result = decrementTaskNumber(tn);
+    expect(result).toBeNull();
   });
 });
