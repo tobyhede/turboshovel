@@ -293,4 +293,26 @@ describe('extractSubtaskHeader', () => {
     expect(extractSubtaskHeader('1 Missing dot')).toBeNull();
     expect(extractSubtaskHeader('.A No number')).toBeNull();
   });
+
+  describe('edge cases', () => {
+    it('rejects multi-letter subtask IDs (by design)', () => {
+      // Document that multi-letter IDs like "1.AA" are intentionally not supported
+      // Only single letters A-Z are valid subtask identifiers
+      expect(extractSubtaskHeader('1.AA First task')).toBeNull();
+      expect(extractSubtaskHeader('2.AB Second task')).toBeNull();
+    });
+
+    it('accepts single letter subtask IDs', () => {
+      const result = extractSubtaskHeader('1.A First task');
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe('A');
+    });
+
+    it('accepts dynamic subtask marker {n}', () => {
+      const result = extractSubtaskHeader('1.{n} Dynamic task');
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe('{n}');
+      expect(result?.isDynamic).toBe(true);
+    });
+  });
 });
