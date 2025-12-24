@@ -2,6 +2,7 @@
 import { handleSubagentStop, type SubagentStopResult } from '../../../src/workflow/hooks/subagent-stop';
 import { WorkflowStateManager } from '../../../src/workflow/state';
 import type { HookInput } from '../../../src/types';
+import { createTaskNumber } from '../../../src/workflow/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -22,8 +23,8 @@ describe('handleSubagentStop with agent binding', () => {
   it('looks up agent by agent_id and updates binding', async () => {
     const state = await manager.create('test.workflow.md', 'Test');
     await manager.setActive(state.id);
-    await manager.pushPendingTask(state.id, { task: 2 });
-    await manager.bindAgent(state.id, 'agent-xyz', { task: 2 });
+    await manager.pushPendingTask(state.id, { task: createTaskNumber(2)! });
+    await manager.bindAgent(state.id, 'agent-xyz', { task: createTaskNumber(2)! });
 
     const input: HookInput = {
       hook_event_name: 'SubagentStop',
@@ -45,7 +46,7 @@ describe('handleSubagentStop with agent binding', () => {
   it('marks as fail when STATUS: BLOCKED', async () => {
     const state = await manager.create('test.workflow.md', 'Test');
     await manager.setActive(state.id);
-    await manager.bindAgent(state.id, 'agent-abc', { task: 1 });
+    await manager.bindAgent(state.id, 'agent-abc', { task: createTaskNumber(1)! });
 
     const input: HookInput = {
       hook_event_name: 'SubagentStop',
@@ -80,7 +81,7 @@ describe('handleSubagentStop with agent binding', () => {
   it('defaults to pass when no STATUS in output', async () => {
     const state = await manager.create('test.workflow.md', 'Test');
     await manager.setActive(state.id);
-    await manager.bindAgent(state.id, 'agent-xyz', { task: 1 });
+    await manager.bindAgent(state.id, 'agent-xyz', { task: createTaskNumber(1)! });
 
     const input: HookInput = {
       hook_event_name: 'SubagentStop',

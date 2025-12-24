@@ -5,6 +5,7 @@ import * as fs from 'fs/promises';
 import { dispatch } from '../../src/dispatcher';
 import { WorkflowStateManager } from '../../src/workflow/state';
 import type { HookInput } from '../../src/types';
+import { createTaskNumber } from '../../src/workflow/types';
 
 describe('Dispatcher Workflow Integration', () => {
   let testDir: string;
@@ -93,7 +94,7 @@ describe('dispatcher with orchestration hooks', () => {
   it('injects agent context on SubagentStart', async () => {
     const state = await manager.create('test.workflow.md', 'Test');
     await manager.setActive(state.id);
-    await manager.pushPendingTask(state.id, { task: 1 });
+    await manager.pushPendingTask(state.id, { task: createTaskNumber(1)! });
 
     const input: HookInput = {
       hook_event_name: 'SubagentStart',

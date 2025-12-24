@@ -134,32 +134,32 @@ describe('WorkflowStateManager', () => {
   describe('WorkflowStateManager.pushPendingTask', () => {
     it('adds task to empty pending queue', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
-      const taskId: TaskId = { task: 3, subtask: 'A' };
+      const taskId: TaskId = { task: createTaskNumber(3)!, subtask: 'A' };
 
       await manager.pushPendingTask(state.id, taskId);
 
       const updated = await manager.load(state.id);
-      expect(updated?.pendingTasks).toEqual([{ task: 3, subtask: 'A' }]);
+      expect(updated?.pendingTasks).toEqual([{ task: createTaskNumber(3)!, subtask: 'A' }]);
     });
 
     it('appends to existing pending queue (FIFO)', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
 
-      await manager.pushPendingTask(state.id, { task: 1 });
-      await manager.pushPendingTask(state.id, { task: 2 });
-      await manager.pushPendingTask(state.id, { task: 3, subtask: 'A' });
+      await manager.pushPendingTask(state.id, { task: createTaskNumber(1)! });
+      await manager.pushPendingTask(state.id, { task: createTaskNumber(2)! });
+      await manager.pushPendingTask(state.id, { task: createTaskNumber(3)!, subtask: 'A' });
 
       const updated = await manager.load(state.id);
       expect(updated?.pendingTasks).toEqual([
-        { task: 1 },
-        { task: 2 },
-        { task: 3, subtask: 'A' },
+        { task: createTaskNumber(1)! },
+        { task: createTaskNumber(2)! },
+        { task: createTaskNumber(3)!, subtask: 'A' },
       ]);
     });
 
     it('throws for non-existent workflow', async () => {
       await expect(
-        manager.pushPendingTask('non-existent', { task: 1 })
+        manager.pushPendingTask('non-existent', { task: createTaskNumber(1)! })
       ).rejects.toThrow('Workflow non-existent not found');
     });
   });
@@ -175,14 +175,14 @@ describe('WorkflowStateManager', () => {
 
     it('returns and removes first task (FIFO)', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
-      await manager.pushPendingTask(state.id, { task: 1 });
-      await manager.pushPendingTask(state.id, { task: 2 });
+      await manager.pushPendingTask(state.id, { task: createTaskNumber(1)! });
+      await manager.pushPendingTask(state.id, { task: createTaskNumber(2)! });
 
       const first = await manager.popPendingTask(state.id);
-      expect(first).toEqual({ task: 1 });
+      expect(first).toEqual({ task: createTaskNumber(1)! });
 
       const updated = await manager.load(state.id);
-      expect(updated?.pendingTasks).toEqual([{ task: 2 }]);
+      expect(updated?.pendingTasks).toEqual([{ task: createTaskNumber(2)! }]);
     });
 
     it('returns null for non-existent workflow', async () => {
@@ -194,13 +194,13 @@ describe('WorkflowStateManager', () => {
   describe('bindAgent', () => {
     it('creates agent binding with running status', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
-      const taskId: TaskId = { task: 3, subtask: 'A' };
+      const taskId: TaskId = { task: createTaskNumber(3)!, subtask: 'A' };
 
       await manager.bindAgent(state.id, 'agent-xyz', taskId);
 
       const updated = await manager.load(state.id);
       expect(updated?.agentBindings['agent-xyz']).toEqual({
-        taskId: { task: 3, subtask: 'A' },
+        taskId: { task: createTaskNumber(3)!, subtask: 'A' },
         status: 'running',
       });
     });
@@ -208,8 +208,8 @@ describe('WorkflowStateManager', () => {
     it('allows multiple agent bindings', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
 
-      await manager.bindAgent(state.id, 'agent-1', { task: 1 });
-      await manager.bindAgent(state.id, 'agent-2', { task: 2 });
+      await manager.bindAgent(state.id, 'agent-1', { task: createTaskNumber(1)! });
+      await manager.bindAgent(state.id, 'agent-2', { task: createTaskNumber(2)! });
 
       const updated = await manager.load(state.id);
       expect(Object.keys(updated?.agentBindings || {})).toHaveLength(2);
@@ -217,7 +217,7 @@ describe('WorkflowStateManager', () => {
 
     it('throws for non-existent workflow', async () => {
       await expect(
-        manager.bindAgent('non-existent', 'agent-x', { task: 1 })
+        manager.bindAgent('non-existent', 'agent-x', { task: createTaskNumber(1)! })
       ).rejects.toThrow('Workflow non-existent not found');
     });
   });
@@ -225,12 +225,12 @@ describe('WorkflowStateManager', () => {
   describe('getAgentBinding', () => {
     it('returns binding for existing agent', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
-      await manager.bindAgent(state.id, 'agent-xyz', { task: 3 });
+      await manager.bindAgent(state.id, 'agent-xyz', { task: createTaskNumber(3)! });
 
       const binding = await manager.getAgentBinding(state.id, 'agent-xyz');
 
       expect(binding).toEqual({
-        taskId: { task: 3 },
+        taskId: { task: createTaskNumber(3)! },
         status: 'running',
       });
     });
@@ -252,7 +252,7 @@ describe('WorkflowStateManager', () => {
   describe('updateAgentBinding', () => {
     it('updates status to done with result', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
-      await manager.bindAgent(state.id, 'agent-xyz', { task: 3 });
+      await manager.bindAgent(state.id, 'agent-xyz', { task: createTaskNumber(3)! });
 
       await manager.updateAgentBinding(state.id, 'agent-xyz', {
         status: 'done',
@@ -266,12 +266,12 @@ describe('WorkflowStateManager', () => {
 
     it('preserves taskId when updating', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
-      await manager.bindAgent(state.id, 'agent-xyz', { task: 3, subtask: 'A' });
+      await manager.bindAgent(state.id, 'agent-xyz', { task: createTaskNumber(3)!, subtask: 'A' });
 
       await manager.updateAgentBinding(state.id, 'agent-xyz', { status: 'done' });
 
       const binding = await manager.getAgentBinding(state.id, 'agent-xyz');
-      expect(binding?.taskId).toEqual({ task: 3, subtask: 'A' });
+      expect(binding?.taskId).toEqual({ task: createTaskNumber(3)!, subtask: 'A' });
     });
 
     it('throws for non-existent agent', async () => {
@@ -308,13 +308,13 @@ describe('WorkflowStateManager', () => {
     it('preserves workflow state when stashed', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
       await manager.setActive(state.id);
-      await manager.pushPendingTask(state.id, { task: 3 });
+      await manager.pushPendingTask(state.id, { task: createTaskNumber(3)! });
 
       await manager.stash();
 
       // Workflow still exists with its state
       const loaded = await manager.load(state.id);
-      expect(loaded?.pendingTasks).toEqual([{ task: 3 }]);
+      expect(loaded?.pendingTasks).toEqual([{ task: createTaskNumber(3)! }]);
     });
   });
 

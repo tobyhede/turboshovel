@@ -10,6 +10,7 @@ import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
 import { execSync } from 'child_process';
 import { WorkflowStateManager } from '../../src/workflow/state';
+import { createTaskNumber } from '../../src/workflow/types';
 
 interface CliResult {
   stdout: string;
@@ -97,7 +98,7 @@ echo "test"
       // Verify state
       const manager = new WorkflowStateManager(testDir);
       const state = await manager.getActive();
-      expect(state?.pendingTasks).toContainEqual({ task: 3, subtask: 'A' });
+      expect(state?.pendingTasks).toContainEqual({ task: createTaskNumber(3)!, subtask: 'A' });
     });
 
     it('errors when no active workflow', async () => {

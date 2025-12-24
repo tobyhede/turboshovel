@@ -85,7 +85,7 @@ describe('WorkflowState orchestration fields', () => {
       retryMax: 3,
       variables: {},
       tasks: [],
-      pendingTasks: [{ task: 1 }, { task: 2, subtask: 'A' }],
+      pendingTasks: [{ task: createTaskNumber(1)! }, { task: createTaskNumber(2)!, subtask: 'A' }],
       agentBindings: {},
       startedAt: '2025-01-01T00:00:00Z',
       updatedAt: '2025-01-01T00:00:00Z',
@@ -105,7 +105,7 @@ describe('WorkflowState orchestration fields', () => {
       tasks: [],
       pendingTasks: [],
       agentBindings: {
-        'agent-abc': { taskId: { task: 1 }, status: 'running' },
+        'agent-abc': { taskId: { task: createTaskNumber(1)! }, status: 'running' },
       },
       startedAt: '2025-01-01T00:00:00Z',
       updatedAt: '2025-01-01T00:00:00Z',
@@ -127,7 +127,7 @@ describe('WorkflowState orchestration fields', () => {
       agentBindings: {},
       agentId: 'agent-xyz',
       parentWorkflowId: 'wf-parent',
-      parentTaskId: { task: 2, subtask: 'B' },
+      parentTaskId: { task: createTaskNumber(2)!, subtask: 'B' },
       startedAt: '2025-01-01T00:00:00Z',
       updatedAt: '2025-01-01T00:00:00Z',
     };

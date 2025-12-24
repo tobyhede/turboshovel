@@ -4,6 +4,7 @@ import * as fs from 'fs/promises';
 import { trackTaskDispatch, type TaskDispatchResult } from '../../../src/workflow/hooks/task-tracker';
 import { WorkflowStateManager } from '../../../src/workflow/state';
 import type { HookInput } from '../../../src/types';
+import { createTaskNumber } from '../../../src/workflow/types';
 
 describe('trackTaskDispatch with TaskId', () => {
   let testDir: string;
@@ -35,10 +36,10 @@ describe('trackTaskDispatch with TaskId', () => {
 
     const result = await trackTaskDispatch(input);
 
-    expect(result.taskId).toEqual({ task: 3, subtask: 'A' });
+    expect(result.taskId).toEqual({ task: createTaskNumber(3)!, subtask: 'A' });
 
     const updated = await manager.getActive();
-    expect(updated?.pendingTasks).toContainEqual({ task: 3, subtask: 'A' });
+    expect(updated?.pendingTasks).toContainEqual({ task: createTaskNumber(3)!, subtask: 'A' });
   });
 
   it('returns violation for missing TaskId prefix in enforcement mode', async () => {

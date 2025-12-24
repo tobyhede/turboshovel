@@ -1,9 +1,11 @@
+import { createTaskNumber, type TaskNumber } from './types';
+
 /**
  * Task identifier with optional subtask
  * Format: "3" or "3.A" (task with optional subtask letter)
  */
 export interface TaskId {
-  readonly task: number;
+  readonly task: TaskNumber;
   readonly subtask?: string;
 }
 
@@ -40,8 +42,9 @@ export function parseTaskIdFromString(
   const match = input.match(pattern);
   if (!match) return null;
 
-  const task = parseInt(match[1], 10);
-  if (task <= 0) return null;
+  const taskNum = parseInt(match[1], 10);
+  const task = createTaskNumber(taskNum);
+  if (!task) return null;  // Invalid task number (0, negative, or too large)
 
   return {
     task,

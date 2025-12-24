@@ -1,6 +1,7 @@
 import { handleSubagentStart, type SubagentStartResult } from '../../../src/workflow/hooks/subagent-start';
 import { WorkflowStateManager } from '../../../src/workflow/state';
 import type { HookInput } from '../../../src/types';
+import { createTaskNumber } from '../../../src/workflow/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -21,7 +22,7 @@ describe('handleSubagentStart', () => {
   it('pops pending task and binds agent', async () => {
     const state = await manager.create('test.workflow.md', 'Test');
     await manager.setActive(state.id);
-    await manager.pushPendingTask(state.id, { task: 3, subtask: 'A' });
+    await manager.pushPendingTask(state.id, { task: createTaskNumber(3)!, subtask: 'A' });
 
     const input: HookInput = {
       hook_event_name: 'SubagentStart',
