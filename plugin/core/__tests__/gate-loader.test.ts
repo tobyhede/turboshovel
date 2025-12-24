@@ -86,7 +86,7 @@ describe('Plugin Gate Loading', () => {
   beforeEach(async () => {
     // Create mock plugin directory structure
     mockPluginDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mock-plugins-'));
-    const cipherpowersDir = path.join(mockPluginDir, 'cipherpowers', 'hooks');
+    const cipherpowersDir = path.join(mockPluginDir, 'cipherpowers');
     await fs.mkdir(cipherpowersDir, { recursive: true });
 
     // Create mock gates.json for cipherpowers
@@ -133,7 +133,7 @@ describe('Plugin Gate Loading', () => {
 
   test('validates loaded plugin config structure', async () => {
     // Create plugin with malformed gates.json
-    const malformedDir = path.join(mockPluginDir, 'malformed', 'hooks');
+    const malformedDir = path.join(mockPluginDir, 'malformed');
     await fs.mkdir(malformedDir, { recursive: true });
     await fs.writeFile(
       path.join(malformedDir, 'gates.json'),

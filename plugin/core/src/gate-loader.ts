@@ -185,7 +185,7 @@ export async function loadPluginGate(
   gateName: string
 ): Promise<PluginGateResult> {
   const pluginRoot = resolvePluginPath(pluginName);
-  const gatesPath = path.join(pluginRoot, 'hooks', 'gates.json');
+  const gatesPath = path.join(pluginRoot, 'gates.json');
 
   const pluginConfig = await loadConfigFile(gatesPath);
   if (!pluginConfig) {

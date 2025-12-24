@@ -15,10 +15,10 @@ describe('Plugin Gate Composition Integration', () => {
     mockPluginsDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mock-plugins-'));
 
     // Create mock cipherpowers plugin
-    const cipherpowersHooksDir = path.join(mockPluginsDir, 'cipherpowers', 'hooks');
-    await fs.mkdir(cipherpowersHooksDir, { recursive: true });
+    const cipherpowersDir = path.join(mockPluginsDir, 'cipherpowers');
+    await fs.mkdir(cipherpowersDir, { recursive: true });
     await fs.writeFile(
-      path.join(cipherpowersHooksDir, 'gates.json'),
+      path.join(cipherpowersDir, 'gates.json'),
       JSON.stringify({
         hooks: {},
         gates: {
@@ -31,10 +31,10 @@ describe('Plugin Gate Composition Integration', () => {
     );
 
     // Create mock turboshovel plugin (current plugin)
-    const turboshovelHooksDir = path.join(mockPluginsDir, 'turboshovel', 'hooks');
-    await fs.mkdir(turboshovelHooksDir, { recursive: true });
+    const turboshovelDir = path.join(mockPluginsDir, 'turboshovel');
+    await fs.mkdir(turboshovelDir, { recursive: true });
     await fs.writeFile(
-      path.join(turboshovelHooksDir, 'gates.json'),
+      path.join(turboshovelDir, 'gates.json'),
       JSON.stringify({ hooks: {}, gates: {} })
     );
 
@@ -95,9 +95,9 @@ describe('Plugin Gate Composition Integration', () => {
 
   test('plugin gate BLOCK stops execution', async () => {
     // Update cipherpowers gate to fail
-    const cipherpowersHooksDir = path.join(mockPluginsDir, 'cipherpowers', 'hooks');
+    const cipherpowersDir = path.join(mockPluginsDir, 'cipherpowers');
     await fs.writeFile(
-      path.join(cipherpowersHooksDir, 'gates.json'),
+      path.join(cipherpowersDir, 'gates.json'),
       JSON.stringify({
         hooks: {},
         gates: {
@@ -123,8 +123,8 @@ describe('Plugin Gate Composition Integration', () => {
 
   test('prevents circular gate references', async () => {
     // Create circular reference: pluginA -> pluginB -> pluginA
-    const pluginADir = path.join(mockPluginsDir, 'pluginA', 'hooks');
-    const pluginBDir = path.join(mockPluginsDir, 'pluginB', 'hooks');
+    const pluginADir = path.join(mockPluginsDir, 'pluginA');
+    const pluginBDir = path.join(mockPluginsDir, 'pluginB');
     await fs.mkdir(pluginADir, { recursive: true });
     await fs.mkdir(pluginBDir, { recursive: true });
 
@@ -188,7 +188,7 @@ describe('Plugin Gate Composition Integration', () => {
 
   test('handles plugin self-reference', async () => {
     // Plugin references its own gate
-    const selfRefDir = path.join(mockPluginsDir, 'selfref', 'hooks');
+    const selfRefDir = path.join(mockPluginsDir, 'selfref');
     await fs.mkdir(selfRefDir, { recursive: true });
     await fs.writeFile(
       path.join(selfRefDir, 'gates.json'),

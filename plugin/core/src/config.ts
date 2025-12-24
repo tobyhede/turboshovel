@@ -157,11 +157,12 @@ function getPluginRoot(): string | null {
   }
 
   // Fallback: compute from this file's location
-  // This file is at: plugin/hooks/hooks-app/src/config.ts (dev)
-  // Or at: plugin/hooks/hooks-app/dist/config.js (built)
+  // This file is at: plugin/core/src/config.ts (dev)
+  // Or at: plugin/core/dist/config.js (built)
   // Plugin root is: plugin/
   try {
-    return path.resolve(__dirname, '..', '..', '..');
+    // Go up from src/ or dist/ -> core/ -> plugin/
+    return path.resolve(__dirname, '..', '..');
   } catch {
     return null;
   }
@@ -202,7 +203,7 @@ function mergeConfigs(pluginConfig: GatesConfig, projectConfig: GatesConfig): Ga
  * Priority:
  * 1. Project: .claude/gates.json (highest)
  * 2. Project: gates.json
- * 3. Plugin: ${CLAUDE_PLUGIN_ROOT}/hooks/gates.json (fallback/defaults)
+ * 3. Plugin: ${CLAUDE_PLUGIN_ROOT}/gates.json (fallback/defaults)
  *
  * Configs are MERGED - project overrides plugin for same keys.
  */
@@ -213,7 +214,7 @@ export async function loadConfig(cwd: string): Promise<GatesConfig | null> {
   let mergedConfig: GatesConfig | null = null;
 
   if (pluginRoot) {
-    const pluginConfigPath = path.join(pluginRoot, 'hooks', 'gates.json');
+    const pluginConfigPath = path.join(pluginRoot, 'gates.json');
     const pluginConfig = await loadConfigFile(pluginConfigPath);
     if (pluginConfig) {
       await logger.debug('Loaded plugin gates.json', { path: pluginConfigPath });

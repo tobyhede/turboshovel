@@ -18,12 +18,12 @@ function getPluginRoot(): string | null {
   }
 
   // Fallback: compute from this file's location
-  // This file is at: plugin/hooks/hooks-app/src/context.ts (dev)
-  // Or at: plugin/hooks/hooks-app/dist/context.js (built)
+  // This file is at: plugin/core/src/context.ts (dev)
+  // Or at: plugin/core/dist/context.js (built)
   // Plugin root is: plugin/
   try {
-    // Go up from src/ or dist/ -> hooks-app/ -> hooks/ -> plugin/
-    return path.resolve(__dirname, '..', '..', '..');
+    // Go up from src/ or dist/ -> core/ -> plugin/
+    return path.resolve(__dirname, '..', '..');
   } catch {
     return null;
   }
