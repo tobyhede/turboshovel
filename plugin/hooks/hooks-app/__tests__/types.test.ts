@@ -81,35 +81,6 @@ describe('GateConfig Type', () => {
   });
 });
 
-describe('SessionState stash support', () => {
-  it('includes optional stashedWorkflowId', () => {
-    const session: SessionState = {
-      session_id: 'test-123',
-      started_at: '2025-01-01T00:00:00Z',
-      active_command: null,
-      active_skill: null,
-      edited_files: [],
-      file_extensions: [],
-      metadata: {},
-      stashedWorkflowId: 'wf-2025-01-01-abc',
-    };
-    expect(session.stashedWorkflowId).toBe('wf-2025-01-01-abc');
-  });
-
-  it('allows undefined stashedWorkflowId', () => {
-    const session: SessionState = {
-      session_id: 'test-123',
-      started_at: '2025-01-01T00:00:00Z',
-      active_command: null,
-      active_skill: null,
-      edited_files: [],
-      file_extensions: [],
-      metadata: {},
-    };
-    expect(session.stashedWorkflowId).toBeUndefined();
-  });
-});
-
 describe('HookInput subagent fields', () => {
   it('includes agent_id field', () => {
     const input: HookInput = {

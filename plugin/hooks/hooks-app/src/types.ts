@@ -88,10 +88,7 @@ export interface SessionState {
   file_extensions: string[];
 
   /** Custom metadata for specific workflows */
-  metadata: Record<string, any>;
-
-  /** ID of stashed workflow (enforcement paused) */
-  stashedWorkflowId?: string;
+  metadata: Record<string, unknown>;
 }
 
 // Note: active_agent NOT included - Claude Code does not provide unique
@@ -109,7 +106,6 @@ export const SESSION_STATE_KEYS = [
   'edited_files',
   'file_extensions',
   'metadata',
-  'stashedWorkflowId',
 ] as const satisfies readonly (keyof SessionState)[];
 
 /** Array field keys in SessionState (for type-safe operations) */
