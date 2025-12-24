@@ -32,6 +32,17 @@ describe('TaskNumber', () => {
     const result = createTaskNumber(1.5);
     expect(result).toBeNull();
   });
+
+  test('createTaskNumber at MAX_TASK_NUMBER boundary succeeds', () => {
+    // 999999 is the maximum valid task number
+    expect(createTaskNumber(999999)).not.toBeNull();
+    expect(createTaskNumber(999998)).not.toBeNull();
+  });
+
+  test('createTaskNumber above MAX_TASK_NUMBER boundary fails', () => {
+    expect(createTaskNumber(1000000)).toBeNull();
+    expect(createTaskNumber(1000001)).toBeNull();
+  });
 });
 
 describe('Action discriminated union', () => {

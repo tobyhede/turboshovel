@@ -6,7 +6,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { WorkflowStateManager } from '../workflow/state';
 import { parseWorkflow, WorkflowSyntaxError } from '../workflow/parser';
-import { taskIdToString, parseTaskIdFromString, type TaskId } from '../workflow/task-id';
+import { taskIdToString, parseTaskIdFromString } from '../workflow/task-id';
 import { createTaskNumber, type Action, type Task } from '../workflow/types';
 
 const program = new Command();
