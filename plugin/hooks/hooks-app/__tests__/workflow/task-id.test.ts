@@ -2,7 +2,7 @@ import { parseTaskIdFromString, taskIdToString, taskIdEquals } from '../../src/w
 import { createTaskNumber } from '../../src/workflow/types';
 
 describe('parseTaskIdFromString with requireSeparator', () => {
-  const parse = (s: string) => parseTaskIdFromString(s, { requireSeparator: true });
+  const parse = (s: string): ReturnType<typeof parseTaskIdFromString> => parseTaskIdFromString(s, { requireSeparator: true });
 
   it('parses simple task number from description', () => {
     const result = parse('3 - Review code');

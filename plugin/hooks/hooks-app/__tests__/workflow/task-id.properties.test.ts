@@ -3,7 +3,6 @@ import {
   createTaskNumber,
   incrementTaskNumber,
   decrementTaskNumber,
-  TaskNumber,
 } from '../../src/workflow/types';
 import {
   taskIdToString,
@@ -16,9 +15,6 @@ describe('TaskId Property Tests', () => {
 
   // Generator for valid subtask letters (A-Z)
   const subtaskArb = fc.constantFrom(...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''));
-
-  // Generator for optional subtask
-  const optionalSubtaskArb = fc.option(subtaskArb, { nil: undefined });
 
   describe('createTaskNumber bounds', () => {
     it('accepts all integers 1 to 999999', () => {
@@ -134,7 +130,6 @@ describe('TaskId Property Tests', () => {
           taskNumberArb,
           fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz'.split('')),
           (n, lowerSubtask) => {
-            const taskNum = createTaskNumber(n)!;
             const str = `${n}.${lowerSubtask}`;
             const parsed = parseTaskIdFromString(str, { requireSeparator: false });
 

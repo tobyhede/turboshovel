@@ -18,8 +18,8 @@ describe('Session Property Tests', () => {
     edited_files: fc.array(fc.string({ maxLength: 200 }).filter(s => !s.includes('\0')), { maxLength: 50 }),
     file_extensions: fc.array(fc.string({ minLength: 1, maxLength: 10 }).filter(s => /^[a-zA-Z0-9]+$/.test(s)), { maxLength: 20 }),
     metadata: fc.dictionary(
-      fc.string({ minLength: 1, maxLength: 20 }).filter(s => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(s)),
-      fc.jsonValue()
+      fc.string({ minLength: 1, maxLength: 20 }).filter(s => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(s) && s !== '__proto__'),
+      fc.jsonValue().filter(v => !Object.is(v, -0)) // Exclude -0 since JSON doesn't preserve it
     ),
   });
 

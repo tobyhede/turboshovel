@@ -40,11 +40,12 @@ describe('workflow CLI', () => {
         stdio: ['pipe', 'pipe', 'pipe'],
       });
       return { stdout, stderr: '', exitCode: 0 };
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as { stdout?: string; stderr?: string; status?: number };
       return {
-        stdout: error.stdout || '',
-        stderr: error.stderr || '',
-        exitCode: error.status || 1,
+        stdout: err.stdout || '',
+        stderr: err.stderr || '',
+        exitCode: err.status || 1,
       };
     }
   };
