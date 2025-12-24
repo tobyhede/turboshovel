@@ -184,18 +184,24 @@ describe('CLI Integration', () => {
       proc.stdin.end();
     });
 
-    test('should handle graceful exit on missing required fields', (done) => {
+    test('should reject input missing required fields', (done) => {
       const proc = spawn('node', ['dist/cli.js'], {
         cwd: path.resolve(__dirname, '..')
       });
 
+      let stderr = '';
+      proc.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+
       const input = JSON.stringify({
-        // Missing hook_event_name and cwd
+        // Missing hook_event_name and cwd - this is a schema violation
         tool_name: 'Edit'
       });
 
       proc.on('close', (code) => {
-        expect(code).toBe(0); // Graceful exit
+        expect(code).toBe(1); // Schema violation is an error
+        expect(stderr).toContain('Invalid input');
         done();
       });
 
