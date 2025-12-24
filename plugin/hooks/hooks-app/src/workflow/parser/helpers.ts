@@ -2,6 +2,7 @@
 
 import { createTaskNumber, type Action, type TaskNumber } from '../types';
 import type { ParsedConditional, AggregationModifier } from './types';
+import { WorkflowSyntaxError } from './types';
 
 /**
  * Strip common separators and whitespace
@@ -186,36 +187,72 @@ export function parseConditional(text: string): ParsedConditional | null {
 }
 
 /**
+ * Resolve aggregation mode from modifiers
+ * Returns true for PASS ALL + FAIL ANY, false for PASS ANY + FAIL ALL
+ * Throws WorkflowSyntaxError for invalid combinations
+ */
+function resolveAggregationMode(
+  passModifier: AggregationModifier,
+  failModifier: AggregationModifier
+): boolean {
+  // Explicit both specified - validate
+  if (passModifier && failModifier) {
+    if (passModifier === 'ALL' && failModifier === 'ANY') return true;
+    if (passModifier === 'ANY' && failModifier === 'ALL') return false;
+    throw new WorkflowSyntaxError(
+      `Invalid aggregation combination: PASS ${passModifier} + FAIL ${failModifier}. ` +
+      `Valid: PASS ALL + FAIL ANY (pessimistic) or PASS ANY + FAIL ALL (optimistic)`
+    );
+  }
+
+  // One specified - infer the other
+  if (passModifier === 'ALL') return true;
+  if (passModifier === 'ANY') return false;
+  if (failModifier === 'ANY') return true;
+  if (failModifier === 'ALL') return false;
+
+  // No modifiers - default to pessimistic
+  return true;
+}
+
+/**
  * Convert pending conditionals to Conditions object
  * Defaults to all: true (PASS ALL + FAIL ANY, pessimistic)
  */
-export function convertConditionals(conditionals: ParsedConditional[]): { all: true; pass: Action; fail: Action } | null {
+export function convertConditionals(conditionals: ParsedConditional[]): { all: boolean; pass: Action; fail: Action } | null {
   if (conditionals.length === 0) {
     return null;
   }
 
   let passAction: Action | null = null;
   let failAction: Action | null = null;
+  let passModifier: AggregationModifier = null;
+  let failModifier: AggregationModifier = null;
 
   for (const conditional of conditionals) {
     if (conditional.type === 'pass') {
       passAction = conditional.action;
+      passModifier = conditional.modifier;
     } else {
       failAction = conditional.action;
+      failModifier = conditional.modifier;
     }
   }
 
+  // Resolve aggregation mode
+  const all = resolveAggregationMode(passModifier, failModifier);
+
   // If we have both, create Conditions
   if (passAction && failAction) {
-    return { all: true, pass: passAction, fail: failAction };
+    return { all, pass: passAction, fail: failAction };
   }
 
   if (passAction && !failAction) {
-    return { all: true, pass: passAction, fail: { type: 'STOP' } };
+    return { all, pass: passAction, fail: { type: 'STOP' } };
   }
 
   if (!passAction && failAction) {
-    return { all: true, pass: { type: 'CONTINUE' }, fail: failAction };
+    return { all, pass: { type: 'CONTINUE' }, fail: failAction };
   }
 
   return null;

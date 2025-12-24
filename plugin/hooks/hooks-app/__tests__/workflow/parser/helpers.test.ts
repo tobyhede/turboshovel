@@ -1,5 +1,5 @@
 // __tests__/workflow/parser/helpers.test.ts
-import { stripSeparator, extractTaskHeader, parseAction, parseConditional } from '../../../src/workflow/parser/helpers';
+import { stripSeparator, extractTaskHeader, parseAction, parseConditional, convertConditionals } from '../../../src/workflow/parser/helpers';
 
 describe('stripSeparator', () => {
   test('strips colon separator', () => {
@@ -186,5 +186,65 @@ describe('parseConditional with aggregation', () => {
       action: { type: 'STOP', message: 'All approaches failed' },
       modifier: 'ALL',
     });
+  });
+});
+
+describe('convertConditionals with aggregation', () => {
+  it('returns all: true for PASS ALL', () => {
+    const result = convertConditionals([
+      { type: 'pass', action: { type: 'CONTINUE' }, modifier: 'ALL' },
+      { type: 'fail', action: { type: 'STOP' }, modifier: null },
+    ]);
+    expect(result?.all).toBe(true);
+  });
+
+  it('returns all: false for PASS ANY', () => {
+    const result = convertConditionals([
+      { type: 'pass', action: { type: 'CONTINUE' }, modifier: 'ANY' },
+      { type: 'fail', action: { type: 'STOP' }, modifier: null },
+    ]);
+    expect(result?.all).toBe(false);
+  });
+
+  it('infers all: true from FAIL ANY', () => {
+    const result = convertConditionals([
+      { type: 'pass', action: { type: 'CONTINUE' }, modifier: null },
+      { type: 'fail', action: { type: 'STOP' }, modifier: 'ANY' },
+    ]);
+    expect(result?.all).toBe(true);
+  });
+
+  it('infers all: false from FAIL ALL', () => {
+    const result = convertConditionals([
+      { type: 'pass', action: { type: 'CONTINUE' }, modifier: null },
+      { type: 'fail', action: { type: 'STOP' }, modifier: 'ALL' },
+    ]);
+    expect(result?.all).toBe(false);
+  });
+
+  it('defaults to all: true (pessimistic)', () => {
+    const result = convertConditionals([
+      { type: 'pass', action: { type: 'CONTINUE' }, modifier: null },
+      { type: 'fail', action: { type: 'STOP' }, modifier: null },
+    ]);
+    expect(result?.all).toBe(true);
+  });
+
+  it('throws for invalid combination PASS ALL + FAIL ALL', () => {
+    expect(() =>
+      convertConditionals([
+        { type: 'pass', action: { type: 'CONTINUE' }, modifier: 'ALL' },
+        { type: 'fail', action: { type: 'STOP' }, modifier: 'ALL' },
+      ])
+    ).toThrow('Invalid aggregation');
+  });
+
+  it('throws for invalid combination PASS ANY + FAIL ANY', () => {
+    expect(() =>
+      convertConditionals([
+        { type: 'pass', action: { type: 'CONTINUE' }, modifier: 'ANY' },
+        { type: 'fail', action: { type: 'STOP' }, modifier: 'ANY' },
+      ])
+    ).toThrow('Invalid aggregation');
   });
 });
