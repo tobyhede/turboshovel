@@ -8,6 +8,7 @@ import { WorkflowStateManager } from '../workflow/state';
 import { parseWorkflow, WorkflowSyntaxError } from '../workflow/parser';
 import { taskIdToString, parseTaskIdFromString } from '../workflow/task-id';
 import { createTaskNumber, type Action, type Task } from '../workflow/types';
+import { isNodeError, getErrorMessage } from '../errors';
 
 const program = new Command();
 
@@ -105,12 +106,12 @@ program
       }
 
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      if (isNodeError(error) && error.code === 'ENOENT') {
         console.error(`Error: Workflow file not found: ${file}`);
       } else if (error instanceof WorkflowSyntaxError) {
         console.error(`Syntax error: ${error.message}`);
       } else {
-        console.error(`Error: ${(error as Error).message}`);
+        console.error(`Error: ${getErrorMessage(error)}`);
       }
       process.exit(1);
     }
@@ -213,7 +214,7 @@ program
       console.log(`Task ${nextTaskNum}: ${nextTask.description}`);
       printTaskGuidance(nextTask);
     } catch (error) {
-      console.error(`Error: ${(error as Error).message}`);
+      console.error(`Error: ${getErrorMessage(error)}`);
       process.exit(1);
     }
   });
@@ -243,7 +244,7 @@ program
         console.log(`Workflow complete: ${state.workflow}`);
       }
     } catch (error) {
-      console.error(`Error: ${(error as Error).message}`);
+      console.error(`Error: ${getErrorMessage(error)}`);
       process.exit(1);
     }
   });
@@ -305,7 +306,7 @@ program
         }
       }
     } catch (error) {
-      console.error(`Error: ${(error as Error).message}`);
+      console.error(`Error: ${getErrorMessage(error)}`);
       process.exit(1);
     }
   });
@@ -328,7 +329,7 @@ program
       await manager.setActive(null);
       console.log(`Stopped workflow: ${state.workflow}`);
     } catch (error) {
-      console.error(`Error: ${(error as Error).message}`);
+      console.error(`Error: ${getErrorMessage(error)}`);
       process.exit(1);
     }
   });
@@ -353,7 +354,7 @@ program
         console.log(`${state.id}${marker}: ${state.workflow} - Task ${state.task}`);
       }
     } catch (error) {
-      console.error(`Error: ${(error as Error).message}`);
+      console.error(`Error: ${getErrorMessage(error)}`);
       process.exit(1);
     }
   });
@@ -377,7 +378,7 @@ program
       console.log('Enforcement paused. Run freely.');
       console.log('Use "workflow pop" to resume.');
     } catch (error) {
-      console.error(`Error: ${(error as Error).message}`);
+      console.error(`Error: ${getErrorMessage(error)}`);
       process.exit(1);
     }
   });
@@ -401,7 +402,7 @@ program
       console.log(`Resuming at step ${state.task}: ${state.taskName}`);
       console.log('Enforcement active.');
     } catch (error) {
-      console.error(`Error: ${(error as Error).message}`);
+      console.error(`Error: ${getErrorMessage(error)}`);
       process.exit(1);
     }
   });
