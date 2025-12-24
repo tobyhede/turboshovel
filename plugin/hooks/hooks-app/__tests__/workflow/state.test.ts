@@ -243,9 +243,10 @@ describe('WorkflowStateManager', () => {
       expect(binding).toBeNull();
     });
 
-    it('returns null for non-existent workflow', async () => {
-      const binding = await manager.getAgentBinding('non-existent', 'agent-x');
-      expect(binding).toBeNull();
+    it('throws when workflow not found', async () => {
+      await expect(
+        manager.getAgentBinding('nonexistent-wf', 'agent-1')
+      ).rejects.toThrow('Workflow nonexistent-wf not found');
     });
   });
 

@@ -252,10 +252,14 @@ export class WorkflowStateManager {
 
   /**
    * Get agent binding by agent ID
+   * @throws Error if workflow not found
    */
   async getAgentBinding(id: string, agentId: string): Promise<AgentBinding | null> {
     const state = await this.load(id);
-    return state?.agentBindings?.[agentId] || null;
+    if (!state) {
+      throw new Error(`Workflow ${id} not found`);
+    }
+    return state.agentBindings?.[agentId] || null;
   }
 
   /**
