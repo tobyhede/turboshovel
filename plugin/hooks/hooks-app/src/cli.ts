@@ -217,15 +217,6 @@ async function handleHookDispatch(): Promise<void> {
       skill: input.skill
     });
 
-    // Validate required fields
-    if (!input.hook_event_name || !input.cwd) {
-      await logger.warn('CLI missing required fields, exiting', {
-        has_event: !!input.hook_event_name,
-        has_cwd: !!input.cwd
-      });
-      return;
-    }
-
     // Dispatch
     const result = await dispatch(input);
 
