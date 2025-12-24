@@ -12,7 +12,9 @@ describe('Session Property Tests', () => {
   // Generator for valid SessionState
   const sessionStateArb = fc.record({
     session_id: fc.string({ minLength: 1, maxLength: 50 }).filter(s => !s.includes('\0')),
-    started_at: fc.date({ min: new Date('2000-01-01'), max: new Date('2100-01-01') }).map(d => d.toISOString()),
+    started_at: fc.date({ min: new Date('2000-01-01'), max: new Date('2100-01-01') })
+      .filter(d => !isNaN(d.getTime()))
+      .map(d => d.toISOString()),
     active_command: fc.option(fc.string({ maxLength: 100 }), { nil: null }),
     active_skill: fc.option(fc.string({ maxLength: 100 }), { nil: null }),
     edited_files: fc.array(fc.string({ maxLength: 200 }).filter(s => !s.includes('\0')), { maxLength: 50 }),
