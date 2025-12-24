@@ -49,13 +49,13 @@ This example shows both keyword-based filtering (check gate) and file pattern fi
 
 ## Development Commands
 
-- Build: `cd plugin/hooks/hooks-app && npm run build`
-- Test: `cd plugin/hooks/hooks-app && npm test`
-- Lint: `cd plugin/hooks/hooks-app && npm run lint`
+- Build: `cd plugin/core && npm run build`
+- Test: `cd plugin/core && npm test`
+- Lint: `cd plugin/core && npm run lint`
 
 ## Architecture
 
-See plugin/hooks/ARCHITECTURE.md for system design.
+See ARCHITECTURE.md for system design.
 
 ## Environment Variables
 
@@ -108,7 +108,7 @@ State persists in `.claude/turboshovel/workflows/` (workflow files) and `.claude
 
 ## Documentation
 
-- [README.md](plugin/hooks/README.md) - Quick start and examples
-- [SETUP.md](plugin/hooks/SETUP.md) - Configuration guide
-- [CONVENTIONS.md](plugin/hooks/CONVENTIONS.md) - Context file patterns
-- [TYPESCRIPT.md](plugin/hooks/TYPESCRIPT.md) - Custom TypeScript gates
+- [README.md](README.md) - Quick start and examples
+- [SETUP.md](SETUP.md) - Configuration guide
+- [CONVENTIONS.md](CONVENTIONS.md) - Context file patterns
+- [TYPESCRIPT.md](TYPESCRIPT.md) - Custom TypeScript gates
