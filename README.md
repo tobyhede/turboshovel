@@ -26,7 +26,7 @@ Automated quality enforcement and context injection via Claude Code's hook syste
 
 2. **Build the hooks app:**
    ```bash
-   cd turboshovel/plugin/core/hooks-app
+   cd turboshovel/plugin/core
    npm install
    npm run build
    ```
@@ -51,7 +51,7 @@ Automated quality enforcement and context injection via Claude Code's hook syste
 If you want to use the workflow system:
 
 ```bash
-cd plugin/core/hooks-app
+cd plugin/core
 npm link
 ```
 
@@ -543,7 +543,7 @@ The workflow CLI is available via the hooks-app package:
 
 ```bash
 # Option 1: Link the package globally (recommended)
-cd plugin/core/hooks-app && npm link
+cd plugin/core && npm link
 
 # Verify the link worked:
 which workflow
@@ -558,7 +558,7 @@ workflow status
 workflow next
 
 # Option 2: Direct invocation (without linking)
-node plugin/core/hooks-app/dist/cli/workflow-cli.js <command>
+node plugin/core/dist/cli/workflow-cli.js <command>
 ```
 
 **Note:** After `npm link`, the `workflow` command is available globally. All examples in this documentation assume the package has been linked.
