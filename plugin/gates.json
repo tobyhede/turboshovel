@@ -25,6 +25,18 @@
       "command": "echo '[PLACEHOLDER] Build passed. Configure with actual project build command (e.g., npm run build, cargo build)'",
       "on_pass": "CONTINUE",
       "on_fail": "CONTINUE"
+    },
+    "walkthrough:log": {
+      "description": "Append message to walkthrough log",
+      "command": "echo \"$1\" >> .work/walkthrough.log",
+      "on_pass": "CONTINUE",
+      "on_fail": "CONTINUE"
+    },
+    "walkthrough:gate-check": {
+      "description": "Test gate - checks marker file and logs execution",
+      "command": "test -f .work/walkthrough-marker && echo 'gate-check-ran' >> .work/walkthrough.log",
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
     }
   },
   "hooks": {
