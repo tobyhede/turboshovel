@@ -15,6 +15,7 @@ import {
   type Task
 } from '../workflow/types';
 import { isNodeError, getErrorMessage } from '../errors';
+import { evaluateFailCondition } from './condition-handler';
 
 const program = new Command();
 
@@ -43,14 +44,14 @@ program
         }
 
         // Parse TaskId from CLI argument (raw ID, no separator required)
-        // Used for command-line arguments like `--task 3` or `--task 3.A`
+        // Used for command-line arguments like `--task 3` or `--task 3.1`
         // Note: This uses parseTaskIdFromString without requireSeparator option
         // to parse raw task IDs without trailing description text.
         // @see task-id.ts parseTaskIdFromString with requireSeparator: true for description parsing
         const taskId = parseTaskIdFromString(options.task);
         if (!taskId) {
           console.error(`Error: Invalid task ID format: ${options.task}`);
-          console.error('Expected format: "3" or "3.A"');
+          console.error('Expected format: "3" or "3.1"');
           process.exit(1);
         }
 
@@ -130,6 +131,7 @@ program
   .option('--step <n>', 'Jump to specific step (for GOTO)')
   .option('--pass', 'Mark task as passed')
   .option('--fail', 'Mark task as failed/blocked')
+  .option('--retry', 'Retry current task (increment retry count)')
   .option('--task <taskId>', 'Specify which task (for parallel tasks)')
   .option('--agent <agentId>', 'Specify agent completing task')
   .action(
@@ -137,6 +139,7 @@ program
       step?: string;
       pass?: boolean;
       fail?: boolean;
+      retry?: boolean;
       task?: string;
       agent?: string;
     }) => {
@@ -176,6 +179,79 @@ program
           } else {
             console.log('All agents complete. Run: workflow next');
           }
+          return;
+        }
+
+        // Handle --fail without --agent (main task failed)
+        if (options.fail && !options.agent) {
+          const workflowPath = await findWorkflowFile(cwd, state.workflow);
+          if (!workflowPath) {
+            console.error(`Error: Workflow file ${state.workflow} not found`);
+            process.exit(1);
+          }
+
+          const content = await fs.readFile(workflowPath, 'utf8');
+          const tasks = parseWorkflow(content);
+          const currentTask = tasks[state.task - 1];
+
+          const result = evaluateFailCondition(currentTask, state.retryCount, state.retryMax);
+
+          switch (result.action) {
+            case 'retry':
+              await manager.update(state.id, { retryCount: result.newRetryCount! });
+              console.log(`Retry ${result.newRetryCount}/${state.retryMax}`);
+              console.log(`Task ${state.task}: ${currentTask.description}`);
+              printTaskGuidance(currentTask);
+              return;
+
+            case 'blocked':
+              console.error(`Error: ${result.message || 'Task blocked'}`);
+              process.exit(1);
+
+            case 'goto':
+              const gotoTask = tasks[result.gotoTask! - 1];
+              await manager.update(state.id, {
+                task: result.gotoTask!,
+                taskName: gotoTask.description,
+                retryCount: 0
+              });
+              console.log(`Task ${result.gotoTask}: ${gotoTask.description}`);
+              printTaskGuidance(gotoTask);
+              return;
+
+            case 'continue':
+              // Fall through to normal advance
+              break;
+          }
+        }
+
+        // Handle retry
+        if (options.retry) {
+          const newRetryCount = state.retryCount + 1;
+
+          if (newRetryCount > state.retryMax) {
+            console.error(`Error: Max retries exceeded (${state.retryMax})`);
+            process.exit(1);
+          }
+
+          // Load workflow to get current task
+          const workflowPath = await findWorkflowFile(cwd, state.workflow);
+          if (!workflowPath) {
+            console.error(`Error: Workflow file ${state.workflow} not found`);
+            process.exit(1);
+          }
+
+          const content = await fs.readFile(workflowPath, 'utf8');
+          const tasks = parseWorkflow(content);
+          const currentTask = tasks[state.task - 1];
+
+          await manager.update(state.id, {
+            retryCount: newRetryCount
+          });
+
+          console.log(`Retry ${newRetryCount}/${state.retryMax}`);
+          console.log(`Task ${state.task}: ${currentTask.description}`);
+          printTaskGuidance(currentTask);
           return;
         }
 

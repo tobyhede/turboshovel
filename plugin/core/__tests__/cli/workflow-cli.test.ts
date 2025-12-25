@@ -98,14 +98,14 @@ echo "test"
       await runCli(['start', workflowPath]);
 
       // Then add a task
-      const result = await runCli(['start', '--task', '3.A']);
+      const result = await runCli(['start', '--task', '3.1']);
 
-      expect(result.stdout).toContain('Task 3.A queued');
+      expect(result.stdout).toContain('Task 3.1 queued');
 
       // Verify state
       const manager = new WorkflowStateManager(testDir);
       const state = await manager.getActive();
-      expect(state?.pendingTasks).toContainEqual({ task: createTaskNumber(3)!, subtask: 'A' });
+      expect(state?.pendingTasks).toContainEqual({ task: createTaskNumber(3)!, subtask: '1' });
     });
 
     it('errors when no active workflow', async () => {
@@ -162,11 +162,11 @@ echo "test"
 `
       );
       await runCli(['start', workflowPath]);
-      await runCli(['start', '--task', '2.A']);
+      await runCli(['start', '--task', '2.1']);
 
       const result = await runCli(['start', '--agent', 'agent-xyz']);
 
-      expect(result.stdout).toContain('Agent agent-xyz bound to task 2.A');
+      expect(result.stdout).toContain('Agent agent-xyz bound to task 2.1');
 
       const manager = new WorkflowStateManager(testDir);
       const state = await manager.getActive();
@@ -258,14 +258,14 @@ echo "test"
 `
       );
       await runCli(['start', workflowPath]);
-      await runCli(['start', '--task', '2.A']);
-      await runCli(['start', '--task', '2.B']);
+      await runCli(['start', '--task', '2.1']);
+      await runCli(['start', '--task', '2.2']);
 
       const result = await runCli(['status']);
 
       expect(result.stdout).toContain('Pending Tasks');
-      expect(result.stdout).toContain('2.A');
-      expect(result.stdout).toContain('2.B');
+      expect(result.stdout).toContain('2.1');
+      expect(result.stdout).toContain('2.2');
     });
 
     it('shows agent bindings', async () => {
@@ -370,6 +370,210 @@ echo "done"
       const result = await runCli(['next']);
 
       expect(result.stdout).toContain('complete');
+    });
+  });
+
+  describe('workflow next --retry', () => {
+    it('increments retryCount and re-presents same task', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(
+        workflowPath,
+        `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: RETRY 3
+`
+      );
+      await runCli(['start', workflowPath]);
+
+      const result = await runCli(['next', '--retry']);
+
+      expect(result.stdout).toContain('Retry 1/3');
+      expect(result.stdout).toContain('Task 1');
+
+      const manager = new WorkflowStateManager(testDir);
+      const state = await manager.getActive();
+      expect(state?.retryCount).toBe(1);
+      expect(state?.task).toBe(1); // Still on task 1
+    });
+
+    it('blocks when retryCount exceeds retryMax', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(
+        workflowPath,
+        `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: RETRY 2
+`
+      );
+      await runCli(['start', workflowPath]);
+
+      // Use up retries
+      await runCli(['next', '--retry']); // retry 1
+      await runCli(['next', '--retry']); // retry 2
+
+      const result = await runCli(['next', '--retry']); // retry 3 - should fail
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('Max retries exceeded');
+    });
+
+    it('resets retryCount when advancing to next task', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(
+        workflowPath,
+        `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: RETRY 3
+
+## 2. Second step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+`
+      );
+      await runCli(['start', workflowPath]);
+      await runCli(['next', '--retry']); // retry 1
+
+      // Now advance normally
+      await runCli(['next']);
+
+      const manager = new WorkflowStateManager(testDir);
+      const state = await manager.getActive();
+      expect(state?.retryCount).toBe(0); // Reset
+      expect(state?.task).toBe(2);
+    });
+  });
+
+  describe('workflow next --fail (condition evaluation)', () => {
+    it('retries task when FAIL: RETRY and under max', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(
+        workflowPath,
+        `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: RETRY 3
+`
+      );
+      await runCli(['start', workflowPath]);
+
+      const result = await runCli(['next', '--fail']);
+
+      expect(result.stdout).toContain('Retry 1/3');
+      expect(result.stdout).toContain('Task 1');
+
+      const manager = new WorkflowStateManager(testDir);
+      const state = await manager.getActive();
+      expect(state?.retryCount).toBe(1);
+      expect(state?.task).toBe(1); // Still on task 1
+    });
+
+    it('blocks when FAIL: RETRY and max exceeded', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(
+        workflowPath,
+        `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: RETRY 1
+`
+      );
+      await runCli(['start', workflowPath]);
+      await runCli(['next', '--fail']); // retry 1
+
+      const result = await runCli(['next', '--fail']); // should block
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('Max retries exceeded');
+    });
+
+    it('blocks with message when FAIL: STOP', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(
+        workflowPath,
+        `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP Fix the build
+`
+      );
+      await runCli(['start', workflowPath]);
+
+      const result = await runCli(['next', '--fail']);
+
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('Fix the build');
+    });
+
+    it('jumps to task when FAIL: GOTO', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(
+        workflowPath,
+        `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: GOTO 3
+
+## 2. Second step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+## 3. Error handler
+
+**Prompt:** Handle the error.
+`
+      );
+      await runCli(['start', workflowPath]);
+
+      const result = await runCli(['next', '--fail']);
+
+      expect(result.stdout).toContain('Task 3');
+      expect(result.stdout).toContain('Error handler');
+
+      const manager = new WorkflowStateManager(testDir);
+      const state = await manager.getActive();
+      expect(state?.task).toBe(3);
     });
   });
 
