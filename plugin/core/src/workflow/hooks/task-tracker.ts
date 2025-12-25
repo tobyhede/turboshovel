@@ -51,7 +51,7 @@ export async function trackTaskDispatch(input: HookInput): Promise<TaskDispatchR
     if (!taskId) {
       return {
         violation:
-          `Task description must start with TaskId (e.g., "3.A - Review code"). ` +
+          `Task description must start with TaskId (e.g., "3.1 - Review code"). ` +
           `Got: "${description.substring(0, DESCRIPTION_DISPLAY_LIMIT)}${description.length > DESCRIPTION_DISPLAY_LIMIT ? '...' : ''}"`
       };
     }

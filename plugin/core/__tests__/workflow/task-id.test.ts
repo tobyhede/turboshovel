@@ -10,14 +10,14 @@ describe('parseTaskIdFromString with requireSeparator', () => {
     expect(result).toEqual({ task: createTaskNumber(3)! });
   });
 
-  it('parses task with subtask letter', () => {
-    const result = parse('3.A - First reviewer');
-    expect(result).toEqual({ task: createTaskNumber(3)!, subtask: 'A' });
+  it('parses task with numeric subtask', () => {
+    const result = parse('3.1 - First reviewer');
+    expect(result).toEqual({ task: createTaskNumber(3)!, subtask: '1' });
   });
 
-  it('normalizes lowercase subtask to uppercase', () => {
-    const result = parse('2.b - Second task');
-    expect(result).toEqual({ task: createTaskNumber(2)!, subtask: 'B' });
+  it('parses task with multi-digit subtask', () => {
+    const result = parse('2.12 - Second task');
+    expect(result).toEqual({ task: createTaskNumber(2)!, subtask: '12' });
   });
 
   it('parses task with dash separator', () => {
@@ -52,7 +52,7 @@ describe('taskIdToString', () => {
   });
 
   it('formats task with subtask', () => {
-    expect(taskIdToString({ task: createTaskNumber(3)!, subtask: 'A' })).toBe('3.A');
+    expect(taskIdToString({ task: createTaskNumber(3)!, subtask: '1' })).toBe('3.1');
   });
 });
 
@@ -64,8 +64,8 @@ describe('taskIdEquals', () => {
   it('returns true for equal tasks with subtasks', () => {
     expect(
       taskIdEquals(
-        { task: createTaskNumber(3)!, subtask: 'A' },
-        { task: createTaskNumber(3)!, subtask: 'A' }
+        { task: createTaskNumber(3)!, subtask: '1' },
+        { task: createTaskNumber(3)!, subtask: '1' }
       )
     ).toBe(true);
   });
@@ -79,15 +79,15 @@ describe('taskIdEquals', () => {
   it('returns false for different subtasks', () => {
     expect(
       taskIdEquals(
-        { task: createTaskNumber(3)!, subtask: 'A' },
-        { task: createTaskNumber(3)!, subtask: 'B' }
+        { task: createTaskNumber(3)!, subtask: '1' },
+        { task: createTaskNumber(3)!, subtask: '2' }
       )
     ).toBe(false);
   });
 
   it('returns false when one has subtask and other does not', () => {
     expect(
-      taskIdEquals({ task: createTaskNumber(3)! }, { task: createTaskNumber(3)!, subtask: 'A' })
+      taskIdEquals({ task: createTaskNumber(3)! }, { task: createTaskNumber(3)!, subtask: '1' })
     ).toBe(false);
   });
 });
@@ -98,14 +98,14 @@ describe('parseTaskIdFromString without separator', () => {
     expect(result).toEqual({ task: createTaskNumber(3)! });
   });
 
-  it('parses task with subtask', () => {
-    const result = parseTaskIdFromString('3.A');
-    expect(result).toEqual({ task: createTaskNumber(3)!, subtask: 'A' });
+  it('parses task with numeric subtask', () => {
+    const result = parseTaskIdFromString('3.1');
+    expect(result).toEqual({ task: createTaskNumber(3)!, subtask: '1' });
   });
 
-  it('normalizes lowercase subtask', () => {
-    const result = parseTaskIdFromString('2.b');
-    expect(result).toEqual({ task: createTaskNumber(2)!, subtask: 'B' });
+  it('parses task with multi-digit subtask', () => {
+    const result = parseTaskIdFromString('2.15');
+    expect(result).toEqual({ task: createTaskNumber(2)!, subtask: '15' });
   });
 
   it('returns null for invalid format', () => {
@@ -113,6 +113,7 @@ describe('parseTaskIdFromString without separator', () => {
     expect(parseTaskIdFromString('')).toBeNull();
     expect(parseTaskIdFromString('0')).toBeNull();
     expect(parseTaskIdFromString('-1')).toBeNull();
+    expect(parseTaskIdFromString('3.A')).toBeNull(); // Letters no longer valid
   });
 
   it('returns null when separator missing but required', () => {

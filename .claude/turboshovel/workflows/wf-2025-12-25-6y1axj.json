@@ -1,0 +1,14 @@
+{
+  "id": "wf-2025-12-25-6y1axj",
+  "workflow": "plugin/workflows/walkthrough.workflow.md",
+  "task": 5,
+  "taskName": "Verification",
+  "retryCount": 0,
+  "retryMax": 3,
+  "variables": {},
+  "tasks": [],
+  "pendingTasks": [],
+  "agentBindings": {},
+  "startedAt": "2025-12-25T03:05:19.888Z",
+  "updatedAt": "2025-12-25T03:06:22.619Z"
+}

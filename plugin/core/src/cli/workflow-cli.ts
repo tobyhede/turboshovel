@@ -254,8 +254,9 @@ program
             case 'blocked':
               console.error(`Error: ${result.message || 'Task blocked'}`);
               process.exit(1);
+              break;
 
-            case 'goto':
+            case 'goto': {
               const gotoTask = tasks[result.gotoTask! - 1];
               await manager.update(state.id, {
                 task: result.gotoTask!,
@@ -265,6 +266,7 @@ program
               console.log(`Task ${result.gotoTask}: ${gotoTask.description}`);
               printTaskGuidance(gotoTask);
               return;
+            }
 
             case 'continue':
               // Fall through to normal advance

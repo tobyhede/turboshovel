@@ -10,8 +10,8 @@ describe('TaskId Property Tests', () => {
   // Generator for valid task numbers (1-999999)
   const taskNumberArb = fc.integer({ min: 1, max: 999999 });
 
-  // Generator for valid subtask letters (A-Z)
-  const subtaskArb = fc.constantFrom(...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''));
+  // Generator for valid subtask numbers (1-99 as strings)
+  const subtaskArb = fc.integer({ min: 1, max: 99 }).map(n => n.toString());
 
   describe('createTaskNumber bounds', () => {
     it('accepts all integers 1 to 999999', () => {
@@ -120,18 +120,18 @@ describe('TaskId Property Tests', () => {
     });
   });
 
-  describe('subtask case normalization', () => {
-    it('lowercase subtasks are normalized to uppercase', () => {
+  describe('subtask parsing', () => {
+    it('parses multi-digit subtask numbers', () => {
       fc.assert(
         fc.property(
           taskNumberArb,
-          fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz'.split('')),
-          (n, lowerSubtask) => {
-            const str = `${n}.${lowerSubtask}`;
+          subtaskArb,
+          (n, subtask) => {
+            const str = `${n}.${subtask}`;
             const parsed = parseTaskIdFromString(str, { requireSeparator: false });
 
             expect(parsed).not.toBeNull();
-            expect(parsed!.subtask).toBe(lowerSubtask.toUpperCase());
+            expect(parsed!.subtask).toBe(subtask);
           }
         ),
         { numRuns: 100 }

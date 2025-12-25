@@ -414,16 +414,18 @@ echo "test"
 \`\`\`
 
 - PASS: CONTINUE
-- FAIL: RETRY 2
+- FAIL: RETRY 3
 `
       );
       await runCli(['start', workflowPath]);
 
+      // --retry uses state.retryMax (default 3), not workflow value
       // Use up retries
       await runCli(['next', '--retry']); // retry 1
       await runCli(['next', '--retry']); // retry 2
+      await runCli(['next', '--retry']); // retry 3
 
-      const result = await runCli(['next', '--retry']); // retry 3 - should fail
+      const result = await runCli(['next', '--retry']); // retry 4 - should fail
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Max retries exceeded');

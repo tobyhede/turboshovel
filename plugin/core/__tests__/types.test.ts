@@ -97,10 +97,10 @@ describe('HookInput subagent fields', () => {
       cwd: '/test',
       tool_name: 'Task',
       tool_input: {
-        description: '3.A - Review code',
+        description: '3.1 - Review code',
         subagent_type: 'code-review-agent'
       }
     };
-    expect(input.tool_input?.description).toBe('3.A - Review code');
+    expect(input.tool_input?.description).toBe('3.1 - Review code');
   });
 });

@@ -1,4 +1,4 @@
-import { evaluateFailCondition, type ConditionResult } from '../../src/cli/condition-handler';
+import { evaluateFailCondition } from '../../src/cli/condition-handler';
 import { createTaskNumber, type Task, type Conditions } from '../../src/workflow/types';
 
 describe('evaluateFailCondition', () => {

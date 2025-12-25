@@ -280,22 +280,22 @@ describe('convertConditionals with aggregation', () => {
 });
 
 describe('extractSubtaskHeader', () => {
-  it('parses static subtask: 1.A First reviewer', () => {
-    const result = extractSubtaskHeader('1.A First reviewer');
+  it('parses static subtask: 1.1 First reviewer', () => {
+    const result = extractSubtaskHeader('1.1 First reviewer');
     expect(result).toEqual({
       taskNumber: 1,
-      id: 'A',
+      id: '1',
       description: 'First reviewer',
       agentType: undefined,
       isDynamic: false
     });
   });
 
-  it('parses subtask with agent type: 2.B Second (code-agent)', () => {
-    const result = extractSubtaskHeader('2.B Second reviewer (code-agent)');
+  it('parses subtask with agent type: 2.2 Second (code-agent)', () => {
+    const result = extractSubtaskHeader('2.2 Second reviewer (code-agent)');
     expect(result).toEqual({
       taskNumber: 2,
-      id: 'B',
+      id: '2',
       description: 'Second reviewer',
       agentType: 'code-agent',
       isDynamic: false
@@ -313,29 +313,28 @@ describe('extractSubtaskHeader', () => {
     });
   });
 
-  it('normalizes lowercase id to uppercase', () => {
-    const result = extractSubtaskHeader('1.a First');
-    expect(result?.id).toBe('A');
+  it('parses multi-digit subtask numbers', () => {
+    const result = extractSubtaskHeader('1.12 Twelfth subtask');
+    expect(result?.id).toBe('12');
   });
 
   it('returns null for invalid format', () => {
     expect(extractSubtaskHeader('Not a subtask')).toBeNull();
     expect(extractSubtaskHeader('1 Missing dot')).toBeNull();
-    expect(extractSubtaskHeader('.A No number')).toBeNull();
+    expect(extractSubtaskHeader('.1 No number')).toBeNull();
   });
 
   describe('edge cases', () => {
-    it('rejects multi-letter subtask IDs (by design)', () => {
-      // Document that multi-letter IDs like "1.AA" are intentionally not supported
-      // Only single letters A-Z are valid subtask identifiers
-      expect(extractSubtaskHeader('1.AA First task')).toBeNull();
-      expect(extractSubtaskHeader('2.AB Second task')).toBeNull();
+    it('rejects letter-based subtask IDs (now numeric only)', () => {
+      // Letters are no longer valid - subtasks must be numeric
+      expect(extractSubtaskHeader('1.A First task')).toBeNull();
+      expect(extractSubtaskHeader('2.B Second task')).toBeNull();
     });
 
-    it('accepts single letter subtask IDs', () => {
-      const result = extractSubtaskHeader('1.A First task');
+    it('accepts numeric subtask IDs', () => {
+      const result = extractSubtaskHeader('1.1 First task');
       expect(result).not.toBeNull();
-      expect(result?.id).toBe('A');
+      expect(result?.id).toBe('1');
     });
 
     it('accepts dynamic subtask marker {n}', () => {

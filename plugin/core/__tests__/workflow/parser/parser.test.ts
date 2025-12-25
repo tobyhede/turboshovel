@@ -315,8 +315,8 @@ echo "test"
       const markdown = `
 ## 1. Dispatch reviewers
 
-### 1.A First reviewer (code-review-agent)
-### 1.B Second reviewer (code-agent)
+### 1.1 First reviewer (code-review-agent)
+### 1.2 Second reviewer (code-agent)
 
 PASS ALL: CONTINUE
 FAIL ANY: STOP
@@ -325,12 +325,12 @@ FAIL ANY: STOP
 
       expect(tasks[0].subtasks).toHaveLength(2);
       expect(tasks[0].subtasks?.[0]).toEqual({
-        id: 'A',
+        id: '1',
         description: 'First reviewer',
         agentType: 'code-review-agent',
         isDynamic: false
       });
-      expect(tasks[0].subtasks?.[1].id).toBe('B');
+      expect(tasks[0].subtasks?.[1].id).toBe('2');
     });
 
     it('parses dynamic subtask template', () => {
@@ -353,7 +353,7 @@ FAIL ANY: STOP
       const markdown = `
 ## 1. Task one
 
-### 2.A Wrong prefix
+### 2.1 Wrong prefix
 `;
       expect(() => parseWorkflow(markdown)).toThrow('does not belong');
     });
@@ -362,8 +362,8 @@ FAIL ANY: STOP
       const markdown = `
 ## 1. Task
 
-### 1.A First
-### 1.A Duplicate
+### 1.1 First
+### 1.1 Duplicate
 `;
       expect(() => parseWorkflow(markdown)).toThrow('Duplicate subtask');
     });
@@ -372,7 +372,7 @@ FAIL ANY: STOP
       const markdown = `
 ## 1. Task
 
-### 1.A Static
+### 1.1 Static
 ### 1.{n} Dynamic
 `;
       expect(() => parseWorkflow(markdown)).toThrow('Cannot mix');

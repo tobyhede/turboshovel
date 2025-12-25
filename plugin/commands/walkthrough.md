@@ -21,12 +21,12 @@ This walkthrough exercises all workflow features:
 
 1. Start the workflow:
    ```bash
-   workflow start ${CLAUDE_PLUGIN_ROOT}/workflows/walkthrough.workflow.md
+   node ${CLAUDE_PLUGIN_ROOT}/core/dist/cli/workflow-cli.js start ${CLAUDE_PLUGIN_ROOT}/workflows/walkthrough.workflow.md
    ```
 
 2. Check status anytime:
    ```bash
-   workflow status
+   node ${CLAUDE_PLUGIN_ROOT}/core/dist/cli/workflow-cli.js status
    ```
 
 3. Follow the workflow prompts to progress through tasks.
@@ -42,7 +42,7 @@ This walkthrough exercises all workflow features:
 
 If a task fails:
 - Check `.work/walkthrough.log` for the last successful step
-- Use `workflow status` to see current state
-- Use `workflow stop` to abort and start fresh
+- Use `node ${CLAUDE_PLUGIN_ROOT}/core/dist/cli/workflow-cli.js status` to see current state
+- Use `node ${CLAUDE_PLUGIN_ROOT}/core/dist/cli/workflow-cli.js stop` to abort and start fresh
 
 </instructions>

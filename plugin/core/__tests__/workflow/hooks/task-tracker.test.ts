@@ -32,17 +32,17 @@ describe('trackTaskDispatch with TaskId', () => {
       cwd: testDir,
       tool_name: 'Task',
       tool_input: {
-        description: '3.A - Review code changes',
+        description: '3.1 - Review code changes',
         subagent_type: 'code-review-agent'
       }
     };
 
     const result = await trackTaskDispatch(input);
 
-    expect(result.taskId).toEqual({ task: createTaskNumber(3)!, subtask: 'A' });
+    expect(result.taskId).toEqual({ task: createTaskNumber(3)!, subtask: '1' });
 
     const updated = await manager.getActive();
-    expect(updated?.pendingTasks).toContainEqual({ task: createTaskNumber(3)!, subtask: 'A' });
+    expect(updated?.pendingTasks).toContainEqual({ task: createTaskNumber(3)!, subtask: '1' });
   });
 
   it('returns violation for missing TaskId prefix in enforcement mode', async () => {

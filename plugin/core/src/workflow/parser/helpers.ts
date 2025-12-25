@@ -6,7 +6,7 @@ import { WorkflowSyntaxError } from './types';
 
 export interface ParsedSubtaskHeader {
   taskNumber: number;
-  id: string; // A, B, or {n}
+  id: string; // "1", "2", or "{n}" for dynamic
   description: string;
   agentType?: string;
   isDynamic: boolean;
@@ -64,14 +64,15 @@ export function extractTaskHeader(
 /**
  * Extract subtask header from H3 text
  * Patterns:
- *   "1.A First reviewer (code-agent)" -> { taskNumber: 1, id: "A", ... }
+ *   "1.1 First reviewer (code-agent)" -> { taskNumber: 1, id: "1", ... }
  *   "3.{n} Execute task" -> { taskNumber: 3, id: "{n}", isDynamic: true }
  */
 export function extractSubtaskHeader(text: string): ParsedSubtaskHeader | null {
   const trimmed = text.trim();
 
-  // Match: "N.A description" or "N.{n} description" with optional (agent-type)
-  const match = trimmed.match(/^(\d+)\.(\{n\}|[A-Za-z])\s+(.+?)(?:\s+\(([^)]+)\))?$/);
+  // Match: "N.M description" or "N.{n} description" with optional (agent-type)
+  // Subtasks are now numeric (e.g., 1.1, 1.2) not alphabetic (1.A, 1.B)
+  const match = trimmed.match(/^(\d+)\.(\{n\}|\d+)\s+(.+?)(?:\s+\(([^)]+)\))?$/);
   if (!match) return null;
 
   const [, taskStr, subtaskId, desc, agent] = match;
@@ -79,7 +80,7 @@ export function extractSubtaskHeader(text: string): ParsedSubtaskHeader | null {
   if (taskNumber <= 0) return null;
 
   const isDynamic = subtaskId === '{n}';
-  const id = isDynamic ? '{n}' : subtaskId.toUpperCase();
+  const id = subtaskId; // Keep as-is: "{n}" or numeric string
 
   return {
     taskNumber,

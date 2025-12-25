@@ -2,11 +2,11 @@ import { createTaskNumber, type TaskNumber } from './types';
 
 /**
  * Task identifier with optional subtask
- * Format: "3" or "3.A" (task with optional subtask letter)
+ * Format: "3" or "3.1" (task with optional numeric subtask)
  */
 export interface TaskId {
   readonly task: TaskNumber;
-  readonly subtask?: string;
+  readonly subtask?: string; // Numeric string: "1", "2", etc.
 }
 
 export interface ParseTaskIdOptions {
@@ -20,10 +20,10 @@ export interface ParseTaskIdOptions {
  * The requireSeparator option controls parsing strictness:
  *
  * Without requireSeparator (CLI argument parsing):
- *   Used when parsing TaskIds from CLI arguments like `--task 3` or `--task 3.A`
+ *   Used when parsing TaskIds from CLI arguments like `--task 3` or `--task 3.1`
  *   Expects the entire string to be the task ID with no trailing text
  *   "3" -> { task: 3 }
- *   "3.A" -> { task: 3, subtask: 'A' }
+ *   "3.1" -> { task: 3, subtask: '1' }
  *   "3 - description" -> null (fails because of space)
  *
  * With requireSeparator (Task description parsing):
@@ -31,7 +31,7 @@ export interface ParseTaskIdOptions {
  *   follows the ID. The separator requirement prevents false matches on text
  *   that happens to start with a number.
  *   "3 - Review code" -> { task: 3 }
- *   "3.A - First reviewer" -> { task: 3, subtask: 'A' }
+ *   "3.1 - First reviewer" -> { task: 3, subtask: '1' }
  *   "5: Execute" -> { task: 5 }
  *   "3" -> null (fails because no separator found)
  *
@@ -42,9 +42,10 @@ export function parseTaskIdFromString(input: string, options?: ParseTaskIdOption
   const requireSeparator = options?.requireSeparator ?? false;
 
   // Build regex based on options
+  // Subtask is now numeric (e.g., 3.1, 3.2) not alphabetic (3.A, 3.B)
   const pattern = requireSeparator
-    ? /^(\d+)(?:\.([A-Za-z]))?[\s\-:]/ // Must have separator
-    : /^(\d+)(?:\.([A-Za-z]))?$/; // Must match entire string
+    ? /^(\d+)(?:\.(\d+))?[\s\-:]/ // Must have separator
+    : /^(\d+)(?:\.(\d+))?$/; // Must match entire string
 
   const match = input.match(pattern);
   if (!match) return null;
@@ -55,12 +56,12 @@ export function parseTaskIdFromString(input: string, options?: ParseTaskIdOption
 
   return {
     task,
-    subtask: match[2]?.toUpperCase()
+    subtask: match[2] // Already a numeric string
   };
 }
 
 /**
- * Serialize TaskId to string (e.g., { task: 3, subtask: 'A' } -> "3.A")
+ * Serialize TaskId to string (e.g., { task: 3, subtask: '1' } -> "3.1")
  */
 export function taskIdToString(taskId: TaskId): string {
   return taskId.subtask ? `${taskId.task}.${taskId.subtask}` : `${taskId.task}`;

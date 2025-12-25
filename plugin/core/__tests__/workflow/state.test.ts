@@ -134,12 +134,12 @@ describe('WorkflowStateManager', () => {
   describe('WorkflowStateManager.pushPendingTask', () => {
     it('adds task to empty pending queue', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
-      const taskId: TaskId = { task: createTaskNumber(3)!, subtask: 'A' };
+      const taskId: TaskId = { task: createTaskNumber(3)!, subtask: '1' };
 
       await manager.pushPendingTask(state.id, taskId);
 
       const updated = await manager.load(state.id);
-      expect(updated?.pendingTasks).toEqual([{ task: createTaskNumber(3)!, subtask: 'A' }]);
+      expect(updated?.pendingTasks).toEqual([{ task: createTaskNumber(3)!, subtask: '1' }]);
     });
 
     it('appends to existing pending queue (FIFO)', async () => {
@@ -147,13 +147,13 @@ describe('WorkflowStateManager', () => {
 
       await manager.pushPendingTask(state.id, { task: createTaskNumber(1)! });
       await manager.pushPendingTask(state.id, { task: createTaskNumber(2)! });
-      await manager.pushPendingTask(state.id, { task: createTaskNumber(3)!, subtask: 'A' });
+      await manager.pushPendingTask(state.id, { task: createTaskNumber(3)!, subtask: '1' });
 
       const updated = await manager.load(state.id);
       expect(updated?.pendingTasks).toEqual([
         { task: createTaskNumber(1)! },
         { task: createTaskNumber(2)! },
-        { task: createTaskNumber(3)!, subtask: 'A' }
+        { task: createTaskNumber(3)!, subtask: '1' }
       ]);
     });
 
@@ -194,13 +194,13 @@ describe('WorkflowStateManager', () => {
   describe('bindAgent', () => {
     it('creates agent binding with running status', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
-      const taskId: TaskId = { task: createTaskNumber(3)!, subtask: 'A' };
+      const taskId: TaskId = { task: createTaskNumber(3)!, subtask: '1' };
 
       await manager.bindAgent(state.id, 'agent-xyz', taskId);
 
       const updated = await manager.load(state.id);
       expect(updated?.agentBindings['agent-xyz']).toEqual({
-        taskId: { task: createTaskNumber(3)!, subtask: 'A' },
+        taskId: { task: createTaskNumber(3)!, subtask: '1' },
         status: 'running'
       });
     });
@@ -267,12 +267,12 @@ describe('WorkflowStateManager', () => {
 
     it('preserves taskId when updating', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
-      await manager.bindAgent(state.id, 'agent-xyz', { task: createTaskNumber(3)!, subtask: 'A' });
+      await manager.bindAgent(state.id, 'agent-xyz', { task: createTaskNumber(3)!, subtask: '1' });
 
       await manager.updateAgentBinding(state.id, 'agent-xyz', { status: 'done' });
 
       const binding = await manager.getAgentBinding(state.id, 'agent-xyz');
-      expect(binding?.taskId).toEqual({ task: createTaskNumber(3)!, subtask: 'A' });
+      expect(binding?.taskId).toEqual({ task: createTaskNumber(3)!, subtask: '1' });
     });
 
     it('throws for non-existent agent', async () => {

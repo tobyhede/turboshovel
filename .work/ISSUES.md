@@ -45,23 +45,33 @@ The TaskID system used letters (A, B, C) for subtask identifiers, but the walkth
 
 ## Issue 3: Retry Count Not Auto-Incremented
 
-**Status:** Design Gap
+**Status:** ✅ FIXED
 **Severity:** Medium
-**Location:** `src/cli/workflow-cli.ts`, hook system
+**Location:** `src/cli/workflow-cli.ts`, `src/cli/condition-handler.ts`
 
-When a task fails with `FAIL: RETRY N`, the workflow state's `retryCount` is not automatically incremented. The orchestrator must manually track retries.
+When a task fails with `FAIL: RETRY N`, the workflow state's `retryCount` was not automatically incremented.
 
-**Current behavior:**
-- Task fails -> FAIL condition triggers RETRY action
-- `workflow status` shows `Retry: 0/3` (unchanged)
-- No automatic retry loop
+**Resolution:** `workflow next --fail` now evaluates the task's FAIL condition:
 
-**Expected behavior (unclear):**
-- Should the CLI auto-retry commands?
-- Should it just increment the counter for agent awareness?
-- Is manual orchestration by main agent intentional?
+1. Created `src/cli/condition-handler.ts` with `evaluateFailCondition()` helper
+2. Updated `workflow next --fail` (without `--agent`) to evaluate conditions:
+   - RETRY: Increments retry count, re-presents task
+   - STOP: Blocks with error message
+   - GOTO: Jumps to target task
+   - CONTINUE: Advances normally
+3. Updated `workflow next --fail --agent` to support agent retries
 
-**Resolution:** Clarify design intent. If auto-increment desired, add to `workflow next` when previous task failed.
+### Usage
+
+```bash
+# Task failed - evaluate FAIL condition
+workflow next --fail
+
+# Agent failed - evaluate FAIL condition for agent
+workflow next --fail --agent agent-xyz
+```
+
+The legacy `--retry` flag still exists for manual retry override (uses state.retryMax, not workflow value).
 
 ---
 
@@ -123,7 +133,7 @@ The `### N.{n}` syntax marks a subtask as "dynamic" (spawned at runtime), but:
 |---|-------|----------|--------|
 | 1 | CLI not in PATH | Low | Document |
 | 2 | TaskID letters vs numbers | High | ✅ FIXED |
-| 3 | Retry count not auto-incremented | Medium | Clarify design |
+| 3 | Retry count not auto-incremented | Medium | ✅ FIXED |
 | 4 | Variable substitution missing | High | ✅ FIXED |
 | 5 | Dynamic subtask semantics | Medium | Document |
 
@@ -131,4 +141,5 @@ The `### N.{n}` syntax marks a subtask as "dynamic" (spawned at runtime), but:
 
 1. ~~**Fix Issue 2 first** - Refactor TaskID to use numbers~~ ✅
 2. ~~**Fix Issue 4** - Implement or document variable substitution~~ ✅
-3. **Document** Issues 1, 3, 5 in relevant docs
+3. ~~**Fix Issue 3** - Auto-increment retry count on `--fail`~~ ✅
+4. **Document** Issues 1, 5 in relevant docs

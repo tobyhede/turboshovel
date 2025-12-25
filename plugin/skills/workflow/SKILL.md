@@ -46,10 +46,10 @@ You orchestrate the workflow. Use these commands:
 
 Include TaskId in Task description:
 ```
-Task(description="2.A - Review authentication code", ...)
+Task(description="2.1 - Review authentication code", ...)
 ```
 
-The TaskId format is `N.X` where N is task number, X is subtask letter.
+The TaskId format is `N.X` where N is task number, X is subtask number.
 
 ### Parallel Subtasks
 

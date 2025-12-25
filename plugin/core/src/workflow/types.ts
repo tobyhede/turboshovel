@@ -114,10 +114,10 @@ export interface Prompt {
  * A subtask within a task (H3 header)
  */
 export interface Subtask {
-  readonly id: string; // A, B, C or {n} for dynamic
+  readonly id: string; // "1", "2", "3" or "{n}" for dynamic
   readonly description: string;
   readonly agentType?: string; // e.g., "code-review-agent" from "(code-review-agent)"
-  readonly isDynamic: boolean; // true for ### N.{n}, false for ### N.A
+  readonly isDynamic: boolean; // true for ### N.{n}, false for ### N.1
 }
 
 /**

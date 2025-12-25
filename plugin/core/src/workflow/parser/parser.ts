@@ -156,7 +156,7 @@ export function parseWorkflow(markdown: string): Task[] {
         const hasDynamic = currentTask.subtasks.some((s) => s.isDynamic);
         if ((hasStatic && parsed.isDynamic) || (hasDynamic && !parsed.isDynamic)) {
           throw new WorkflowSyntaxError(
-            `Cannot mix static subtasks (like 1.A) and dynamic subtasks (like 1.{n}) in task ${currentTask.number}`
+            `Cannot mix static subtasks (like 1.1) and dynamic subtasks (like 1.{n}) in task ${currentTask.number}`
           );
         }
 
