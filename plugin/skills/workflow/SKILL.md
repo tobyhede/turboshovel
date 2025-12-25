@@ -58,6 +58,35 @@ For parallel execution (e.g., `### 2.{n}` subtasks):
 2. Run `workflow status` to check agent completion
 3. When all agents report done, run `workflow next`
 
+### Dynamic Subtask `{n}` Syntax
+
+The `### N.{n}` syntax marks a subtask as dynamic - the orchestrator decides how many to spawn at runtime.
+
+**Workflow definition:**
+```markdown
+### 3.{n} Parallel review
+
+**Prompt:**
+You are reviewer $n. Review the code.
+```
+
+**Orchestration contract:**
+1. Main agent decides how many subtasks (e.g., 2 reviewers)
+2. Queue tasks with sequential numbers: `workflow start --task 3.1`, `workflow start --task 3.2`
+3. Bind agents: `workflow start --agent agent-a`, `workflow start --agent agent-b`
+4. The `$n` in prompts is substituted with the subtask number (1, 2, etc.)
+
+**Example:**
+```bash
+# Decide to spawn 2 reviewers
+workflow start --task 3.1
+workflow start --task 3.2
+workflow start --agent reviewer-1  # Gets prompt with $n → 1
+workflow start --agent reviewer-2  # Gets prompt with $n → 2
+```
+
+The `{n}` is a template marker, not a literal ID. It signals "spawn N instances at runtime" where N is determined by the orchestrator based on task requirements.
+
 ### Handling Failures
 
 When a subagent reports `STATUS: FAIL`:

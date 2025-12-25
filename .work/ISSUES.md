@@ -4,7 +4,7 @@ Issues discovered during `/turboshovel:walkthrough` debugging session on 2025-12
 
 ## Issue 1: CLI Not in PATH
 
-**Status:** Documentation
+**Status:** ✅ DOCUMENTED
 **Severity:** Low
 **Location:** `plugin/core/package.json`
 
@@ -13,10 +13,10 @@ The `workflow` command is defined as a bin entry but not globally accessible. Us
 node /path/to/plugin/core/dist/cli/workflow-cli.js <command>
 ```
 
-**Resolution:** Document the requirement to either:
-- Use full path to the CLI
-- Run `npm link` in the plugin/core directory
-- Add an alias
+**Resolution:** Documented in CLAUDE.md under "Workflow System > CLI Access" with three options:
+1. Full path (always works)
+2. `npm link` (for development)
+3. Shell alias
 
 ---
 
@@ -109,7 +109,7 @@ You are agent 1 in the walkthrough.
 
 ## Issue 5: Dynamic Subtask `{n}` Semantics Unclear
 
-**Status:** Documentation
+**Status:** ✅ DOCUMENTED
 **Severity:** Medium
 **Location:** `src/workflow/parser/helpers.ts`
 
@@ -118,12 +118,11 @@ The `### N.{n}` syntax marks a subtask as "dynamic" (spawned at runtime), but:
 - The orchestrator must decide the count
 - No clear API to "expand" `{n}` into `1, 2, 3...`
 
-**Current understanding:**
+**Resolution:** Documented in `plugin/skills/workflow/SKILL.md` under "Dynamic Subtask `{n}` Syntax":
 - `{n}` is a template marker, not a literal ID
 - Main agent decides how many subtasks to create
-- Each gets sequential number 1, 2, 3...
-
-**Resolution:** Document the orchestration contract clearly in SKILL.md.
+- Queue with sequential numbers: `workflow start --task N.1`, `workflow start --task N.2`
+- `$n` in prompts is substituted with subtask number
 
 ---
 
@@ -131,15 +130,17 @@ The `### N.{n}` syntax marks a subtask as "dynamic" (spawned at runtime), but:
 
 | # | Issue | Priority | Status |
 |---|-------|----------|--------|
-| 1 | CLI not in PATH | Low | Document |
+| 1 | CLI not in PATH | Low | ✅ DOCUMENTED |
 | 2 | TaskID letters vs numbers | High | ✅ FIXED |
 | 3 | Retry count not auto-incremented | Medium | ✅ FIXED |
 | 4 | Variable substitution missing | High | ✅ FIXED |
-| 5 | Dynamic subtask semantics | Medium | Document |
+| 5 | Dynamic subtask semantics | Medium | ✅ DOCUMENTED |
 
-## Next Steps
+## Completed
 
-1. ~~**Fix Issue 2 first** - Refactor TaskID to use numbers~~ ✅
-2. ~~**Fix Issue 4** - Implement or document variable substitution~~ ✅
+1. ~~**Fix Issue 2** - Refactor TaskID to use numbers~~ ✅
+2. ~~**Fix Issue 4** - Implement variable substitution~~ ✅
 3. ~~**Fix Issue 3** - Auto-increment retry count on `--fail`~~ ✅
-4. **Document** Issues 1, 5 in relevant docs
+4. ~~**Document Issues 1, 5** - CLI access and {n} semantics~~ ✅
+
+All issues resolved.
