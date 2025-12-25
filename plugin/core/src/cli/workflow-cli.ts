@@ -415,6 +415,40 @@ program
     }
   });
 
+program
+  .command('gate <name>')
+  .description('Run a gate by name')
+  .action(async (name: string) => {
+    try {
+      const cwd = getCwd();
+      const { loadConfig } = await import('../config');
+      const config = await loadConfig(cwd);
+
+      if (!config?.gates?.[name]) {
+        console.error(`Gate not found: ${name}`);
+        process.exit(1);
+      }
+
+      const gate = config.gates[name];
+      if (!gate.command) {
+        console.error(`Gate has no command: ${name}`);
+        process.exit(1);
+      }
+
+      const { execSync } = await import('child_process');
+      const options: any = {
+        cwd,
+        stdio: 'inherit',
+        shell: true
+      };
+      execSync(gate.command, options);
+      console.log(`Gate ${name}: PASS`);
+    } catch (error) {
+      console.error(`Gate ${name}: FAIL`);
+      process.exit(1);
+    }
+  });
+
 function printTaskGuidance(task: Task): void {
   if (task.command) {
     console.log(`\nCommand: ${task.command.code}`);
