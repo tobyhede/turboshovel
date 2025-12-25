@@ -161,6 +161,53 @@ program
             process.exit(1);
           }
 
+          // If --fail, evaluate FAIL condition
+          if (options.fail) {
+            const workflowPath = await findWorkflowFile(cwd, state.workflow);
+            if (!workflowPath) {
+              console.error(`Error: Workflow file ${state.workflow} not found`);
+              process.exit(1);
+            }
+
+            const content = await fs.readFile(workflowPath, 'utf8');
+            const tasks = parseWorkflow(content);
+            const agentTask = tasks[binding.taskId.task - 1];
+
+            const conditionResult = evaluateFailCondition(agentTask, state.retryCount, state.retryMax);
+
+            switch (conditionResult.action) {
+              case 'retry':
+                // Keep agent running, increment retry, re-present task
+                await manager.update(state.id, { retryCount: conditionResult.newRetryCount! });
+                console.log(`Retry ${conditionResult.newRetryCount}/${state.retryMax}`);
+                console.log(`Agent ${options.agent} retrying task ${binding.taskId.task}`);
+                return;
+
+              case 'blocked':
+                // Mark agent as failed
+                await manager.updateAgentBinding(state.id, options.agent, {
+                  status: 'done',
+                  result: 'fail'
+                });
+                console.log(`Agent ${options.agent} blocked: ${conditionResult.message || 'Task failed'}`);
+                return;
+
+              case 'goto':
+                // Mark agent done, workflow will handle goto
+                await manager.updateAgentBinding(state.id, options.agent, {
+                  status: 'done',
+                  result: 'fail'
+                });
+                console.log(`Agent ${options.agent} failed, workflow jumping to task ${conditionResult.gotoTask}`);
+                return;
+
+              case 'continue':
+                // Treat as pass, fall through
+                break;
+            }
+          }
+
+          // --pass or continue from above
           const result = options.fail ? 'fail' : 'pass';
           await manager.updateAgentBinding(state.id, options.agent, {
             status: 'done',

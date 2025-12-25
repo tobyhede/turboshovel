@@ -759,4 +759,65 @@ echo "test"
       expect(result.stdout).toContain('No stashed workflow');
     });
   });
+
+  describe('workflow next --fail --agent (with retry)', () => {
+    it('retries agent task when FAIL: RETRY', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(
+        workflowPath,
+        `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: RETRY 3
+`
+      );
+      await runCli(['start', workflowPath]);
+      await runCli(['start', '--task', '1']);
+      await runCli(['start', '--agent', 'agent-xyz']);
+
+      const result = await runCli(['next', '--fail', '--agent', 'agent-xyz']);
+
+      // Agent should be marked for retry, not just failed
+      expect(result.stdout).toContain('Retry 1/3');
+
+      const manager = new WorkflowStateManager(testDir);
+      const state = await manager.getActive();
+      // Agent should be re-queued for retry (still running)
+      expect(state?.agentBindings['agent-xyz'].status).toBe('running');
+    });
+
+    it('blocks agent when FAIL: STOP', async () => {
+      const workflowPath = join(testDir, 'test.workflow.md');
+      await fs.writeFile(
+        workflowPath,
+        `
+## 1. First step
+
+\`\`\`bash
+echo "test"
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+`
+      );
+      await runCli(['start', workflowPath]);
+      await runCli(['start', '--task', '1']);
+      await runCli(['start', '--agent', 'agent-xyz']);
+
+      const result = await runCli(['next', '--fail', '--agent', 'agent-xyz']);
+
+      expect(result.stdout).toContain('blocked');
+
+      const manager = new WorkflowStateManager(testDir);
+      const state = await manager.getActive();
+      expect(state?.agentBindings['agent-xyz'].status).toBe('done');
+      expect(state?.agentBindings['agent-xyz'].result).toBe('fail');
+    });
+  });
 });
