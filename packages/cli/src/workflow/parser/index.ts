@@ -1,4 +1,4 @@
 // src/workflow/parser/index.ts
-export { parseWorkflow } from './parser';
-export { WorkflowSyntaxError } from './types';
-export type { ParsedConditional } from './types';
+export { parseWorkflow } from './parser.js';
+export { WorkflowSyntaxError } from './types.js';
+export type { ParsedConditional } from './types.js';

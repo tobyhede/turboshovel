@@ -1,4 +1,4 @@
-import type { Task, TaskNumber } from '../workflow/types';
+import type { Task, TaskNumber } from './types.js';
 
 export interface ConditionResult {
   action: 'retry' | 'blocked' | 'goto' | 'continue';

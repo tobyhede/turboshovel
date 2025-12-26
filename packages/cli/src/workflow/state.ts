@@ -1,8 +1,8 @@
 // src/workflow/state.ts
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { createTaskNumber, type WorkflowState, type AgentBinding } from './types';
-import type { TaskId } from './task-id';
+import { createTaskNumber, type WorkflowState, type AgentBinding } from './types.js';
+import type { TaskId } from './task-id.js';
 
 const STATE_DIR = '.claude/turboshovel/workflows';
 const SESSION_FILE = '.claude/turboshovel/session.json';

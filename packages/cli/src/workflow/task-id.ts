@@ -1,4 +1,4 @@
-import { createTaskNumber, type TaskNumber } from './types';
+import { createTaskNumber, type TaskNumber } from './types.js';
 
 /**
  * Task identifier with optional subtask

@@ -89,35 +89,36 @@ Claude Code automatically sets `${CLAUDE_PLUGIN_ROOT}` to the correct path for e
 
 ## Workflow System
 
-Execute multi-step processes with state tracking:
+Execute multi-step processes with state tracking.
 
-- `workflow start <file>` - Start workflow
-- `workflow next` - Advance to next task (use `--step N` to jump to specific step)
-- `workflow next --fail` - Signal task failure, evaluate FAIL condition (RETRY/STOP/GOTO)
-- `workflow complete` - Mark workflow as complete
-- `workflow status` - Show current state
-- `workflow stop` - Abort workflow
-- `workflow list` - List all workflows (active and inactive)
-- `workflow stash` - Pause workflow enforcement for ad-hoc work
-- `workflow pop` - Resume workflow enforcement
+### Installation
 
-State persists in `.claude/turboshovel/workflows/` (workflow files) and `.claude/turboshovel/session.json` (active workflow tracking). Both survive context clears.
-
-### CLI Access
-
-The `workflow` command is part of the plugin but not globally installed. Access options:
+Install the CLI globally:
 
 ```bash
-# Option 1: Full path (always works)
-node /path/to/plugin/core/dist/cli/workflow-cli.js <command>
-
-# Option 2: npm link (for development)
-cd plugin/core && npm link
-workflow status  # Now works globally
-
-# Option 3: Shell alias
-alias workflow='node /path/to/plugin/core/dist/cli/workflow-cli.js'
+npm install -g @turboshovel/cli
 ```
+
+### Commands
+
+```bash
+tsv start <file>       # Start workflow
+tsv next               # Advance to next step
+tsv next --fail        # Signal task failure (evaluates FAIL condition)
+tsv status             # Show current state
+tsv stop               # Abort workflow
+tsv complete           # Mark complete
+tsv stash              # Pause enforcement
+tsv pop                # Resume enforcement
+tsv list               # List all workflows
+tsv gate <name>        # Run a gate
+```
+
+The `turboshovel` command is an alias for `tsv`.
+
+### State Persistence
+
+State persists in `.claude/turboshovel/workflows/` (workflow files) and `.claude/turboshovel/session.json` (active workflow tracking). Both survive context clears.
 
 ## Commands
 

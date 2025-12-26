@@ -13,14 +13,14 @@ import type {
   Text,
   PhrasingContent
 } from 'mdast';
-import type { Task, Action, TaskNumber, Subtask } from '../types';
+import type { Task, Action, TaskNumber, Subtask } from '../types.js';
 import {
   extractTaskHeader,
   extractSubtaskHeader,
   parseConditional,
   convertConditionals
-} from './helpers';
-import { WorkflowSyntaxError, type ParsedConditional } from './types';
+} from './helpers.js';
+import { WorkflowSyntaxError, type ParsedConditional } from './types.js';
 
 /**
  * Extract plain text from mdast node
