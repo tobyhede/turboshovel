@@ -1,4 +1,4 @@
-// plugin/hooks/hooks-app/src/config.ts
+// packages/cli/src/config.ts
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { GatesConfig, HookConfig, GateConfig } from './types';
