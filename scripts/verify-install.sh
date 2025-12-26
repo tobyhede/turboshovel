@@ -29,11 +29,11 @@ if [ "$SOURCE" = "local" ]; then
 
   # Build Docker image with local artifacts
   echo "Building Docker image..."
-  docker build -f scripts/Dockerfile.test -t turboshovel-test .
+  docker build -f scripts/Dockerfile.test --target local -t turboshovel-test .
 else
   # Build minimal image for npm install
   echo "Building Docker image (npm source)..."
-  docker build -f scripts/Dockerfile.test -t turboshovel-test --build-arg SOURCE=npm .
+  docker build -f scripts/Dockerfile.test --target npm -t turboshovel-test .
 fi
 
 # Run test container
