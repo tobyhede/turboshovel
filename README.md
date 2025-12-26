@@ -11,51 +11,25 @@ Automated quality enforcement and context injection via Claude Code's hook syste
 
 ## Installation
 
-### Prerequisites
-
-- Node.js 18+ installed
-- Claude Code CLI installed and working
-
-### Setup
-
-1. **Clone or download turboshovel:**
-   ```bash
-   git clone https://github.com/your-org/turboshovel.git
-   # Or download and extract the release
-   ```
-
-2. **Build the hooks app:**
-   ```bash
-   cd turboshovel/plugin/core
-   npm install
-   npm run build
-   ```
-
-3. **Enable the plugin in your Claude Code settings:**
-
-   Add to `~/.claude/settings.local.json`:
-   ```json
-   {
-     "enabledPlugins": {
-       "turboshovel@turboshovel": true
-     }
-   }
-   ```
-
-4. **Verify installation:**
-
-   Start a new Claude Code session. You should see the SessionStart hook fire with environment context.
-
-### Optional: Workflow CLI
-
-If you want to use the workflow system:
+### Plugin (Claude Code)
 
 ```bash
-cd plugin/core
-npm link
+# Add turboshovel marketplace
+claude plugin marketplace add tobyhede/turboshovel
+
+# Install the plugin
+claude plugin install turboshovel@turboshovel
 ```
 
-After linking, the `workflow` command is available globally. See [Workflow System](#workflow-system) for usage.
+### CLI (optional, for workflows)
+
+```bash
+npm install -g @turboshovel/cli
+```
+
+### Verify
+
+Start a new Claude Code session. The plugin will be active and context injection will work automatically.
 
 ## Quick Start
 
@@ -539,55 +513,59 @@ Traditional skills and agents are guidance-only. Workflows enforce process:
 
 ### Workflow CLI Setup
 
-The workflow CLI is available via the hooks-app package:
+The workflow CLI is available via npm:
 
 ```bash
-# Option 1: Link the package globally (recommended)
-cd plugin/core && npm link
+# Install globally (recommended)
+npm install -g @turboshovel/cli
 
-# Verify the link worked:
-which workflow
-# Should output: /usr/local/bin/workflow (or similar)
-
-workflow --help
+# Verify installation
+tsv --help
 # Should show available commands
 
-# After linking, use the simple command:
-workflow start my-workflow.md
-workflow status
-workflow next
-
-# Option 2: Direct invocation (without linking)
-node plugin/core/dist/cli/workflow-cli.js <command>
+# After installing, use the simple command:
+tsv start my-workflow.md
+tsv status
+tsv next
 ```
 
-**Note:** After `npm link`, the `workflow` command is available globally. All examples in this documentation assume the package has been linked.
+**For development (without npm install):**
 
-**Troubleshooting:** If `which workflow` returns nothing, the link may have failed. Try:
-1. Ensure you ran `npm link` from the `hooks-app` directory
-2. Check npm's global bin directory is in your PATH: `npm config get prefix`
-3. On macOS/Linux, you may need to add `$(npm config get prefix)/bin` to your PATH
+```bash
+# Clone and build
+cd turboshovel/packages/cli
+npm install
+npm run build
+npm link
 
-### Quick Start
+# Or direct invocation
+node packages/cli/dist/cli.js <command>
+```
+
+**Troubleshooting:** If `tsv` command not found after install:
+1. Ensure npm's global bin directory is in your PATH: `npm config get prefix`
+2. On macOS/Linux, add `$(npm config get prefix)/bin` to your PATH
+
+### Workflow Commands
 
 ```bash
 # Start a workflow
-workflow start my-workflow.md
+tsv start my-workflow.md
 
 # Check status
-workflow status
+tsv status
 
 # Advance to next task
-workflow next
+tsv next
 
 # Jump to specific step
-workflow next --step 3
+tsv next --step 3
 
 # List all workflows
-workflow list
+tsv list
 
 # Stop workflow
-workflow stop
+tsv stop
 ```
 
 ### Orchestration (Subagent Dispatch)
@@ -1370,6 +1348,32 @@ Full workflow examples in `plugin/examples/`:
 - **`code-review.workflow.md`** - Code review dispatch and triage (4 tasks)
 
 See this file for a complete, production-ready workflow pattern.
+
+## Development
+
+For contributors working on turboshovel itself:
+
+```bash
+# Clone the repository
+git clone https://github.com/tobyhede/turboshovel.git
+cd turboshovel
+
+# Build the plugin core
+cd plugin/core
+npm install
+npm run build
+
+# Run tests
+npm test
+
+# Link CLI for local development
+cd ../../packages/cli
+npm install
+npm run build
+npm link
+```
+
+After linking, the `tsv` and `turboshovel` commands are available globally.
 
 ## Examples
 
