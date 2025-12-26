@@ -1,0 +1,19 @@
+FROM node:22-slim
+
+# Install Claude Code CLI
+RUN npm install -g @anthropic-ai/claude-code
+
+# Create test workspace
+WORKDIR /test
+
+# Copy tarballs (built by verify script)
+COPY dist/*.tgz ./packages/
+
+# Copy plugin source for local plugin install
+COPY plugin/ ./plugin/
+
+# Copy test entrypoint
+COPY scripts/docker-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
