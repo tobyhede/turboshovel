@@ -34,8 +34,8 @@ tsv stop
 | `tsv start <file>` | Start a new workflow |
 | `tsv next` | Advance to next step |
 | `tsv status` | Show current state |
-| `tsv stop` | Abort workflow |
-| `tsv complete` | Mark complete |
+| `tsv stop` | Abort workflow and delete workflow state |
+| `tsv complete` | Mark workflow as successfully completed |
 | `tsv stash` | Pause enforcement |
 | `tsv pop` | Resume enforcement |
 | `tsv list` | List all workflows |

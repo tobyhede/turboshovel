@@ -43,9 +43,7 @@ Gates only (context injection not implemented):
 
 **Planned hooks:** SlashCommandStart, SlashCommandEnd, SkillStart, SkillEnd - recognized by config validation but not yet registered in `hooks.json` for Claude Code routing. Context patterns exist for future use.
 
-Plugin provides default context for `SessionStart` via `${CLAUDE_PLUGIN_ROOT}/context/session-start.md`.
-
-**Note:** SessionStart fires at the beginning of each Claude Code session and injects context from `session-start.md`.
+**Note:** SessionStart fires at the beginning of each Claude Code session and injects context from `session-start.md` if present in `.claude/context/`.
 
 **Examples:**
 
@@ -92,36 +90,21 @@ All structures supported - use what fits your project size.
 
 ## Discovery Order
 
-Dispatcher searches paths in priority order. **Project-level context takes precedence over plugin-level context.**
+Dispatcher searches paths in priority order within the **project's `.claude/context/` directory**.
 
 **For SubagentStop (agent completion):**
 
-Project paths (checked first):
 1. `.claude/context/{agent}-{command}-end.md` (agent + command/skill)
 2. `.claude/context/{agent}-end.md` (agent only)
-
-Plugin paths (fallback):
-3. `${CLAUDE_PLUGIN_ROOT}/context/{agent}-{command}-end.md`
-4. `${CLAUDE_PLUGIN_ROOT}/context/{agent}-end.md`
-
-Standard discovery (backward compat):
-5. Command/skill-specific paths
+3. Command/skill-specific paths (backward compat)
 
 **For Commands and Skills:**
 
-Project paths (checked first):
 1. `.claude/context/{name}-{stage}.md`
 2. `.claude/context/slash-command/{name}-{stage}.md`
 3. `.claude/context/slash-command/{name}/{stage}.md`
 4. `.claude/context/skill/{name}-{stage}.md`
 5. `.claude/context/skill/{name}/{stage}.md`
-
-Plugin paths (fallback):
-6. `${CLAUDE_PLUGIN_ROOT}/context/{name}-{stage}.md`
-7. `${CLAUDE_PLUGIN_ROOT}/context/slash-command/{name}-{stage}.md`
-8. `${CLAUDE_PLUGIN_ROOT}/context/slash-command/{name}/{stage}.md`
-9. `${CLAUDE_PLUGIN_ROOT}/context/skill/{name}-{stage}.md`
-10. `${CLAUDE_PLUGIN_ROOT}/context/skill/{name}/{stage}.md`
 
 First match wins.
 
@@ -366,7 +349,7 @@ Look for: `"dispatcher: Context file: /path/to/file.md"`
 
 ## Examples Directory
 
-See `plugin/core/examples/context/` for working examples:
+See `examples/context/` for working examples:
 - Code review requirements
 - Planning templates
 - TDD standards

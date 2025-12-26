@@ -1,4 +1,4 @@
-// plugin/hooks/hooks-app/src/gates/index.ts
+// plugin/core/src/gates/index.ts
 /**
  * Built-in gates registry
  *

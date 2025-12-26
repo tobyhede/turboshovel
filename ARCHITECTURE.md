@@ -29,8 +29,8 @@ The Turboshovel hook system is a **self-referential TypeScript application** tha
 │      Context Injection        │   │         Config Loading             │
 │  (PRIMARY - always runs)      │   │   (loads + merges gates.json)     │
 │                               │   │                                   │
-│  1. Project .claude/context/  │   │  1. Plugin gates.json (defaults)  │
-│  2. Plugin context/ (fallback)│   │  2. Project gates.json (override) │
+│  Project .claude/context/     │   │  1. Plugin gates.json (defaults)  │
+│                               │   │  2. Project gates.json (override) │
 └───────────────────────────────┘   └───────────────────────────────────┘
                                                     │
                                                     ▼
@@ -57,7 +57,7 @@ The Turboshovel hook system is a **self-referential TypeScript application** tha
 The hook system uses **its own gates.json** to configure default behaviors:
 
 ```
-plugin/core/gates.json           ← Plugin defaults (TypeScript gates)
+plugin/gates.json                ← Plugin defaults (TypeScript gates)
         ↓ merged with
 .claude/gates.json               ← Project overrides (user configuration)
         ↓
@@ -98,15 +98,9 @@ Merged Configuration             ← Project takes precedence
 
 ```
 plugin/
-├── context/                    # Plugin-level context files
-│   ├── session-start.md        # Injects on SessionStart
-│   ├── prompt-submit.md        # Injects on UserPromptSubmit
-│   ├── subagent-stop.md        # Injects on SubagentStop
-│   └── tool-use.md             # Injects on tool events
-│
+├── hooks.json                  # Hook registration (routes to CLI)
+├── gates.json                  # Plugin default gates configuration
 └── core/
-    ├── hooks.json              # Hook registration (routes to CLI)
-    ├── gates.json              # Plugin default gates configuration
     ├── src/
     │   ├── cli.ts              # Entry point
     │   ├── dispatcher.ts       # Main dispatch logic
@@ -142,11 +136,13 @@ plugin/
     │           ├── subagent-start.ts
     │           ├── subagent-stop.ts
     │           └── task-tracker.ts
-    └── examples/
-        ├── context/            # Example context files
-        ├── strict.json         # Example: strict mode
-        ├── permissive.json     # Example: warn only
-        └── pipeline.json       # Example: gate chaining
+    └── dist/                   # Compiled JavaScript output
+
+examples/                       # Project root examples
+├── context/                    # Example context files
+├── strict.json                 # Example: strict mode
+├── permissive.json             # Example: warn only
+└── pipeline.json               # Example: gate chaining
 ```
 
 ## Execution Flow
@@ -162,7 +158,7 @@ Claude Code fires a hook event (e.g., `UserPromptSubmit`). The `hooks.json` rout
       "matcher": ".*",
       "hooks": [{
         "type": "command",
-        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/hooks-app/dist/cli.js"
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/core/dist/cli.js"
       }]
     }]
   }
@@ -171,16 +167,13 @@ Claude Code fires a hook event (e.g., `UserPromptSubmit`). The `hooks.json` rout
 
 ### 2. Context Injection (Primary Behavior)
 
-**Always runs first.** Discovers and injects markdown content from:
+**Always runs first.** Discovers and injects markdown content from **project context**:
 
-1. **Project context** (highest priority):
-   - `.claude/context/{name}-{stage}.md`
-   - `.claude/context/slash-command/{name}-{stage}.md`
-   - `.claude/context/skill/{name}-{stage}.md`
+- `.claude/context/{name}-{stage}.md`
+- `.claude/context/slash-command/{name}-{stage}.md`
+- `.claude/context/skill/{name}-{stage}.md`
 
-2. **Plugin context** (fallback):
-   - `${CLAUDE_PLUGIN_ROOT}/context/{name}-{stage}.md`
-   - (same variations as project)
+Context files are discovered from your project's `.claude/context/` directory following the naming conventions.
 
 ### 3. Config Loading and Merging
 
@@ -188,7 +181,7 @@ Loads both configs and merges them:
 
 ```typescript
 // Load plugin defaults first
-const pluginConfig = await loadConfigFile(`${CLAUDE_PLUGIN_ROOT}/core/gates.json`);
+const pluginConfig = await loadConfigFile(`${CLAUDE_PLUGIN_ROOT}/gates.json`);
 
 // Load project overrides
 const projectConfig = await loadConfigFile('.claude/gates.json');

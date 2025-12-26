@@ -104,6 +104,7 @@ npm install -g @turboshovel/cli
 ```bash
 tsv start <file>       # Start workflow
 tsv next               # Advance to next step
+tsv next --pass        # Signal task success (evaluates PASS condition)
 tsv next --fail        # Signal task failure (evaluates FAIL condition)
 tsv status             # Show current state
 tsv stop               # Abort workflow

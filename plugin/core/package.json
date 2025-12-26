@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "TypeScript hooks dispatcher for Turboshovel",
   "main": "dist/cli.js",
-  "bin": {
-    "workflow": "dist/cli/workflow-cli.js"
-  },
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
