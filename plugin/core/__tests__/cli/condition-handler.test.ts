@@ -1,4 +1,4 @@
-import { evaluateFailCondition } from '../../src/cli/condition-handler.js';
+import { evaluateFailCondition, evaluatePassCondition } from '../../src/cli/condition-handler.js';
 import { createTaskNumber, type Task, type Conditions } from '@turboshovel/shared';
 
 describe('evaluateFailCondition', () => {
@@ -87,6 +87,97 @@ describe('evaluateFailCondition', () => {
 
       expect(result.action).toBe('blocked');
       expect(result.message).toContain('No FAIL condition');
+    });
+  });
+});
+
+describe('evaluatePassCondition', () => {
+  const makeTask = (conditions?: Conditions): Task => ({
+    number: createTaskNumber(1)!,
+    description: 'Test Task',
+    prompts: [],
+    conditions
+  });
+
+  describe('DONE action', () => {
+    it('returns done to complete workflow', () => {
+      const task = makeTask({
+        all: true,
+        pass: { type: 'DONE' },
+        fail: { type: 'STOP' }
+      });
+
+      const result = evaluatePassCondition(task);
+
+      expect(result.action).toBe('done');
+    });
+  });
+
+  describe('GOTO action', () => {
+    it('returns goto with target task', () => {
+      const task = makeTask({
+        all: true,
+        pass: { type: 'GOTO', task: createTaskNumber(5)! },
+        fail: { type: 'STOP' }
+      });
+
+      const result = evaluatePassCondition(task);
+
+      expect(result.action).toBe('goto');
+      expect(result.gotoTask).toBe(5);
+    });
+  });
+
+  describe('STOP action', () => {
+    it('returns blocked with message', () => {
+      const task = makeTask({
+        all: true,
+        pass: { type: 'STOP', message: 'Should not pass' },
+        fail: { type: 'STOP' }
+      });
+
+      const result = evaluatePassCondition(task);
+
+      expect(result.action).toBe('blocked');
+      expect(result.message).toBe('Should not pass');
+    });
+  });
+
+  describe('CONTINUE action', () => {
+    it('returns continue to advance normally', () => {
+      const task = makeTask({
+        all: true,
+        pass: { type: 'CONTINUE' },
+        fail: { type: 'STOP' }
+      });
+
+      const result = evaluatePassCondition(task);
+
+      expect(result.action).toBe('continue');
+    });
+  });
+
+  describe('RETRY action', () => {
+    it('treats RETRY as continue since retry on pass is nonsensical', () => {
+      const task = makeTask({
+        all: true,
+        pass: { type: 'RETRY', max: 3 },
+        fail: { type: 'STOP' }
+      });
+
+      const result = evaluatePassCondition(task);
+
+      expect(result.action).toBe('continue');
+    });
+  });
+
+  describe('no conditions', () => {
+    it('returns continue when task has no conditions', () => {
+      const task = makeTask(undefined);
+
+      const result = evaluatePassCondition(task);
+
+      expect(result.action).toBe('continue');
     });
   });
 });
