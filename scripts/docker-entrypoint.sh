@@ -9,9 +9,8 @@ echo "Source: $SOURCE"
 # 1. Install packages
 echo "Installing turboshovel packages..."
 if [ "$SOURCE" = "local" ]; then
-  # Install shared first (CLI dependency)
-  npm install -g ./packages/turboshovel-shared-*.tgz
-  npm install -g ./packages/turboshovel-cli-*.tgz
+  # Install both together so npm can resolve shared as CLI dependency
+  npm install -g ./packages/turboshovel-shared-*.tgz ./packages/turboshovel-cli-*.tgz
 else
   npm install -g @turboshovel/cli
 fi
