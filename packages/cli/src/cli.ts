@@ -4,18 +4,21 @@
 import { Command } from 'commander';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { WorkflowStateManager } from './workflow/state.js';
-import { parseWorkflow, WorkflowSyntaxError } from './workflow/parser/index.js';
-import { taskIdToString, parseTaskIdFromString } from './workflow/task-id.js';
 import {
+  WorkflowStateManager,
+  parseWorkflow,
+  WorkflowSyntaxError,
+  taskIdToString,
+  parseTaskIdFromString,
   createTaskNumber,
   incrementTaskNumber,
+  evaluateFailCondition,
+  isNodeError,
+  getErrorMessage,
   type TaskNumber,
   type Action,
   type Task
-} from './workflow/types.js';
-import { isNodeError, getErrorMessage } from './errors.js';
-import { evaluateFailCondition } from './workflow/condition-handler.js';
+} from '@turboshovel/shared';
 
 const program = new Command();
 
@@ -542,7 +545,7 @@ program
   .action(async (name: string) => {
     try {
       const cwd = getCwd();
-      const { loadConfig } = await import('./config.js');
+      const { loadConfig } = await import('@turboshovel/shared');
       const config = await loadConfig(cwd);
 
       if (!config?.gates?.[name]) {
