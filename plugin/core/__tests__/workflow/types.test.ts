@@ -9,7 +9,7 @@ import {
   type Task,
   type WorkflowState,
   type Conditions
-} from '../../src/workflow/types.js';
+} from '@turboshovel/shared';
 
 describe('TaskNumber', () => {
   test('createTaskNumber with valid number returns TaskNumber', () => {

@@ -1,5 +1,5 @@
 import { evaluateConditions } from '../../src/workflow/evaluation.js';
-import type { Conditions, TaskState } from '../../src/workflow/types.js';
+import type { Conditions, TaskState } from '@turboshovel/shared';
 
 describe('evaluateConditions', () => {
   const passAction = { type: 'CONTINUE' as const };

@@ -2,9 +2,10 @@ import fc from 'fast-check';
 import {
   createTaskNumber,
   incrementTaskNumber,
-  decrementTaskNumber
-} from '../../src/workflow/types.js';
-import { taskIdToString, parseTaskIdFromString } from '../../src/workflow/task-id.js';
+  decrementTaskNumber,
+  taskIdToString,
+  parseTaskIdFromString
+} from '@turboshovel/shared';
 
 describe('TaskId Property Tests', () => {
   // Generator for valid task numbers (1-999999)

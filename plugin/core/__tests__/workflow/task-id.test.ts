@@ -1,5 +1,4 @@
-import { parseTaskIdFromString, taskIdToString, taskIdEquals } from '../../src/workflow/task-id.js';
-import { createTaskNumber } from '../../src/workflow/types.js';
+import { parseTaskIdFromString, taskIdToString, taskIdEquals, createTaskNumber } from '@turboshovel/shared';
 
 describe('parseTaskIdFromString with requireSeparator', () => {
   const parse = (s: string): ReturnType<typeof parseTaskIdFromString> =>

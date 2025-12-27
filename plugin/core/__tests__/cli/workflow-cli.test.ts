@@ -9,8 +9,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
 import { execSync } from 'child_process';
-import { WorkflowStateManager } from '../../src/workflow/state.js';
-import { createTaskNumber } from '../../src/workflow/types.js';
+import { WorkflowStateManager, createTaskNumber } from '@turboshovel/shared';
 
 interface CliResult {
   stdout: string;

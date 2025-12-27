@@ -3,9 +3,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
 import { dispatch } from '../../src/dispatcher.js';
-import { WorkflowStateManager } from '../../src/workflow/state.js';
-import type { HookInput } from '../../src/types.js';
-import { createTaskNumber } from '../../src/workflow/types.js';
+import { WorkflowStateManager, createTaskNumber, type HookInput } from '@turboshovel/shared';
 
 describe('Dispatcher Workflow Integration', () => {
   let testDir: string;
