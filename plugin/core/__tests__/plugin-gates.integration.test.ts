@@ -1,6 +1,6 @@
 // plugin/hooks/hooks-app/__tests__/plugin-gates.integration.test.ts
 import { dispatch } from '../src/dispatcher.js';
-import { HookInput } from '../src/types.js';
+import { HookInput } from '@turboshovel/shared';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';

@@ -29,7 +29,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@turboshovel/shared": "workspace:*",
+    "@turboshovel/shared": "*",
     "commander": "^14.0.2",
     "js-yaml": "^4.1.1",
     "mdast-util-from-markdown": "^2.0.2",

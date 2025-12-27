@@ -4,6 +4,12 @@ module.exports = {
   testMatch: ['**/*.test.ts'],
   collectCoverageFrom: ['src/**/*.ts'],
   moduleFileExtensions: ['ts', 'js', 'json'],
+  // Map .js imports to .ts files for ESM compatibility
+  // Map @turboshovel/shared to TypeScript source for testing
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^@turboshovel/shared$': '<rootDir>/../../packages/shared/src/index.ts',
+  },
   transform: {
     '^.+\\.tsx?$': [
       'ts-jest',
@@ -32,8 +38,8 @@ module.exports = {
       },
     ],
   },
-  // Transpile ESM-only packages
+  // Transpile ESM-only packages (including @turboshovel/shared)
   transformIgnorePatterns: [
-    'node_modules/(?!(mdast|unist|micromark|decode-named-character-reference|character-entities))',
+    'node_modules/(?!(@turboshovel|mdast|unist|micromark|decode-named-character-reference|character-entities))',
   ],
 };

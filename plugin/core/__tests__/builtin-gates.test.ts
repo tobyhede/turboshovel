@@ -1,6 +1,6 @@
 // plugin/hooks/hooks-app/__tests__/builtin-gates.test.ts
 import { executeBuiltinGate } from '../src/gate-loader.js';
-import { HookInput } from '../src/types.js';
+import { HookInput } from '@turboshovel/shared';
 import * as path from 'path';
 
 // Set CLAUDE_PLUGIN_ROOT for tests to point to plugin directory

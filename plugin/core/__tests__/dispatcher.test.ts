@@ -5,8 +5,7 @@ import {
   gateMatchesKeywords,
   gateMatchesFilePattern
 } from '../src/dispatcher.js';
-import { validateFilePatterns } from '../src/config.js';
-import { HookInput, HookConfig, GateConfig } from '../src/types.js';
+import { validateFilePatterns, HookInput, HookConfig, GateConfig } from '@turboshovel/shared';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -676,7 +675,7 @@ describe('gateMatchesFilePattern - debug logging', () => {
     mockDebugCalls = [];
 
     // Mock logger.debug to capture calls
-    const { logger } = await import('../src/logger');
+    const { logger } = await import('@turboshovel/shared');
     jest
       .spyOn(logger, 'debug')
       .mockImplementation(async (message: string, data?: Record<string, unknown>) => {

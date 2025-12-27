@@ -4,7 +4,7 @@ import {
   getErrorMessage,
   SessionLoadError,
   isFileNotFoundError
-} from '../src/errors.js';
+} from '@turboshovel/shared';
 
 describe('isNodeError', () => {
   it('returns true for NodeJS.ErrnoException', () => {

@@ -1,4 +1,4 @@
-import { HookInputSchema, parseHookInput, SessionStateSchema } from '../src/schemas.js';
+import { HookInputSchema, parseHookInput, SessionStateSchema } from '@turboshovel/shared';
 
 describe('HookInputSchema', () => {
   it('parses valid minimal input', () => {

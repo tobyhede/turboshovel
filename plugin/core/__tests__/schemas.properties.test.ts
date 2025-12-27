@@ -1,5 +1,5 @@
 import fc from 'fast-check';
-import { HookInputSchema, SessionStateSchema, parseHookInput } from '../src/schemas.js';
+import { HookInputSchema, SessionStateSchema, parseHookInput } from '@turboshovel/shared';
 
 describe('Schema Property Tests', () => {
   describe('HookInputSchema', () => {

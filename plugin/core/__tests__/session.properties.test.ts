@@ -1,6 +1,6 @@
 import fc from 'fast-check';
 import { Session } from '../src/session.js';
-import { SessionStateSchema } from '../src/schemas.js';
+import { SessionStateSchema } from '@turboshovel/shared';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';

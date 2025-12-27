@@ -1,6 +1,6 @@
 // plugin/hooks/hooks-app/__tests__/action-handler.test.ts
 import { handleAction } from '../src/action-handler.js';
-import { GateResult, GatesConfig } from '../src/types.js';
+import { GateResult, GatesConfig } from '@turboshovel/shared';
 
 const mockConfig: GatesConfig = {
   hooks: {},

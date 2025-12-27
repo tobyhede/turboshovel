@@ -1,6 +1,6 @@
 // plugin/hooks/hooks-app/__tests__/gate-loader.test.ts
 import { executeShellCommand, executeGate, loadPluginGate } from '../src/gate-loader.js';
-import { GateConfig, HookInput } from '../src/types.js';
+import { GateConfig, HookInput } from '@turboshovel/shared';
 import * as os from 'os';
 import * as fs from 'fs/promises';
 import * as path from 'path';
