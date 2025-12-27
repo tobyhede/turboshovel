@@ -78,7 +78,7 @@ export async function executeBuiltinGate(gateName: string, input: HookInput): Pr
     const moduleName = gateName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
 
     // Import the gate module dynamically
-    const gates = await import('./gates');
+    const gates = await import('./gates/index.js');
     const gateModule = (gates as any)[moduleName];
 
     if (!gateModule || typeof gateModule.execute !== 'function') {

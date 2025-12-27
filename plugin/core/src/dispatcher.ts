@@ -11,7 +11,7 @@ import { executeGate } from './gate-loader.js';
 import { handleAction } from './action-handler.js';
 import { Session } from './session.js';
 import { getWorkflowContext } from './workflow/context.js';
-import { trackTaskDispatch, handleSubagentStart, handleSubagentStop } from './workflow/hooks.js';
+import { trackTaskDispatch, handleSubagentStart, handleSubagentStop } from './workflow/hooks/index.js';
 import { minimatch } from 'minimatch';
 import path from 'path';
 
