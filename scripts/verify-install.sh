@@ -31,6 +31,13 @@ else
   docker build -f scripts/Dockerfile.test --target npm -t turboshovel-test .
 fi
 
-# Run interactive container
+# Persist Claude auth in project-local directory
+CLAUDE_DOCKER_DIR="$ROOT_DIR/.claude-docker"
+mkdir -p "$CLAUDE_DOCKER_DIR"
+
+# Run interactive container with mounted volumes
 echo "Starting interactive Docker container..."
-docker run -it --rm turboshovel-test "$SOURCE"
+echo "Auth persisted in: $CLAUDE_DOCKER_DIR"
+docker run -it --rm \
+  -v "$CLAUDE_DOCKER_DIR:/root/.claude" \
+  turboshovel-test "$SOURCE"
