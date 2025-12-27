@@ -5,11 +5,15 @@
  * IMPORTANT: These tests require the project to be built first!
  * Run: npm run build
  */
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
 import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
 import { WorkflowStateManager, createTaskNumber } from '@turboshovel/shared';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 interface CliResult {
   stdout: string;

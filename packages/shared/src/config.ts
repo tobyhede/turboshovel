@@ -148,24 +148,10 @@ export function resolvePluginPath(pluginName: string): string {
 
 /**
  * Get the plugin root directory from CLAUDE_PLUGIN_ROOT env var.
- * Falls back to computing relative to this file's location.
+ * Claude Code sets this automatically during hook execution.
  */
 function getPluginRoot(): string | null {
-  const envRoot = process.env.CLAUDE_PLUGIN_ROOT;
-  if (envRoot) {
-    return envRoot;
-  }
-
-  // Fallback: compute from this file's location
-  // This file is at: plugin/core/src/config.ts (dev)
-  // Or at: plugin/core/dist/config.js (built)
-  // Plugin root is: plugin/
-  try {
-    // Go up from src/ or dist/ -> core/ -> plugin/
-    return path.resolve(__dirname, '..', '..');
-  } catch {
-    return null;
-  }
+  return process.env.CLAUDE_PLUGIN_ROOT || null;
 }
 
 /**

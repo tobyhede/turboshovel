@@ -3,6 +3,10 @@ import { promisify } from 'util';
 import { join, dirname } from 'path';
 import { promises as fs } from 'fs';
 import { tmpdir } from 'os';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const execAsync = promisify(exec);
 

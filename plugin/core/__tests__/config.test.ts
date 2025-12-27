@@ -3,6 +3,14 @@ import { loadConfig, resolvePluginPath } from '@turboshovel/shared';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Set CLAUDE_PLUGIN_ROOT for tests to point to plugin directory
+// __dirname = plugin/core/__tests__, plugin root = plugin/ (2 levels up)
+process.env.CLAUDE_PLUGIN_ROOT = path.resolve(__dirname, '../..');
 
 describe('Config Loading', () => {
   let testDir: string;

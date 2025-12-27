@@ -2,6 +2,10 @@
 import { executeBuiltinGate } from '../src/gate-loader.js';
 import { HookInput } from '@turboshovel/shared';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Set CLAUDE_PLUGIN_ROOT for tests to point to plugin directory
 process.env.CLAUDE_PLUGIN_ROOT = path.resolve(__dirname, '../../..');

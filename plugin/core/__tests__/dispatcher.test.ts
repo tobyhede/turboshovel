@@ -1,4 +1,5 @@
 // plugin/hooks/hooks-app/__tests__/dispatcher.test.ts
+import { jest } from '@jest/globals';
 import {
   shouldProcessHook,
   dispatch,

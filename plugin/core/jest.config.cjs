@@ -4,19 +4,19 @@ module.exports = {
   testMatch: ['**/*.test.ts'],
   collectCoverageFrom: ['src/**/*.ts'],
   moduleFileExtensions: ['ts', 'js', 'json'],
+  extensionsToTreatAsEsm: ['.ts'],
   // Map .js imports to .ts files for ESM compatibility
-  // Map @turboshovel/shared to TypeScript source for testing
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
-    '^@turboshovel/shared$': '<rootDir>/../../packages/shared/src/index.ts',
   },
   transform: {
     '^.+\\.tsx?$': [
       'ts-jest',
       {
-        useESM: false,
+        useESM: true,
         tsconfig: {
-          module: 'commonjs',
+          module: 'NodeNext',
+          moduleResolution: 'NodeNext',
           target: 'ES2020',
           lib: ['ES2020'],
           strict: true,
@@ -25,15 +25,18 @@ module.exports = {
           skipLibCheck: true,
           forceConsistentCasingInFileNames: true,
           resolveJsonModule: true,
+          isolatedModules: true,
         },
       },
     ],
     '^.+\\.js$': [
       'ts-jest',
       {
-        useESM: false,
+        useESM: true,
         tsconfig: {
-          module: 'commonjs',
+          module: 'NodeNext',
+          moduleResolution: 'NodeNext',
+          isolatedModules: true,
         },
       },
     ],
