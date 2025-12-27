@@ -2,6 +2,7 @@
   "name": "@turboshovel/core",
   "version": "1.0.0",
   "description": "TypeScript hooks dispatcher for Turboshovel",
+  "type": "module",
   "main": "dist/cli.js",
   "scripts": {
     "build": "tsc",
@@ -28,6 +29,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@turboshovel/shared": "workspace:*",
     "commander": "^14.0.2",
     "js-yaml": "^4.1.1",
     "mdast-util-from-markdown": "^2.0.2",
