@@ -44,9 +44,9 @@ echo ""
 
 cd /test/project
 if [ "$SOURCE" = "local" ]; then
-  exec claude --plugin-dir /test/plugin
+  exec claude --plugin-dir /test/plugin --dangerously-skip-permissions
 else
   # For npm mode, install from marketplace
   claude plugin install turboshovel@turboshovel
-  exec claude
+  exec claude --dangerously-skip-permissions
 fi
