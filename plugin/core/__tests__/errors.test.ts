@@ -4,7 +4,7 @@ import {
   getErrorMessage,
   SessionLoadError,
   isFileNotFoundError
-} from '../src/errors';
+} from '../src/errors.js';
 
 describe('isNodeError', () => {
   it('returns true for NodeJS.ErrnoException', () => {

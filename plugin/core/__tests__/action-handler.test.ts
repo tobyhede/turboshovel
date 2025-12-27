@@ -1,6 +1,6 @@
 // plugin/hooks/hooks-app/__tests__/action-handler.test.ts
-import { handleAction } from '../src/action-handler';
-import { GateResult, GatesConfig } from '../src/types';
+import { handleAction } from '../src/action-handler.js';
+import { GateResult, GatesConfig } from '../src/types.js';
 
 const mockConfig: GatesConfig = {
   hooks: {},

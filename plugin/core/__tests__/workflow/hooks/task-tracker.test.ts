@@ -4,10 +4,10 @@ import * as fs from 'fs/promises';
 import {
   trackTaskDispatch,
   type TaskDispatchResult
-} from '../../../src/workflow/hooks/task-tracker';
-import { WorkflowStateManager } from '../../../src/workflow/state';
-import type { HookInput } from '../../../src/types';
-import { createTaskNumber } from '../../../src/workflow/types';
+} from '../../../src/workflow/hooks/task-tracker.js';
+import { WorkflowStateManager } from '../../../src/workflow/state.js';
+import type { HookInput } from '../../../src/types.js';
+import { createTaskNumber } from '../../../src/workflow/types.js';
 
 describe('trackTaskDispatch with TaskId', () => {
   let testDir: string;

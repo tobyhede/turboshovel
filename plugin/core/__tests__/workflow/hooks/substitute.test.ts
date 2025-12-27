@@ -1,6 +1,6 @@
-import { substituteVariables, getTaskPrompt } from '../../../src/workflow/hooks/substitute';
-import { createTaskNumber, type Task } from '../../../src/workflow/types';
-import type { TaskId } from '../../../src/workflow/task-id';
+import { substituteVariables, getTaskPrompt } from '../../../src/workflow/hooks/substitute.js';
+import { createTaskNumber, type Task } from '../../../src/workflow/types.js';
+import type { TaskId } from '../../../src/workflow/task-id.js';
 
 describe('substituteVariables', () => {
   it('substitutes $n with subtask number', () => {

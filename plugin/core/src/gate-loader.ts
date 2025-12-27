@@ -2,8 +2,8 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
-import { HookInput, GateResult, GateConfig, GatesConfig } from './types';
-import { resolvePluginPath, loadConfigFile } from './config';
+import { HookInput, GateResult, GateConfig, GatesConfig } from './types.js';
+import { resolvePluginPath, loadConfigFile } from './config.js';
 
 const execAsync = promisify(exec);
 

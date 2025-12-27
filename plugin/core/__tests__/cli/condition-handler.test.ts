@@ -1,5 +1,5 @@
-import { evaluateFailCondition } from '../../src/cli/condition-handler';
-import { createTaskNumber, type Task, type Conditions } from '../../src/workflow/types';
+import { evaluateFailCondition } from '../../src/cli/condition-handler.js';
+import { createTaskNumber, type Task, type Conditions } from '../../src/workflow/types.js';
 
 describe('evaluateFailCondition', () => {
   const makeTask = (conditions?: Conditions): Task => ({

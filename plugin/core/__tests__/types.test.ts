@@ -1,5 +1,5 @@
 // plugin/hooks/hooks-app/__tests__/types.test.ts
-import { HookInput, GateResult, GateConfig, SessionState } from '../src/types';
+import { HookInput, GateResult, GateConfig, SessionState } from '../src/types.js';
 
 describe('Types', () => {
   test('HookInput has required fields', () => {

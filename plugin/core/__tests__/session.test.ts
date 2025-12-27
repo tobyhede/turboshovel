@@ -1,4 +1,4 @@
-import { Session } from '../src/session';
+import { Session } from '../src/session.js';
 import { promises as fs } from 'fs';
 import { join, dirname } from 'path';
 import { tmpdir } from 'os';

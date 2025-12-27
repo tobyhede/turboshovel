@@ -1,5 +1,5 @@
 // plugin/hooks/hooks-app/__tests__/context.test.ts
-import { discoverContextFile, injectContext } from '../src/context';
+import { discoverContextFile, injectContext } from '../src/context.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';

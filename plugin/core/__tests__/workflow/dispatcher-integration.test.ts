@@ -2,10 +2,10 @@
 import { join } from 'path';
 import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
-import { dispatch } from '../../src/dispatcher';
-import { WorkflowStateManager } from '../../src/workflow/state';
-import type { HookInput } from '../../src/types';
-import { createTaskNumber } from '../../src/workflow/types';
+import { dispatch } from '../../src/dispatcher.js';
+import { WorkflowStateManager } from '../../src/workflow/state.js';
+import type { HookInput } from '../../src/types.js';
+import { createTaskNumber } from '../../src/workflow/types.js';
 
 describe('Dispatcher Workflow Integration', () => {
   let testDir: string;

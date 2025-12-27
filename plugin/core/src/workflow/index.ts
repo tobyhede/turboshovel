@@ -10,7 +10,7 @@
  *
  * @example
  * ```typescript
- * import { parseWorkflow, WorkflowStateManager, getWorkflowContext } from './workflow';
+ * import { parseWorkflow, WorkflowStateManager, getWorkflowContext } from './workflow.js';
  *
  * // Parse a workflow file
  * const tasks = parseWorkflow(markdownContent);
@@ -25,7 +25,7 @@
  *
  * @module workflow
  */
-export * from './types';
-export { WorkflowStateManager } from './state';
-export { parseWorkflow, WorkflowSyntaxError } from './parser';
-export { getWorkflowContext } from './context';
+export * from './types.js';
+export { WorkflowStateManager } from './state.js';
+export { parseWorkflow, WorkflowSyntaxError } from './parser.js';
+export { getWorkflowContext } from './context.js';

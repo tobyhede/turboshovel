@@ -1,6 +1,6 @@
 // plugin/hooks/hooks-app/__tests__/plugin-gates.integration.test.ts
-import { dispatch } from '../src/dispatcher';
-import { HookInput } from '../src/types';
+import { dispatch } from '../src/dispatcher.js';
+import { HookInput } from '../src/types.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';

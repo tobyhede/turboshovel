@@ -1,7 +1,7 @@
 // src/workflow/hooks/task-tracker.ts
-import { WorkflowStateManager } from '../state';
-import { parseTaskIdFromString, taskIdToString, type TaskId } from '../task-id';
-import type { HookInput } from '../../types';
+import { WorkflowStateManager } from '../state.js';
+import { parseTaskIdFromString, taskIdToString, type TaskId } from '../task-id.js';
+import type { HookInput } from '../../types.js';
 
 /** Maximum characters to show in task description before truncation */
 const DESCRIPTION_DISPLAY_LIMIT = 60;

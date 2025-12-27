@@ -1,6 +1,6 @@
 // src/workflow/parser/types.ts
 
-import type { Action, Task, Conditions, Prompt, Command, TaskNumber } from '../types';
+import type { Action, Task, Conditions, Prompt, Command, TaskNumber } from '../types.js';
 
 export class WorkflowSyntaxError extends Error {
   constructor(message: string) {

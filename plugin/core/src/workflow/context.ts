@@ -1,6 +1,6 @@
 // src/workflow/context.ts
-import { WorkflowStateManager } from './state';
-import type { WorkflowState } from './types';
+import { WorkflowStateManager } from './state.js';
+import type { WorkflowState } from './types.js';
 
 /**
  * Get workflow context for injection into agent prompts

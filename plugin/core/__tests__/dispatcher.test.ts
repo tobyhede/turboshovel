@@ -4,9 +4,9 @@ import {
   dispatch,
   gateMatchesKeywords,
   gateMatchesFilePattern
-} from '../src/dispatcher';
-import { validateFilePatterns } from '../src/config';
-import { HookInput, HookConfig, GateConfig } from '../src/types';
+} from '../src/dispatcher.js';
+import { validateFilePatterns } from '../src/config.js';
+import { HookInput, HookConfig, GateConfig } from '../src/types.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';

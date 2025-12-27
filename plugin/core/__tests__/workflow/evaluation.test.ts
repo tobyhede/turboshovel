@@ -1,5 +1,5 @@
-import { evaluateConditions } from '../../src/workflow/evaluation';
-import type { Conditions, TaskState } from '../../src/workflow/types';
+import { evaluateConditions } from '../../src/workflow/evaluation.js';
+import type { Conditions, TaskState } from '../../src/workflow/types.js';
 
 describe('evaluateConditions', () => {
   const passAction = { type: 'CONTINUE' as const };

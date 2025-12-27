@@ -1,5 +1,5 @@
 import fc from 'fast-check';
-import { HookInputSchema, SessionStateSchema, parseHookInput } from '../src/schemas';
+import { HookInputSchema, SessionStateSchema, parseHookInput } from '../src/schemas.js';
 
 describe('Schema Property Tests', () => {
   describe('HookInputSchema', () => {

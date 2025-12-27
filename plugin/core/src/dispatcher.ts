@@ -1,13 +1,13 @@
 // plugin/hooks/hooks-app/src/dispatcher.ts
-import { HookInput, HookConfig, GateConfig } from './types';
-import { loadConfig } from './config';
-import { injectContext } from './context';
-import { executeGate } from './gate-loader';
-import { handleAction } from './action-handler';
-import { Session } from './session';
-import { logger } from './logger';
-import { getWorkflowContext } from './workflow/context';
-import { trackTaskDispatch, handleSubagentStart, handleSubagentStop } from './workflow/hooks';
+import { HookInput, HookConfig, GateConfig } from './types.js';
+import { loadConfig } from './config.js';
+import { injectContext } from './context.js';
+import { executeGate } from './gate-loader.js';
+import { handleAction } from './action-handler.js';
+import { Session } from './session.js';
+import { logger } from './logger.js';
+import { getWorkflowContext } from './workflow/context.js';
+import { trackTaskDispatch, handleSubagentStart, handleSubagentStop } from './workflow/hooks.js';
 import { minimatch } from 'minimatch';
 import path from 'path';
 

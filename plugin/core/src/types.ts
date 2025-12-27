@@ -1,7 +1,7 @@
 // plugin/hooks/hooks-app/src/types.ts
 
 // Import HookInput from schemas (single source of truth for validation)
-import type { HookInput as SchemaHookInput } from './schemas';
+import type { HookInput as SchemaHookInput } from './schemas.js';
 
 // Re-export for consumers
 export type HookInput = SchemaHookInput;

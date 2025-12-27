@@ -4,18 +4,18 @@
 import { Command } from 'commander';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { WorkflowStateManager } from '../workflow/state';
-import { parseWorkflow, WorkflowSyntaxError } from '../workflow/parser';
-import { taskIdToString, parseTaskIdFromString } from '../workflow/task-id';
+import { WorkflowStateManager } from '../workflow/state.js';
+import { parseWorkflow, WorkflowSyntaxError } from '../workflow/parser.js';
+import { taskIdToString, parseTaskIdFromString } from '../workflow/task-id.js';
 import {
   createTaskNumber,
   incrementTaskNumber,
   type TaskNumber,
   type Action,
   type Task
-} from '../workflow/types';
-import { isNodeError, getErrorMessage } from '../errors';
-import { evaluateFailCondition } from './condition-handler';
+} from '../workflow/types.js';
+import { isNodeError, getErrorMessage } from '../errors.js';
+import { evaluateFailCondition } from './condition-handler.js';
 
 const program = new Command();
 

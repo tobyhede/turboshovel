@@ -1,5 +1,5 @@
-import type { TaskId } from '../task-id';
-import type { Task } from '../types';
+import type { TaskId } from '../task-id.js';
+import type { Task } from '../types.js';
 
 /**
  * Substitute workflow variables in a prompt string.

@@ -1,6 +1,6 @@
 // src/workflow/types.ts
 
-import type { TaskId } from './task-id';
+import type { TaskId } from './task-id.js';
 
 /**
  * Branded type for task numbers (1-indexed, never zero)
@@ -42,7 +42,7 @@ export function decrementTaskNumber(tn: TaskNumber): TaskNumber | null {
 /**
  * Re-export TaskId from task-id module
  */
-export type { TaskId } from './task-id';
+export type { TaskId } from './task-id.js';
 
 /**
  * Discriminated union for workflow actions

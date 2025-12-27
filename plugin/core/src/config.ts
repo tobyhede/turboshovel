@@ -1,9 +1,9 @@
 // plugin/hooks/hooks-app/src/config.ts
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { GatesConfig, HookConfig, GateConfig } from './types';
-import { fileExists } from './utils';
-import { logger } from './logger';
+import { GatesConfig, HookConfig, GateConfig } from './types.js';
+import { fileExists } from './utils.js';
+import { logger } from './logger.js';
 
 const KNOWN_HOOK_EVENTS = [
   'PreToolUse',

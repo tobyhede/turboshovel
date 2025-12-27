@@ -2,8 +2,8 @@
 import { join } from 'path';
 import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
-import { WorkflowStateManager } from '../../src/workflow/state';
-import { getWorkflowContext } from '../../src/workflow/context';
+import { WorkflowStateManager } from '../../src/workflow/state.js';
+import { getWorkflowContext } from '../../src/workflow/context.js';
 
 describe('Workflow Context Injection', () => {
   let testDir: string;

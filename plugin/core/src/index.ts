@@ -1,11 +1,11 @@
 // plugin/hooks/hooks-app/src/index.ts
 
 // Existing exports
-export { dispatch } from './dispatcher';
-export { executeGate } from './gate-loader';
-export { handleAction } from './action-handler';
-export { loadConfig } from './config';
-export { injectContext } from './context';
+export { dispatch } from './dispatcher.js';
+export { executeGate } from './gate-loader.js';
+export { handleAction } from './action-handler.js';
+export { loadConfig } from './config.js';
+export { injectContext } from './context.js';
 
 export type {
   HookInput,
@@ -14,12 +14,12 @@ export type {
   GateConfig,
   HookConfig,
   GatesConfig
-} from './types';
+} from './types.js';
 
 // New session exports
-export { Session } from './session';
-export type { SessionState, SessionStateArrayKey, SessionStateScalarKey } from './types';
+export { Session } from './session.js';
+export type { SessionState, SessionStateArrayKey, SessionStateScalarKey } from './types.js';
 
 // Logging exports
-export { logger } from './logger';
-export type { LogLevel } from './logger';
+export { logger } from './logger.js';
+export type { LogLevel } from './logger.js';

@@ -1,4 +1,4 @@
-import type { Action, Conditions, TaskState } from './types';
+import type { Action, Conditions, TaskState } from './types.js';
 
 /**
  * Evaluate aggregated conditions based on task states

@@ -1,6 +1,6 @@
 // __tests__/workflow/parser/parser.test.ts
-import { parseWorkflow } from '../../../src/workflow/parser/parser';
-import { WorkflowSyntaxError } from '../../../src/workflow/parser/types';
+import { parseWorkflow } from '../../../src/workflow/parser/parser.js';
+import { WorkflowSyntaxError } from '../../../src/workflow/parser/types.js';
 
 describe('parseWorkflow', () => {
   describe('basic parsing', () => {

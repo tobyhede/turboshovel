@@ -2,9 +2,9 @@
 import { join } from 'path';
 import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
-import { WorkflowStateManager } from '../../src/workflow/state';
-import { createTaskNumber } from '../../src/workflow/types';
-import type { TaskId } from '../../src/workflow/task-id';
+import { WorkflowStateManager } from '../../src/workflow/state.js';
+import { createTaskNumber } from '../../src/workflow/types.js';
+import type { TaskId } from '../../src/workflow/task-id.js';
 
 describe('WorkflowStateManager', () => {
   let testDir: string;

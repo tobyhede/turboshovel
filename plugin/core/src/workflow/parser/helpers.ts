@@ -1,8 +1,8 @@
 // src/workflow/parser/helpers.ts
 
-import { createTaskNumber, type Action, type Conditions, type TaskNumber } from '../types';
-import type { ParsedConditional, AggregationModifier } from './types';
-import { WorkflowSyntaxError } from './types';
+import { createTaskNumber, type Action, type Conditions, type TaskNumber } from '../types.js';
+import type { ParsedConditional, AggregationModifier } from './types.js';
+import { WorkflowSyntaxError } from './types.js';
 
 export interface ParsedSubtaskHeader {
   taskNumber: number;

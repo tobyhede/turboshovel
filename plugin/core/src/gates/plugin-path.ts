@@ -1,5 +1,5 @@
 // plugin/hooks/hooks-app/src/gates/plugin-path.ts
-import { HookInput, GateResult } from '../types';
+import { HookInput, GateResult } from '../types.js';
 import * as path from 'path';
 
 /**

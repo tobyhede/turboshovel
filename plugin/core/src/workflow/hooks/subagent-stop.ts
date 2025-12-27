@@ -1,8 +1,8 @@
 // src/workflow/hooks/subagent-stop.ts
-import { WorkflowStateManager } from '../state';
-import { taskIdToString } from '../task-id';
-import type { HookInput } from '../../types';
-import type { AgentBinding } from '../types';
+import { WorkflowStateManager } from '../state.js';
+import { taskIdToString } from '../task-id.js';
+import type { HookInput } from '../../types.js';
+import type { AgentBinding } from '../types.js';
 
 export interface SubagentStopResult {
   context?: string;

@@ -9,7 +9,7 @@ import {
   type Task,
   type WorkflowState,
   type Conditions
-} from '../../src/workflow/types';
+} from '../../src/workflow/types.js';
 
 describe('TaskNumber', () => {
   test('createTaskNumber with valid number returns TaskNumber', () => {

@@ -3,8 +3,8 @@ import {
   createTaskNumber,
   incrementTaskNumber,
   decrementTaskNumber
-} from '../../src/workflow/types';
-import { taskIdToString, parseTaskIdFromString } from '../../src/workflow/task-id';
+} from '../../src/workflow/types.js';
+import { taskIdToString, parseTaskIdFromString } from '../../src/workflow/task-id.js';
 
 describe('TaskId Property Tests', () => {
   // Generator for valid task numbers (1-999999)

@@ -1,10 +1,10 @@
 import {
   handleSubagentStart,
   type SubagentStartResult
-} from '../../../src/workflow/hooks/subagent-start';
-import { WorkflowStateManager } from '../../../src/workflow/state';
-import type { HookInput } from '../../../src/types';
-import { createTaskNumber } from '../../../src/workflow/types';
+} from '../../../src/workflow/hooks/subagent-start.js';
+import { WorkflowStateManager } from '../../../src/workflow/state.js';
+import type { HookInput } from '../../../src/types.js';
+import { createTaskNumber } from '../../../src/workflow/types.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';

@@ -5,4 +5,4 @@
  * All TypeScript gates are exported here for easy discovery and import.
  */
 
-export * as pluginPath from './plugin-path';
+export * as pluginPath from './plugin-path.js';

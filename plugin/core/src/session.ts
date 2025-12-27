@@ -1,9 +1,9 @@
 import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
-import { SessionState, SessionStateArrayKey } from './types';
-import { SessionStateSchema } from './schemas';
-import { SessionLoadResult, isNodeError, isFileNotFoundError } from './errors';
-import { logger } from './logger';
+import { SessionState, SessionStateArrayKey } from './types.js';
+import { SessionStateSchema } from './schemas.js';
+import { SessionLoadResult, isNodeError, isFileNotFoundError } from './errors.js';
+import { logger } from './logger.js';
 
 /**
  * Manages session state with atomic file updates.

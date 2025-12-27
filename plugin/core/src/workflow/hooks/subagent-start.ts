@@ -1,10 +1,10 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { WorkflowStateManager } from '../state';
-import { taskIdToString, type TaskId } from '../task-id';
-import { parseWorkflow } from '../parser/parser';
-import { substituteVariables, getTaskPrompt } from './substitute';
-import type { HookInput } from '../../types';
+import { WorkflowStateManager } from '../state.js';
+import { taskIdToString, type TaskId } from '../task-id.js';
+import { parseWorkflow } from '../parser/parser.js';
+import { substituteVariables, getTaskPrompt } from './substitute.js';
+import type { HookInput } from '../../types.js';
 
 export interface SubagentStartResult {
   context?: string;

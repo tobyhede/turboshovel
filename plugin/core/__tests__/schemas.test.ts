@@ -1,4 +1,4 @@
-import { HookInputSchema, parseHookInput, SessionStateSchema } from '../src/schemas';
+import { HookInputSchema, parseHookInput, SessionStateSchema } from '../src/schemas.js';
 
 describe('HookInputSchema', () => {
   it('parses valid minimal input', () => {
