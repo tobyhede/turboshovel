@@ -18,6 +18,8 @@ if [ "$SOURCE" = "local" ]; then
   # Create tarballs
   echo "Creating tarballs..."
   mkdir -p dist
+  rm -f dist/*.tgz
+  (cd packages/shared && npm pack --pack-destination "$ROOT_DIR/dist")
   (cd packages/cli && npm pack --pack-destination "$ROOT_DIR/dist")
 
   # Build Docker image with local artifacts

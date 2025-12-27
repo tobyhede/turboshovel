@@ -6,9 +6,11 @@ SOURCE="${1:-local}"  # "local" or "npm"
 echo "=== Turboshovel Test Environment ==="
 echo "Source: $SOURCE"
 
-# 1. Install CLI package
-echo "Installing @turboshovel/cli..."
+# 1. Install packages
+echo "Installing turboshovel packages..."
 if [ "$SOURCE" = "local" ]; then
+  # Install shared first (CLI dependency)
+  npm install -g ./packages/turboshovel-shared-*.tgz
   npm install -g ./packages/turboshovel-cli-*.tgz
 else
   npm install -g @turboshovel/cli
