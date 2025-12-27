@@ -1,10 +1,14 @@
 // plugin/hooks/hooks-app/src/cli.ts
-import { SessionState, SessionStateArrayKey, SESSION_STATE_KEYS } from './types.js';
-import type { HookInput } from './schemas.js';
-import { parseHookInput } from './schemas.js';
+import {
+  SessionState,
+  SessionStateArrayKey,
+  SESSION_STATE_KEYS,
+  type HookInput,
+  parseHookInput,
+  logger
+} from '@turboshovel/shared';
 import { dispatch } from './dispatcher.js';
 import { Session } from './session.js';
-import { logger } from './logger.js';
 
 interface OutputMessage {
   additionalContext?: string;

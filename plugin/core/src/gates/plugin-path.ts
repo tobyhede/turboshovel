@@ -1,5 +1,5 @@
 // plugin/hooks/hooks-app/src/gates/plugin-path.ts
-import { HookInput, GateResult } from '../types.js';
+import { HookInput, GateResult } from '@turboshovel/shared';
 import * as path from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';

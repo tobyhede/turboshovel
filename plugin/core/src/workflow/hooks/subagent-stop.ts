@@ -1,8 +1,10 @@
 // src/workflow/hooks/subagent-stop.ts
-import { WorkflowStateManager } from '../state.js';
-import { taskIdToString } from '../task-id.js';
-import type { HookInput } from '../../types.js';
-import type { AgentBinding } from '../types.js';
+import {
+  WorkflowStateManager,
+  taskIdToString,
+  type HookInput,
+  type AgentBinding
+} from '@turboshovel/shared';
 
 export interface SubagentStopResult {
   context?: string;

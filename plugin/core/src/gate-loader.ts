@@ -2,8 +2,14 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
-import { HookInput, GateResult, GateConfig, GatesConfig } from './types.js';
-import { resolvePluginPath, loadConfigFile } from './config.js';
+import {
+  HookInput,
+  GateResult,
+  GateConfig,
+  GatesConfig,
+  resolvePluginPath,
+  loadConfigFile
+} from '@turboshovel/shared';
 
 const execAsync = promisify(exec);
 

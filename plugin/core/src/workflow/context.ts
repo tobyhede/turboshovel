@@ -1,6 +1,5 @@
 // src/workflow/context.ts
-import { WorkflowStateManager } from './state.js';
-import type { WorkflowState } from './types.js';
+import { WorkflowStateManager, type WorkflowState } from '@turboshovel/shared';
 
 /**
  * Get workflow context for injection into agent prompts

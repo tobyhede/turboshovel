@@ -1,5 +1,4 @@
-import type { TaskId } from '../task-id.js';
-import type { Task } from '../types.js';
+import type { TaskId, Task } from '@turboshovel/shared';
 
 /**
  * Substitute workflow variables in a prompt string.

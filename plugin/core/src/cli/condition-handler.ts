@@ -1,4 +1,4 @@
-import type { Task, TaskNumber } from '../workflow/types.js';
+import type { Task, TaskNumber } from '@turboshovel/shared';
 
 export interface ConditionResult {
   action: 'retry' | 'blocked' | 'goto' | 'continue';

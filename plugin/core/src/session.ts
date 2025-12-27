@@ -1,9 +1,14 @@
 import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
-import { SessionState, SessionStateArrayKey } from './types.js';
-import { SessionStateSchema } from './schemas.js';
-import { SessionLoadResult, isNodeError, isFileNotFoundError } from './errors.js';
-import { logger } from './logger.js';
+import {
+  SessionState,
+  SessionStateArrayKey,
+  SessionStateSchema,
+  SessionLoadResult,
+  isNodeError,
+  isFileNotFoundError,
+  logger
+} from '@turboshovel/shared';
 
 /**
  * Manages session state with atomic file updates.

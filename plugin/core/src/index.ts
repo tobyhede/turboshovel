@@ -4,22 +4,23 @@
 export { dispatch } from './dispatcher.js';
 export { executeGate } from './gate-loader.js';
 export { handleAction } from './action-handler.js';
-export { loadConfig } from './config.js';
 export { injectContext } from './context.js';
 
-export type {
-  HookInput,
-  GateResult,
-  GateExecute,
-  GateConfig,
-  HookConfig,
-  GatesConfig
-} from './types.js';
+// Exports from @turboshovel/shared
+export {
+  loadConfig,
+  type HookInput,
+  type GateResult,
+  type GateExecute,
+  type GateConfig,
+  type HookConfig,
+  type GatesConfig,
+  type SessionState,
+  type SessionStateArrayKey,
+  type SessionStateScalarKey,
+  logger,
+  type LogLevel
+} from '@turboshovel/shared';
 
 // New session exports
 export { Session } from './session.js';
-export type { SessionState, SessionStateArrayKey, SessionStateScalarKey } from './types.js';
-
-// Logging exports
-export { logger } from './logger.js';
-export type { LogLevel } from './logger.js';

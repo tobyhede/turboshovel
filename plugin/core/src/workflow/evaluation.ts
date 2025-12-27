@@ -1,4 +1,4 @@
-import type { Action, Conditions, TaskState } from './types.js';
+import type { Action, Conditions, TaskState } from '@turboshovel/shared';
 
 /**
  * Evaluate aggregated conditions based on task states

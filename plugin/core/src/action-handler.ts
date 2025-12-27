@@ -1,5 +1,5 @@
 // plugin/hooks/hooks-app/src/action-handler.ts
-import { GateResult, GatesConfig, HookInput } from './types.js';
+import { GateResult, GatesConfig, HookInput } from '@turboshovel/shared';
 
 export interface ActionResult {
   continue: boolean;

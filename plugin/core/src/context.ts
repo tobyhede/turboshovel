@@ -3,10 +3,8 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { HookInput } from './types.js';
-import { fileExists } from './utils.js';
+import { HookInput, fileExists, logger } from '@turboshovel/shared';
 import { Session } from './session.js';
-import { logger } from './logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

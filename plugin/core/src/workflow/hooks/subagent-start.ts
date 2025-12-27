@@ -1,10 +1,13 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { WorkflowStateManager } from '../state.js';
-import { taskIdToString, type TaskId } from '../task-id.js';
-import { parseWorkflow } from '../parser/parser.js';
+import {
+  WorkflowStateManager,
+  taskIdToString,
+  type TaskId,
+  parseWorkflow,
+  type HookInput
+} from '@turboshovel/shared';
 import { substituteVariables, getTaskPrompt } from './substitute.js';
-import type { HookInput } from '../../types.js';
 
 export interface SubagentStartResult {
   context?: string;

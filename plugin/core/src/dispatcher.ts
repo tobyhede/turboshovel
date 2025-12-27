@@ -1,11 +1,15 @@
 // plugin/hooks/hooks-app/src/dispatcher.ts
-import { HookInput, HookConfig, GateConfig } from './types.js';
-import { loadConfig } from './config.js';
+import {
+  HookInput,
+  HookConfig,
+  GateConfig,
+  loadConfig,
+  logger
+} from '@turboshovel/shared';
 import { injectContext } from './context.js';
 import { executeGate } from './gate-loader.js';
 import { handleAction } from './action-handler.js';
 import { Session } from './session.js';
-import { logger } from './logger.js';
 import { getWorkflowContext } from './workflow/context.js';
 import { trackTaskDispatch, handleSubagentStart, handleSubagentStop } from './workflow/hooks.js';
 import { minimatch } from 'minimatch';
