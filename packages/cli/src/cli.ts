@@ -13,6 +13,7 @@ import {
   createTaskNumber,
   incrementTaskNumber,
   evaluateFailCondition,
+  evaluatePassCondition,
   isNodeError,
   getErrorMessage,
   type TaskNumber,
@@ -226,6 +227,49 @@ program
             console.log('All agents complete. Run: tsv next');
           }
           return;
+        }
+
+        // Handle --pass without --agent (main task passed)
+        if (options.pass && !options.agent) {
+          const workflowPath = await findWorkflowFile(cwd, state.workflow);
+          if (!workflowPath) {
+            console.error(`Error: Workflow file ${state.workflow} not found`);
+            process.exit(1);
+          }
+
+          const content = await fs.readFile(workflowPath, 'utf8');
+          const tasks = parseWorkflow(content);
+          const currentTask = tasks[state.task - 1];
+
+          const result = evaluatePassCondition(currentTask);
+
+          switch (result.action) {
+            case 'done':
+              console.log(`Workflow complete: ${state.workflow}`);
+              await manager.setActive(null);
+              return;
+
+            case 'blocked':
+              console.error(`Error: ${result.message || 'Task blocked'}`);
+              process.exit(1);
+              break;
+
+            case 'goto': {
+              const gotoTask = tasks[result.gotoTask! - 1];
+              await manager.update(state.id, {
+                task: result.gotoTask!,
+                taskName: gotoTask.description,
+                retryCount: 0
+              });
+              console.log(`Task ${result.gotoTask}: ${gotoTask.description}`);
+              printTaskGuidance(gotoTask);
+              return;
+            }
+
+            case 'continue':
+              // Fall through to normal advance
+              break;
+          }
         }
 
         // Handle --fail without --agent (main task failed)
