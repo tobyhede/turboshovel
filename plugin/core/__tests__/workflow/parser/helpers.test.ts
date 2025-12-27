@@ -6,7 +6,7 @@ import {
   parseConditional,
   convertConditionals,
   extractSubtaskHeader
-} from '../../../src/workflow/parser/helpers.js';
+} from '@turboshovel/shared';
 
 describe('stripSeparator', () => {
   test('strips colon separator', () => {

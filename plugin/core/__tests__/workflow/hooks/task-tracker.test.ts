@@ -5,9 +5,7 @@ import {
   trackTaskDispatch,
   type TaskDispatchResult
 } from '../../../src/workflow/hooks/task-tracker.js';
-import { WorkflowStateManager } from '../../../src/workflow/state.js';
-import type { HookInput } from '../../../src/types.js';
-import { createTaskNumber } from '../../../src/workflow/types.js';
+import { WorkflowStateManager, type HookInput, createTaskNumber } from '@turboshovel/shared';
 
 describe('trackTaskDispatch with TaskId', () => {
   let testDir: string;
