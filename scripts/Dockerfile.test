@@ -21,6 +21,9 @@ FROM base AS local
 COPY dist/*.tgz ./packages/
 COPY plugin/ ./plugin/
 
+# Install plugin dependencies
+RUN cd /test/plugin/core && npm install
+
 # NPM mode: minimal, installs from registry
 FROM base AS npm
 # No local artifacts needed - installs from npm registry at runtime
