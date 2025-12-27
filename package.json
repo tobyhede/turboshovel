@@ -2,7 +2,8 @@
   "name": "turboshovel-monorepo",
   "private": true,
   "scripts": {
-    "verify:install": "./scripts/verify-install.sh",
-    "verify:install:npm": "./scripts/verify-install.sh npm"
+    "verify:login": "./scripts/verify-install.sh login",
+    "verify:install": "./scripts/verify-install.sh verify",
+    "verify:install:npm": "./scripts/verify-install.sh verify-npm"
   }
 }
