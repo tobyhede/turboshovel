@@ -1,7 +1,7 @@
 import type { Task, TaskNumber } from './types.js';
 
 export interface ConditionResult {
-  action: 'retry' | 'blocked' | 'goto' | 'continue';
+  action: 'retry' | 'blocked' | 'goto' | 'continue' | 'done';
   newRetryCount?: number;
   gotoTask?: TaskNumber;
   message?: string;
@@ -70,5 +70,47 @@ export function evaluateFailCondition(
         action: 'blocked',
         message: 'Unknown FAIL action'
       };
+  }
+}
+
+/**
+ * Evaluate the PASS condition for a task.
+ *
+ * @param task - The task with conditions
+ * @returns Action to take based on PASS condition
+ */
+export function evaluatePassCondition(task: Task): ConditionResult {
+  if (!task.conditions) {
+    // Default: PASS means continue to next task
+    return { action: 'continue' };
+  }
+
+  const passAction = task.conditions.pass;
+
+  switch (passAction.type) {
+    case 'DONE':
+      return { action: 'done' };
+
+    case 'GOTO':
+      return {
+        action: 'goto',
+        gotoTask: passAction.task
+      };
+
+    case 'STOP':
+      return {
+        action: 'blocked',
+        message: passAction.message
+      };
+
+    case 'CONTINUE':
+      return { action: 'continue' };
+
+    case 'RETRY':
+      // RETRY doesn't make sense for PASS, treat as continue
+      return { action: 'continue' };
+
+    default:
+      return { action: 'continue' };
   }
 }
