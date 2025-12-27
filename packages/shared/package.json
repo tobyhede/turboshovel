@@ -1,0 +1,38 @@
+{
+  "name": "@turboshovel/shared",
+  "version": "1.0.0",
+  "description": "Shared workflow and configuration library for Turboshovel",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo 'No tests yet' && exit 0",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["turboshovel", "workflow", "shared"],
+  "author": "Toby Hede",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tobyhede/turboshovel"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.1",
+    "mdast-util-from-markdown": "^2.0.2",
+    "minimatch": "^10.1.1",
+    "unist-util-visit": "^5.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
