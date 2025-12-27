@@ -23,7 +23,18 @@ tsv --version
 echo "Installing turboshovel plugin..."
 if [ "$SOURCE" = "local" ]; then
   mkdir -p ~/.claude/plugins
-  cp -r ./plugin ~/.claude/plugins/turboshovel
+  cp -r /test/plugin ~/.claude/plugins/turboshovel
+
+  # Enable plugin in settings
+  mkdir -p ~/.claude
+  cat > ~/.claude/settings.json << 'EOF'
+{
+  "enabledPlugins": {
+    "turboshovel@local": true
+  }
+}
+EOF
+  echo "  Plugin installed and enabled"
 else
   claude plugin install turboshovel@turboshovel
 fi
