@@ -1,10 +1,15 @@
 // plugin/hooks/hooks-app/src/context.ts
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { HookInput } from './types.js';
 import { fileExists } from './utils.js';
 import { Session } from './session.js';
 import { logger } from './logger.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /**
  * Get the plugin root directory from CLAUDE_PLUGIN_ROOT env var.
