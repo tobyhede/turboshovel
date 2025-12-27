@@ -6,9 +6,8 @@
     "plugin/core"
   ],
   "scripts": {
-    "verify:login": "./scripts/verify-install.sh login",
-    "verify:install": "./scripts/verify-install.sh verify",
-    "verify:install:npm": "./scripts/verify-install.sh verify-npm",
+    "verify:claude": "./scripts/verify-install.sh",
+    "verify:claude:npm": "./scripts/verify-install.sh npm",
     "build": "npm run build -w packages/shared && npm run build -w packages/cli && npm run build -w plugin/core",
     "test": "npm run test -w packages/shared && npm run test -w packages/cli && npm run test -w plugin/core"
   }
