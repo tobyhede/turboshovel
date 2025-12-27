@@ -6,13 +6,13 @@ SOURCE="${1:-local}"  # "local" or "npm"
 echo "=== Turboshovel Test Environment ==="
 echo "Source: $SOURCE"
 
-# 1. Install packages
-echo "Installing turboshovel packages..."
-if [ "$SOURCE" = "local" ]; then
-  # Install both together so npm can resolve shared as CLI dependency
-  npm install -g ./packages/turboshovel-shared-*.tgz ./packages/turboshovel-cli-*.tgz
+# 1. Install packages (local mode: already installed during Docker build)
+if [ "$SOURCE" = "npm" ]; then
+  echo "Installing turboshovel packages from npm..."
+  # For npm mode, use sudo for global install
+  sudo npm install -g @turboshovel/cli
 else
-  npm install -g @turboshovel/cli
+  echo "Using pre-installed local packages..."
 fi
 
 # 2. Verify CLI

@@ -39,5 +39,5 @@ mkdir -p "$CLAUDE_DOCKER_DIR"
 echo "Starting interactive Docker container..."
 echo "Auth persisted in: $CLAUDE_DOCKER_DIR"
 docker run -it --rm \
-  -v "$CLAUDE_DOCKER_DIR:/root/.claude" \
+  -v "$CLAUDE_DOCKER_DIR:/home/testuser/.claude" \
   turboshovel-test "$SOURCE"
