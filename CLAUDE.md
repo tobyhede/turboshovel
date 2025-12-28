@@ -123,7 +123,7 @@ State persists in `.claude/turboshovel/workflows/` (workflow files) and `.claude
 
 ## Commands
 
-- `/turboshovel:verify` - N-Verification with consensus-based collation
+- `/turboshovel:verify` - Verify with consensus-based collation
 
 ## Documentation
 
