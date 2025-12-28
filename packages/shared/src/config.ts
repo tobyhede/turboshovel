@@ -1,7 +1,7 @@
 // packages/cli/src/config.ts
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { GatesConfig, HookConfig, GateConfig } from './types.js';
+import { TurboshovelConfig, HookConfig, GateConfig } from './types.js';
 import { fileExists } from './utils.js';
 import { logger } from './logger.js';
 
@@ -71,7 +71,7 @@ function validateGateConfig(gateName: string, gateConfig: GateConfig): void {
  * Validate config invariants to catch configuration errors early.
  * Throws descriptive errors when invariants are violated.
  */
-export function validateConfig(config: GatesConfig): void {
+export function validateConfig(config: TurboshovelConfig): void {
   // Invariant: Hook event names must be known types
   for (const hookName of Object.keys(config.hooks)) {
     if (!KNOWN_HOOK_EVENTS.includes(hookName)) {
@@ -157,7 +157,7 @@ function getPluginRoot(): string | null {
 /**
  * Load a single config file
  */
-export async function loadConfigFile(configPath: string): Promise<GatesConfig | null> {
+export async function loadConfigFile(configPath: string): Promise<TurboshovelConfig | null> {
   if (await fileExists(configPath)) {
     const content = await fs.readFile(configPath, 'utf-8');
     return JSON.parse(content);
@@ -170,7 +170,7 @@ export async function loadConfigFile(configPath: string): Promise<GatesConfig | 
  * - hooks: project hooks override plugin hooks for same event
  * - gates: project gates override plugin gates for same name
  */
-function mergeConfigs(pluginConfig: GatesConfig, projectConfig: GatesConfig): GatesConfig {
+function mergeConfigs(pluginConfig: TurboshovelConfig, projectConfig: TurboshovelConfig): TurboshovelConfig {
   return {
     hooks: {
       ...pluginConfig.hooks,
@@ -187,20 +187,20 @@ function mergeConfigs(pluginConfig: GatesConfig, projectConfig: GatesConfig): Ga
  * Load and merge project and plugin configs.
  *
  * Priority:
- * 1. Project: .claude/gates.json (highest)
- * 2. Project: gates.json
- * 3. Plugin: ${CLAUDE_PLUGIN_ROOT}/gates.json (fallback/defaults)
+ * 1. Project: .claude/turboshovel.json (highest)
+ * 2. Project: turboshovel.json
+ * 3. Plugin: ${CLAUDE_PLUGIN_ROOT}/turboshovel.json (fallback/defaults)
  *
  * Configs are MERGED - project overrides plugin for same keys.
  */
-export async function loadConfig(cwd: string): Promise<GatesConfig | null> {
+export async function loadConfig(cwd: string): Promise<TurboshovelConfig | null> {
   const pluginRoot = getPluginRoot();
 
   // Load plugin config first (defaults)
-  let mergedConfig: GatesConfig | null = null;
+  let mergedConfig: TurboshovelConfig | null = null;
 
   if (pluginRoot) {
-    const pluginConfigPath = path.join(pluginRoot, 'gates.json');
+    const pluginConfigPath = path.join(pluginRoot, 'turboshovel.json');
     const pluginConfig = await loadConfigFile(pluginConfigPath);
     if (pluginConfig) {
       await logger.debug('Loaded plugin gates.json', { path: pluginConfigPath });
@@ -209,7 +209,7 @@ export async function loadConfig(cwd: string): Promise<GatesConfig | null> {
   }
 
   // Load project config (overrides)
-  const projectPaths = [path.join(cwd, '.claude', 'gates.json'), path.join(cwd, 'gates.json')];
+  const projectPaths = [path.join(cwd, '.claude', 'turboshovel.json'), path.join(cwd, 'turboshovel.json')];
 
   for (const configPath of projectPaths) {
     const projectConfig = await loadConfigFile(configPath);
