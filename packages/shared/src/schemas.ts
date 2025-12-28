@@ -110,11 +110,14 @@ const TaskNumberSchema = z
 
 /**
  * Zod schema for TaskId branded type
- * Validates and transforms plain string to branded TaskId
+ * Validates object structure and transforms to branded TaskId
  */
 const TaskIdSchema = z
-  .string()
-  .transform((s): TaskId => s as unknown as TaskId);
+  .object({
+    task: TaskNumberSchema,
+    subtask: z.string().optional(),
+  })
+  .transform((obj): TaskId => obj as TaskId);
 
 /**
  * Workflow State Schema - Runtime Validation for Persisted WorkflowState
