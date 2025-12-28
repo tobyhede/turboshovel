@@ -107,7 +107,7 @@ export function parseWorkflow(markdown: string): Task[] {
   // Walk AST nodes
   visit(tree, (node: Node, index: number | undefined, parent: Node | undefined) => {
     // Handle H1 headings - reject if they look like task headers
-    if (node.type === 'heading' && node.depth === 1) {
+    if (isHeading(node) && node.depth === 1) {
       const headingText = extractText(node);
       const looksLikeTask = /^\d+[.:\-)\s]/.test(headingText);
       if (looksLikeTask) {
