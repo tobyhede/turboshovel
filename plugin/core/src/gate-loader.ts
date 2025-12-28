@@ -20,6 +20,48 @@ export interface ShellResult {
 }
 
 /**
+ * Type guard for execution errors from child_process
+ * Represents error objects that can be thrown by exec/execSync
+ */
+interface ExecError extends Error {
+  killed?: boolean;
+  signal?: string;
+  code?: number;
+  stdout?: string;
+  stderr?: string;
+}
+
+/**
+ * Type guard to safely access error properties
+ * Returns the error cast to ExecError, handling both CommonJS and ESM error objects
+ */
+function asExecError(error: unknown): ExecError {
+  // Check if error is an object with Error-like properties
+  // (handles both instanceof Error and plain objects from ESM)
+  if (error !== null && typeof error === 'object') {
+    const err = error as Record<string, unknown>;
+    return {
+      name: typeof err.name === 'string' ? err.name : 'Error',
+      message: typeof err.message === 'string' ? err.message : String(error),
+      killed: typeof err.killed === 'boolean' ? err.killed : false,
+      signal: typeof err.signal === 'string' ? err.signal : undefined,
+      code: typeof err.code === 'number' ? err.code : undefined,
+      stdout: typeof err.stdout === 'string' ? err.stdout : '',
+      stderr: typeof err.stderr === 'string' ? err.stderr : ''
+    };
+  }
+  return {
+    name: 'Error',
+    message: String(error),
+    killed: false,
+    signal: undefined,
+    code: 1,
+    stdout: '',
+    stderr: ''
+  };
+}
+
+/**
  * Execute shell command from gate configuration with timeout.
  *
  * SECURITY MODEL: gates.json is trusted configuration (project-controlled, not user input).
@@ -44,19 +86,17 @@ export async function executeShellCommand(
       output: stdout + stderr
     };
   } catch (error: unknown) {
-    const err = error as {
-      killed?: boolean;
-      signal?: string;
-      code?: number;
-      stdout?: string;
-      stderr?: string;
-    };
+    // Type guard - safely access error properties
+    const err = asExecError(error);
+
+    // Check for timeout: killed=true and signal='SIGTERM'
     if (err.killed && err.signal === 'SIGTERM') {
       return {
         exitCode: 124, // Standard timeout exit code
         output: `Command timed out after ${timeoutMs}ms`
       };
     }
+
     return {
       exitCode: err.code || 1,
       output: (err.stdout || '') + (err.stderr || '')

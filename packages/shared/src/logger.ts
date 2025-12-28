@@ -51,9 +51,9 @@ function isLoggingEnabled(): boolean {
  * TURBOSHOVEL_LOG_LEVEL=debug|info|warn|error (default: info)
  */
 function getMinLogLevel(): LogLevel {
-  const level = process.env.TURBOSHOVEL_LOG_LEVEL as LogLevel;
-  if (level && LOG_LEVELS[level] !== undefined) {
-    return level;
+  const envLevel = process.env.TURBOSHOVEL_LOG_LEVEL;
+  if (envLevel && LOG_LEVELS[envLevel as LogLevel] !== undefined) {
+    return envLevel as LogLevel;
   }
   return 'info';
 }

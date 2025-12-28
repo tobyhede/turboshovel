@@ -3,6 +3,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { createTaskNumber, type WorkflowState, type AgentBinding } from './types.js';
 import type { TaskId } from './task-id.js';
+import { WorkflowStateSchema } from '../schemas.js';
 
 const STATE_DIR = '.claude/turboshovel/workflows';
 const SESSION_FILE = '.claude/turboshovel/session.json';
@@ -100,7 +101,12 @@ export class WorkflowStateManager {
   async load(id: string): Promise<WorkflowState | null> {
     try {
       const content = await fs.readFile(this.statePath(id), 'utf8');
-      return JSON.parse(content) as WorkflowState;
+      const parsed = JSON.parse(content);
+      const result = WorkflowStateSchema.safeParse(parsed);
+      if (!result.success) {
+        return null;
+      }
+      return result.data as WorkflowState;
     } catch {
       return null;
     }

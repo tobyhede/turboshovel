@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { WorkflowState } from './workflow/types.js';
 
 /**
  * Zod schema for tool_input in Task tool calls
@@ -94,3 +95,44 @@ export const SessionStateSchema = z.object({
 });
 
 export type ValidatedSessionState = z.infer<typeof SessionStateSchema>;
+
+/**
+ * Workflow State Schema - Runtime Validation for Persisted WorkflowState
+ *
+ * Validates the structure of workflow state files to ensure data integrity
+ * when loading from disk. Uses safeParse() for non-fatal validation errors.
+ */
+export const WorkflowStateSchema = z.object({
+  id: z.string(),
+  workflow: z.string(),
+  task: z.number().positive().int(),
+  taskName: z.string(),
+  retryCount: z.number().nonnegative().int(),
+  retryMax: z.number().nonnegative().int(),
+  variables: z.record(z.string(), z.union([z.boolean(), z.number(), z.string()])),
+  tasks: z.array(z.object({
+    id: z.string(),
+    status: z.enum(['pending', 'running', 'complete', 'blocked']),
+    subagentType: z.string().optional(),
+    startedAt: z.string().optional(),
+    completedAt: z.string().optional()
+  })),
+  pendingTasks: z.array(z.string()),
+  agentBindings: z.record(z.string(), z.object({
+    taskId: z.string(),
+    childWorkflowId: z.string().optional(),
+    status: z.enum(['running', 'done', 'stopped']),
+    result: z.enum(['pass', 'fail']).optional()
+  })),
+  agentId: z.string().optional(),
+  parentWorkflowId: z.string().optional(),
+  parentTaskId: z.string().optional(),
+  nested: z.object({
+    workflow: z.string(),
+    instanceId: z.string()
+  }).optional(),
+  startedAt: z.string(),
+  updatedAt: z.string()
+});
+
+export type ValidatedWorkflowState = z.infer<typeof WorkflowStateSchema>;

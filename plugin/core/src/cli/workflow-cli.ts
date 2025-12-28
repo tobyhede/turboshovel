@@ -4,6 +4,7 @@
 import { Command } from 'commander';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { execSync, type ExecSyncOptions } from 'child_process';
 import {
   WorkflowStateManager,
   parseWorkflow,
@@ -606,11 +607,10 @@ program
         process.exit(1);
       }
 
-      const { execSync } = await import('child_process');
-      const options: any = {
+      const options: ExecSyncOptions = {
         cwd,
         stdio: 'inherit',
-        shell: true
+        shell: '/bin/bash'
       };
       execSync(gate.command, options);
       console.log(`Gate ${name}: PASS`);

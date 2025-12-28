@@ -2,7 +2,7 @@
 
 // Core types and schemas
 export * from './types.js';
-export { HookInputSchema, ParseResult, parseHookInput, SessionStateSchema, ValidatedSessionState } from './schemas.js';
+export { HookInputSchema, ParseResult, parseHookInput, SessionStateSchema, ValidatedSessionState, WorkflowStateSchema, ValidatedWorkflowState } from './schemas.js';
 
 // Errors
 export * from './errors.js';

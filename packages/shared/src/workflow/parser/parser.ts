@@ -2,6 +2,7 @@
 
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
+import type { Node } from 'unist';
 import type {
   Root,
   Heading,
@@ -96,7 +97,7 @@ export function parseWorkflow(markdown: string): Task[] {
   let implicitText = '';
 
   // Walk AST nodes
-  visit(tree, (node: any, index: any, parent: any) => {
+  visit(tree, (node: Node, index: number | undefined, parent: Node | undefined) => {
     // Handle H1 headings - reject if they look like task headers
     if (node.type === 'heading' && node.depth === 1) {
       const headingText = extractText(node);
