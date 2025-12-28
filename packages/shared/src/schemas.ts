@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MAX_TASK_NUMBER, type TaskNumber } from './workflow/types.js';
+import { MAX_TASK_NUMBER, type TaskNumber, type TaskId } from './workflow/types.js';
 import type { WorkflowState } from './workflow/types.js';
 
 /**
@@ -109,6 +109,14 @@ const TaskNumberSchema = z
   .transform((n): TaskNumber => n as TaskNumber);
 
 /**
+ * Zod schema for TaskId branded type
+ * Validates and transforms plain string to branded TaskId
+ */
+const TaskIdSchema = z
+  .string()
+  .transform((s): TaskId => s as unknown as TaskId);
+
+/**
  * Workflow State Schema - Runtime Validation for Persisted WorkflowState
  *
  * Validates the structure of workflow state files to ensure data integrity
@@ -129,16 +137,16 @@ export const WorkflowStateSchema = z.object({
     startedAt: z.string().optional(),
     completedAt: z.string().optional()
   })),
-  pendingTasks: z.array(z.string()),
+  pendingTasks: z.array(TaskIdSchema).readonly(),
   agentBindings: z.record(z.string(), z.object({
-    taskId: z.string(),
+    taskId: TaskIdSchema,
     childWorkflowId: z.string().optional(),
     status: z.enum(['running', 'done', 'stopped']),
     result: z.enum(['pass', 'fail']).optional()
   })),
   agentId: z.string().optional(),
   parentWorkflowId: z.string().optional(),
-  parentTaskId: z.string().optional(),
+  parentTaskId: TaskIdSchema.optional(),
   nested: z.object({
     workflow: z.string(),
     instanceId: z.string()

@@ -106,7 +106,7 @@ export class WorkflowStateManager {
       if (!result.success) {
         return null;
       }
-      return result.data as WorkflowState;
+      return result.data;
     } catch {
       return null;
     }
