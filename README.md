@@ -5,9 +5,9 @@ Automated quality enforcement and context injection via Claude Code's hook syste
 > **💡 CONTEXT INJECTION IS AUTOMATIC**
 >
 > Just create `.claude/context/{name}-{stage}.md` files - they auto-inject at the right time.
-> **No configuration files needed.** No gates.json. No setup.
+> **No configuration files needed.** No turboshovel.json. No setup.
 >
-> The `gates.json` file is ONLY for optional quality enforcement (lint, test, build checks).
+> The `turboshovel.json` file is ONLY for optional quality enforcement (lint, test, build checks).
 
 ## Installation
 
@@ -57,11 +57,11 @@ EOF
 
 ### Advanced: Quality Gates (Optional)
 
-**Need to enforce quality checks?** Add `gates.json` configuration:
+**Need to enforce quality checks?** Add `turboshovel.json` configuration:
 
 ```bash
 mkdir -p .claude
-cat > .claude/gates.json << 'EOF'
+cat > .claude/turboshovel.json << 'EOF'
 {
   "gates": {
     "check": {"command": "npm run lint", "on_fail": "BLOCK"},
@@ -82,18 +82,18 @@ See **[SETUP.md](SETUP.md)** for detailed gate configuration.
 ## How It Works
 
 ```
-Hook Event → Context Injection (AUTOMATIC) → [OPTIONAL: gates.json Gates] → Action
+Hook Event → Context Injection (AUTOMATIC) → [OPTIONAL: turboshovel.json Gates] → Action
                  ↓                                        ↓
           .claude/context/                         Quality checks
           (zero config!)                           Custom commands
-                                                   (requires gates.json)
+                                                   (requires turboshovel.json)
 ```
 
 1. **Context Injection** (AUTOMATIC): Always runs first, discovers `.claude/context/{name}-{stage}.md` files
-2. **Gate Execution** (OPTIONAL): If `gates.json` configured, runs quality checks/custom commands
+2. **Gate Execution** (OPTIONAL): If `turboshovel.json` configured, runs quality checks/custom commands
 3. **Action Handling**: CONTINUE, BLOCK, STOP, or chain to another gate
 
-**Context injection works standalone - gates.json is only for optional quality enforcement.**
+**Context injection works standalone - turboshovel.json is only for optional quality enforcement.**
 
 See **[ARCHITECTURE.md](ARCHITECTURE.md)** for detailed system design.
 
@@ -194,7 +194,7 @@ See **[CONVENTIONS.md](CONVENTIONS.md)** for full documentation.
 
 **Most users only need context files.** Gates are for optional quality enforcement and custom commands.
 
-Gates are defined in `gates.json` and can be:
+Gates are defined in `turboshovel.json` and can be:
 
 ### Monorepo Support
 
@@ -296,7 +296,7 @@ The plugin provides placeholder shell gates that you can override with your proj
 | `test` | Run test suite | test, testing, spec, verify | Placeholder (configure) |
 | `build` | Build project | build, compile, package | Placeholder (configure) |
 
-**To configure:** Override in your `.claude/gates.json`:
+**To configure:** Override in your `.claude/turboshovel.json`:
 
 ```json
 {
@@ -370,9 +370,9 @@ Gates can define `keywords` to only run when the user message contains matching 
 The system merges plugin and project configurations:
 
 ```
-plugin/core/gates.json     (defaults)
+plugin/core/turboshovel.json     (defaults)
         ↓ merged with
-.claude/gates.json          (project overrides)
+.claude/turboshovel.json          (project overrides)
         ↓
 Merged Configuration        (project takes precedence)
 ```
@@ -386,7 +386,7 @@ When using turboshovel alongside other Claude Code plugins:
 **✅ DO:**
 - Enable plugins in `.claude/settings.local.json` using `enabledPlugins`
 - Let Claude Code handle `${CLAUDE_PLUGIN_ROOT}` automatically per-plugin
-- Reference cross-plugin gates using the `plugin` field in gates.json
+- Reference cross-plugin gates using the `plugin` field in turboshovel.json
 
 **❌ DON'T:**
 - Set `CLAUDE_PLUGIN_ROOT` in project-level `env` configuration
