@@ -317,21 +317,21 @@ The plugin provides three example configurations:
 
 ### Strict Mode (Block on Failures)
 ```bash
-cp examples/strict.json .claude/gates.json
+cp examples/strict.json .claude/turboshovel.json
 ```
 
 Best for: Production code, established projects
 
 ### Permissive Mode (Warn Only)
 ```bash
-cp examples/permissive.json .claude/gates.json
+cp examples/permissive.json .claude/turboshovel.json
 ```
 
 Best for: Prototyping, learning, experimental work
 
 ### Pipeline Mode (Chained Gates)
 ```bash
-cp examples/pipeline.json .claude/gates.json
+cp examples/pipeline.json .claude/turboshovel.json
 ```
 
 Best for: Complex workflows, auto-formatting before checks
@@ -340,15 +340,15 @@ Best for: Complex workflows, auto-formatting before checks
 
 ### Disable Quality Hooks Entirely
 
-Remove or rename your project's `gates.json`:
+Remove or rename your project's `turboshovel.json`:
 
 ```bash
-mv .claude/gates.json .claude/gates.json.disabled
+mv .claude/turboshovel.json .claude/turboshovel.json.disabled
 ```
 
 ### Disable Specific Hooks
 
-Edit `gates.json` to remove hooks:
+Edit `turboshovel.json` to remove hooks:
 
 ```json
 {
@@ -518,7 +518,7 @@ Let Claude Code handle `${CLAUDE_PLUGIN_ROOT}` dynamically - it will set the cor
 
 ```bash
 # Validate JSON
-jq . .claude/gates.json
+jq . .claude/turboshovel.json
 
 # Common errors:
 # - Missing commas between items

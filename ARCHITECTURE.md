@@ -181,10 +181,10 @@ Loads both configs and merges them:
 
 ```typescript
 // Load plugin defaults first
-const pluginConfig = await loadConfigFile(`${CLAUDE_PLUGIN_ROOT}/gates.json`);
+const pluginConfig = await loadConfigFile(`${CLAUDE_PLUGIN_ROOT}/turboshovel.json`);
 
 // Load project overrides
-const projectConfig = await loadConfigFile('.claude/gates.json');
+const projectConfig = await loadConfigFile('.claude/turboshovel.json');
 
 // Merge: project overrides plugin
 const mergedConfig = {
