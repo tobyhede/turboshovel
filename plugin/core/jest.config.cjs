@@ -6,6 +6,9 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   extensionsToTreatAsEsm: ['.ts'],
   // Map .js imports to .ts files for ESM compatibility
+  // Note: @turboshovel/shared is NOT mapped here - we use the compiled dist/
+  // output rather than TypeScript source. This is required for ESM mode because
+  // dynamic imports (e.g., in gate-loader.ts) need properly compiled .js files.
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },

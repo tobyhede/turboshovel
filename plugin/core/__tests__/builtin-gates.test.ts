@@ -8,7 +8,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Set CLAUDE_PLUGIN_ROOT for tests to point to plugin directory
-process.env.CLAUDE_PLUGIN_ROOT = path.resolve(__dirname, '../../..');
+// __dirname = plugin/core/__tests__, plugin root = plugin/ (2 levels up)
+process.env.CLAUDE_PLUGIN_ROOT = path.resolve(__dirname, '../..');
 
 describe('Built-in Gates', () => {
   describe('plugin-path', () => {

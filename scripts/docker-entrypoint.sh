@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# Docker Permission Model:
+# - Container runs as non-root 'testuser' (Claude Code blocks --dangerously-skip-permissions with root)
+# - testuser has passwordless sudo for npm global installs
+# - Local mode: packages pre-installed during Docker build (as root)
+# - NPM mode: packages installed at runtime via sudo npm install -g
+
 SOURCE="${1:-local}"  # "local" or "npm"
 
 echo "=== Turboshovel Test Environment ==="
