@@ -1,9 +1,9 @@
 ---
-name: n-verification
+name: verifying-by-consensus
 description: Dispatch N independent review agents, collate by consensus ratio, cross-check exclusive findings
 ---
 
-# N-Verification Skill
+# Verifying by Consensus
 
 ## Overview
 
@@ -31,7 +31,7 @@ Dispatch N agents to independently review the same subject. Collate findings:
 
 ## Process
 
-**Announce:** "I'm using the n-verification skill to verify [subject]."
+**Announce:** "I'm using the verifying-by-consensus skill to verify [subject]."
 
 ### Phase 1: Dispatch
 
