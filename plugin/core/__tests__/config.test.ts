@@ -1,5 +1,6 @@
 // plugin/hooks/hooks-app/__tests__/config.test.ts
 import { loadConfig, resolvePluginPath } from '@turboshovel/shared';
+import { TurboshovelConfig } from '@turboshovel/shared';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -33,23 +34,23 @@ describe('Config Loading', () => {
     expect(config?.gates).toBeDefined();
   });
 
-  test('loads .claude/gates.json with highest priority', async () => {
+  test('loads .claude/turboshovel.json with highest priority', async () => {
     const claudeDir = path.join(testDir, '.claude');
     await fs.mkdir(claudeDir);
 
     const config1 = { hooks: {}, gates: { test: { command: 'claude-config' } } };
     const config2 = { hooks: {}, gates: { test: { command: 'root-config' } } };
 
-    await fs.writeFile(path.join(claudeDir, 'gates.json'), JSON.stringify(config1));
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(config2));
+    await fs.writeFile(path.join(claudeDir, 'turboshovel.json'), JSON.stringify(config1));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(config2));
 
     const config = await loadConfig(testDir);
     expect(config?.gates.test.command).toBe('claude-config');
   });
 
-  test('loads gates.json from root when .claude does not exist', async () => {
+  test('loads turboshovel.json from root when .claude does not exist', async () => {
     const config1 = { hooks: {}, gates: { test: { command: 'root-config' } } };
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(config1));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(config1));
 
     const config = await loadConfig(testDir);
     expect(config?.gates.test.command).toBe('root-config');
@@ -69,7 +70,7 @@ describe('Config Loading', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(configObj));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(configObj));
 
     const config = await loadConfig(testDir);
     expect(config?.hooks.PostToolUse.enabled_tools).toEqual(['Edit', 'Write']);
@@ -84,7 +85,7 @@ describe('Config Loading', () => {
       gates: {}
     };
 
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(configObj));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(configObj));
 
     await expect(loadConfig(testDir)).rejects.toThrow('Unknown hook event');
   });
@@ -97,7 +98,7 @@ describe('Config Loading', () => {
       gates: {}
     };
 
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(configObj));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(configObj));
 
     await expect(loadConfig(testDir)).rejects.toThrow('references undefined gate');
   });
@@ -112,7 +113,7 @@ describe('Config Loading', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(configObj));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(configObj));
 
     await expect(loadConfig(testDir)).rejects.toThrow(
       'is not CONTINUE/BLOCK/STOP or valid gate name'
@@ -201,7 +202,7 @@ describe('Gate Config Validation', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(configObj));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(configObj));
     await expect(loadConfig(testDir)).rejects.toThrow(
       "Gate 'test' has 'plugin' but missing 'gate' field"
     );
@@ -215,7 +216,7 @@ describe('Gate Config Validation', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(configObj));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(configObj));
     await expect(loadConfig(testDir)).rejects.toThrow(
       "Gate 'test' has 'gate' but missing 'plugin' field"
     );
@@ -233,7 +234,7 @@ describe('Gate Config Validation', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(configObj));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(configObj));
     await expect(loadConfig(testDir)).rejects.toThrow(
       "Gate 'test' cannot have both 'command' and 'plugin/gate'"
     );
@@ -247,7 +248,7 @@ describe('Gate Config Validation', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(configObj));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(configObj));
     // Should not throw validation error for structure
     // (May fail later when trying to resolve plugin, which is acceptable)
     const config = await loadConfig(testDir);
