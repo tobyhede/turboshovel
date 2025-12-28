@@ -13,7 +13,7 @@ Turboshovel is a Claude Code plugin providing a generic hook framework for quali
 
 ## Configuration
 
-Create `.claude/gates.json` with your project commands:
+Create `.claude/turboshovel.json` with your project commands:
 
 ```json
 {
