@@ -118,7 +118,7 @@ export function parseWorkflow(markdown: string): Task[] {
     }
 
     // Handle H2 headings - these are task headers
-    if (node.type === 'heading' && node.depth === 2) {
+    if (isHeading(node) && node.depth === 2) {
       // Finalize previous task
       if (currentTask) {
         tasks.push(finalizeTask(currentTask, pendingConditionals, implicitText));
