@@ -1,8 +1,8 @@
 // plugin/hooks/hooks-app/__tests__/action-handler.test.ts
 import { handleAction } from '../src/action-handler.js';
-import { GateResult, GatesConfig } from '@turboshovel/shared';
+import { GateResult, TurboshovelConfig } from '@turboshovel/shared';
 
-const mockConfig: GatesConfig = {
+const mockConfig: TurboshovelConfig = {
   hooks: {},
   gates: {
     'next-gate': { command: 'echo "next"', on_pass: 'CONTINUE' }
