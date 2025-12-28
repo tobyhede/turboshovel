@@ -15,7 +15,7 @@ describe('Dispatcher Workflow Integration', () => {
     // Create minimal config
     await fs.mkdir(join(testDir, '.claude'), { recursive: true });
     await fs.writeFile(
-      join(testDir, '.claude/gates.json'),
+      join(testDir, '.claude/turboshovel.json'),
       JSON.stringify({ gates: {}, hooks: {} })
     );
   });

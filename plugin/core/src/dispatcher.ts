@@ -275,16 +275,16 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
   // 2. Load config for additional gates (optional)
   const config = await loadConfig(cwd);
   if (!config) {
-    await logger.debug('No gates.json config found', { cwd });
-    // Return context injection result even without gates.json
+    await logger.debug('No turboshovel.json config found', { cwd });
+    // Return context injection result even without turboshovel.json
     return accumulatedContext ? { context: accumulatedContext } : {};
   }
 
   // 3. Check if hook event has additional gates configured
   const hookConfig = config.hooks[hookEvent];
   if (!hookConfig) {
-    await logger.debug('Hook event not configured in gates.json', { event: hookEvent });
-    // Return context injection result even if hook not in gates.json
+    await logger.debug('Hook event not configured in turboshovel.json', { event: hookEvent });
+    // Return context injection result even if hook not in turboshovel.json
     return accumulatedContext ? { context: accumulatedContext } : {};
   }
 
@@ -299,7 +299,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
     return accumulatedContext ? { context: accumulatedContext } : {};
   }
 
-  // 5. Run additional gates in sequence (from gates.json)
+  // 5. Run additional gates in sequence (from turboshovel.json)
   const gates = hookConfig.gates || [];
   let gatesExecuted = 0;
 

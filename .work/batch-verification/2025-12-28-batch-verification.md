@@ -4,7 +4,7 @@
 
 **Goal:** Add batch verification capability to systematically verify large content (docs, code) that exceeds agent context limits, with progress persistence, cycle tracking, and multi-workflow support.
 
-**Architecture:** CLI (`tsv batch`) generates token-based batches. Workflow orchestrates verification. N-verification runs per batch. Reports use standardized Markdown+YAML format. Named workflows enable long-running verification across sessions.
+**Architecture:** CLI (`tsv batch`) generates token-based batches. Workflow orchestrates verification. N-verification runs per batch. Reports are pure markdown (agents read/write directly). Named workflows enable long-running verification across sessions.
 
 **Tech Stack:** TypeScript, Node.js, existing turboshovel workflow system, glob patterns, SHA-256 hashing.
 
@@ -12,7 +12,7 @@
 
 ## Phase 0: Standard Report Format
 
-Standardize n-verification report format BEFORE adding batch features. This ensures batch verification reuses the same format.
+Standardize verification report format BEFORE adding batch features. This ensures batch verification reuses the same format.
 
 ---
 
@@ -28,83 +28,62 @@ Create `plugin/templates/verify-report.md`:
 ```markdown
 # Verification Report Template
 
-Use this template for ALL verification report output.
+Use this template for ALL verification report output. Pure markdown - no YAML, no structured data.
 
 ## Report Structure
 
-Reports use Markdown with YAML frontmatter for machine parsing.
-
-### Frontmatter (Required)
-
-```yaml
----
-type: verification-report
-subject: <glob pattern or description>
-verified_at: <ISO timestamp>
-files_reviewed: <count>
-agents_used: <count>
-stats:
-  common: <count>
-  validated: <count>
-  invalidated: <count>
-  uncertain: <count>
----
-```
-
-### Findings Block
-
-Place findings in a YAML code block between markers:
-
 ```markdown
-<!-- FINDINGS_START -->
-```yaml
-- id: 1
-  file: path/to/file.md
-  line: 42
-  confidence: common|validated|invalidated|uncertain
-  issue: One-line summary
-  detail: Extended explanation (optional)
-  suggestion: Proposed fix (optional)
-  found_by: [1, 2] (agent indices, for exclusive findings)
-  validation: confirmed|disproven|uncertain (for exclusive findings)
-  evidence: path/to/evidence.ts:42 (optional)
-  question: Decision needed? (for uncertain findings)
-  status: pending|done|skipped
-```
-<!-- FINDINGS_END -->
-```
+# Verification Report
 
-### Human Summary Section
+**Subject:** `<glob pattern or description>`
+**Date:** <YYYY-MM-DD>
+**Files:** <count> | **Agents:** <count>
 
-After findings, add tables organized by confidence tier:
+---
 
-```markdown
+## Findings
+
+### COMMON (all agents agree)
+
+#### 1. path/to/file.md:42 - Issue title
+Description of the issue.
+**Suggestion:** How to fix it.
+
+### VALIDATED (cross-checked)
+
+#### 2. path/to/file.md:88 - Issue title
+Description of the issue.
+**Evidence:** `path/to/evidence.ts:42`
+**Suggestion:** How to fix it.
+
+### UNCERTAIN (needs decision)
+
+#### 3. path/to/file.md:200 - Issue title
+Description of the issue.
+**Question:** What decision is needed?
+
+---
+
 ## Summary
 
-### COMMON (high confidence) - N findings
-| File | Line | Issue |
-|------|------|-------|
-| path/to/file.md | 42 | Issue summary |
+| Tier | Count |
+|------|-------|
+| COMMON | N |
+| VALIDATED | N |
+| UNCERTAIN | N |
 
-### VALIDATED (medium confidence) - N findings
-| File | Line | Issue | Evidence |
-|------|------|-------|----------|
-| path/to/file.md | 42 | Issue summary | evidence.ts:42 |
-
-### UNCERTAIN (needs decision) - N findings
-| File | Line | Issue | Question |
-|------|------|-------|----------|
-| path/to/file.md | 42 | Issue summary | Question? |
-```
-
-### Next Steps Section
-
-```markdown
 ## Next Steps
 
 Run `tsv revise` to address COMMON and VALIDATED findings.
 Review UNCERTAIN findings manually before proceeding.
 ```
+
+## Key Points
+
+- **No structured data blocks** - pure markdown throughout
+- **Agents read markdown directly** - no parsing needed
+- **Consistent heading structure** - findings organized by confidence tier
+- **File:line format** - `path/to/file.md:42` for easy navigation
 ```
 
 **Step 2: Verify file created**
@@ -121,14 +100,14 @@ git commit -m "feat(verify): add standard report template"
 
 ---
 
-### Task 0.2: Update N-Verification Skill to Reference Template
+### Task 0.2: Update Verifying-by-Consensus Skill to Reference Template
 
 **Files:**
-- Modify: `plugin/skills/n-verification/SKILL.md`
+- Modify: `plugin/skills/verifying-by-consensus/SKILL.md`
 
 **Step 1: Read current skill file**
 
-Run: `cat plugin/skills/n-verification/SKILL.md`
+Run: `cat plugin/skills/verifying-by-consensus/SKILL.md`
 
 **Step 2: Add template reference to Output Files section**
 
@@ -156,208 +135,15 @@ After all agents complete, dispatch collation:
 - Read all N review files
 - Compare findings across agents
 - **Output using standard report template** (`verify-report.md`)
-- Categorize by consensus:
-  - **common:** All agents found this issue
-  - **validated/invalidated/uncertain:** Filled in during cross-check
+- Organize findings by confidence tier (COMMON, VALIDATED, UNCERTAIN)
+- Use `file:line` format for navigation
 ```
 
 **Step 4: Commit**
 
 ```bash
-git add plugin/skills/n-verification/SKILL.md
+git add plugin/skills/verifying-by-consensus/SKILL.md
 git commit -m "feat(verify): reference standard report template in skill"
-```
-
----
-
-### Task 0.3: Create Report Parser Utility
-
-**Files:**
-- Create: `packages/shared/src/report-parser.ts`
-- Create: `packages/shared/src/report-parser.test.ts`
-
-**Step 1: Write the failing test**
-
-Create `packages/shared/src/report-parser.test.ts`:
-
-```typescript
-import { describe, it, expect } from 'vitest';
-import { parseVerificationReport, type Finding } from './report-parser.js';
-
-const SAMPLE_REPORT = `---
-type: verification-report
-subject: docs/**/*.md
-verified_at: 2025-12-28T12:00:00Z
-files_reviewed: 5
-agents_used: 2
-stats:
-  common: 2
-  validated: 1
-  invalidated: 0
-  uncertain: 1
----
-
-# Verification Report
-
-<!-- FINDINGS_START -->
-\`\`\`yaml
-- id: 1
-  file: docs/README.md
-  line: 42
-  confidence: common
-  issue: Outdated reference
-  status: pending
-
-- id: 2
-  file: docs/API.md
-  line: 10
-  confidence: validated
-  issue: Missing parameter
-  validation: confirmed
-  status: pending
-\`\`\`
-<!-- FINDINGS_END -->
-
-## Summary
-`;
-
-describe('parseVerificationReport', () => {
-  it('parses frontmatter metadata', () => {
-    const result = parseVerificationReport(SAMPLE_REPORT);
-
-    expect(result.metadata.type).toBe('verification-report');
-    expect(result.metadata.subject).toBe('docs/**/*.md');
-    expect(result.metadata.files_reviewed).toBe(5);
-    expect(result.metadata.agents_used).toBe(2);
-    expect(result.metadata.stats.common).toBe(2);
-  });
-
-  it('parses findings from YAML block', () => {
-    const result = parseVerificationReport(SAMPLE_REPORT);
-
-    expect(result.findings).toHaveLength(2);
-    expect(result.findings[0].id).toBe(1);
-    expect(result.findings[0].file).toBe('docs/README.md');
-    expect(result.findings[0].confidence).toBe('common');
-  });
-
-  it('returns empty findings for report without FINDINGS block', () => {
-    const minimal = `---
-type: verification-report
-subject: test
-verified_at: 2025-12-28T12:00:00Z
-files_reviewed: 0
-agents_used: 0
-stats:
-  common: 0
-  validated: 0
-  invalidated: 0
-  uncertain: 0
----
-
-# Report
-`;
-    const result = parseVerificationReport(minimal);
-    expect(result.findings).toHaveLength(0);
-  });
-});
-```
-
-**Step 2: Run test to verify it fails**
-
-Run: `cd packages/shared && npm test -- --run report-parser`
-Expected: FAIL with "Cannot find module './report-parser.js'"
-
-**Step 3: Write minimal implementation**
-
-Create `packages/shared/src/report-parser.ts`:
-
-```typescript
-import * as yaml from 'yaml';
-
-export interface ReportMetadata {
-  type: string;
-  subject: string;
-  verified_at: string;
-  files_reviewed: number;
-  agents_used: number;
-  stats: {
-    common: number;
-    validated: number;
-    invalidated: number;
-    uncertain: number;
-  };
-}
-
-export interface Finding {
-  id: number;
-  file: string;
-  line: number;
-  confidence: 'common' | 'validated' | 'invalidated' | 'uncertain';
-  issue: string;
-  detail?: string;
-  suggestion?: string;
-  found_by?: number[];
-  validation?: 'confirmed' | 'disproven' | 'uncertain';
-  evidence?: string;
-  question?: string;
-  status: 'pending' | 'done' | 'skipped';
-}
-
-export interface VerificationReport {
-  metadata: ReportMetadata;
-  findings: Finding[];
-  raw: string;
-}
-
-/**
- * Parse a verification report from Markdown with YAML frontmatter.
- */
-export function parseVerificationReport(content: string): VerificationReport {
-  // Extract frontmatter
-  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-  if (!frontmatterMatch) {
-    throw new Error('Report missing YAML frontmatter');
-  }
-
-  const metadata = yaml.parse(frontmatterMatch[1]) as ReportMetadata;
-
-  // Extract findings block
-  const findingsMatch = content.match(
-    /<!-- FINDINGS_START -->\s*```yaml\s*([\s\S]*?)```\s*<!-- FINDINGS_END -->/
-  );
-
-  let findings: Finding[] = [];
-  if (findingsMatch) {
-    findings = yaml.parse(findingsMatch[1]) as Finding[];
-  }
-
-  return {
-    metadata,
-    findings,
-    raw: content,
-  };
-}
-```
-
-**Step 4: Run test to verify it passes**
-
-Run: `cd packages/shared && npm test -- --run report-parser`
-Expected: PASS
-
-**Step 5: Add export to index**
-
-Add to `packages/shared/src/index.ts`:
-
-```typescript
-export * from './report-parser.js';
-```
-
-**Step 6: Commit**
-
-```bash
-git add packages/shared/src/report-parser.ts packages/shared/src/report-parser.test.ts packages/shared/src/index.ts
-git commit -m "feat(shared): add verification report parser"
 ```
 
 ---
@@ -365,6 +151,67 @@ git commit -m "feat(shared): add verification report parser"
 ## Phase 1: CLI Foundation
 
 Build the `tsv batch` subcommand with token counting and batch generation.
+
+---
+
+### Task 1.0: Set Up Jest in packages/shared
+
+**Files:**
+- Modify: `packages/shared/package.json`
+- Create: `packages/shared/jest.config.js`
+
+**Step 1: Install Jest dependencies**
+
+Run: `cd packages/shared && npm install -D jest @types/jest ts-jest`
+
+**Step 2: Create Jest config**
+
+Create `packages/shared/jest.config.js`:
+
+```javascript
+/** @type {import('jest').Config} */
+export default {
+  preset: 'ts-jest/presets/default-esm',
+  testEnvironment: 'node',
+  extensionsToTreatAsEsm: ['.ts'],
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+  },
+  transform: {
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        useESM: true,
+      },
+    ],
+  },
+  testMatch: ['**/*.test.ts'],
+};
+```
+
+**Step 3: Update package.json test script**
+
+Change the test script in `packages/shared/package.json`:
+
+```json
+"scripts": {
+  "build": "tsc",
+  "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+  "clean": "rm -rf dist"
+}
+```
+
+**Step 4: Verify Jest works**
+
+Run: `cd packages/shared && npm test`
+Expected: "No tests found" (not an error)
+
+**Step 5: Commit**
+
+```bash
+git add packages/shared/package.json packages/shared/jest.config.js
+git commit -m "chore(shared): add Jest test infrastructure"
+```
 
 ---
 
@@ -379,7 +226,6 @@ Build the `tsv batch` subcommand with token counting and batch generation.
 Create `packages/shared/src/tokens.test.ts`:
 
 ```typescript
-import { describe, it, expect } from 'vitest';
 import { countTokens, countTokensInFile } from './tokens.js';
 
 describe('countTokens', () => {
@@ -423,7 +269,7 @@ describe('countTokensInFile', () => {
 
 **Step 2: Run test to verify it fails**
 
-Run: `cd packages/shared && npm test -- --run tokens`
+Run: `cd packages/shared && npm test -- tokens`
 Expected: FAIL with "Cannot find module './tokens.js'"
 
 **Step 3: Write minimal implementation**
@@ -468,7 +314,7 @@ export async function countTokensInFiles(filePaths: string[]): Promise<number> {
 
 **Step 4: Run test to verify it passes**
 
-Run: `cd packages/shared && npm test -- --run tokens`
+Run: `cd packages/shared && npm test -- tokens`
 Expected: PASS
 
 **Step 5: Add export to index**
@@ -499,7 +345,6 @@ git commit -m "feat(shared): add token counting utility"
 Create `packages/shared/src/batch.test.ts`:
 
 ```typescript
-import { describe, it, expect } from 'vitest';
 import { generateBatches, type BatchConfig, type BatchResult } from './batch.js';
 
 describe('generateBatches', () => {
@@ -575,7 +420,7 @@ describe('generateBatches', () => {
 
 **Step 2: Run test to verify it fails**
 
-Run: `cd packages/shared && npm test -- --run batch`
+Run: `cd packages/shared && npm test -- batch`
 Expected: FAIL with "Cannot find module './batch.js'"
 
 **Step 3: Write implementation**
@@ -699,7 +544,7 @@ export async function generateBatches(config: BatchConfig): Promise<BatchResult>
 
 **Step 4: Run test to verify it passes**
 
-Run: `cd packages/shared && npm test -- --run batch`
+Run: `cd packages/shared && npm test -- batch`
 Expected: PASS
 
 **Step 5: Add export to index**
@@ -918,25 +763,40 @@ Examples:
 }
 ```
 
-**Step 3: Wire into CLI router**
+**Step 3: Install glob dependency**
 
-In `packages/cli/src/cli.ts`, add the batch command. Find where commands are registered and add:
+Run: `cd packages/cli && npm install glob`
+
+**Step 4: Wire into CLI using Commander**
+
+The CLI uses Commander subcommands. Add to `packages/cli/src/cli.ts`:
 
 ```typescript
+// At top with other imports:
 import { batchCommand } from './commands/batch.js';
 
-// In the command routing section:
-case 'batch':
-  await batchCommand(args.slice(1), {
-    generate: args.includes('--generate'),
-    status: args.includes('--status'),
-    tokens: args.find((a, i) => args[i-1] === '--tokens'),
-    pattern: args.find(a => !a.startsWith('--') && a !== 'batch'),
-  }, process.cwd());
-  break;
+// After other program.command() calls (around line 210):
+program
+  .command('batch [pattern]')
+  .description('Generate and manage verification batches')
+  .option('--generate', 'Generate batches from glob pattern')
+  .option('--status', 'Show batch status')
+  .option('--tokens <file>', 'Count tokens in a file')
+  .action(async (pattern: string | undefined, options: { generate?: boolean; status?: boolean; tokens?: string }) => {
+    try {
+      await batchCommand(
+        pattern ? [pattern] : [],
+        { ...options, pattern },
+        process.cwd()
+      );
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  });
 ```
 
-**Step 4: Build and test**
+**Step 5: Build and test**
 
 Run: `cd packages/cli && npm run build`
 
@@ -959,33 +819,50 @@ git commit -m "feat(cli): add batch subcommand for verification batches"
 
 Enable long-running verification workflows with named workflows and resume capability.
 
+**Note:** The existing schema already has `parentWorkflowId` and `parentTaskId` fields. We extend the session state for named workflows and add a `children` field.
+
 ---
 
 ### Task 2.1: Add Named Workflows to Session State
 
 **Files:**
 - Modify: `packages/shared/src/workflow/state.ts`
-- Modify: `packages/shared/src/workflow/types.ts`
+- Modify: `packages/shared/src/schemas.ts`
 
-**Step 1: Update types**
+**Step 1: Read existing SessionData interface**
 
-Add to `packages/shared/src/workflow/types.ts`:
+The `SessionData` interface in `packages/shared/src/workflow/state.ts` (lines 34-37) currently has:
+- `active_workflow: string | null`
+- `stashedWorkflowId?: string`
+
+We need to add:
+- `named_workflows: Record<string, string>`
+
+**Step 2: Update SessionData interface**
+
+In `packages/shared/src/workflow/state.ts`, update the interface:
 
 ```typescript
-/**
- * Session data stored in session.json
- * Tracks active and named workflows
- */
-export interface SessionData {
+interface SessionData {
   active_workflow: string | null;
-  last_suspended: string | null;
-  named_workflows: Record<string, string>; // name -> workflow ID
+  stashedWorkflowId?: string;
+  named_workflows?: Record<string, string>; // name -> workflow ID
 }
 ```
 
-**Step 2: Update WorkflowStateManager**
+**Step 3: Update WorkflowStateSchema for children tracking**
 
-Add methods to `packages/shared/src/workflow/state.ts`:
+In `packages/shared/src/schemas.ts`, add to `WorkflowStateSchema`:
+
+```typescript
+// Add after parentTaskId field (around line 129):
+childWorkflowIds: z.array(z.string()).optional(),
+status: z.enum(['running', 'suspended', 'completed', 'stopped']).optional(),
+```
+
+**Step 4: Add methods to WorkflowStateManager**
+
+Add to `packages/shared/src/workflow/state.ts`:
 
 ```typescript
 /**
@@ -1018,26 +895,21 @@ async resume(name: string): Promise<WorkflowState> {
     throw new Error(`No workflow named '${name}'`);
   }
 
-  // Check if current active has running children
+  // Check if current active has running children (using existing parentWorkflowId)
   if (session.active_workflow) {
-    const active = await this.load(session.active_workflow);
-    if (active && active.children && active.children.length > 0) {
-      // Check if any children are still running
-      for (const childId of active.children) {
-        const child = await this.load(childId);
-        if (child && child.status === 'running') {
-          throw new Error(
-            `Cannot switch: ${active.taskName} has running child workflows. ` +
-            `Wait for children to complete before switching.`
-          );
-        }
-      }
+    const children = await this.getChildWorkflows(session.active_workflow);
+    const runningChildren = children.filter(c => c.status === 'running');
+    if (runningChildren.length > 0) {
+      throw new Error(
+        `Cannot switch: active workflow has ${runningChildren.length} running child workflow(s). ` +
+        `Wait for children to complete before switching.`
+      );
     }
   }
 
   // Suspend current active
   if (session.active_workflow && session.active_workflow !== workflowId) {
-    session.last_suspended = session.active_workflow;
+    session.stashedWorkflowId = session.active_workflow;
   }
 
   // Make named workflow active
@@ -1051,25 +923,20 @@ async resume(name: string): Promise<WorkflowState> {
 
   return state;
 }
-```
 
-**Step 3: Update WorkflowState type to include parent/children**
-
-In types:
-
-```typescript
-export interface WorkflowState {
-  // ... existing fields ...
-  parent: string | null;
-  children: string[];
-  status: 'running' | 'suspended' | 'completed' | 'stopped';
+/**
+ * Get child workflows (workflows with parentWorkflowId matching id)
+ */
+async getChildWorkflows(id: string): Promise<WorkflowState[]> {
+  const all = await this.list();
+  return all.filter(w => w.parentWorkflowId === id);
 }
 ```
 
-**Step 4: Commit**
+**Step 5: Commit**
 
 ```bash
-git add packages/shared/src/workflow/state.ts packages/shared/src/workflow/types.ts
+git add packages/shared/src/workflow/state.ts packages/shared/src/schemas.ts
 git commit -m "feat(workflow): add named workflows and resume support"
 ```
 
@@ -1080,55 +947,59 @@ git commit -m "feat(workflow): add named workflows and resume support"
 **Files:**
 - Modify: `packages/cli/src/cli.ts`
 
-**Step 1: Add resume command handler**
+**Step 1: Add resume command using Commander**
+
+Add after other `program.command()` calls:
 
 ```typescript
-case 'resume': {
-  const name = args[1];
-  const manager = new WorkflowStateManager(process.cwd());
-
-  if (!name) {
-    // Resume last suspended
-    const state = await manager.pop();
-    if (!state) {
-      console.error('No suspended workflow to resume');
-      process.exit(1);
-    }
-    console.log(`Resumed: ${state.taskName}`);
-  } else {
-    // Resume named workflow
+program
+  .command('resume [name]')
+  .description('Resume a named or stashed workflow')
+  .action(async (name: string | undefined) => {
     try {
-      const state = await manager.resume(name);
-      console.log(`Resumed workflow '${name}': ${state.taskName}`);
+      const cwd = getCwd();
+      const manager = new WorkflowStateManager(cwd);
+
+      if (!name) {
+        // Resume last stashed (same as pop)
+        const state = await manager.pop();
+        if (!state) {
+          console.error('No stashed workflow to resume');
+          process.exit(1);
+        }
+        console.log(`Resumed: ${state.taskName}`);
+      } else {
+        // Resume named workflow
+        const state = await manager.resume(name);
+        console.log(`Resumed workflow '${name}': ${state.taskName}`);
+      }
     } catch (error) {
       console.error(error instanceof Error ? error.message : error);
       process.exit(1);
     }
-  }
-  break;
-}
+  });
 ```
 
 **Step 2: Update start command to support --name**
 
-Add `--name` flag handling:
+Find the existing `program.command('start [file]')` section and add the `--name` option:
 
 ```typescript
-case 'start': {
-  const file = args[1];
-  const nameIndex = args.indexOf('--name');
-  const name = nameIndex !== -1 ? args[nameIndex + 1] : undefined;
+program
+  .command('start [file]')
+  .description('Start a new workflow or queue a task')
+  .option('--task <taskId>', 'Mark task as started (adds to pending queue)')
+  .option('--agent <agentId>', 'Bind agent to pending task')
+  .option('--name <name>', 'Give workflow a name for later resume')  // ADD THIS
+  .action(async (file: string | undefined, options: { task?: string; agent?: string; name?: string }) => {
+    // ... existing logic ...
 
-  // ... existing start logic ...
-
-  // After creating workflow, register if named
-  if (name) {
-    await manager.registerNamedWorkflow(name, state.id);
-    console.log(`Workflow '${name}' started: ${state.id}`);
-  }
-
-  break;
-}
+    // After creating workflow state (around line 115), add:
+    if (options.name) {
+      await manager.registerNamedWorkflow(options.name, state.id);
+      console.log(`Workflow '${options.name}' started: ${state.id}`);
+    }
+  });
 ```
 
 **Step 3: Build and test**
@@ -1166,4 +1037,5 @@ This plan covers Phase 0-2 (report format, CLI foundation, named workflows). The
 - Each task is designed to be completed in 10-30 minutes
 - Tests are written first (TDD)
 - Commits happen after each task
-- Dependencies (glob, yaml) may need to be installed: `npm install glob yaml`
+- Dependencies: `glob` may need to be installed: `npm install glob`
+- Tests use Jest globals (describe, it, expect) - no imports needed

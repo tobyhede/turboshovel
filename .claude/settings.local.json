@@ -11,7 +11,10 @@
       "Skill(cipherpowers:writing-plans)",
       "mcp__serena__list_dir",
       "mcp__serena__find_symbol",
-      "mcp__serena__read_file"
+      "mcp__serena__read_file",
+      "Skill(cipherpowers:commit-workflow)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

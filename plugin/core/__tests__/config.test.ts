@@ -26,7 +26,7 @@ describe('Config Loading', () => {
 
   test('returns plugin defaults when no project config exists', async () => {
     // Config loader now returns plugin defaults when no project config exists
-    // This provides fallback behavior without requiring every project to have gates.json
+    // This provides fallback behavior without requiring every project to have turboshovel.json
     const config = await loadConfig(testDir);
     expect(config).not.toBeNull();
     // Verify it's actually plugin defaults by checking for expected structure

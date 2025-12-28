@@ -18,7 +18,7 @@ describe('Plugin Gate Composition Integration', () => {
     const cipherpowersDir = path.join(mockPluginsDir, 'cipherpowers');
     await fs.mkdir(cipherpowersDir, { recursive: true });
     await fs.writeFile(
-      path.join(cipherpowersDir, 'gates.json'),
+      path.join(cipherpowersDir, 'turboshovel.json'),
       JSON.stringify({
         hooks: {},
         gates: {
@@ -34,7 +34,7 @@ describe('Plugin Gate Composition Integration', () => {
     const turboshovelDir = path.join(mockPluginsDir, 'turboshovel');
     await fs.mkdir(turboshovelDir, { recursive: true });
     await fs.writeFile(
-      path.join(turboshovelDir, 'gates.json'),
+      path.join(turboshovelDir, 'turboshovel.json'),
       JSON.stringify({ hooks: {}, gates: {} })
     );
 
@@ -45,7 +45,7 @@ describe('Plugin Gate Composition Integration', () => {
 
     // Project config references cipherpowers gate
     await fs.writeFile(
-      path.join(claudeDir, 'gates.json'),
+      path.join(claudeDir, 'turboshovel.json'),
       JSON.stringify({
         hooks: {
           SubagentStop: {
@@ -97,7 +97,7 @@ describe('Plugin Gate Composition Integration', () => {
     // Update cipherpowers gate to fail
     const cipherpowersDir = path.join(mockPluginsDir, 'cipherpowers');
     await fs.writeFile(
-      path.join(cipherpowersDir, 'gates.json'),
+      path.join(cipherpowersDir, 'turboshovel.json'),
       JSON.stringify({
         hooks: {},
         gates: {
@@ -130,7 +130,7 @@ describe('Plugin Gate Composition Integration', () => {
 
     // PluginA has gate that references pluginB
     await fs.writeFile(
-      path.join(pluginADir, 'gates.json'),
+      path.join(pluginADir, 'turboshovel.json'),
       JSON.stringify({
         hooks: {},
         gates: {
@@ -144,7 +144,7 @@ describe('Plugin Gate Composition Integration', () => {
 
     // PluginB has gate that references pluginA (circular)
     await fs.writeFile(
-      path.join(pluginBDir, 'gates.json'),
+      path.join(pluginBDir, 'turboshovel.json'),
       JSON.stringify({
         hooks: {},
         gates: {
@@ -159,7 +159,7 @@ describe('Plugin Gate Composition Integration', () => {
     // Project config references pluginA gate
     const claudeDir = path.join(projectDir, '.claude');
     await fs.writeFile(
-      path.join(claudeDir, 'gates.json'),
+      path.join(claudeDir, 'turboshovel.json'),
       JSON.stringify({
         hooks: {
           SubagentStop: {
@@ -191,7 +191,7 @@ describe('Plugin Gate Composition Integration', () => {
     const selfRefDir = path.join(mockPluginsDir, 'selfref');
     await fs.mkdir(selfRefDir, { recursive: true });
     await fs.writeFile(
-      path.join(selfRefDir, 'gates.json'),
+      path.join(selfRefDir, 'turboshovel.json'),
       JSON.stringify({
         hooks: {},
         gates: {
@@ -209,7 +209,7 @@ describe('Plugin Gate Composition Integration', () => {
     // Project references the self-referencing gate
     const claudeDir = path.join(projectDir, '.claude');
     await fs.writeFile(
-      path.join(claudeDir, 'gates.json'),
+      path.join(claudeDir, 'turboshovel.json'),
       JSON.stringify({
         hooks: {
           SubagentStop: {
