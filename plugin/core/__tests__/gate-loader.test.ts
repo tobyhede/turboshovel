@@ -89,7 +89,7 @@ describe('Plugin Gate Loading', () => {
     const cipherpowersDir = path.join(mockPluginDir, 'cipherpowers');
     await fs.mkdir(cipherpowersDir, { recursive: true });
 
-    // Create mock gates.json for cipherpowers
+    // Create mock turboshovel.json for cipherpowers
     const gatesConfig = {
       hooks: {},
       gates: {
@@ -99,7 +99,7 @@ describe('Plugin Gate Loading', () => {
         }
       }
     };
-    await fs.writeFile(path.join(cipherpowersDir, 'gates.json'), JSON.stringify(gatesConfig));
+    await fs.writeFile(path.join(cipherpowersDir, 'turboshovel.json'), JSON.stringify(gatesConfig));
 
     // Set CLAUDE_PLUGIN_ROOT to point to turboshovel sibling
     originalEnv = process.env.CLAUDE_PLUGIN_ROOT;
@@ -119,9 +119,9 @@ describe('Plugin Gate Loading', () => {
     expect(result.pluginRoot).toBe(path.join(mockPluginDir, 'cipherpowers'));
   });
 
-  test('throws when plugin gates.json not found', async () => {
+  test('throws when plugin turboshovel.json not found', async () => {
     await expect(loadPluginGate('nonexistent', 'some-gate')).rejects.toThrow(
-      "Cannot find gates.json for plugin 'nonexistent'"
+      "Cannot find turboshovel.json for plugin 'nonexistent'"
     );
   });
 
@@ -132,11 +132,11 @@ describe('Plugin Gate Loading', () => {
   });
 
   test('validates loaded plugin config structure', async () => {
-    // Create plugin with malformed gates.json
+    // Create plugin with malformed turboshovel.json
     const malformedDir = path.join(mockPluginDir, 'malformed');
     await fs.mkdir(malformedDir, { recursive: true });
     await fs.writeFile(
-      path.join(malformedDir, 'gates.json'),
+      path.join(malformedDir, 'turboshovel.json'),
       JSON.stringify({
         hooks: {},
         gates: {
