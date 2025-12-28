@@ -24,6 +24,14 @@ import {
 import { WorkflowSyntaxError, type ParsedConditional } from './types.js';
 
 /**
+ * Type guard to narrow Node to Heading
+ * Required because unist-util-visit types callback node as base Node
+ */
+function isHeading(node: Node): node is Heading {
+  return node.type === 'heading';
+}
+
+/**
  * Extract plain text from mdast node
  */
 function extractText(node: PhrasingContent | Heading | Paragraph | ListItem): string {
