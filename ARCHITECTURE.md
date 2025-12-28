@@ -54,17 +54,17 @@ The Turboshovel hook system is a **self-referential TypeScript application** tha
 
 ## Self-Referential Design
 
-The hook system uses **its own gates.json** to configure default behaviors:
+The hook system uses **its own turboshovel.json** to configure default behaviors:
 
 ```
-plugin/gates.json                ← Plugin defaults (TypeScript gates)
+plugin/turboshovel.json                ← Plugin defaults (TypeScript gates)
         ↓ merged with
-.claude/gates.json               ← Project overrides (user configuration)
+.claude/turboshovel.json               ← Project overrides (user configuration)
         ↓
 Merged Configuration             ← Project takes precedence
 ```
 
-### Plugin gates.json
+### Plugin turboshovel.json
 
 ```json
 {
@@ -99,7 +99,7 @@ Merged Configuration             ← Project takes precedence
 ```
 plugin/
 ├── hooks.json                  # Hook registration (routes to CLI)
-├── gates.json                  # Plugin default gates configuration
+├── turboshovel.json            # Plugin default gates configuration
 └── core/
     ├── src/
     │   ├── cli.ts              # Entry point
@@ -280,7 +280,7 @@ Gate name maps to export: `"plugin-path"` → `gates.pluginPath.execute()`
 **Project configuration overrides plugin configuration at the key level:**
 
 ```json
-// Plugin gates.json (defaults)
+// Plugin turboshovel.json (defaults)
 {
   "hooks": {
     "UserPromptSubmit": { "gates": ["check"] },
@@ -292,7 +292,7 @@ Gate name maps to export: `"plugin-path"` → `gates.pluginPath.execute()`
   }
 }
 
-// Project .claude/gates.json (overrides)
+// Project .claude/turboshovel.json (overrides)
 {
   "hooks": {
     "PostToolUse": { "gates": ["lint", "test"] }  // Replaces plugin's PostToolUse
