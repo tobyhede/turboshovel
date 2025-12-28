@@ -4,7 +4,7 @@ Guide to creating and working with TypeScript gates in the Turboshovel hook syst
 
 ## Overview
 
-TypeScript gates are gates defined **without a `command` field** in `gates.json`. They're implemented as TypeScript modules in `plugin/core/src/gates/`.
+TypeScript gates are gates defined **without a `command` field** in `turboshovel.json`. They're implemented as TypeScript modules in `plugin/core/src/gates/`.
 
 ```json
 {
@@ -71,11 +71,11 @@ export * as pluginPath from './plugin-path';
 export * as myGate from './my-gate';  // Add this line
 ```
 
-**Note:** Gate name in `gates.json` uses kebab-case (`my-gate`), which maps to camelCase export (`myGate`).
+**Note:** Gate name in `turboshovel.json` uses kebab-case (`my-gate`), which maps to camelCase export (`myGate`).
 
-### 3. Add to gates.json
+### 3. Add to turboshovel.json
 
-Add to `plugin/gates.json` (for plugin default) or project `.claude/gates.json`:
+Add to `plugin/turboshovel.json` (for plugin default) or project `.claude/turboshovel.json`:
 
 ```json
 {
@@ -263,7 +263,7 @@ npm run build -- --watch
 
 ## Naming Conventions
 
-| gates.json | TypeScript Export | File |
+| turboshovel.json | TypeScript Export | File |
 |------------|-------------------|------|
 | `plugin-path` | `pluginPath` | `plugin-path.ts` |
 | `my-custom-gate` | `myCustomGate` | `my-custom-gate.ts` |
