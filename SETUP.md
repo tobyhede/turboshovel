@@ -40,56 +40,56 @@ EOF
 
 ### That's It!
 
-Context files auto-inject when commands/skills run. **No gates.json needed.**
+Context files auto-inject when commands/skills run. **No turboshovel.json needed.**
 
 **Need quality gates or custom commands?** Continue to "Advanced Setup" below.
 
 ---
 
-## Advanced Setup (gates.json Configuration)
+## Advanced Setup (turboshovel.json Configuration)
 
 **Only needed for quality enforcement (lint, test, build checks) or custom commands.**
 
-Quality hooks support optional **project-level** `gates.json` configuration for running quality checks.
+Quality hooks support optional **project-level** `turboshovel.json` configuration for running quality checks.
 
-### gates.json Search Priority
+### turboshovel.json Search Priority
 
-The hooks search for `gates.json` and use **only the first match found**:
+The hooks search for `turboshovel.json` and use **only the first match found**:
 
-1. **`.claude/gates.json`** - Project-specific configuration (recommended)
-2. **`gates.json`** - Project root configuration
-3. **`${CLAUDE_PLUGIN_ROOT}/gates.json`** - Plugin default (fallback)
+1. **`.claude/turboshovel.json`** - Project-specific configuration (recommended)
+2. **`turboshovel.json`** - Project root configuration
+3. **`${CLAUDE_PLUGIN_ROOT}/turboshovel.json`** - Plugin default (fallback)
 
-**Note:** If `.claude/gates.json` exists, `gates.json` in project root is NOT loaded. The plugin default is always merged as a base, with the first project config found as overrides.
+**Note:** If `.claude/turboshovel.json` exists, `turboshovel.json` in project root is NOT loaded. The plugin default is always merged as a base, with the first project config found as overrides.
 
-### Quick gates.json Setup
+### Quick turboshovel.json Setup
 
-### Option 1: Recommended (.claude/gates.json)
+### Option 1: Recommended (.claude/turboshovel.json)
 
 ```bash
 # Create .claude directory
 mkdir -p .claude
 
 # Copy example configuration
-cp examples/strict.json .claude/gates.json
+cp examples/strict.json .claude/turboshovel.json
 
 # Customize for your project
-vim .claude/gates.json
+vim .claude/turboshovel.json
 ```
 
-### Option 2: Project Root (gates.json)
+### Option 2: Project Root (turboshovel.json)
 
 ```bash
 # Copy example configuration
-cp examples/strict.json gates.json
+cp examples/strict.json turboshovel.json
 
 # Customize for your project
-vim gates.json
+vim turboshovel.json
 ```
 
 ## Customizing Gates
 
-Edit your project's `gates.json` to match your build tooling:
+Edit your project's `turboshovel.json` to match your build tooling:
 
 ```json
 {
@@ -384,7 +384,7 @@ Remove from enabled lists:
 
 ```bash
 # Verify JSON is valid
-jq . .claude/gates.json
+jq . .claude/turboshovel.json
 
 # Test with mock hook input via TypeScript CLI
 export CLAUDE_PLUGIN_ROOT=/path/to/plugin
@@ -397,10 +397,10 @@ tail -f $TMPDIR/turboshovel/hooks-$(date +%Y-%m-%d).log
 
 ## Version Control
 
-### Recommended: Commit gates.json
+### Recommended: Commit turboshovel.json
 
 ```bash
-git add .claude/gates.json
+git add .claude/turboshovel.json
 git commit -m "chore: configure quality gates"
 ```
 
@@ -412,15 +412,15 @@ Developers can override with local configuration:
 
 ```bash
 # Team config
-.claude/gates.json  ← committed
+.claude/turboshovel.json  ← committed
 
 # Personal override (gitignored)
-gates.json  ← takes priority, not committed
+turboshovel.json  ← takes priority, not committed
 ```
 
 Add to `.gitignore`:
 ```
-/gates.json
+/turboshovel.json
 ```
 
 ## Troubleshooting
@@ -429,7 +429,7 @@ Add to `.gitignore`:
 
 1. Check configuration exists:
    ```bash
-   ls -la .claude/gates.json
+   ls -la .claude/turboshovel.json
    ```
 
 2. Verify plugin root is set:
@@ -439,7 +439,7 @@ Add to `.gitignore`:
 
 3. Check tool/agent is enabled:
    ```bash
-   jq '.hooks.PostToolUse.enabled_tools' .claude/gates.json
+   jq '.hooks.PostToolUse.enabled_tools' .claude/turboshovel.json
    ```
 
 ### Hooks Not Running in Multi-Plugin Projects
@@ -628,14 +628,14 @@ You can combine local gates (with `command` field) and plugin gates (with `plugi
 
 ## Migration from Plugin Default
 
-If you were using the plugin's default `gates.json`, migrate to project-level:
+If you were using the plugin's default `turboshovel.json`, migrate to project-level:
 
 ```bash
 # Copy current config
-cp examples/strict.json .claude/gates.json
+cp examples/strict.json .claude/turboshovel.json
 
 # Customize for this project
-vim .claude/gates.json
+vim .claude/turboshovel.json
 ```
 
 The plugin default now serves as a fallback template only.
