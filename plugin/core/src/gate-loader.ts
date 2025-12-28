@@ -10,6 +10,7 @@ import {
   resolvePluginPath,
   loadConfigFile
 } from '@turboshovel/shared';
+import * as builtinGates from './gates/index.js';
 
 const execAsync = promisify(exec);
 
@@ -77,9 +78,8 @@ export async function executeBuiltinGate(gateName: string, input: HookInput): Pr
     // "plugin-path" -> "pluginPath"
     const moduleName = gateName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
 
-    // Import the gate module dynamically
-    const gates = await import('./gates/index.js');
-    const gateModule = (gates as any)[moduleName];
+    // Look up the gate module from static imports
+    const gateModule = (builtinGates as Record<string, { execute?: (input: HookInput) => Promise<GateResult> }>)[moduleName];
 
     if (!gateModule || typeof gateModule.execute !== 'function') {
       throw new Error(`Gate module '${moduleName}' not found or missing execute function`);
