@@ -1,5 +1,5 @@
 ---
-description: N-Verification with independent agents and consensus-based collation
+description: Verify with independent agents and consensus-based collation
 ---
 
 # Verify
@@ -11,10 +11,10 @@ Dispatch N independent review agents, collate findings by consensus ratio, cross
 
 ## MANDATORY: Skill Activation
 
-Use and follow the n-verification skill exactly as written.
+Use and follow the verifying-by-consensus skill exactly as written.
 
-Path: `${CLAUDE_PLUGIN_ROOT}skills/n-verification/SKILL.md`
-Tool: `Skill(skill: "turboshovel:n-verification")`
+Path: `${CLAUDE_PLUGIN_ROOT}skills/verifying-by-consensus/SKILL.md`
+Tool: `Skill(skill: "turboshovel:verifying-by-consensus")`
 
 Do NOT proceed without completing skill activation.
 </instructions>
