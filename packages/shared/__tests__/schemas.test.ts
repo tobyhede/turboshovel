@@ -111,3 +111,55 @@ describe('WorkflowStateSchema - TaskNumber validation', () => {
     expect(result.success).toBe(false);
   });
 });
+
+describe('WorkflowStateSchema - TaskId validation', () => {
+  const createStateWithPendingTasks = (pendingTasks: unknown[]) => ({
+    id: 'test-id',
+    workflow: 'test.md',
+    task: 1,
+    taskName: 'Test Task',
+    retryCount: 0,
+    retryMax: 3,
+    variables: {},
+    tasks: [],
+    pendingTasks,
+    agentBindings: {},
+    startedAt: '2025-01-01T00:00:00Z',
+    updatedAt: '2025-01-01T00:00:00Z'
+  });
+
+  it('accepts valid TaskId object', () => {
+    const result = WorkflowStateSchema.safeParse(
+      createStateWithPendingTasks([{ task: 1 }])
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts TaskId with subtask', () => {
+    const result = WorkflowStateSchema.safeParse(
+      createStateWithPendingTasks([{ task: 1, subtask: 'a' }])
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects TaskId as plain string', () => {
+    const result = WorkflowStateSchema.safeParse(
+      createStateWithPendingTasks(['1'])
+    );
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects TaskId without task field', () => {
+    const result = WorkflowStateSchema.safeParse(
+      createStateWithPendingTasks([{ subtask: 'a' }])
+    );
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects TaskId with invalid task number', () => {
+    const result = WorkflowStateSchema.safeParse(
+      createStateWithPendingTasks([{ task: 0 }])
+    );
+    expect(result.success).toBe(false);
+  });
+});
