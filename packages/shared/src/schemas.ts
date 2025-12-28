@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MAX_TASK_NUMBER, type TaskNumber } from './workflow/types.js';
 import type { WorkflowState } from './workflow/types.js';
 
 /**
@@ -97,6 +98,17 @@ export const SessionStateSchema = z.object({
 export type ValidatedSessionState = z.infer<typeof SessionStateSchema>;
 
 /**
+ * Zod schema for TaskNumber branded type
+ * Validates and transforms plain number to branded TaskNumber
+ */
+const TaskNumberSchema = z
+  .number()
+  .int('Task number must be an integer')
+  .positive('Task number must be positive')
+  .max(MAX_TASK_NUMBER, 'Task number exceeds maximum')
+  .transform((n): TaskNumber => n as TaskNumber);
+
+/**
  * Workflow State Schema - Runtime Validation for Persisted WorkflowState
  *
  * Validates the structure of workflow state files to ensure data integrity
@@ -105,7 +117,7 @@ export type ValidatedSessionState = z.infer<typeof SessionStateSchema>;
 export const WorkflowStateSchema = z.object({
   id: z.string(),
   workflow: z.string(),
-  task: z.number().positive().int(),
+  task: TaskNumberSchema,
   taskName: z.string(),
   retryCount: z.number().nonnegative().int(),
   retryMax: z.number().nonnegative().int(),

@@ -10,7 +10,7 @@ export type TaskNumber = number & { readonly __brand: 'TaskNumber' };
 /**
  * Maximum valid task number (prevent overflow, keep IDs reasonable)
  */
-const MAX_TASK_NUMBER = 999999;
+export const MAX_TASK_NUMBER = 999999;
 
 /**
  * Factory function to create a valid TaskNumber
