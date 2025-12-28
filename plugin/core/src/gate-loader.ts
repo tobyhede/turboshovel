@@ -6,7 +6,7 @@ import {
   HookInput,
   GateResult,
   GateConfig,
-  GatesConfig,
+  TurboshovelConfig,
   resolvePluginPath,
   loadConfigFile
 } from '@turboshovel/shared';
@@ -64,11 +64,11 @@ function asExecError(error: unknown): ExecError {
 /**
  * Execute shell command from gate configuration with timeout.
  *
- * SECURITY MODEL: gates.json is trusted configuration (project-controlled, not user input).
+ * SECURITY MODEL: turboshovel.json is trusted configuration (project-controlled, not user input).
  * Commands are executed without sanitization because:
- * 1. gates.json is committed to repository or managed by project admins
- * 2. Users cannot inject commands without write access to gates.json
- * 3. If gates.json is compromised, the project is already compromised
+ * 1. turboshovel.json is committed to repository or managed by project admins
+ * 2. Users cannot inject commands without write access to turboshovel.json
+ * 3. If turboshovel.json is compromised, the project is already compromised
  *
  * This is equivalent to package.json scripts or Makefile targets - trusted project configuration.
  *
@@ -231,17 +231,17 @@ export async function loadPluginGate(
   gateName: string
 ): Promise<PluginGateResult> {
   const pluginRoot = resolvePluginPath(pluginName);
-  const gatesPath = path.join(pluginRoot, 'gates.json');
+  const gatesPath = path.join(pluginRoot, 'turboshovel.json');
 
   const pluginConfig = await loadConfigFile(gatesPath);
   if (!pluginConfig) {
-    throw new Error(`Cannot find gates.json for plugin '${pluginName}' at ${gatesPath}`);
+    throw new Error(`Cannot find turboshovel.json for plugin '${pluginName}' at ${gatesPath}`);
   }
 
   // Validate plugin config has gates object
   if (!pluginConfig.gates || typeof pluginConfig.gates !== 'object') {
     throw new Error(
-      `Invalid gates.json structure in plugin '${pluginName}': missing or invalid 'gates' object`
+      `Invalid turboshovel.json structure in plugin '${pluginName}': missing or invalid 'gates' object`
     );
   }
 
