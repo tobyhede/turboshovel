@@ -1,9 +1,26 @@
 ---
 name: workflow
-description: How agents execute and orchestrate workflows - subagents report PASS/FAIL, main agent handles dispatch and troubleshooting
+description: Use when executing multi-step processes requiring state persistence and agent coordination - defines two-tier protocol where subagents report PASS/FAIL status and main agent handles dispatch, advancement, and failure troubleshooting
 ---
 
 # Workflow Execution
+
+## Overview
+
+Workflows are multi-step processes with state tracking. **Two-tier orchestration:** subagents execute individual tasks and report outcomes; main agent dispatches, monitors, and handles failures.
+
+**Core principle:** Subagents fail fast, main agent troubleshoots.
+
+## When to Use
+
+- Multi-step processes needing state persistence across context clears
+- Parallel subagent orchestration with status tracking
+- PASS/FAIL signaling between agents
+- Processes requiring retry/resume capability
+
+**Not for:** Single-step tasks, ad-hoc commands
+
+---
 
 ## For Subagents
 
@@ -18,9 +35,11 @@ You're executing a workflow task. Your context shows:
 3. If stuck, blocked, or unclear, report `STATUS: FAIL` - main agent will handle
 
 **Do NOT:**
-- Run `workflow next` - main agent advances the workflow
+- Advance the parent workflow - only your orchestrator does that
 - Try to fix infrastructure issues - report FAIL and let main handle
 - Continue past errors - fail fast so main can troubleshoot
+
+**You CAN:** Run your own nested workflows with full `workflow` commands.
 
 ---
 
@@ -60,38 +79,23 @@ For parallel execution (e.g., `### 2.{n}` subtasks):
 
 ### Dynamic Subtask `{n}` Syntax
 
-The `### N.{n}` syntax marks a subtask as dynamic - the orchestrator decides how many to spawn at runtime.
+`### N.{n}` marks dynamic subtasks - orchestrator decides count at runtime.
 
-**Workflow definition:**
-```markdown
-### 3.{n} Parallel review
-
-**Prompt:**
-You are reviewer $n. Review the code.
-```
-
-**Orchestration contract:**
-1. Main agent decides how many subtasks (e.g., 2 reviewers)
-2. Queue tasks with sequential numbers: `workflow start --task 3.1`, `workflow start --task 3.2`
-3. Bind agents: `workflow start --agent agent-a`, `workflow start --agent agent-b`
-4. The `$n` in prompts is substituted with the subtask number (1, 2, etc.)
-
-**Example:**
-```bash
-# Decide to spawn 2 reviewers
-workflow start --task 3.1
-workflow start --task 3.2
-workflow start --agent reviewer-1  # Gets prompt with $n → 1
-workflow start --agent reviewer-2  # Gets prompt with $n → 2
-```
-
-The `{n}` is a template marker, not a literal ID. It signals "spawn N instances at runtime" where N is determined by the orchestrator based on task requirements.
+- Queue with sequential numbers: `workflow start --task 3.1`, `--task 3.2`
+- `$n` in prompts substitutes with subtask number (1, 2, etc.)
 
 ### Handling Failures
 
-When a subagent reports `STATUS: FAIL`:
-1. Check agent output for details
-2. Discuss with user before proceeding
-3. Either retry (`workflow next --step N`) or abort (`workflow stop`)
+When subagent reports `STATUS: FAIL`: check output, discuss with user, then retry (`--step N`) or abort (`stop`).
 
-Never auto-retry failed tasks without understanding the failure.
+---
+
+## Common Mistakes
+
+| Mistake | Fix |
+|---------|-----|
+| Subagent advances parent workflow | Only advance your own nested workflow, not parent's |
+| Subagent auto-retries on failure | Report `STATUS: FAIL` and let main handle |
+| Main agent auto-retries without user | Always discuss failures before retry |
+| Missing TaskId in dispatch | Include `N.X` format in Task description |
+| Parallel tasks without status check | Run `workflow status` before advancing |
