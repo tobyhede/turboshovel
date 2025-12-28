@@ -4,7 +4,7 @@ Convention-based patterns for zero-config hook customization.
 
 ## Overview
 
-Conventions allow project-specific hook behavior without editing `gates.json`. Place files following naming patterns and they auto-execute at the right time.
+Conventions allow project-specific hook behavior without editing `turboshovel.json`. Place files following naming patterns and they auto-execute at the right time.
 
 ## Convention Types
 
@@ -177,7 +177,7 @@ Content appears as `additionalContext` in conversation.
 **Before explicit gates:**
 ```
 1. Convention file exists? → Auto-inject
-2. Run explicit gates (from gates.json)
+2. Run explicit gates (from turboshovel.json)
 3. Continue or block based on results
 ```
 
@@ -322,7 +322,7 @@ Zero scripting needed.
 2. **Naming:** Use exact command/skill names (lowercase-only stage names)
 3. **Content:** Keep focused - one concern per file
 4. **Discovery:** Let multiple paths support project evolution
-5. **Control:** Rename/move files rather than editing gates.json
+5. **Control:** Rename/move files rather than editing turboshovel.json
 
 ## Debugging
 
