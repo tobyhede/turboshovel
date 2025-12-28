@@ -14,7 +14,7 @@ export {
   type GateExecute,
   type GateConfig,
   type HookConfig,
-  type GatesConfig,
+  type TurboshovelConfig,
   type SessionState,
   type SessionStateArrayKey,
   type SessionStateScalarKey,

@@ -203,7 +203,7 @@ export async function loadConfig(cwd: string): Promise<TurboshovelConfig | null>
     const pluginConfigPath = path.join(pluginRoot, 'turboshovel.json');
     const pluginConfig = await loadConfigFile(pluginConfigPath);
     if (pluginConfig) {
-      await logger.debug('Loaded plugin gates.json', { path: pluginConfigPath });
+      await logger.debug('Loaded plugin turboshovel.json', { path: pluginConfigPath });
       mergedConfig = pluginConfig;
     }
   }
@@ -214,7 +214,7 @@ export async function loadConfig(cwd: string): Promise<TurboshovelConfig | null>
   for (const configPath of projectPaths) {
     const projectConfig = await loadConfigFile(configPath);
     if (projectConfig) {
-      await logger.debug('Loaded project gates.json', { path: configPath });
+      await logger.debug('Loaded project turboshovel.json', { path: configPath });
       if (mergedConfig) {
         mergedConfig = mergeConfigs(mergedConfig, projectConfig);
         await logger.debug('Merged project config with plugin config');
