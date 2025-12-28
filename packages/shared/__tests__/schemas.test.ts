@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { parseHookInput } from '../src/schemas.js';
+import { parseHookInput, WorkflowStateSchema } from '../src/schemas.js';
 
 describe('parseHookInput', () => {
   it('parses valid PostToolUse input', () => {
@@ -55,5 +55,59 @@ describe('parseHookInput', () => {
     if (!result.success) {
       expect(result.error).toContain('Invalid input');
     }
+  });
+});
+
+describe('WorkflowStateSchema - TaskNumber validation', () => {
+  const validState = {
+    id: 'test-id',
+    workflow: 'test.md',
+    task: 1,
+    taskName: 'Test Task',
+    retryCount: 0,
+    retryMax: 3,
+    variables: {},
+    tasks: [],
+    pendingTasks: [],
+    agentBindings: {},
+    startedAt: '2025-01-01T00:00:00Z',
+    updatedAt: '2025-01-01T00:00:00Z'
+  };
+
+  it('accepts valid positive integer task number', () => {
+    const result = WorkflowStateSchema.safeParse(validState);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects zero task number', () => {
+    const result = WorkflowStateSchema.safeParse({
+      ...validState,
+      task: 0
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects negative task number', () => {
+    const result = WorkflowStateSchema.safeParse({
+      ...validState,
+      task: -1
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects non-integer task number', () => {
+    const result = WorkflowStateSchema.safeParse({
+      ...validState,
+      task: 1.5
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects task number exceeding maximum', () => {
+    const result = WorkflowStateSchema.safeParse({
+      ...validState,
+      task: 1000000 // MAX_TASK_NUMBER is 999999
+    });
+    expect(result.success).toBe(false);
   });
 });
