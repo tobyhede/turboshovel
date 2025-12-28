@@ -111,7 +111,7 @@ describe('Dispatcher - Gate Chaining', () => {
 
   beforeEach(async () => {
     // Create temporary directory for test config
-    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'gates-test-'));
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'turboshovel-test-'));
   });
 
   afterEach(async () => {
@@ -120,7 +120,7 @@ describe('Dispatcher - Gate Chaining', () => {
   });
 
   test('gate chaining works - gate-a chains to gate-b on pass', async () => {
-    // Create gates.json with chaining config
+    // Create turboshovel.json with chaining config
     const gatesConfig = {
       hooks: {
         PostToolUse: {
@@ -139,7 +139,7 @@ describe('Dispatcher - Gate Chaining', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(gatesConfig, null, 2));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(gatesConfig, null, 2));
 
     const input: HookInput = {
       hook_event_name: 'PostToolUse',
@@ -156,7 +156,7 @@ describe('Dispatcher - Gate Chaining', () => {
   });
 
   test('circular chain prevention - exceeds max gate depth', async () => {
-    // Create gates.json with circular chain
+    // Create turboshovel.json with circular chain
     const gatesConfig = {
       hooks: {
         PostToolUse: {
@@ -175,7 +175,7 @@ describe('Dispatcher - Gate Chaining', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(gatesConfig, null, 2));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(gatesConfig, null, 2));
 
     const input: HookInput = {
       hook_event_name: 'PostToolUse',
@@ -451,7 +451,7 @@ describe('File pattern filtering integration', () => {
 
   beforeEach(async () => {
     // Create temporary directory for test config
-    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'gates-test-'));
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'turboshovel-test-'));
   });
 
   afterEach(async () => {
@@ -485,7 +485,7 @@ describe('File pattern filtering integration', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(mockConfig, null, 2));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(mockConfig, null, 2));
 
     const input: HookInput = {
       hook_event_name: 'PostToolUse',
@@ -527,7 +527,7 @@ describe('File pattern filtering integration', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(mockConfig, null, 2));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(mockConfig, null, 2));
 
     const input: HookInput = {
       hook_event_name: 'PostToolUse',
@@ -569,7 +569,7 @@ describe('File pattern filtering integration', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(mockConfig, null, 2));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(mockConfig, null, 2));
 
     const input: HookInput = {
       hook_event_name: 'PostToolUse',
@@ -601,7 +601,7 @@ describe('File pattern filtering integration', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(mockConfig, null, 2));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(mockConfig, null, 2));
 
     const input: HookInput = {
       hook_event_name: 'UserPromptSubmit',
@@ -647,7 +647,7 @@ describe('File pattern filtering integration', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'gates.json'), JSON.stringify(multiGateConfig, null, 2));
+    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(multiGateConfig, null, 2));
 
     const input: HookInput = {
       hook_event_name: 'PostToolUse',
