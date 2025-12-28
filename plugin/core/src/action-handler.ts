@@ -1,5 +1,5 @@
 // plugin/hooks/hooks-app/src/action-handler.ts
-import { GateResult, GatesConfig, HookInput } from '@turboshovel/shared';
+import { GateResult, TurboshovelConfig, HookInput } from '@turboshovel/shared';
 
 export interface ActionResult {
   continue: boolean;
@@ -12,7 +12,7 @@ export interface ActionResult {
 export async function handleAction(
   action: string,
   gateResult: GateResult,
-  _config: GatesConfig,
+  _config: TurboshovelConfig,
   _input: HookInput
 ): Promise<ActionResult> {
   switch (action) {
