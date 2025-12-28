@@ -140,7 +140,7 @@ export function parseWorkflow(markdown: string): Task[] {
     }
 
     // Handle H3 headings - these are subtask headers
-    if (node.type === 'heading' && node.depth === 3 && currentTask) {
+    if (isHeading(node) && node.depth === 3 && currentTask) {
       const headingText = extractText(node);
       const parsed = extractSubtaskHeader(headingText);
 
