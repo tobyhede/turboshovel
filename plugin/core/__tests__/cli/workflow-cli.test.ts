@@ -25,7 +25,7 @@ describe('workflow CLI', () => {
   let testDir: string;
 
   beforeEach(async () => {
-    testDir = join(tmpdir(), `workflow-cli-test-${Date.now()}`);
+    testDir = join(tmpdir(), `workflow-cli-test-${String(Date.now())}`);
     await fs.mkdir(testDir, { recursive: true });
   });
 
@@ -46,9 +46,9 @@ describe('workflow CLI', () => {
     } catch (error) {
       const err = error as { stdout?: string; stderr?: string; status?: number };
       return {
-        stdout: err.stdout || '',
-        stderr: err.stderr || '',
-        exitCode: err.status || 1
+        stdout: err.stdout ?? '',
+        stderr: err.stderr ?? '',
+        exitCode: err.status ?? 1
       };
     }
   };

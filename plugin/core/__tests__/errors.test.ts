@@ -2,7 +2,7 @@ import {
   isNodeError,
   isError,
   getErrorMessage,
-  SessionLoadError,
+  type SessionLoadError,
   isFileNotFoundError
 } from '@turboshovel/shared';
 

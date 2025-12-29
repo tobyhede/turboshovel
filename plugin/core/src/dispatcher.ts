@@ -283,6 +283,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
 
   // 3. Check if hook event has additional gates configured
   const hookConfig = config.hooks[hookEvent];
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!hookConfig) {
     await logger.debug('Hook event not configured in turboshovel.json', { event: hookEvent });
     // Return context injection result even if hook not in turboshovel.json
@@ -314,6 +315,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
     }
 
     const gateConfig = config.gates[gateName];
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!gateConfig) {
       // Graceful degradation: skip undefined gates with warning
       accumulatedContext += `\nWarning: Gate '${gateName}' not defined, skipping`;
@@ -353,7 +355,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
     const action = passed ? gateConfig.on_pass ?? 'CONTINUE' : gateConfig.on_fail ?? 'BLOCK';
 
     // Handle action
-    const actionResult = await handleAction(action, result, config, input);
+    const actionResult = handleAction(action, result, config, input);
 
     if (actionResult.context) {
       accumulatedContext += '\n' + actionResult.context;

@@ -128,7 +128,7 @@ describe('TaskId Property Tests', () => {
           taskNumberArb,
           subtaskArb,
           (n, subtask) => {
-            const str = `${n}.${subtask}`;
+            const str = `${String(n)}.${subtask}`;
             const parsed = parseTaskIdFromString(str, { requireSeparator: false });
 
             expect(parsed).not.toBeNull();

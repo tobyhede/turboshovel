@@ -9,7 +9,7 @@ describe('WorkflowStateManager', () => {
   let manager: WorkflowStateManager;
 
   beforeEach(async () => {
-    testDir = join(tmpdir(), `workflow-state-test-${Date.now()}`);
+    testDir = join(tmpdir(), `workflow-state-test-${String(Date.now())}`);
     await fs.mkdir(testDir, { recursive: true });
     manager = new WorkflowStateManager(testDir);
   });
@@ -210,7 +210,7 @@ describe('WorkflowStateManager', () => {
       await manager.bindAgent(state.id, 'agent-2', { task: createTaskNumber(2)! });
 
       const updated = await manager.load(state.id);
-      expect(Object.keys(updated?.agentBindings || {})).toHaveLength(2);
+      expect(Object.keys(updated?.agentBindings ?? {})).toHaveLength(2);
     });
 
     it('throws for non-existent workflow', async () => {

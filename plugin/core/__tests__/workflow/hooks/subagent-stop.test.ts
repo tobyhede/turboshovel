@@ -1,7 +1,6 @@
 // __tests__/workflow/hooks/subagent-stop.test.ts
 import {
-  handleSubagentStop,
-  type SubagentStopResult
+  handleSubagentStop
 } from '../../../src/workflow/hooks/subagent-stop.js';
 import { WorkflowStateManager, type HookInput, createTaskNumber } from '@turboshovel/shared';
 import * as fs from 'fs/promises';

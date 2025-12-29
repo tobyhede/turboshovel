@@ -1,6 +1,6 @@
 // plugin/hooks/hooks-app/__tests__/action-handler.test.ts
 import { handleAction } from '../src/action-handler.js';
-import { GateResult, TurboshovelConfig } from '@turboshovel/shared';
+import type { GateResult, TurboshovelConfig } from '@turboshovel/shared';
 
 const mockConfig: TurboshovelConfig = {
   hooks: {},
@@ -15,41 +15,41 @@ const mockInput = {
 };
 
 describe('Action Handler', () => {
-  test('CONTINUE returns continue=true', async () => {
+  test('CONTINUE returns continue=true', () => {
     const result: GateResult = {};
-    const action = await handleAction('CONTINUE', result, mockConfig, mockInput);
+    const action = handleAction('CONTINUE', result, mockConfig, mockInput);
 
     expect(action.continue).toBe(true);
     expect(action.context).toBeUndefined();
   });
 
-  test('CONTINUE with context returns context', async () => {
+  test('CONTINUE with context returns context', () => {
     const result: GateResult = { additionalContext: 'test context' };
-    const action = await handleAction('CONTINUE', result, mockConfig, mockInput);
+    const action = handleAction('CONTINUE', result, mockConfig, mockInput);
 
     expect(action.continue).toBe(true);
     expect(action.context).toBe('test context');
   });
 
-  test('BLOCK returns continue=false', async () => {
+  test('BLOCK returns continue=false', () => {
     const result: GateResult = { decision: 'block', reason: 'test reason' };
-    const action = await handleAction('BLOCK', result, mockConfig, mockInput);
+    const action = handleAction('BLOCK', result, mockConfig, mockInput);
 
     expect(action.continue).toBe(false);
     expect(action.blockReason).toBe('test reason');
   });
 
-  test('BLOCK with no reason uses default', async () => {
+  test('BLOCK with no reason uses default', () => {
     const result: GateResult = {};
-    const action = await handleAction('BLOCK', result, mockConfig, mockInput);
+    const action = handleAction('BLOCK', result, mockConfig, mockInput);
 
     expect(action.continue).toBe(false);
     expect(action.blockReason).toBe('Gate failed');
   });
 
-  test('STOP returns continue=false with stop message', async () => {
+  test('STOP returns continue=false with stop message', () => {
     const result: GateResult = { message: 'stop message' };
-    const action = await handleAction('STOP', result, mockConfig, mockInput);
+    const action = handleAction('STOP', result, mockConfig, mockInput);
 
     expect(action.continue).toBe(false);
     expect(action.stopMessage).toBe('stop message');

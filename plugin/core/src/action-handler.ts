@@ -9,12 +9,12 @@ export interface ActionResult {
   chainedGate?: string;
 }
 
-export async function handleAction(
+export function handleAction(
   action: string,
   gateResult: GateResult,
   _config: TurboshovelConfig,
   _input: HookInput
-): Promise<ActionResult> {
+): ActionResult {
   switch (action) {
     case 'CONTINUE':
       return {
@@ -25,13 +25,13 @@ export async function handleAction(
     case 'BLOCK':
       return {
         continue: false,
-        blockReason: gateResult.reason || 'Gate failed'
+        blockReason: gateResult.reason ?? 'Gate failed'
       };
 
     case 'STOP':
       return {
         continue: false,
-        stopMessage: gateResult.message || 'Gate stopped execution'
+        stopMessage: gateResult.message ?? 'Gate stopped execution'
       };
 
     default:

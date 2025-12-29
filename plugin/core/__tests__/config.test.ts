@@ -1,6 +1,5 @@
 // plugin/hooks/hooks-app/__tests__/config.test.ts
 import { loadConfig, resolvePluginPath } from '@turboshovel/shared';
-import { TurboshovelConfig } from '@turboshovel/shared';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';

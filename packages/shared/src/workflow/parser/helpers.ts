@@ -86,7 +86,7 @@ export function extractSubtaskHeader(text: string): ParsedSubtaskHeader | null {
     taskNumber,
     id,
     description: desc.trim(),
-    agentType: agent?.trim(),
+    agentType: agent ? agent.trim() : undefined,
     isDynamic
   };
 }

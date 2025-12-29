@@ -52,7 +52,7 @@ function isLoggingEnabled(): boolean {
  */
 function getMinLogLevel(): LogLevel {
   const envLevel = process.env.TURBOSHOVEL_LOG_LEVEL;
-  if (envLevel && LOG_LEVELS[envLevel as LogLevel] !== undefined) {
+  if (envLevel && envLevel in LOG_LEVELS) {
     return envLevel as LogLevel;
   }
   return 'info';

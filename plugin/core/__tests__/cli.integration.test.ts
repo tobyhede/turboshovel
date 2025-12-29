@@ -33,11 +33,11 @@ describe('CLI Integration', () => {
         let stdout = '';
         let stderr = '';
 
-        proc.stdout.on('data', (data) => {
+        proc.stdout.on('data', (data: Buffer) => {
           stdout += data.toString();
         });
 
-        proc.stderr.on('data', (data) => {
+        proc.stderr.on('data', (data: Buffer) => {
           stderr += data.toString();
         });
 
@@ -188,7 +188,7 @@ describe('CLI Integration', () => {
       });
 
       let stdout = '';
-      proc.stdout.on('data', (data) => {
+      proc.stdout.on('data', (data: Buffer) => {
         stdout += data.toString();
       });
 
@@ -211,7 +211,7 @@ describe('CLI Integration', () => {
       });
 
       let stderr = '';
-      proc.stderr.on('data', (data) => {
+      proc.stderr.on('data', (data: Buffer) => {
         stderr += data.toString();
       });
 
@@ -236,7 +236,7 @@ describe('CLI Integration', () => {
       });
 
       let stderr = '';
-      proc.stderr.on('data', (data) => {
+      proc.stderr.on('data', (data: Buffer) => {
         stderr += data.toString();
       });
 

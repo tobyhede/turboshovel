@@ -64,7 +64,7 @@ export function parseTaskIdFromString(input: string, options?: ParseTaskIdOption
  * Serialize TaskId to string (e.g., { task: 3, subtask: '1' } -> "3.1")
  */
 export function taskIdToString(taskId: TaskId): string {
-  return taskId.subtask ? `${String(taskId.task)}.${taskId.subtask}` : `${String(taskId.task)}`;
+  return taskId.subtask ? `${String(taskId.task)}.${taskId.subtask}` : String(taskId.task);
 }
 
 /**

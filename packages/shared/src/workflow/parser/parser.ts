@@ -242,6 +242,7 @@ export function parseWorkflow(markdown: string): Task[] {
   });
 
   // Finalize last task
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (currentTask) {
     tasks.push(finalizeTask(currentTask, pendingConditionals, implicitText));
   }
@@ -270,7 +271,7 @@ function finalizeTask(
     description: task.description,
     command: task.command,
     prompts: task.prompts,
-    conditions: conditions || undefined,
+    conditions: conditions ?? undefined,
     subtasks: task.subtasks.length > 0 ? task.subtasks : undefined
   };
 }

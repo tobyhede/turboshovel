@@ -2,8 +2,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
 import {
-  trackTaskDispatch,
-  type TaskDispatchResult
+  trackTaskDispatch
 } from '../../../src/workflow/hooks/task-tracker.js';
 import { WorkflowStateManager, type HookInput, createTaskNumber } from '@turboshovel/shared';
 
@@ -12,7 +11,7 @@ describe('trackTaskDispatch with TaskId', () => {
   let manager: WorkflowStateManager;
 
   beforeEach(async () => {
-    testDir = join(tmpdir(), `task-tracker-test-${Date.now()}`);
+    testDir = join(tmpdir(), `task-tracker-test-${String(Date.now())}`);
     await fs.mkdir(testDir, { recursive: true });
     manager = new WorkflowStateManager(testDir);
   });

@@ -9,7 +9,7 @@ describe('Dispatcher Workflow Integration', () => {
   let testDir: string;
 
   beforeEach(async () => {
-    testDir = join(tmpdir(), `dispatcher-workflow-test-${Date.now()}`);
+    testDir = join(tmpdir(), `dispatcher-workflow-test-${String(Date.now())}`);
     await fs.mkdir(testDir, { recursive: true });
 
     // Create minimal config
@@ -55,7 +55,7 @@ describe('Dispatcher Workflow Integration', () => {
 
     expect(result.blockReason).toBeUndefined();
     // Should not contain workflow context
-    expect(result.context || '').not.toContain('Active Workflow');
+    expect(result.context ?? '').not.toContain('Active Workflow');
   });
 });
 
@@ -64,7 +64,7 @@ describe('dispatcher with orchestration hooks', () => {
   let manager: WorkflowStateManager;
 
   beforeEach(async () => {
-    testDir = join(tmpdir(), `dispatcher-integration-test-${Date.now()}`);
+    testDir = join(tmpdir(), `dispatcher-integration-test-${String(Date.now())}`);
     await fs.mkdir(testDir, { recursive: true });
     manager = new WorkflowStateManager(testDir);
   });

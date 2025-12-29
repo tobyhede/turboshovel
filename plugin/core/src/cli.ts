@@ -3,7 +3,6 @@ import {
   type SessionState,
   type SessionStateArrayKey,
   SESSION_STATE_KEYS,
-  type HookInput,
   parseHookInput,
   logger
 } from '@turboshovel/shared';
@@ -175,7 +174,7 @@ async function handleHookDispatch(): Promise<void> {
     // Read stdin
     const chunks: Buffer[] = [];
     for await (const chunk of process.stdin) {
-      chunks.push(chunk);
+      chunks.push(chunk as Buffer);
     }
     const inputStr = Buffer.concat(chunks).toString('utf-8');
 
@@ -272,11 +271,11 @@ async function handleHookDispatch(): Promise<void> {
     console.error(
       JSON.stringify({
         continue: false,
-        message: `Unexpected error: ${error}`
+        message: `Unexpected error: ${String(error)}`
       })
     );
     process.exit(1);
   }
 }
 
-main();
+void main();

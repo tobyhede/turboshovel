@@ -106,7 +106,7 @@ export class WorkflowStateManager {
   async load(id: string): Promise<WorkflowState | null> {
     try {
       const content = await fs.readFile(this.statePath(id), 'utf8');
-      const parsed = JSON.parse(content);
+      const parsed = JSON.parse(content) as unknown;
       const result = WorkflowStateSchema.safeParse(parsed);
       if (!result.success) {
         return null;
@@ -223,7 +223,7 @@ export class WorkflowStateManager {
     }
 
     await this.update(id, {
-      pendingTasks: [...(state.pendingTasks || []), taskId]
+      pendingTasks: [...state.pendingTasks, taskId]
     });
   }
 
@@ -233,7 +233,7 @@ export class WorkflowStateManager {
    */
   async popPendingTask(id: string): Promise<TaskId | null> {
     const state = await this.load(id);
-    if (!state?.pendingTasks?.length) {
+    if (!state || state.pendingTasks.length === 0) {
       return null;
     }
 
@@ -258,7 +258,7 @@ export class WorkflowStateManager {
 
     await this.update(id, {
       agentBindings: {
-        ...(state.agentBindings || {}),
+        ...state.agentBindings,
         [agentId]: binding
       }
     });
@@ -273,7 +273,7 @@ export class WorkflowStateManager {
     if (!state) {
       throw new Error(`Workflow ${id} not found`);
     }
-    return state.agentBindings?.[agentId] || null;
+    return state.agentBindings[agentId] ?? null;
   }
 
   /**
@@ -289,14 +289,15 @@ export class WorkflowStateManager {
       throw new Error(`Workflow ${id} not found`);
     }
 
-    const existing = state.agentBindings?.[agentId];
+    const existing = state.agentBindings[agentId];
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!existing) {
       throw new Error(`No binding for agent ${agentId}`);
     }
 
     await this.update(id, {
       agentBindings: {
-        ...(state.agentBindings || {}),
+        ...state.agentBindings,
         [agentId]: { ...existing, ...updates }
       }
     });

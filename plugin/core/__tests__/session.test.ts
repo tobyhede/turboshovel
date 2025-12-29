@@ -7,7 +7,7 @@ describe('Session', () => {
   let testDir: string;
 
   beforeEach(async () => {
-    testDir = join(tmpdir(), `session-test-${Date.now()}`);
+    testDir = join(tmpdir(), `session-test-${String(Date.now())}`);
     await fs.mkdir(testDir, { recursive: true });
   });
 
@@ -18,7 +18,7 @@ describe('Session', () => {
   describe('constructor', () => {
     test('sets state file path', () => {
       const session = new Session(testDir);
-      expect(session['stateFile']).toBe(join(testDir, '.claude', 'session', 'state.json'));
+      expect(session.stateFile).toBe(join(testDir, '.claude', 'session', 'state.json'));
     });
   });
 

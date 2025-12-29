@@ -602,12 +602,12 @@ program
       const { loadConfig } = await import('@turboshovel/shared');
       const config = await loadConfig(cwd);
 
-      if (!config?.gates?.[name]) {
+      if (!config || !(name in config.gates)) {
         console.error(`Gate not found: ${name}`);
         process.exit(1);
       }
 
-      const gate = config!.gates[name];
+      const gate = config.gates[name];
       if (!gate.command) {
         console.error(`Gate has no command: ${name}`);
         process.exit(1);

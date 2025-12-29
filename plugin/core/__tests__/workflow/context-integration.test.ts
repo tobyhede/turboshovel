@@ -9,7 +9,7 @@ describe('Workflow Context Injection', () => {
   let testDir: string;
 
   beforeEach(async () => {
-    testDir = join(tmpdir(), `workflow-context-test-${Date.now()}`);
+    testDir = join(tmpdir(), `workflow-context-test-${String(Date.now())}`);
     await fs.mkdir(testDir, { recursive: true });
   });
 

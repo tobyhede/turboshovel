@@ -85,7 +85,7 @@ export function validateConfig(config: TurboshovelConfig): void {
   for (const [hookName, hookConfig] of Object.entries(config.hooks)) {
     if (hookConfig.gates) {
       for (const gateName of hookConfig.gates) {
-        if (!config.gates[gateName]) {
+        if (!(gateName in config.gates)) {
           throw new Error(`Hook '${hookName}' references undefined gate '${gateName}'`);
         }
       }
@@ -107,7 +107,7 @@ export function validateConfig(config: TurboshovelConfig): void {
     }
 
     for (const action of [gateConfig.on_pass, gateConfig.on_fail]) {
-      if (action && !KNOWN_ACTIONS.includes(action) && !config.gates[action]) {
+      if (action && !KNOWN_ACTIONS.includes(action) && !(action in config.gates)) {
         throw new Error(
           `Gate '${gateName}' action '${action}' is not CONTINUE/BLOCK/STOP or valid gate name`
         );
@@ -161,7 +161,7 @@ function getPluginRoot(): string | null {
 export async function loadConfigFile(configPath: string): Promise<TurboshovelConfig | null> {
   if (await fileExists(configPath)) {
     const content = await fs.readFile(configPath, 'utf-8');
-    return JSON.parse(content);
+    return JSON.parse(content) as TurboshovelConfig;
   }
   return null;
 }

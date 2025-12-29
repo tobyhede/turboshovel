@@ -15,7 +15,7 @@ describe('Integration Tests', () => {
   let cliPath: string;
 
   beforeEach(async () => {
-    testDir = join(tmpdir(), `integration-test-${Date.now()}`);
+    testDir = join(tmpdir(), `integration-test-${String(Date.now())}`);
     await fs.mkdir(testDir, { recursive: true });
     cliPath = join(__dirname, '../dist/cli.js');
   });

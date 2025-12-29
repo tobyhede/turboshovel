@@ -1,5 +1,5 @@
 // plugin/hooks/hooks-app/__tests__/types.test.ts
-import { HookInput, GateResult, GateConfig, SessionState } from '@turboshovel/shared';
+import type { HookInput, GateResult, GateConfig } from '@turboshovel/shared';
 
 describe('Types', () => {
   test('HookInput has required fields', () => {
