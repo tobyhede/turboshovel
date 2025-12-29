@@ -239,11 +239,16 @@ describe('next command', () => {
 
     describe('FAIL: GOTO N', () => {
       beforeEach(async () => {
-        // We need a workflow with FAIL: GOTO - create one dynamically
-        // For now, skip this test or use a fixture that has it
+        runCli('start workflows/fail-goto.workflow.md', workspace);
       });
 
-      it.todo('jumps to specified task on failure');
+      it('jumps to specified task on failure', async () => {
+        const result = runCli('next --fail', workspace);
+
+        expect(result.exitCode).toBe(0);
+        const state = await getActiveState(workspace);
+        expect(state?.task).toBe(3); // GOTO 3 on FAIL
+      });
     });
   });
 });
