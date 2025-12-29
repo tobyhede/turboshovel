@@ -49,9 +49,16 @@ This example shows both keyword-based filtering (check gate) and file pattern fi
 
 ## Development Commands
 
-- Build: `cd plugin/core && npm run build`
-- Test: `cd plugin/core && npm test`
-- Lint: `cd plugin/core && npm run lint`
+From repository root:
+
+```bash
+npm run build      # Build all packages
+npm run test       # Run all tests
+npm run lint       # Lint all packages
+npm run lint:fix   # Auto-fix lint issues
+```
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for full development guide.
 
 ## Architecture
 
@@ -128,6 +135,7 @@ State persists in `.claude/turboshovel/workflows/` (workflow files) and `.claude
 ## Documentation
 
 - [README.md](README.md) - Quick start and examples
+- [DEVELOPMENT.md](DEVELOPMENT.md) - Development setup and commands
 - [SETUP.md](SETUP.md) - Configuration guide
 - [CONVENTIONS.md](CONVENTIONS.md) - Context file patterns
 - [TYPESCRIPT.md](TYPESCRIPT.md) - Custom TypeScript gates
