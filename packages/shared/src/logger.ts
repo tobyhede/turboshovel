@@ -129,30 +129,30 @@ function createEntry(level: LogLevel, message: string, data?: Record<string, unk
  *   {"ts":"2025-11-25T10:30:00.000Z","level":"info","event":"PostToolUse","tool":"Edit"}
  */
 export const logger = {
-  debug: (message: string, data?: Record<string, unknown>) =>
+  debug: (message: string, data?: Record<string, unknown>): Promise<void> =>
     writeLog(createEntry('debug', message, data)),
 
-  info: (message: string, data?: Record<string, unknown>) =>
+  info: (message: string, data?: Record<string, unknown>): Promise<void> =>
     writeLog(createEntry('info', message, data)),
 
-  warn: (message: string, data?: Record<string, unknown>) =>
+  warn: (message: string, data?: Record<string, unknown>): Promise<void> =>
     writeLog(createEntry('warn', message, data)),
 
-  error: (message: string, data?: Record<string, unknown>) =>
+  error: (message: string, data?: Record<string, unknown>): Promise<void> =>
     writeLog(createEntry('error', message, data)),
 
   /**
    * Log unconditionally (bypasses TURBOSHOVEL_LOG check).
    * Used for startup/diagnostic logging to verify hooks are invoked.
    */
-  always: (message: string, data?: Record<string, unknown>) =>
+  always: (message: string, data?: Record<string, unknown>): Promise<void> =>
     writeLogAlways(createEntry('info', message, data)),
 
   /**
    * Log a hook event with structured data.
    * Convenience method for common hook logging pattern.
    */
-  event: (level: LogLevel, event: string, data?: Record<string, unknown>) =>
+  event: (level: LogLevel, event: string, data?: Record<string, unknown>): Promise<void> =>
     writeLog({
       ts: new Date().toISOString(),
       level,

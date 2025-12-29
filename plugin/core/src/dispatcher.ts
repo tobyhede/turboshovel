@@ -21,14 +21,14 @@ export function shouldProcessHook(input: HookInput, hookConfig: HookConfig): boo
   // PostToolUse filtering
   if (hookEvent === 'PostToolUse') {
     if (hookConfig.enabled_tools && hookConfig.enabled_tools.length > 0) {
-      return hookConfig.enabled_tools.includes(input.tool_name || '');
+      return hookConfig.enabled_tools.includes(input.tool_name ?? '');
     }
   }
 
   // SubagentStop filtering
   if (hookEvent === 'SubagentStop') {
     if (hookConfig.enabled_agents && hookConfig.enabled_agents.length > 0) {
-      const agentName = input.agent_name || input.subagent_name || '';
+      const agentName = input.agent_name ?? input.subagent_name ?? '';
       return hookConfig.enabled_agents.includes(agentName);
     }
   }
@@ -216,7 +216,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
 
   await logger.event('debug', hookEvent, {
     tool: input.tool_name,
-    agent: input.agent_name || input.subagent_name,
+    agent: input.agent_name ?? input.subagent_name,
     file: input.file_path,
     cwd
   });
@@ -227,13 +227,14 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
   // 1. ALWAYS run context injection FIRST (primary behavior)
   // This discovers .claude/context/{name}-{stage}.md files
   const contextContent = await injectContext(hookEvent, input);
-  let accumulatedContext = contextContent || '';
+  let accumulatedContext = contextContent ?? '';
 
   // Inject workflow context if active
   const workflowContext = await getWorkflowContext(input.cwd);
   if (workflowContext) {
     accumulatedContext += '\n\n' + workflowContext;
   }
+
 
   // Workflow orchestration hooks
   if (input.hook_event_name === 'PostToolUse' && input.tool_name === 'Task') {
@@ -300,16 +301,15 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
   }
 
   // 5. Run additional gates in sequence (from turboshovel.json)
-  const gates = hookConfig.gates || [];
+  const gates = hookConfig.gates ?? [];
   let gatesExecuted = 0;
 
-  for (let i = 0; i < gates.length; i++) {
-    const gateName = gates[i];
+  for (const gateName of gates) {
 
     // Circuit breaker: prevent infinite chains
     if (gatesExecuted >= MAX_GATES_PER_DISPATCH) {
       return {
-        blockReason: `Exceeded max gate chain depth (${MAX_GATES_PER_DISPATCH}). Check for circular references.`
+        blockReason: `Exceeded max gate chain depth (${String(MAX_GATES_PER_DISPATCH)}). Check for circular references.`
       };
     }
 
@@ -350,7 +350,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
     });
 
     // Determine action
-    const action = passed ? gateConfig.on_pass || 'CONTINUE' : gateConfig.on_fail || 'BLOCK';
+    const action = passed ? gateConfig.on_pass ?? 'CONTINUE' : gateConfig.on_fail ?? 'BLOCK';
 
     // Handle action
     const actionResult = await handleAction(action, result, config, input);

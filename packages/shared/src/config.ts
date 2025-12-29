@@ -1,7 +1,7 @@
 // packages/cli/src/config.ts
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { type TurboshovelConfig, HookConfig, type GateConfig } from './types.js';
+import { type TurboshovelConfig, type GateConfig } from './types.js';
 import { fileExists } from './utils.js';
 import { logger } from './logger.js';
 
@@ -113,6 +113,7 @@ export function validateConfig(config: TurboshovelConfig): void {
         );
       }
     }
+
   }
 }
 
@@ -151,7 +152,7 @@ export function resolvePluginPath(pluginName: string): string {
  * Claude Code sets this automatically during hook execution.
  */
 function getPluginRoot(): string | null {
-  return process.env.CLAUDE_PLUGIN_ROOT || null;
+  return process.env.CLAUDE_PLUGIN_ROOT ?? null;
 }
 
 /**

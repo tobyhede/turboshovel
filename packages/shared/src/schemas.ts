@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { MAX_TASK_NUMBER, type TaskNumber, type TaskId } from './workflow/types.js';
-import type { WorkflowState } from './workflow/types.js';
 
 /**
  * Zod schema for tool_input in Task tool calls

@@ -160,7 +160,7 @@ function parseConditionalPrefix(rest: string, type: 'pass' | 'fail'): ParsedCond
   let remaining = rest;
 
   // Match modifier: space + (ALL|ANY) + (space or colon or arrow or dash)
-  const modifierMatch = /^\s+(ALL|ANY)[\s:→\-]/.exec(remaining);
+  const modifierMatch = /^\s+(ALL|ANY)[\s:→-]/.exec(remaining);
   if (modifierMatch) {
     modifier = modifierMatch[1] as 'ALL' | 'ANY';
     remaining = remaining.slice(modifierMatch[0].length);

@@ -4,14 +4,10 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
 import type { Node } from 'unist';
 import type {
-  Root,
-  Heading,
   Code,
-  Paragraph,
-  List,
+  Heading,
   ListItem,
-  Strong,
-  Text,
+  Paragraph,
   PhrasingContent
 } from 'mdast';
 import type { Task, Action, TaskNumber, Subtask } from '../types.js';
@@ -105,7 +101,7 @@ export function parseWorkflow(markdown: string): Task[] {
   let implicitText = '';
 
   // Walk AST nodes
-  visit(tree, (node: Node, index: number | undefined, parent: Node | undefined) => {
+  visit(tree, (node: Node, _index: number | undefined, _parent: Node | undefined) => {
     // Handle H1 headings - reject if they look like task headers
     if (isHeading(node) && node.depth === 1) {
       const headingText = extractText(node);
@@ -148,7 +144,7 @@ export function parseWorkflow(markdown: string): Task[] {
         // Validate subtask prefix matches current task number
         if (parsed.taskNumber !== currentTask.number) {
           throw new WorkflowSyntaxError(
-            `Subtask ${headingText} does not belong to task ${currentTask.number} (it belongs to task ${parsed.taskNumber})`
+            `Subtask ${headingText} does not belong to task ${String(currentTask.number)} (it belongs to task ${String(parsed.taskNumber)})`
           );
         }
 
@@ -156,7 +152,7 @@ export function parseWorkflow(markdown: string): Task[] {
         const duplicateId = currentTask.subtasks.find((s) => s.id === parsed.id);
         if (duplicateId) {
           throw new WorkflowSyntaxError(
-            `Duplicate subtask ID '${parsed.id}' in task ${currentTask.number}`
+            `Duplicate subtask ID '${parsed.id}' in task ${String(currentTask.number)}`
           );
         }
 
@@ -165,7 +161,7 @@ export function parseWorkflow(markdown: string): Task[] {
         const hasDynamic = currentTask.subtasks.some((s) => s.isDynamic);
         if ((hasStatic && parsed.isDynamic) || (hasDynamic && !parsed.isDynamic)) {
           throw new WorkflowSyntaxError(
-            `Cannot mix static subtasks (like 1.1) and dynamic subtasks (like 1.{n}) in task ${currentTask.number}`
+            `Cannot mix static subtasks (like 1.1) and dynamic subtasks (like 1.{n}) in task ${String(currentTask.number)}`
           );
         }
 
@@ -187,7 +183,7 @@ export function parseWorkflow(markdown: string): Task[] {
       if (lang === 'bash') {
         if (currentTask.command) {
           throw new WorkflowSyntaxError(
-            `Multiple code blocks per task not allowed. Task ${currentTask.number} already has a command block. ` +
+            `Multiple code blocks per task not allowed. Task ${String(currentTask.number)} already has a command block. ` +
               `Suggestion: (1) Combine commands using && or ; operators, or (2) Split into separate tasks.`
           );
         }
@@ -292,7 +288,7 @@ function validateWorkflow(tasks: Task[]): void {
     const expected = i + 1;
     if (tasks[i].number !== expected) {
       throw new WorkflowSyntaxError(
-        `Tasks must be numbered sequentially. Expected task ${expected}, found task ${tasks[i].number}.\n` +
+        `Tasks must be numbered sequentially. Expected task ${String(expected)}, found task ${String(tasks[i].number)}.\n` +
           `Workflows must have exactly one algorithm with continuous numbering (1, 2, 3...).`
       );
     }
@@ -312,12 +308,12 @@ function validateAction(action: Action, taskNum: number, totalTasks: number): vo
     const target = action.task as number;
     if (target < 1 || target > totalTasks) {
       throw new WorkflowSyntaxError(
-        `Task ${taskNum}: GOTO target Task ${target} does not exist (workflow has ${totalTasks} tasks)`
+        `Task ${String(taskNum)}: GOTO target Task ${String(target)} does not exist (workflow has ${String(totalTasks)} tasks)`
       );
     }
     if (target === taskNum) {
       throw new WorkflowSyntaxError(
-        `Task ${taskNum}: GOTO self creates infinite loop (use RETRY instead)`
+        `Task ${String(taskNum)}: GOTO self creates infinite loop (use RETRY instead)`
       );
     }
   }

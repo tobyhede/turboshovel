@@ -37,7 +37,7 @@ export function evaluateFailCondition(
       if (newCount > max) {
         return {
           action: 'blocked',
-          message: `Max retries exceeded (${max})`
+          message: `Max retries exceeded (${String(max)})`
         };
       }
 

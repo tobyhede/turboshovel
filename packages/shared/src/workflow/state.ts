@@ -79,10 +79,15 @@ export class WorkflowStateManager {
     const id = generateId();
     const now = new Date().toISOString();
 
+    const taskNum = createTaskNumber(1);
+    if (!taskNum) {
+      throw new Error('Failed to create initial task number');
+    }
+
     const state: WorkflowState = {
       id,
       workflow,
-      task: createTaskNumber(1)!,
+      task: taskNum,
       taskName,
       retryCount: 0,
       retryMax: 3,
@@ -162,9 +167,9 @@ export class WorkflowStateManager {
   async getActive(): Promise<WorkflowState | null> {
     try {
       const content = await fs.readFile(this.sessionPath, 'utf8');
-      const session = JSON.parse(content);
-      if (session.active_workflow) {
-        return this.load(session.active_workflow);
+      const session = JSON.parse(content) as Record<string, unknown>;
+      if (typeof session.active_workflow === 'string') {
+        return await this.load(session.active_workflow);
       }
     } catch {
       // Session file doesn't exist or is invalid
@@ -178,7 +183,7 @@ export class WorkflowStateManager {
     let session: Record<string, unknown> = {};
     try {
       const content = await fs.readFile(this.sessionPath, 'utf8');
-      session = JSON.parse(content);
+      session = JSON.parse(content) as Record<string, unknown>;
     } catch {
       // Start fresh if session doesn't exist
     }
@@ -351,13 +356,13 @@ export class WorkflowStateManager {
    */
   async getStashedWorkflowId(): Promise<string | null> {
     const session = await this.loadSession();
-    return session.stashedWorkflowId || null;
+    return session.stashedWorkflowId ?? null;
   }
 
   private async loadSession(): Promise<SessionData> {
     try {
       const content = await fs.readFile(this.sessionPath, 'utf8');
-      return JSON.parse(content);
+      return JSON.parse(content) as SessionData;
     } catch {
       return { active_workflow: null };
     }

@@ -116,7 +116,7 @@ program
       }
     } catch (error) {
       if (isNodeError(error) && error.code === 'ENOENT') {
-        console.error(`Error: Workflow file not found: ${String(file ?? 'unknown')}`);
+        console.error(`Error: Workflow file not found: ${file ?? 'unknown'}`);
       } else if (error instanceof WorkflowSyntaxError) {
         console.error(`Syntax error: ${error.message}`);
       } else {
@@ -470,12 +470,12 @@ program
       }
 
       // Show pending tasks
-      if (state.pendingTasks && state.pendingTasks.length > 0) {
+      if (state.pendingTasks.length > 0) {
         console.log(`\nPending Tasks: ${state.pendingTasks.map(taskIdToString).join(', ')}`);
       }
 
       // Show agent bindings
-      if (state.agentBindings && Object.keys(state.agentBindings).length > 0) {
+      if (Object.keys(state.agentBindings).length > 0) {
         console.log('\nAgent Bindings:');
         for (const [agentId, binding] of Object.entries(state.agentBindings)) {
           const taskStr = taskIdToString(binding.taskId);
@@ -607,7 +607,7 @@ program
         process.exit(1);
       }
 
-      const gate = config.gates[name];
+      const gate = config!.gates[name];
       if (!gate.command) {
         console.error(`Gate has no command: ${name}`);
         process.exit(1);
@@ -620,7 +620,7 @@ program
       };
       execSync(gate.command, options);
       console.log(`Gate ${name}: PASS`);
-    } catch (error) {
+    } catch {
       console.error(`Gate ${name}: FAIL`);
       process.exit(1);
     }
