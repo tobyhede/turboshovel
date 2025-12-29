@@ -11,7 +11,6 @@ export default tseslint.config(
       '**/dist/**',
       '**/coverage/**',
       '**/*.js',
-      '!eslint.config.js',
     ],
   },
 
