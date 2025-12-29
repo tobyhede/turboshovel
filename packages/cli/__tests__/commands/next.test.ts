@@ -140,4 +140,110 @@ describe('next command', () => {
       expect(result.stderr).toContain('Max retries');
     });
   });
+
+  describe('pass condition (--pass)', () => {
+    describe('PASS: CONTINUE', () => {
+      beforeEach(async () => {
+        runCli('start workflows/simple.workflow.md', workspace);
+      });
+
+      it('advances to next task', async () => {
+        const result = runCli('next --pass', workspace);
+
+        expect(result.exitCode).toBe(0);
+        const state = await getActiveState(workspace);
+        expect(state?.task).toBe(2);
+      });
+    });
+
+    describe('PASS: DONE', () => {
+      beforeEach(async () => {
+        runCli('start workflows/simple.workflow.md', workspace);
+        runCli('next', workspace); // Advance to task 2 which has PASS: DONE
+      });
+
+      it('marks workflow complete', async () => {
+        const result = runCli('next --pass', workspace);
+
+        expect(result.stdout).toContain('complete');
+      });
+
+      it('clears active workflow', async () => {
+        runCli('next --pass', workspace);
+
+        const session = await readSession(workspace);
+        expect(session.active).toBeNull();
+      });
+    });
+
+    describe('PASS: GOTO N', () => {
+      beforeEach(async () => {
+        runCli('start workflows/goto.workflow.md', workspace);
+      });
+
+      it('jumps to specified task', async () => {
+        const result = runCli('next --pass', workspace);
+
+        expect(result.exitCode).toBe(0);
+        const state = await getActiveState(workspace);
+        expect(state?.task).toBe(3); // GOTO 3
+      });
+
+      it('skips intermediate tasks', async () => {
+        runCli('next --pass', workspace);
+
+        const state = await getActiveState(workspace);
+        expect(state?.taskName).toContain('Jump target');
+      });
+    });
+  });
+
+  describe('fail condition (--fail)', () => {
+    describe('FAIL: RETRY N', () => {
+      beforeEach(async () => {
+        runCli('start workflows/retry.workflow.md', workspace);
+      });
+
+      it('increments retryCount if under max', async () => {
+        runCli('next --fail', workspace);
+
+        const state = await getActiveState(workspace);
+        expect(state?.retryCount).toBe(1);
+        expect(state?.task).toBe(1); // Same task
+      });
+
+      it('outputs retry info', async () => {
+        const result = runCli('next --fail', workspace);
+
+        expect(result.stdout).toContain('Retry');
+      });
+    });
+
+    describe('FAIL: STOP', () => {
+      beforeEach(async () => {
+        runCli('start workflows/simple.workflow.md', workspace);
+      });
+
+      it('blocks workflow', async () => {
+        const result = runCli('next --fail', workspace);
+
+        expect(result.exitCode).toBe(1);
+      });
+
+      it('outputs error message', async () => {
+        const result = runCli('next --fail', workspace);
+
+        expect(result.stderr.length).toBeGreaterThan(0);
+      });
+    });
+
+    describe('FAIL: GOTO N', () => {
+      beforeEach(async () => {
+        // We need a workflow with FAIL: GOTO - create one dynamically
+        // For now, skip this test or use a fixture that has it
+      });
+
+      it.todo('jumps to specified task on failure');
+    });
+  });
 });
