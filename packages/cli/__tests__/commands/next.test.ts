@@ -1,0 +1,143 @@
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {
+  createTestWorkspace,
+  runCli,
+  getActiveState,
+  readSession,
+  type TestWorkspace,
+} from '../helpers/test-utils.js';
+
+describe('next command', () => {
+  let workspace: TestWorkspace;
+
+  beforeEach(async () => {
+    workspace = await createTestWorkspace();
+  });
+
+  afterEach(async () => {
+    await workspace.cleanup();
+  });
+
+  describe('standard advance (bare next)', () => {
+    beforeEach(async () => {
+      runCli('start workflows/simple.workflow.md', workspace);
+    });
+
+    it('increments task number', async () => {
+      runCli('next', workspace);
+
+      const state = await getActiveState(workspace);
+      expect(state?.task).toBe(2);
+    });
+
+    it('resets retryCount to 0', async () => {
+      // First set retry count via --retry
+      runCli('next --retry', workspace);
+      let state = await getActiveState(workspace);
+      expect(state?.retryCount).toBe(1);
+
+      // Now advance
+      runCli('next', workspace);
+      state = await getActiveState(workspace);
+      expect(state?.retryCount).toBe(0);
+    });
+
+    it('updates taskName from workflow', async () => {
+      runCli('next', workspace);
+
+      const state = await getActiveState(workspace);
+      expect(state?.taskName).toContain('Second task');
+    });
+
+    it('outputs next task info', async () => {
+      const result = runCli('next', workspace);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain('Task 2');
+      expect(result.stdout).toContain('Second task');
+    });
+
+    it('fails if no active workflow', async () => {
+      runCli('stop', workspace);
+
+      const result = runCli('next', workspace);
+      expect(result.stdout).toContain('No active workflow');
+    });
+
+    it('completes workflow when advancing past last task', async () => {
+      runCli('next', workspace); // Task 1 -> 2
+
+      const result = runCli('next', workspace); // Task 2 -> complete
+      expect(result.stdout).toContain('complete');
+
+      const session = await readSession(workspace);
+      expect(session.active).toBeNull();
+    });
+  });
+
+  describe('step jump (--step N)', () => {
+    beforeEach(async () => {
+      runCli('start workflows/goto.workflow.md', workspace);
+    });
+
+    it('jumps to specified task number', async () => {
+      const result = runCli('next --step 3', workspace);
+
+      expect(result.exitCode).toBe(0);
+      const state = await getActiveState(workspace);
+      expect(state?.task).toBe(3);
+    });
+
+    it('resets retryCount on jump', async () => {
+      runCli('next --retry', workspace);
+      runCli('next --step 3', workspace);
+
+      const state = await getActiveState(workspace);
+      expect(state?.retryCount).toBe(0);
+    });
+
+    it('outputs jumped task info', async () => {
+      const result = runCli('next --step 3', workspace);
+
+      expect(result.stdout).toContain('Task 3');
+      expect(result.stdout).toContain('Jump target');
+    });
+  });
+
+  describe('retry (--retry)', () => {
+    beforeEach(async () => {
+      runCli('start workflows/retry.workflow.md', workspace);
+    });
+
+    it('increments retryCount', async () => {
+      runCli('next --retry', workspace);
+
+      const state = await getActiveState(workspace);
+      expect(state?.retryCount).toBe(1);
+    });
+
+    it('keeps same task number', async () => {
+      runCli('next --retry', workspace);
+
+      const state = await getActiveState(workspace);
+      expect(state?.task).toBe(1);
+    });
+
+    it('outputs retry count', async () => {
+      const result = runCli('next --retry', workspace);
+
+      expect(result.stdout).toContain('Retry 1/');
+    });
+
+    it('fails if retryCount exceeds retryMax', async () => {
+      // Default retryMax is 3
+      runCli('next --retry', workspace); // 1
+      runCli('next --retry', workspace); // 2
+      runCli('next --retry', workspace); // 3
+
+      const result = runCli('next --retry', workspace); // 4 - should fail
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('Max retries');
+    });
+  });
+});
