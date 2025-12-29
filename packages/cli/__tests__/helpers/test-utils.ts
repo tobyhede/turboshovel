@@ -45,11 +45,17 @@ export async function createTestWorkspace(): Promise<TestWorkspace> {
 
 /**
  * Run CLI via subprocess in isolated workspace.
+ *
+ * @param args - Command arguments as string or array. Use array for paths with spaces.
+ * @example
+ * runCli('start workflow.md', workspace)           // Simple args
+ * runCli(['start', 'my workflow.md'], workspace)   // Path with spaces
  */
-export function runCli(args: string, workspace: TestWorkspace): CliResult {
+export function runCli(args: string | string[], workspace: TestWorkspace): CliResult {
   const cliPath = join(__dirname, '..', '..', 'dist', 'cli.js');
+  const argArray = Array.isArray(args) ? args : args.split(' ').filter(Boolean);
 
-  const result = spawnSync('node', [cliPath, ...args.split(' ').filter(Boolean)], {
+  const result = spawnSync('node', [cliPath, ...argArray], {
     cwd: workspace.cwd,
     encoding: 'utf-8',
     env: {
@@ -68,6 +74,10 @@ export function runCli(args: string, workspace: TestWorkspace): CliResult {
 
 /**
  * Read session.json for active/stashed workflow verification.
+ *
+ * Maps internal session fields to test-friendly names:
+ * - `active_workflow` (from WorkflowStateManager) → `active`
+ * - `stashedWorkflowId` (from WorkflowStateManager) → `stashed`
  */
 export async function readSession(workspace: TestWorkspace): Promise<{
   active: string | null;
@@ -78,7 +88,7 @@ export async function readSession(workspace: TestWorkspace): Promise<{
     const session = JSON.parse(content) as Record<string, unknown>;
     return {
       active: typeof session.active_workflow === 'string' ? session.active_workflow : null,
-      stashed: typeof session.stashedWorkflowId === 'string' ? session.stashedWorkflowId : null
+      stashed: typeof session.stashedWorkflowId === 'string' ? session.stashedWorkflowId : null,
     };
   } catch {
     return { active: null, stashed: null };
