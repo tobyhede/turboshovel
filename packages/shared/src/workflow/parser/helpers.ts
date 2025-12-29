@@ -72,7 +72,7 @@ export function extractSubtaskHeader(text: string): ParsedSubtaskHeader | null {
 
   // Match: "N.M description" or "N.{n} description" with optional (agent-type)
   // Subtasks are now numeric (e.g., 1.1, 1.2) not alphabetic (1.A, 1.B)
-  const match = trimmed.match(/^(\d+)\.(\{n\}|\d+)\s+(.+?)(?:\s+\(([^)]+)\))?$/);
+  const match = /^(\d+)\.(\{n\}|\d+)\s+(.+?)(?:\s+\(([^)]+)\))?$/.exec(trimmed);
   if (!match) return null;
 
   const [, taskStr, subtaskId, desc, agent] = match;
@@ -160,7 +160,7 @@ function parseConditionalPrefix(rest: string, type: 'pass' | 'fail'): ParsedCond
   let remaining = rest;
 
   // Match modifier: space + (ALL|ANY) + (space or colon or arrow or dash)
-  const modifierMatch = remaining.match(/^\s+(ALL|ANY)[\s:→\-]/);
+  const modifierMatch = /^\s+(ALL|ANY)[\s:→\-]/.exec(remaining);
   if (modifierMatch) {
     modifier = modifierMatch[1] as 'ALL' | 'ANY';
     remaining = remaining.slice(modifierMatch[0].length);

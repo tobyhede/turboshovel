@@ -1,5 +1,5 @@
 // plugin/hooks/hooks-app/src/gates/plugin-path.ts
-import { HookInput, GateResult } from '@turboshovel/shared';
+import { type HookInput, type GateResult } from '@turboshovel/shared';
 import * as path from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -17,11 +17,11 @@ const __dirname = dirname(__filename);
  * Typical usage: SubagentStop hook to inject path context when agents complete.
  */
 
-export async function execute(_input: HookInput): Promise<GateResult> {
+export function execute(_input: HookInput): GateResult {
   // Determine plugin root:
   // 1. Use CLAUDE_PLUGIN_ROOT if set (standard Claude Code environment)
   // 2. Otherwise compute from this script's location
-  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT || computePluginRoot();
+  const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT ?? computePluginRoot();
 
   const contextMessage = `## Plugin Path Context
 

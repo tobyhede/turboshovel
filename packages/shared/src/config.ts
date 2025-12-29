@@ -1,7 +1,7 @@
 // packages/cli/src/config.ts
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { TurboshovelConfig, HookConfig, GateConfig } from './types.js';
+import { type TurboshovelConfig, HookConfig, type GateConfig } from './types.js';
 import { fileExists } from './utils.js';
 import { logger } from './logger.js';
 

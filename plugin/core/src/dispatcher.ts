@@ -1,8 +1,8 @@
 // plugin/hooks/hooks-app/src/dispatcher.ts
 import {
-  HookInput,
-  HookConfig,
-  GateConfig,
+  type HookInput,
+  type HookConfig,
+  type GateConfig,
   loadConfig,
   logger
 } from '@turboshovel/shared';

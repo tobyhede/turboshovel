@@ -21,11 +21,11 @@ function formatWorkflowContext(state: WorkflowState): string {
   lines.push('## Active Workflow');
   lines.push('');
   lines.push(`**Workflow:** ${state.workflow}`);
-  lines.push(`**Task ${state.task}:** ${state.taskName}`);
+  lines.push(`**Task ${String(state.task)}:** ${state.taskName}`);
 
   // Show retry info if relevant
   if (state.retryCount > 0) {
-    lines.push(`**Attempt:** ${state.retryCount + 1} of ${state.retryMax}`);
+    lines.push(`**Attempt:** ${String(state.retryCount + 1)} of ${String(state.retryMax)}`);
   }
 
   // Show task progress if there are tasks
@@ -35,13 +35,13 @@ function formatWorkflowContext(state: WorkflowState): string {
     const blocked = state.tasks.filter((t) => t.status === 'blocked').length;
 
     lines.push('');
-    lines.push(`**Tasks:** ${complete}/${state.tasks.length} complete`);
+    lines.push(`**Tasks:** ${String(complete)}/${String(state.tasks.length)} complete`);
 
     if (running > 0) {
-      lines.push(`  - ${running} running`);
+      lines.push(`  - ${String(running)} running`);
     }
     if (blocked > 0) {
-      lines.push(`  - ${blocked} blocked`);
+      lines.push(`  - ${String(blocked)} blocked`);
     }
   }
 
@@ -50,7 +50,7 @@ function formatWorkflowContext(state: WorkflowState): string {
     lines.push('');
     lines.push('**Variables:**');
     for (const [key, value] of Object.entries(state.variables)) {
-      lines.push(`  - ${key}: ${value}`);
+      lines.push(`  - ${key}: ${String(value)}`);
     }
   }
 

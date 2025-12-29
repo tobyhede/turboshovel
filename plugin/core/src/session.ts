@@ -1,10 +1,10 @@
 import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 import {
-  SessionState,
-  SessionStateArrayKey,
+  type SessionState,
+  type SessionStateArrayKey,
   SessionStateSchema,
-  SessionLoadResult,
+  type SessionLoadResult,
   isNodeError,
   isFileNotFoundError,
   logger
@@ -18,7 +18,7 @@ import {
 export class Session {
   private stateFile: string;
 
-  constructor(cwd: string = '.') {
+  constructor(cwd = '.') {
     this.stateFile = join(cwd, '.claude', 'session', 'state.json');
   }
 
@@ -44,8 +44,7 @@ export class Session {
    */
   async append(key: SessionStateArrayKey, value: string): Promise<void> {
     const state = await this.load();
-    // Defensive: ensure array exists even if validation bypassed
-    const array = state[key] ?? [];
+    const array = state[key];
 
     if (!array.includes(value)) {
       array.push(value);
@@ -68,7 +67,7 @@ export class Session {
   async clear(): Promise<void> {
     try {
       await fs.unlink(this.stateFile);
-    } catch (error) {
+    } catch {
       // File doesn't exist, that's fine
     }
   }

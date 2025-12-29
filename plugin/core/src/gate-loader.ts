@@ -3,10 +3,9 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
 import {
-  HookInput,
-  GateResult,
-  GateConfig,
-  TurboshovelConfig,
+  type HookInput,
+  type GateResult,
+  type GateConfig,
   resolvePluginPath,
   loadConfigFile
 } from '@turboshovel/shared';
@@ -42,7 +41,7 @@ function asExecError(error: unknown): ExecError {
     const err = error as Record<string, unknown>;
     return {
       name: typeof err.name === 'string' ? err.name : 'Error',
-      message: typeof err.message === 'string' ? err.message : String(error),
+      message: typeof err.message === 'string' ? err.message : 'Unknown error',
       killed: typeof err.killed === 'boolean' ? err.killed : false,
       signal: typeof err.signal === 'string' ? err.signal : undefined,
       code: typeof err.code === 'number' ? err.code : undefined,
@@ -52,7 +51,7 @@ function asExecError(error: unknown): ExecError {
   }
   return {
     name: 'Error',
-    message: String(error),
+    message: typeof error === 'string' ? error : 'Unknown error',
     killed: false,
     signal: undefined,
     code: 1,
@@ -77,7 +76,7 @@ function asExecError(error: unknown): ExecError {
 export async function executeShellCommand(
   command: string,
   cwd: string,
-  timeoutMs: number = 30000
+  timeoutMs = 30000
 ): Promise<ShellResult> {
   try {
     const { stdout, stderr } = await execAsync(command, { cwd, timeout: timeoutMs });
@@ -93,13 +92,13 @@ export async function executeShellCommand(
     if (err.killed && err.signal === 'SIGTERM') {
       return {
         exitCode: 124, // Standard timeout exit code
-        output: `Command timed out after ${timeoutMs}ms`
+        output: `Command timed out after ${String(timeoutMs)}ms`
       };
     }
 
     return {
-      exitCode: err.code || 1,
-      output: (err.stdout || '') + (err.stderr || '')
+      exitCode: err.code ?? 1,
+      output: (err.stdout ?? '') + (err.stderr ?? '')
     };
   }
 }
@@ -116,18 +115,21 @@ export async function executeBuiltinGate(gateName: string, input: HookInput): Pr
   try {
     // Convert kebab-case to camelCase for module lookup
     // "plugin-path" -> "pluginPath"
-    const moduleName = gateName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+    const moduleName = gateName.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
 
     // Look up the gate module from static imports
     const gateModule = (builtinGates as Record<string, { execute?: (input: HookInput) => Promise<GateResult> }>)[moduleName];
 
-    if (!gateModule || typeof gateModule.execute !== 'function') {
+    if (!gateModule) {
+      throw new Error(`Gate module '${moduleName}' not found or missing execute function`);
+    }
+    if (typeof gateModule.execute !== 'function') {
       throw new Error(`Gate module '${moduleName}' not found or missing execute function`);
     }
 
     return await gateModule.execute(input);
   } catch (error) {
-    throw new Error(`Failed to load built-in gate ${gateName}: ${error}`);
+    throw new Error(`Failed to load built-in gate ${gateName}: ${String(error)}`);
   }
 }
 
@@ -153,7 +155,7 @@ export async function executeGate(
     // Depth limit to prevent infinite recursion
     if (pluginStack.length >= MAX_PLUGIN_DEPTH) {
       throw new Error(
-        `Maximum plugin gate depth (${MAX_PLUGIN_DEPTH}) exceeded: ${pluginStack.join(' -> ')} -> ${gateRef}`
+        `Maximum plugin gate depth (${String(MAX_PLUGIN_DEPTH)}) exceeded: ${pluginStack.join(' -> ')} -> ${gateRef}`
       );
     }
 

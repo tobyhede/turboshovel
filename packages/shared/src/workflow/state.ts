@@ -228,7 +228,7 @@ export class WorkflowStateManager {
    */
   async popPendingTask(id: string): Promise<TaskId | null> {
     const state = await this.load(id);
-    if (!state || !state.pendingTasks?.length) {
+    if (!state?.pendingTasks?.length) {
       return null;
     }
 

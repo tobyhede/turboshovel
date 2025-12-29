@@ -1,7 +1,7 @@
 // plugin/hooks/hooks-app/src/cli.ts
 import {
-  SessionState,
-  SessionStateArrayKey,
+  type SessionState,
+  type SessionStateArrayKey,
   SESSION_STATE_KEYS,
   type HookInput,
   parseHookInput,

@@ -2,7 +2,6 @@
 import {
   WorkflowStateManager,
   parseTaskIdFromString,
-  taskIdToString,
   type TaskId,
   type HookInput
 } from '@turboshovel/shared';
@@ -48,7 +47,7 @@ export async function trackTaskDispatch(input: HookInput): Promise<TaskDispatchR
     }
 
     // Parse TaskId from description
-    const description = input.tool_input?.description || '';
+    const description = input.tool_input?.description ?? '';
     const taskId = parseTaskIdFromString(description, { requireSeparator: true });
 
     // VIOLATION: Task without TaskId prefix

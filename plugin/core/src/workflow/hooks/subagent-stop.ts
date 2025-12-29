@@ -18,7 +18,7 @@ function parseAgentStatus(output?: string): 'pass' | 'fail' | null {
   if (!output) return null;
 
   // Look for STATUS: OK/PASS or STATUS: BLOCKED/FAIL
-  const match = output.match(/STATUS:\s*(OK|PASS|BLOCKED|FAIL)/i);
+  const match = /STATUS:\s*(OK|PASS|BLOCKED|FAIL)/i.exec(output);
   if (match) {
     const status = match[1].toUpperCase();
     return status === 'OK' || status === 'PASS' ? 'pass' : 'fail';
@@ -74,7 +74,7 @@ export async function handleSubagentStop(input: HookInput): Promise<SubagentStop
     }
 
     // Determine result
-    const result = parseAgentStatus(input.output) || 'pass'; // Default to pass
+    const result = parseAgentStatus(input.output) ?? 'pass'; // Default to pass
 
     // Update binding
     await manager.updateAgentBinding(state.id, agentId, {
@@ -110,16 +110,16 @@ async function formatCompletionContext(
   // Check how many agents still running
   const state = await manager.load(workflowId);
   if (state) {
-    const bindings = Object.values(state.agentBindings || {});
+    const bindings = Object.values(state.agentBindings);
     const running = bindings.filter((b) => b.status === 'running').length;
     const done = bindings.filter((b) => b.status === 'done').length;
     const failed = bindings.filter((b) => b.result === 'fail').length;
 
     if (running > 0) {
-      lines.push(`${done}/${done + running} tasks done. Waiting for ${running} more.`);
+      lines.push(`${String(done)}/${String(done + running)} tasks done. Waiting for ${String(running)} more.`);
     } else {
       if (failed > 0) {
-        lines.push(`All tasks complete. ${failed} failed.`);
+        lines.push(`All tasks complete. ${String(failed)} failed.`);
         lines.push(`Run: workflow next --fail`);
       } else {
         lines.push(`All tasks complete.`);
@@ -165,6 +165,6 @@ async function handleLegacySubagentStop(input: HookInput): Promise<SubagentStopR
   }
 
   return {
-    context: `Task complete. ${updatedTasks.filter((t) => t.status === 'complete').length}/${updatedTasks.length} done.`
+    context: `Task complete. ${String(updatedTasks.filter((t) => t.status === 'complete').length)}/${String(updatedTasks.length)} done.`
   };
 }

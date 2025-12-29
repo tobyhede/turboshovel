@@ -116,7 +116,7 @@ program
       }
     } catch (error) {
       if (isNodeError(error) && error.code === 'ENOENT') {
-        console.error(`Error: Workflow file not found: ${file}`);
+        console.error(`Error: Workflow file not found: ${String(file ?? 'unknown')}`);
       } else if (error instanceof WorkflowSyntaxError) {
         console.error(`Syntax error: ${error.message}`);
       } else {
@@ -179,9 +179,11 @@ program
             switch (conditionResult.action) {
               case 'retry':
                 // Keep agent running, increment retry, re-present task
-                await manager.update(state.id, { retryCount: conditionResult.newRetryCount! });
-                console.log(`Retry ${conditionResult.newRetryCount}/${state.retryMax}`);
-                console.log(`Agent ${options.agent} retrying task ${binding.taskId.task}`);
+                if (conditionResult.newRetryCount !== undefined) {
+                  await manager.update(state.id, { retryCount: conditionResult.newRetryCount });
+                  console.log(`Retry ${String(conditionResult.newRetryCount)}/${String(state.retryMax)}`);
+                }
+                console.log(`Agent ${options.agent} retrying task ${String(binding.taskId.task)}`);
                 return;
 
               case 'blocked':
@@ -190,7 +192,7 @@ program
                   status: 'done',
                   result: 'fail'
                 });
-                console.log(`Agent ${options.agent} blocked: ${conditionResult.message || 'Task failed'}`);
+                console.log(`Agent ${options.agent} blocked: ${conditionResult.message ?? 'Task failed'}`);
                 return;
 
               case 'goto':
@@ -199,7 +201,7 @@ program
                   status: 'done',
                   result: 'fail'
                 });
-                console.log(`Agent ${options.agent} failed, workflow jumping to task ${conditionResult.gotoTask}`);
+                console.log(`Agent ${options.agent} failed, workflow jumping to task ${String(conditionResult.gotoTask)}`);
                 return;
 
               case 'continue':
@@ -219,11 +221,11 @@ program
 
           // Check if all agents done
           const updated = await manager.load(state.id);
-          const bindings = Object.values(updated?.agentBindings || {});
+          const bindings = Object.values(updated?.agentBindings ?? {});
           const running = bindings.filter((b) => b.status === 'running').length;
 
           if (running > 0) {
-            console.log(`${running} agent(s) still running`);
+            console.log(`${String(running)} agent(s) still running`);
           } else {
             console.log('All agents complete. Run: tsv next');
           }
@@ -251,19 +253,21 @@ program
               return;
 
             case 'blocked':
-              console.error(`Error: ${result.message || 'Task blocked'}`);
+              console.error(`Error: ${result.message ?? 'Task blocked'}`);
               process.exit(1);
               break;
 
             case 'goto': {
-              const gotoTask = tasks[result.gotoTask! - 1];
-              await manager.update(state.id, {
-                task: result.gotoTask!,
-                taskName: gotoTask.description,
-                retryCount: 0
-              });
-              console.log(`Task ${result.gotoTask}: ${gotoTask.description}`);
-              printTaskGuidance(gotoTask);
+              if (result.gotoTask !== undefined) {
+                const gotoTask = tasks[result.gotoTask - 1];
+                await manager.update(state.id, {
+                  task: result.gotoTask,
+                  taskName: gotoTask.description,
+                  retryCount: 0
+                });
+                console.log(`Task ${String(result.gotoTask)}: ${gotoTask.description}`);
+                printTaskGuidance(gotoTask);
+              }
               return;
             }
 
@@ -288,27 +292,32 @@ program
           const result = evaluateFailCondition(currentTask, state.retryCount, state.retryMax);
 
           switch (result.action) {
-            case 'retry':
-              await manager.update(state.id, { retryCount: result.newRetryCount! });
-              console.log(`Retry ${result.newRetryCount}/${state.retryMax}`);
-              console.log(`Task ${state.task}: ${currentTask.description}`);
+            case 'retry': {
+              if (result.newRetryCount !== undefined) {
+                await manager.update(state.id, { retryCount: result.newRetryCount });
+                console.log(`Retry ${String(result.newRetryCount)}/${String(state.retryMax)}`);
+              }
+              console.log(`Task ${String(state.task)}: ${currentTask.description}`);
               printTaskGuidance(currentTask);
               return;
+            }
 
             case 'blocked':
-              console.error(`Error: ${result.message || 'Task blocked'}`);
+              console.error(`Error: ${result.message ?? 'Task blocked'}`);
               process.exit(1);
               break;
 
             case 'goto': {
-              const gotoTask = tasks[result.gotoTask! - 1];
-              await manager.update(state.id, {
-                task: result.gotoTask!,
-                taskName: gotoTask.description,
-                retryCount: 0
-              });
-              console.log(`Task ${result.gotoTask}: ${gotoTask.description}`);
-              printTaskGuidance(gotoTask);
+              if (result.gotoTask !== undefined) {
+                const gotoTask = tasks[result.gotoTask - 1];
+                await manager.update(state.id, {
+                  task: result.gotoTask,
+                  taskName: gotoTask.description,
+                  retryCount: 0
+                });
+                console.log(`Task ${String(result.gotoTask)}: ${gotoTask.description}`);
+                printTaskGuidance(gotoTask);
+              }
               return;
             }
 
@@ -323,7 +332,7 @@ program
           const newRetryCount = state.retryCount + 1;
 
           if (newRetryCount > state.retryMax) {
-            console.error(`Error: Max retries exceeded (${state.retryMax})`);
+            console.error(`Error: Max retries exceeded (${String(state.retryMax)})`);
             process.exit(1);
           }
 
@@ -342,8 +351,8 @@ program
             retryCount: newRetryCount
           });
 
-          console.log(`Retry ${newRetryCount}/${state.retryMax}`);
-          console.log(`Task ${state.task}: ${currentTask.description}`);
+          console.log(`Retry ${String(newRetryCount)}/${String(state.retryMax)}`);
+          console.log(`Task ${String(state.task)}: ${currentTask.description}`);
           printTaskGuidance(currentTask);
           return;
         }
@@ -387,7 +396,7 @@ program
           retryCount: 0
         });
 
-        console.log(`Task ${nextTaskNumber}: ${nextTask.description}`);
+        console.log(`Task ${String(nextTaskNumber)}: ${nextTask.description}`);
         printTaskGuidance(nextTask);
       } catch (error) {
         console.error(`Error: ${getErrorMessage(error)}`);
@@ -444,7 +453,7 @@ program
       // Show stashed status
       if (stashedId && !state) {
         const stashed = await manager.load(stashedId);
-        console.log(`Workflow stashed: ${stashed?.workflow || stashedId}`);
+        console.log(`Workflow stashed: ${stashed?.workflow ?? stashedId}`);
         console.log('Enforcement paused. Use "tsv pop" to resume.');
         return;
       }
@@ -453,8 +462,8 @@ program
 
       console.log(`Workflow: ${state.workflow}`);
       console.log(`ID: ${state.id}`);
-      console.log(`Task ${state.task}: ${state.taskName}`);
-      console.log(`Retry: ${state.retryCount}/${state.retryMax}`);
+      console.log(`Task ${String(state.task)}: ${state.taskName}`);
+      console.log(`Retry: ${String(state.retryCount)}/${String(state.retryMax)}`);
 
       if (Object.keys(state.variables).length > 0) {
         console.log('Variables:', JSON.stringify(state.variables, null, 2));
@@ -477,7 +486,7 @@ program
 
       // Legacy task display
       if (state.tasks.length > 0) {
-        console.log(`\nTasks: ${state.tasks.length}`);
+        console.log(`\nTasks: ${String(state.tasks.length)}`);
         for (const task of state.tasks) {
           console.log(`  - ${task.id}: ${task.status}`);
         }
@@ -528,7 +537,7 @@ program
 
       for (const state of states) {
         const marker = active?.id === state.id ? ' (active)' : '';
-        console.log(`${state.id}${marker}: ${state.workflow} - Task ${state.task}`);
+        console.log(`${state.id}${marker}: ${state.workflow} - Task ${String(state.task)}`);
       }
     } catch (error) {
       console.error(`Error: ${getErrorMessage(error)}`);
@@ -576,7 +585,7 @@ program
       }
 
       console.log(`Workflow restored: ${state.workflow}`);
-      console.log(`Resuming at Task ${state.task}: ${state.taskName}`);
+      console.log(`Resuming at Task ${String(state.task)}: ${state.taskName}`);
       console.log('Enforcement active.');
     } catch (error) {
       console.error(`Error: ${getErrorMessage(error)}`);
@@ -644,11 +653,11 @@ function formatAction(action: Action): string {
     case 'STOP':
       return action.message ? `STOP "${action.message}"` : 'STOP';
     case 'GOTO':
-      return `GOTO ${action.task}`;
+      return `GOTO ${String(action.task)}`;
     case 'DONE':
       return 'DONE';
     case 'RETRY':
-      return action.max ? `RETRY ${action.max}` : 'RETRY';
+      return action.max ? `RETRY ${String(action.max)}` : 'RETRY';
     default:
       return 'UNKNOWN';
   }

@@ -36,7 +36,7 @@ function isHeading(node: Node): node is Heading {
  */
 function extractText(node: PhrasingContent | Heading | Paragraph | ListItem): string {
   if (node.type === 'text') {
-    return (node as Text).value;
+    return (node).value;
   }
   if ('children' in node && Array.isArray(node.children)) {
     return node.children.map((child) => extractText(child as PhrasingContent)).join('');
@@ -72,7 +72,7 @@ function extractPromptText(node: Paragraph): string {
       continue;
     }
     if (foundMarker) {
-      promptText += extractText(child as PhrasingContent);
+      promptText += extractText(child);
     }
   }
 
@@ -96,7 +96,7 @@ interface TaskBuilder {
  */
 export function parseWorkflow(markdown: string): Task[] {
   // Parse markdown to AST
-  const tree = fromMarkdown(markdown) as Root;
+  const tree = fromMarkdown(markdown);
 
   // State for walking
   const tasks: Task[] = [];
@@ -236,7 +236,7 @@ export function parseWorkflow(markdown: string): Task[] {
       // Get text from first paragraph child
       const firstParagraph = listItemNode.children.find((c) => c.type === 'paragraph');
       if (firstParagraph) {
-        const text = extractText(firstParagraph as Paragraph);
+        const text = extractText(firstParagraph);
         const conditional = parseConditional(text);
         if (conditional) {
           pendingConditionals.push(conditional);
