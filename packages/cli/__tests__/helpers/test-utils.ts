@@ -75,7 +75,11 @@ export async function readSession(workspace: TestWorkspace): Promise<{
 }> {
   try {
     const content = await readFile(workspace.sessionPath(), 'utf-8');
-    return JSON.parse(content);
+    const session = JSON.parse(content) as Record<string, unknown>;
+    return {
+      active: typeof session.active_workflow === 'string' ? session.active_workflow : null,
+      stashed: typeof session.stashedWorkflowId === 'string' ? session.stashedWorkflowId : null
+    };
   } catch {
     return { active: null, stashed: null };
   }
