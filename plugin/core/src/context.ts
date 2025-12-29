@@ -250,7 +250,7 @@ export async function injectContext(hookEvent: string, input: HookInput): Promis
     const session = new Session(input.cwd);
     const activeCommand = await session.get('active_command');
     const activeSkill = await session.get('active_skill');
-    const commandOrSkill = activeCommand || activeSkill;
+    const commandOrSkill = activeCommand ?? activeSkill;
 
     const contextFile = await discoverAgentCommandContext(
       input.cwd,
