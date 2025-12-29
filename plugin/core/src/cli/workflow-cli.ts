@@ -259,6 +259,10 @@ program
               break;
 
             case 'goto': {
+              if (result.gotoTask === undefined) {
+                console.error('Error: goto action missing target task');
+                process.exit(1);
+              }
               const gotoTask = tasks[result.gotoTask - 1];
               await manager.update(state.id, {
                 task: result.gotoTask,
@@ -304,6 +308,10 @@ program
               break;
 
             case 'goto': {
+              if (result.gotoTask === undefined) {
+                console.error('Error: goto action missing target task');
+                process.exit(1);
+              }
               const gotoTask = tasks[result.gotoTask - 1];
               await manager.update(state.id, {
                 task: result.gotoTask,

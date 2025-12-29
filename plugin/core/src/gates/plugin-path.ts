@@ -17,7 +17,7 @@ const __dirname = dirname(__filename);
  * Typical usage: SubagentStop hook to inject path context when agents complete.
  */
 
-export function execute(_input: HookInput): GateResult {
+export function execute(_input: HookInput): Promise<GateResult> {
   // Determine plugin root:
   // 1. Use CLAUDE_PLUGIN_ROOT if set (standard Claude Code environment)
   // 2. Otherwise compute from this script's location
@@ -32,9 +32,9 @@ CLAUDE_PLUGIN_ROOT=${pluginRoot}
 
 When you see file references like \`@\${CLAUDE_PLUGIN_ROOT}skills/...\`, resolve them using the path above.`;
 
-  return {
+  return Promise.resolve({
     additionalContext: contextMessage
-  };
+  });
 }
 
 /**
