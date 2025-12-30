@@ -237,12 +237,16 @@ program
                 return;
 
               case 'goto':
-                // Mark agent done, workflow will handle goto
+                // Mark agent done AND update workflow to goto target
                 await manager.updateAgentBinding(state.id, options.agent, {
                   status: 'done',
                   result: 'fail'
                 });
-                console.log(`Agent ${options.agent} failed, workflow jumping to task ${conditionResult.gotoTask}`);
+                await manager.update(state.id, {
+                  task: conditionResult.gotoTask,
+                  retryCount: 0
+                });
+                console.log(`Agent ${options.agent} failed, workflow jumped to task ${conditionResult.gotoTask}`);
                 return;
 
               case 'continue':
@@ -252,13 +256,17 @@ program
           }
 
           // --pass or continue from above
-          // If agent has child workflow, read its status
+          // If agent has child workflow, it must be completed first
           let result: 'pass' | 'fail' = options.fail ? 'fail' : 'pass';
           if (binding.childWorkflowId) {
             const childResult = await manager.getChildWorkflowResult(binding.childWorkflowId);
-            if (childResult) {
-              result = childResult;
+            if (childResult === null) {
+              console.error(`Error: Child workflow still active. Complete or stop it first.`);
+              console.error(`Child workflow: ${binding.childWorkflowId}`);
+              console.error(`Use: tsv status (to check child) or tsv stop (to abort child)`);
+              process.exit(1);
             }
+            result = childResult;
           }
 
           await manager.updateAgentBinding(state.id, options.agent, {

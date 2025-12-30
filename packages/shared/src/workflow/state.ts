@@ -398,8 +398,7 @@ export class WorkflowStateManager {
    * 1. If child state doesn't exist → 'pass' (cleaned up after completion)
    * 2. If child.variables.blocked === true → 'fail' (workflow hit STOP with error)
    * 3. If child.variables.completed === true → 'pass' (workflow hit DONE)
-   * 4. If child is not active and not stashed → 'pass' (completed without explicit flag)
-   * 5. Otherwise → null (still running)
+   * 4. Otherwise → null (still running - no explicit termination status)
    *
    * The CLI `complete` and `next` commands set these variables
    * when a workflow terminates via DONE or STOP actions.
@@ -421,17 +420,7 @@ export class WorkflowStateManager {
       return 'pass';
     }
 
-    // Check if child is still the active workflow
-    const session = await this.loadSession();
-    if (session.activeWorkflow === childId) {
-      return null; // Still running
-    }
-
-    // Child not active and not stashed = completed
-    if (session.stashedWorkflowId !== childId) {
-      return 'pass';
-    }
-
-    return null; // Stashed, so technically still pending
+    // No explicit termination - child is still running
+    return null;
   }
 }

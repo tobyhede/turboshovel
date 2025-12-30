@@ -4,6 +4,7 @@ import {
   runCli,
   getActiveState,
   readSession,
+  writeSession,
   getAllStates,
   type TestWorkspace,
 } from '../helpers/test-utils.js';
@@ -325,6 +326,33 @@ describe('next command', () => {
       // Parent should now be active
       const session3 = await readSession(workspace);
       expect(session3.active).toBe(parentId);
+    });
+  });
+
+  describe('blocks agent completion while child workflow active', () => {
+    it('should error when trying to complete agent with active child workflow', async () => {
+      // Start parent workflow
+      runCli('start workflows/simple.workflow.md', workspace);
+      const session1 = await readSession(workspace);
+      const parentId = session1.active;
+
+      // Queue task and bind agent with child workflow
+      runCli(['start', '--task', '1.1', 'workflows/simple.workflow.md'], workspace);
+      runCli(['start', '--agent', 'test-agent', 'workflows/simple.workflow.md'], workspace);
+
+      // Child workflow is now active - DO NOT complete it
+      // Manually set parent as active to test the blocking behavior
+      await writeSession(workspace, { active: parentId });
+
+      // Verify parent is active
+      const session2 = await readSession(workspace);
+      expect(session2.active).toBe(parentId);
+
+      // Try to complete agent in parent while child is still running (should fail)
+      const result = runCli(['next', '--pass', '--agent', 'test-agent'], workspace);
+
+      expect(result.exitCode).not.toBe(0);
+      expect(result.stderr).toContain('Child workflow still active');
     });
   });
 });

@@ -98,6 +98,23 @@ export async function readSession(workspace: TestWorkspace): Promise<{
 }
 
 /**
+ * Write session.json to set active/stashed workflow.
+ */
+export async function writeSession(
+  workspace: TestWorkspace,
+  session: { active?: string | null; stashed?: string | null }
+): Promise<void> {
+  const sessionData: Record<string, unknown> = {};
+  if (session.active !== undefined) {
+    sessionData.activeWorkflow = session.active;
+  }
+  if (session.stashed !== undefined) {
+    sessionData.stashedWorkflowId = session.stashed;
+  }
+  await writeFile(workspace.sessionPath(), JSON.stringify(sessionData, null, 2));
+}
+
+/**
  * List all workflow state files.
  */
 export async function listWorkflowStates(workspace: TestWorkspace): Promise<string[]> {
