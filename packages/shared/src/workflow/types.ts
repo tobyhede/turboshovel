@@ -127,6 +127,7 @@ export interface Subtask {
   readonly description: string;
   readonly agentType?: string; // e.g., "code-review-agent" from "(code-review-agent)"
   readonly isDynamic: boolean; // true for ### N.{n}, false for ### N.1
+  readonly workflows?: readonly string[];  // Child workflow files
 }
 
 /**
