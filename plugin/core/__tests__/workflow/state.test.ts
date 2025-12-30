@@ -90,6 +90,19 @@ describe('WorkflowStateManager', () => {
       const active = await manager.getActive();
       expect(active).toBeNull();
     });
+
+    it('migrates active_workflow to activeWorkflow on read', async () => {
+      // Write old format directly
+      const sessionPath = join(testDir, '.claude', 'turboshovel', 'session.json');
+      await fs.mkdir(join(testDir, '.claude', 'turboshovel'), { recursive: true });
+
+      // Create the workflow file so load doesn't fail
+      const state = await manager.create('test.workflow.md', 'Test Task');
+      await fs.writeFile(sessionPath, JSON.stringify({ active_workflow: state.id }));
+
+      const active = await manager.getActive();
+      expect(active?.id).toBe(state.id);
+    });
   });
 
   describe('update', () => {
