@@ -9,5 +9,6 @@ export {
   parseAction,
   parseConditional,
   convertConditionals,
-  extractSubtaskHeader
+  extractSubtaskHeader,
+  extractWorkflowList
 } from './helpers.js';

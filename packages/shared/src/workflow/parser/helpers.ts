@@ -283,3 +283,22 @@ export function convertConditionals(conditionals: ParsedConditional[]): Conditio
 
   return null;
 }
+
+/**
+ * Extract workflow file references from subtask content.
+ * Looks for markdown list items ending in .workflow.md
+ */
+export function extractWorkflowList(content: string): string[] {
+  const workflows: string[] = [];
+  const lines = content.split('\n');
+
+  for (const line of lines) {
+    // Match " - filename.workflow.md" pattern
+    const match = line.match(/^\s*-\s+(\S+\.workflow\.md)\s*$/);
+    if (match) {
+      workflows.push(match[1]);
+    }
+  }
+
+  return workflows;
+}
