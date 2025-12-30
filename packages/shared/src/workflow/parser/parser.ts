@@ -15,7 +15,8 @@ import {
   extractTaskHeader,
   extractSubtaskHeader,
   parseConditional,
-  convertConditionals
+  convertConditionals,
+  extractWorkflowList
 } from './helpers.js';
 import { WorkflowSyntaxError, type ParsedConditional } from './types.js';
 
@@ -75,12 +76,21 @@ function extractPromptText(node: Paragraph): string {
   return promptText.trim();
 }
 
+interface SubtaskBuilder {
+  id: string;
+  description: string;
+  agentType?: string;
+  isDynamic: boolean;
+  content: string;
+}
+
 interface TaskBuilder {
   number: TaskNumber;
   description: string;
   command?: { code: string };
   prompts: { text: string }[];
   subtasks: Subtask[];
+  pendingSubtask?: SubtaskBuilder;
 }
 
 /**
@@ -100,6 +110,22 @@ export function parseWorkflow(markdown: string): Task[] {
   let pendingConditionals: ParsedConditional[] = [];
   let implicitText = '';
 
+  // Helper to finalize pending subtask
+  const finalizePendingSubtask = () => {
+    if (currentTask && currentTask.pendingSubtask) {
+      const workflows = extractWorkflowList(currentTask.pendingSubtask.content);
+      const subtask: Subtask = {
+        id: currentTask.pendingSubtask.id,
+        description: currentTask.pendingSubtask.description,
+        agentType: currentTask.pendingSubtask.agentType,
+        isDynamic: currentTask.pendingSubtask.isDynamic,
+        workflows: workflows.length > 0 ? workflows : undefined
+      };
+      currentTask.subtasks.push(subtask);
+      currentTask.pendingSubtask = undefined;
+    }
+  };
+
   // Walk AST nodes
   visit(tree, (node: Node, _index: number | undefined, _parent: Node | undefined) => {
     // Handle H1 headings - reject if they look like task headers
@@ -115,6 +141,9 @@ export function parseWorkflow(markdown: string): Task[] {
 
     // Handle H2 headings - these are task headers
     if (isHeading(node) && node.depth === 2) {
+      // Finalize pending subtask
+      finalizePendingSubtask();
+
       // Finalize previous task
       if (currentTask) {
         tasks.push(finalizeTask(currentTask, pendingConditionals, implicitText));
@@ -137,6 +166,9 @@ export function parseWorkflow(markdown: string): Task[] {
 
     // Handle H3 headings - these are subtask headers
     if (isHeading(node) && node.depth === 3 && currentTask) {
+      // Finalize pending subtask from previous H3
+      finalizePendingSubtask();
+
       const headingText = extractText(node);
       const parsed = extractSubtaskHeader(headingText);
 
@@ -165,13 +197,14 @@ export function parseWorkflow(markdown: string): Task[] {
           );
         }
 
-        // Add subtask
-        currentTask.subtasks.push({
+        // Start new pending subtask
+        currentTask.pendingSubtask = {
           id: parsed.id,
           description: parsed.description,
           agentType: parsed.agentType,
-          isDynamic: parsed.isDynamic
-        });
+          isDynamic: parsed.isDynamic,
+          content: ''
+        };
       }
     }
 
@@ -226,7 +259,7 @@ export function parseWorkflow(markdown: string): Task[] {
       }
     }
 
-    // Handle list items - check for conditionals
+    // Handle list items - check for conditionals or accumulate for pending subtask
     if (node.type === 'listItem' && currentTask) {
       const listItemNode = node as ListItem;
       // Get text from first paragraph child
@@ -236,10 +269,16 @@ export function parseWorkflow(markdown: string): Task[] {
         const conditional = parseConditional(text);
         if (conditional) {
           pendingConditionals.push(conditional);
+        } else if (currentTask.pendingSubtask) {
+          // Accumulate list item content for pending subtask
+          currentTask.pendingSubtask.content += ' - ' + text + '\n';
         }
       }
     }
   });
+
+  // Finalize pending subtask
+  finalizePendingSubtask();
 
   // Finalize last task
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard for uninitialized currentTask from loop
