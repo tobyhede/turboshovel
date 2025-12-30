@@ -350,7 +350,7 @@ describe('WorkflowStateManager', () => {
       expect(restored).toBeNull();
     });
 
-    it('clears stashedWorkflowId after pop', async () => {
+    it('clears stash after pop', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
       await manager.setActive(state.id);
       await manager.stash();
