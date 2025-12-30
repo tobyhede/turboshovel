@@ -19,7 +19,8 @@ import {
   getErrorMessage,
   type TaskNumber,
   type Action,
-  type Task
+  type Task,
+  type PendingTask
 } from '@turboshovel/shared';
 
 const program = new Command();
@@ -56,8 +57,16 @@ program
           process.exit(1);
         }
 
-        await manager.pushPendingTask(state.id, { taskId });
-        console.log(`Task ${taskIdToString(taskId)} queued for agent binding`);
+        // file parameter becomes the workflow for this task
+        const pendingTask: PendingTask = {
+          taskId,
+          workflow: file  // Optional workflow file
+        };
+
+        await manager.pushPendingTask(state.id, pendingTask);
+
+        const workflowInfo = file ? ` with workflow ${file}` : '';
+        console.log(`Task ${taskIdToString(taskId)} queued for agent binding${workflowInfo}`);
         return;
       }
 

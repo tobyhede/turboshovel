@@ -129,6 +129,18 @@ describe('start command', () => {
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Invalid task ID');
     });
+
+    it('should queue task with workflow file', async () => {
+      const result = runCli('start --task 1.1 workflows/simple.workflow.md', workspace);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain('queued');
+      expect(result.stdout).toContain('1.1');
+
+      const state = await getActiveState(workspace);
+      expect(state?.pendingTasks).toHaveLength(1);
+      expect(state?.pendingTasks[0].workflow).toBe('workflows/simple.workflow.md');
+    });
   });
 
   describe('agent binding mode (--agent)', () => {
