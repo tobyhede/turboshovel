@@ -1,6 +1,7 @@
 ---
 name: verifying-by-consensus
 description: Dispatch N independent review agents, collate by consensus ratio, cross-check exclusive findings
+workflow: verify.workflow.md
 ---
 
 # Verifying by Consensus
@@ -38,10 +39,14 @@ Dispatch N agents to independently review the same subject. Collate findings:
 1. Determine N (default 2, or from args)
 2. Select agents (from args, plugins, or built-ins)
 3. Start workflow: `workflow start ${CLAUDE_PLUGIN_ROOT}workflows/verify.workflow.md`
-4. For each agent 1..N:
-   - Queue task: `workflow start --task N.{i}`
-   - Dispatch agent with review prompt
-   - Agent writes findings to `.work/{date}-verify-{i}-{timestamp}.md`
+4. For each agent 1..N (strictly in sequence):
+   - Queue task: `workflow start --task 1.{n}`
+   - Dispatch agent with Task tool (SubagentStart hook auto-binds agent to queued task)
+   - Agent writes findings to `.work/{date}-verify-{agentId}-{timestamp}.md`
+
+> **Important:** Each task MUST be queued immediately before dispatching its agent.
+> The SubagentStart hook pops the pending task and binds the agent automatically.
+> Do NOT queue all tasks first then dispatch all agents - this breaks binding.
 
 ### Phase 2: Collate
 
