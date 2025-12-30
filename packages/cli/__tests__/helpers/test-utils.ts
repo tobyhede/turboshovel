@@ -76,7 +76,7 @@ export function runCli(args: string | string[], workspace: TestWorkspace): CliRe
  * Read session.json for active/stashed workflow verification.
  *
  * Maps internal session fields to test-friendly names:
- * - `active_workflow` (from WorkflowStateManager) → `active`
+ * - `activeWorkflow` (from WorkflowStateManager) → `active`
  * - `stashedWorkflowId` (from WorkflowStateManager) → `stashed`
  */
 export async function readSession(workspace: TestWorkspace): Promise<{
@@ -86,8 +86,10 @@ export async function readSession(workspace: TestWorkspace): Promise<{
   try {
     const content = await readFile(workspace.sessionPath(), 'utf-8');
     const session = JSON.parse(content) as Record<string, unknown>;
+    // Support both old (active_workflow) and new (activeWorkflow) field names
+    const activeWorkflow = session.activeWorkflow ?? session.active_workflow;
     return {
-      active: typeof session.active_workflow === 'string' ? session.active_workflow : null,
+      active: typeof activeWorkflow === 'string' ? activeWorkflow : null,
       stashed: typeof session.stashedWorkflowId === 'string' ? session.stashedWorkflowId : null,
     };
   } catch {
