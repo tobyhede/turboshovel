@@ -290,7 +290,7 @@ export class WorkflowStateManager {
     }
 
     const existing = state.agentBindings[agentId];
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard for missing agent binding
     if (!existing) {
       throw new Error(`No binding for agent ${agentId}`);
     }

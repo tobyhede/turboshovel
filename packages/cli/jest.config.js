@@ -10,6 +10,8 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'json'],
   extensionsToTreatAsEsm: ['.ts'],
+  // ESM/CJS interop: TypeScript emits .js extensions in imports, but Jest
+  // needs to resolve to .ts source files. This mapper strips .js extensions.
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },

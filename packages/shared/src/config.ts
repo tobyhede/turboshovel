@@ -1,4 +1,4 @@
-// packages/cli/src/config.ts
+// packages/shared/src/config.ts
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { type TurboshovelConfig, type GateConfig } from './types.js';

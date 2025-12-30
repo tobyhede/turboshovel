@@ -1,4 +1,4 @@
-// packages/cli/src/types.ts
+// packages/shared/src/types.ts
 
 // Import HookInput from schemas (single source of truth for validation)
 import type { HookInput as SchemaHookInput } from './schemas.js';

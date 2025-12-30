@@ -511,7 +511,7 @@ Let Claude Code handle `${CLAUDE_PLUGIN_ROOT}` dynamically - it will set the cor
    ```
 
 3. Verify working directory:
-   - Commands run from project root (where gates.json lives)
+   - Commands run from project root (where turboshovel.json lives)
    - Use absolute paths if needed
 
 ### JSON Syntax Errors
@@ -569,7 +569,7 @@ Use the `plugin` and `gate` fields to reference external gates:
 
 **Required Fields:**
 - `plugin`: Name of the plugin containing the gate
-- `gate`: Name of the gate defined in the plugin's `gates.json`
+- `gate`: Name of the gate defined in the plugin's `turboshovel.json`
 
 **Optional Fields:**
 - `description`: Override the plugin's gate description
@@ -617,8 +617,8 @@ You can combine local gates (with `command` field) and plugin gates (with `plugi
 - Example: `"plugin": "cipherpowers"` requires `../cipherpowers/` directory
 
 **Gate not found in plugin:**
-- Verify gate name matches plugin's `gates.json`
-- Check plugin's `gates.json` for available gates
+- Verify gate name matches plugin's `turboshovel.json`
+- Check plugin's `turboshovel.json` for available gates
 - Gate names are case-sensitive
 
 **Plugin gate fails:**

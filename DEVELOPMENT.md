@@ -105,3 +105,33 @@ Packages must be built in dependency order:
 3. `plugin/core` (depends on shared)
 
 The root `npm run build` handles this automatically.
+
+## Docker Integration Test
+
+Test the full installation flow in an isolated Docker environment:
+
+```bash
+# Test local packages (pre-publish verification)
+npm run verify:claude
+
+# Test npm packages (post-publish smoke test)
+npm run verify:claude:npm
+```
+
+This builds a Docker container with Node 22 and Claude Code, installs the CLI and plugin, then launches an interactive Claude session. Auth is persisted in `.claude-docker/`.
+
+## Package Dependencies
+
+### Workspace Protocol
+
+Internal package dependencies use `*` instead of `workspace:*`:
+
+```json
+"dependencies": {
+  "@turboshovel/shared": "*"
+}
+```
+
+**Rationale:** The `workspace:*` protocol is a pnpm/yarn convention that npm doesn't fully support. When publishing to npm, `workspace:*` references cause installation failures because npm doesn't resolve them. Using `*` works with both local development (npm workspaces resolve to local packages) and published packages (npm resolves to published versions).
+
+This was discovered during npm publish testing where `workspace:*` caused `ERESOLVE` errors for users installing from npm registry.

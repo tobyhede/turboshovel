@@ -120,7 +120,7 @@ export async function executeBuiltinGate(gateName: string, input: HookInput): Pr
     // Look up the gate module from static imports
     const gateModule = (builtinGates as Record<string, { execute?: (input: HookInput) => Promise<GateResult> }>)[moduleName];
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard for dynamic module lookup
     if (!gateModule) {
       throw new Error(`Gate module '${moduleName}' not found or missing execute function`);
     }
@@ -242,7 +242,7 @@ export async function loadPluginGate(
   }
 
   // Validate plugin config has gates object
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard validating external config structure
   if (!pluginConfig.gates || typeof pluginConfig.gates !== 'object') {
     throw new Error(
       `Invalid turboshovel.json structure in plugin '${pluginName}': missing or invalid 'gates' object`
@@ -250,7 +250,7 @@ export async function loadPluginGate(
   }
 
   const gateConfig = pluginConfig.gates[gateName];
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard for missing gate in loaded plugin config
   if (!gateConfig) {
     throw new Error(`Gate '${gateName}' not found in plugin '${pluginName}'`);
   }

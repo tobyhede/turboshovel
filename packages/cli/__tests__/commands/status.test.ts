@@ -42,7 +42,7 @@ describe('status command', () => {
     const result = runCli('status', workspace);
 
     expect(result.stdout).toContain('Retry:');
-    expect(result.stdout).toMatch(/\d+\/\d+/);
+    expect(result.stdout).toContain('0/3'); // Default: 0 retries of max 3
   });
 
   it('shows workflow ID', async () => {

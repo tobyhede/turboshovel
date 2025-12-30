@@ -24,7 +24,7 @@ import { WorkflowSyntaxError, type ParsedConditional } from './types.js';
  * Required because unist-util-visit types callback node as base Node
  */
 function isHeading(node: Node): node is Heading {
-  return node.type === 'heading';
+  return node.type === 'heading' && 'depth' in node;
 }
 
 /**
@@ -242,7 +242,7 @@ export function parseWorkflow(markdown: string): Task[] {
   });
 
   // Finalize last task
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard for uninitialized currentTask from loop
   if (currentTask) {
     tasks.push(finalizeTask(currentTask, pendingConditionals, implicitText));
   }

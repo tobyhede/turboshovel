@@ -60,19 +60,13 @@ describe('Action discriminated union', () => {
   test('STOP action with message', () => {
     const action: Action = { type: 'STOP', message: 'fix tests' };
     expect(action.type).toBe('STOP');
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (action.type === 'STOP') {
-      expect(action.message).toBe('fix tests');
-    }
+    expect(action.message).toBe('fix tests');
   });
 
   test('GOTO action with task number', () => {
     const action: Action = { type: 'GOTO', task: 3 as TaskNumber };
     expect(action.type).toBe('GOTO');
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (action.type === 'GOTO') {
-      expect(action.task).toBe(3);
-    }
+    expect(action.task).toBe(3);
   });
 });
 
