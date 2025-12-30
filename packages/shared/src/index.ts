@@ -4,6 +4,9 @@
 export * from './types.js';
 export { HookInputSchema, type ParseResult, parseHookInput, SessionStateSchema, type ValidatedSessionState, WorkflowStateSchema, type ValidatedWorkflowState } from './schemas.js';
 
+// Workflow types
+export type { PendingTask } from './workflow/types.js';
+
 // Errors
 export * from './errors.js';
 

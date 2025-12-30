@@ -142,35 +142,64 @@ describe('WorkflowStateManager', () => {
     });
   });
 
+  describe('pushPendingTask', () => {
+    it('should push task with workflow to pending queue', async () => {
+      const state = await manager.create('test.workflow.md', 'Test');
+
+      await manager.pushPendingTask(state.id, {
+        taskId: { task: createTaskNumber(1)!, subtask: '1' },
+        workflow: 'child.workflow.md'
+      });
+
+      const updated = await manager.load(state.id);
+      expect(updated?.pendingTasks).toHaveLength(1);
+      expect(updated?.pendingTasks[0].taskId).toEqual({ task: createTaskNumber(1)!, subtask: '1' });
+      expect(updated?.pendingTasks[0].workflow).toBe('child.workflow.md');
+    });
+
+    it('should push task without workflow to pending queue', async () => {
+      const state = await manager.create('test.workflow.md', 'Test');
+
+      await manager.pushPendingTask(state.id, {
+        taskId: { task: createTaskNumber(1)!, subtask: '2' }
+      });
+
+      const updated = await manager.load(state.id);
+      expect(updated?.pendingTasks).toHaveLength(1);
+      expect(updated?.pendingTasks[0].taskId).toEqual({ task: createTaskNumber(1)!, subtask: '2' });
+      expect(updated?.pendingTasks[0].workflow).toBeUndefined();
+    });
+  });
+
   describe('WorkflowStateManager.pushPendingTask', () => {
     it('adds task to empty pending queue', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
       const taskId: TaskId = { task: createTaskNumber(3)!, subtask: '1' };
 
-      await manager.pushPendingTask(state.id, taskId);
+      await manager.pushPendingTask(state.id, { taskId });
 
       const updated = await manager.load(state.id);
-      expect(updated?.pendingTasks).toEqual([{ task: createTaskNumber(3)!, subtask: '1' }]);
+      expect(updated?.pendingTasks).toEqual([{ taskId: { task: createTaskNumber(3)!, subtask: '1' } }]);
     });
 
     it('appends to existing pending queue (FIFO)', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
 
-      await manager.pushPendingTask(state.id, { task: createTaskNumber(1)! });
-      await manager.pushPendingTask(state.id, { task: createTaskNumber(2)! });
-      await manager.pushPendingTask(state.id, { task: createTaskNumber(3)!, subtask: '1' });
+      await manager.pushPendingTask(state.id, { taskId: { task: createTaskNumber(1)! } });
+      await manager.pushPendingTask(state.id, { taskId: { task: createTaskNumber(2)! } });
+      await manager.pushPendingTask(state.id, { taskId: { task: createTaskNumber(3)!, subtask: '1' } });
 
       const updated = await manager.load(state.id);
       expect(updated?.pendingTasks).toEqual([
-        { task: createTaskNumber(1)! },
-        { task: createTaskNumber(2)! },
-        { task: createTaskNumber(3)!, subtask: '1' }
+        { taskId: { task: createTaskNumber(1)! } },
+        { taskId: { task: createTaskNumber(2)! } },
+        { taskId: { task: createTaskNumber(3)!, subtask: '1' } }
       ]);
     });
 
     it('throws for non-existent workflow', async () => {
       await expect(
-        manager.pushPendingTask('non-existent', { task: createTaskNumber(1)! })
+        manager.pushPendingTask('non-existent', { taskId: { task: createTaskNumber(1)! } })
       ).rejects.toThrow('Workflow non-existent not found');
     });
   });
@@ -186,14 +215,14 @@ describe('WorkflowStateManager', () => {
 
     it('returns and removes first task (FIFO)', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
-      await manager.pushPendingTask(state.id, { task: createTaskNumber(1)! });
-      await manager.pushPendingTask(state.id, { task: createTaskNumber(2)! });
+      await manager.pushPendingTask(state.id, { taskId: { task: createTaskNumber(1)! } });
+      await manager.pushPendingTask(state.id, { taskId: { task: createTaskNumber(2)! } });
 
       const first = await manager.popPendingTask(state.id);
-      expect(first).toEqual({ task: createTaskNumber(1)! });
+      expect(first).toEqual({ taskId: { task: createTaskNumber(1)! } });
 
       const updated = await manager.load(state.id);
-      expect(updated?.pendingTasks).toEqual([{ task: createTaskNumber(2)! }]);
+      expect(updated?.pendingTasks).toEqual([{ taskId: { task: createTaskNumber(2)! } }]);
     });
 
     it('returns null for non-existent workflow', async () => {
@@ -320,13 +349,13 @@ describe('WorkflowStateManager', () => {
     it('preserves workflow state when stashed', async () => {
       const state = await manager.create('test.workflow.md', 'Test Task');
       await manager.setActive(state.id);
-      await manager.pushPendingTask(state.id, { task: createTaskNumber(3)! });
+      await manager.pushPendingTask(state.id, { taskId: { task: createTaskNumber(3)! } });
 
       await manager.stash();
 
       // Workflow still exists with its state
       const loaded = await manager.load(state.id);
-      expect(loaded?.pendingTasks).toEqual([{ task: createTaskNumber(3)! }]);
+      expect(loaded?.pendingTasks).toEqual([{ taskId: { task: createTaskNumber(3)! } }]);
     });
   });
 

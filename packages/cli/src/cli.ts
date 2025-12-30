@@ -56,7 +56,7 @@ program
           process.exit(1);
         }
 
-        await manager.pushPendingTask(state.id, taskId);
+        await manager.pushPendingTask(state.id, { taskId });
         console.log(`Task ${taskIdToString(taskId)} queued for agent binding`);
         return;
       }
@@ -69,14 +69,14 @@ program
           process.exit(1);
         }
 
-        const taskId = await manager.popPendingTask(state.id);
-        if (!taskId) {
+        const pending = await manager.popPendingTask(state.id);
+        if (!pending) {
           console.error('Error: No pending task to bind');
           process.exit(1);
         }
 
-        await manager.bindAgent(state.id, options.agent, taskId);
-        console.log(`Agent ${options.agent} bound to task ${taskIdToString(taskId)}`);
+        await manager.bindAgent(state.id, options.agent, pending.taskId);
+        console.log(`Agent ${options.agent} bound to task ${taskIdToString(pending.taskId)}`);
 
         // If file also provided, start child workflow (future enhancement)
         if (file) {
@@ -471,7 +471,7 @@ program
 
       // Show pending tasks
       if (state.pendingTasks.length > 0) {
-        console.log(`\nPending Tasks: ${state.pendingTasks.map(taskIdToString).join(', ')}`);
+        console.log(`\nPending Tasks: ${state.pendingTasks.map((p) => taskIdToString(p.taskId)).join(', ')}`);
       }
 
       // Show agent bindings

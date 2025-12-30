@@ -144,3 +144,57 @@ describe('WorkflowStateSchema - TaskId validation', () => {
     expect(result.success).toBe(false);
   });
 });
+
+describe('WorkflowStateSchema pendingTasks migration', () => {
+  const baseState = {
+    id: 'test-123',
+    workflow: 'test.workflow.md',
+    task: 1,
+    taskName: 'Test',
+    retryCount: 0,
+    retryMax: 3,
+    variables: {},
+    tasks: [],
+    agentBindings: {},
+    startedAt: '2025-01-01T00:00:00Z',
+    updatedAt: '2025-01-01T00:00:00Z'
+  };
+
+  it('should accept legacy TaskId[] format and transform to PendingTask[]', () => {
+    const legacyState = {
+      ...baseState,
+      pendingTasks: [{ task: 1, subtask: '1' }]  // Legacy format
+    };
+
+    const result = WorkflowStateSchema.safeParse(legacyState);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.pendingTasks[0]).toEqual({
+        taskId: { task: 1, subtask: '1' },
+        workflow: undefined
+      });
+    }
+  });
+
+  it('should accept new PendingTask[] format', () => {
+    const newState = {
+      ...baseState,
+      pendingTasks: [{ taskId: { task: 1, subtask: '1' }, workflow: 'child.workflow.md' }]
+    };
+
+    const result = WorkflowStateSchema.safeParse(newState);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.pendingTasks[0]).toEqual({
+        taskId: { task: 1, subtask: '1' },
+        workflow: 'child.workflow.md'
+      });
+    }
+  });
+
+  it('should accept empty pendingTasks array', () => {
+    const emptyState = { ...baseState, pendingTasks: [] };
+    const result = WorkflowStateSchema.safeParse(emptyState);
+    expect(result.success).toBe(true);
+  });
+});

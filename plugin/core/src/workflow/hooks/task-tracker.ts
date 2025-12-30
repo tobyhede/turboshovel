@@ -60,7 +60,7 @@ export async function trackTaskDispatch(input: HookInput): Promise<TaskDispatchR
     }
 
     // Push to pending queue
-    await manager.pushPendingTask(state.id, taskId);
+    await manager.pushPendingTask(state.id, { taskId });
 
     return { taskId };
   } catch (error) {

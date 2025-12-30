@@ -1,7 +1,7 @@
 // src/workflow/state.ts
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { createTaskNumber, type WorkflowState, type AgentBinding } from './types.js';
+import { createTaskNumber, type WorkflowState, type AgentBinding, type PendingTask } from './types.js';
 import type { TaskId } from './task-id.js';
 import { WorkflowStateSchema } from '../schemas.js';
 
@@ -214,14 +214,14 @@ export class WorkflowStateManager {
   /**
    * Push task to pending queue (FIFO - first in, first out)
    */
-  async pushPendingTask(id: string, taskId: TaskId): Promise<void> {
+  async pushPendingTask(id: string, pending: PendingTask): Promise<void> {
     const state = await this.load(id);
     if (!state) {
       throw new Error(`Workflow ${id} not found`);
     }
 
     await this.update(id, {
-      pendingTasks: [...state.pendingTasks, taskId]
+      pendingTasks: [...state.pendingTasks, pending]
     });
   }
 
@@ -229,7 +229,7 @@ export class WorkflowStateManager {
    * Pop task from pending queue (FIFO - returns first, removes it)
    * Returns null if queue is empty or workflow not found
    */
-  async popPendingTask(id: string): Promise<TaskId | null> {
+  async popPendingTask(id: string): Promise<PendingTask | null> {
     const state = await this.load(id);
     if (!state || state.pendingTasks.length === 0) {
       return null;

@@ -39,7 +39,7 @@ describe('trackTaskDispatch with TaskId', () => {
     expect(result.taskId).toEqual({ task: createTaskNumber(3)!, subtask: '1' });
 
     const updated = await manager.getActive();
-    expect(updated?.pendingTasks).toContainEqual({ task: createTaskNumber(3)!, subtask: '1' });
+    expect(updated?.pendingTasks).toContainEqual({ taskId: { task: createTaskNumber(3)!, subtask: '1' } });
   });
 
   it('returns violation for missing TaskId prefix in enforcement mode', async () => {

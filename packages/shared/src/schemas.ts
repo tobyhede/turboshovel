@@ -119,6 +119,22 @@ const TaskIdSchema = z
   .transform((obj): TaskId => obj as TaskId);
 
 /**
+ * Schema for pending task with backward compatibility.
+ * Accepts:
+ * - New format: { taskId: TaskId, workflow?: string }
+ * - Legacy format: TaskId (transforms to { taskId, workflow: undefined })
+ */
+const PendingTaskSchema = z.union([
+  // New format (preferred)
+  z.object({
+    taskId: TaskIdSchema,
+    workflow: z.string().optional()
+  }),
+  // Legacy format - transforms on parse
+  TaskIdSchema.transform(taskId => ({ taskId, workflow: undefined }))
+]);
+
+/**
  * Workflow State Schema - Runtime Validation for Persisted WorkflowState
  *
  * Validates the structure of workflow state files to ensure data integrity
@@ -139,7 +155,7 @@ export const WorkflowStateSchema = z.object({
     startedAt: z.string().optional(),
     completedAt: z.string().optional()
   })),
-  pendingTasks: z.array(TaskIdSchema).readonly(),
+  pendingTasks: z.array(PendingTaskSchema).readonly(),
   agentBindings: z.record(z.string(), z.object({
     taskId: TaskIdSchema,
     childWorkflowId: z.string().optional(),

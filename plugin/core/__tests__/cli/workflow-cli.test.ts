@@ -108,7 +108,7 @@ echo "test"
       // Verify state
       const manager = new WorkflowStateManager(testDir);
       const state = await manager.getActive();
-      expect(state?.pendingTasks).toContainEqual({ task: createTaskNumber(3)!, subtask: '1' });
+      expect(state?.pendingTasks).toContainEqual({ taskId: { task: createTaskNumber(3)!, subtask: '1' } });
     });
 
     it('errors when no active workflow', async () => {

@@ -45,6 +45,15 @@ export function decrementTaskNumber(tn: TaskNumber): TaskNumber | null {
 export type { TaskId } from './task-id.js';
 
 /**
+ * A task queued for agent binding, optionally with a child workflow.
+ * Used in the pending task queue to correlate Task tool dispatch with SubagentStart.
+ */
+export interface PendingTask {
+  readonly taskId: TaskId;
+  readonly workflow?: string;  // Child workflow file path (relative)
+}
+
+/**
  * Discriminated union for workflow actions
  * Prevents invalid states at compile time
  */
@@ -167,7 +176,7 @@ export interface WorkflowState {
   readonly tasks: readonly TaskState[];
 
   // Orchestration fields
-  readonly pendingTasks: readonly TaskId[];
+  readonly pendingTasks: readonly PendingTask[];
   readonly agentBindings: Readonly<Record<string, AgentBinding>>;
 
   // Child workflow fields (optional)

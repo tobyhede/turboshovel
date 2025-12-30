@@ -51,10 +51,10 @@ export async function handleSubagentStart(input: HookInput): Promise<SubagentSta
     }
 
     // Pop pending task
-    const taskId = await manager.popPendingTask(state.id);
+    const pending = await manager.popPendingTask(state.id);
 
     // VIOLATION: No pending task
-    if (!taskId) {
+    if (!pending) {
       return {
         violation:
           `SubagentStart with no pending task. ` +
@@ -64,13 +64,13 @@ export async function handleSubagentStart(input: HookInput): Promise<SubagentSta
     }
 
     // Bind agent to task
-    await manager.bindAgent(state.id, agentId, taskId);
+    await manager.bindAgent(state.id, agentId, pending.taskId);
 
     // Load workflow and get substituted prompt
-    const prompt = await loadAndSubstitutePrompt(input.cwd, state.workflow, taskId);
+    const prompt = await loadAndSubstitutePrompt(input.cwd, state.workflow, pending.taskId);
 
     // Inject context for subagent
-    const context = formatAgentContext(agentId, taskId, prompt);
+    const context = formatAgentContext(agentId, pending.taskId, prompt);
 
     return { context };
   } catch (error) {
