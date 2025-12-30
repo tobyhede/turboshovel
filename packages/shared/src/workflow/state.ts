@@ -32,8 +32,10 @@ function generateId(): string {
  * Tracks active and stashed workflows
  */
 interface SessionData {
-  active_workflow: string | null;
+  activeWorkflow: string | null;
   stashedWorkflowId?: string;
+  /** @deprecated Use activeWorkflow - kept for migration from old session files */
+  active_workflow?: string | null;
 }
 
 /**
@@ -165,14 +167,9 @@ export class WorkflowStateManager {
   }
 
   async getActive(): Promise<WorkflowState | null> {
-    try {
-      const content = await fs.readFile(this.sessionPath, 'utf8');
-      const session = JSON.parse(content) as Record<string, unknown>;
-      if (typeof session.active_workflow === 'string') {
-        return await this.load(session.active_workflow);
-      }
-    } catch {
-      // Session file doesn't exist or is invalid
+    const session = await this.loadSession();
+    if (typeof session.activeWorkflow === 'string') {
+      return await this.load(session.activeWorkflow);
     }
     return null;
   }
@@ -188,7 +185,8 @@ export class WorkflowStateManager {
       // Start fresh if session doesn't exist
     }
 
-    session.active_workflow = id;
+    session.activeWorkflow = id;
+    delete session.active_workflow; // Clean up old field
     await fs.writeFile(this.sessionPath, JSON.stringify(session, null, 2));
   }
 
@@ -305,19 +303,20 @@ export class WorkflowStateManager {
 
   /**
    * Stash current workflow (pause enforcement)
-   * Moves active_workflow to stashedWorkflowId, clears active
+   * Moves activeWorkflow to stashedWorkflowId, clears active
    * Returns stashed workflow ID or null if nothing to stash
    */
   async stash(): Promise<string | null> {
     const session = await this.loadSession();
-    const activeId = session.active_workflow;
+    const activeId = session.activeWorkflow;
 
     if (!activeId) {
       return null;
     }
 
-    session.active_workflow = null;
+    session.activeWorkflow = null;
     session.stashedWorkflowId = activeId;
+    delete session.active_workflow; // Clean up old field
     await this.saveSession(session);
 
     return activeId;
@@ -325,7 +324,7 @@ export class WorkflowStateManager {
 
   /**
    * Pop stashed workflow (resume enforcement)
-   * Restores stashedWorkflowId to active_workflow, clears stash
+   * Restores stashedWorkflowId to activeWorkflow, clears stash
    * Returns restored workflow state or null if nothing stashed
    */
   async pop(): Promise<WorkflowState | null> {
@@ -345,8 +344,9 @@ export class WorkflowStateManager {
     }
 
     // Restore to active
-    session.active_workflow = stashedId;
+    session.activeWorkflow = stashedId;
     session.stashedWorkflowId = undefined;
+    delete session.active_workflow; // Clean up old field
     await this.saveSession(session);
 
     return state;
@@ -363,9 +363,14 @@ export class WorkflowStateManager {
   private async loadSession(): Promise<SessionData> {
     try {
       const content = await fs.readFile(this.sessionPath, 'utf8');
-      return JSON.parse(content) as SessionData;
+      const data = JSON.parse(content) as SessionData;
+      // Migration: support old active_workflow field
+      if (data.active_workflow !== undefined && data.activeWorkflow === undefined) {
+        data.activeWorkflow = data.active_workflow;
+      }
+      return data;
     } catch {
-      return { active_workflow: null };
+      return { activeWorkflow: null };
     }
   }
 
