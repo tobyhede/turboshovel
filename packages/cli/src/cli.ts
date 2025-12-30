@@ -252,7 +252,15 @@ program
           }
 
           // --pass or continue from above
-          const result = options.fail ? 'fail' : 'pass';
+          // If agent has child workflow, read its status
+          let result: 'pass' | 'fail' = options.fail ? 'fail' : 'pass';
+          if (binding.childWorkflowId) {
+            const childResult = await manager.getChildWorkflowResult(binding.childWorkflowId);
+            if (childResult) {
+              result = childResult;
+            }
+          }
+
           await manager.updateAgentBinding(state.id, options.agent, {
             status: 'done',
             result
@@ -289,6 +297,9 @@ program
 
           switch (result.action) {
             case 'done':
+              await manager.update(state.id, {
+                variables: { ...state.variables, completed: true }
+              });
               console.log(`Workflow complete: ${state.workflow}`);
               await manager.setActive(null);
               return;
@@ -343,10 +354,15 @@ program
               return;
             }
 
-            case 'blocked':
+            case 'blocked': {
+              // Set blocked variable before stopping
+              await manager.update(state.id, {
+                variables: { ...state.variables, blocked: true }
+              });
               console.error(`Error: ${result.message ?? 'Task blocked'}`);
               process.exit(1);
               break;
+            }
 
             case 'goto': {
               if (result.gotoTask !== undefined) {
@@ -423,6 +439,10 @@ program
 
         // Check if workflow is complete
         if (nextTaskNumber > tasks.length) {
+          // Workflow completed successfully (all tasks finished)
+          await manager.update(state.id, {
+            variables: { ...state.variables, completed: true }
+          });
           console.log(`Workflow complete: ${state.workflow}`);
           await manager.setActive(null);
           return;
@@ -467,6 +487,9 @@ program
         });
         console.log(`Workflow BLOCKED: ${state.workflow}`);
       } else {
+        await manager.update(state.id, {
+          variables: { ...state.variables, completed: true }
+        });
         await manager.setActive(null);
         console.log(`Workflow complete: ${state.workflow}`);
       }

@@ -136,6 +136,32 @@ export async function getActiveState(
 }
 
 /**
+ * Get all workflow states.
+ */
+export async function getAllStates(
+  workspace: TestWorkspace
+): Promise<Array<Record<string, unknown>>> {
+  try {
+    const files = await readdir(workspace.statePath());
+    const states: Array<Record<string, unknown>> = [];
+
+    for (const file of files) {
+      if (file.endsWith('.json')) {
+        const id = file.replace('.json', '');
+        const state = await readWorkflowState(workspace, id);
+        if (state) {
+          states.push(state);
+        }
+      }
+    }
+
+    return states;
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Write a turboshovel config file.
  */
 export async function writeConfig(

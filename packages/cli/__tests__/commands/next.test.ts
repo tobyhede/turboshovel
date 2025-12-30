@@ -4,6 +4,7 @@ import {
   runCli,
   getActiveState,
   readSession,
+  getAllStates,
   type TestWorkspace,
 } from '../helpers/test-utils.js';
 
@@ -174,6 +175,14 @@ describe('next command', () => {
         const session = await readSession(workspace);
         expect(session.active).toBeNull();
       });
+
+      it('should set variables.completed=true when completing workflow', async () => {
+        runCli('next --pass', workspace);
+
+        const states = await getAllStates(workspace);
+        const state = states.find(s => s.workflow === 'workflows/simple.workflow.md');
+        expect(state?.variables.completed).toBe(true);
+      });
     });
 
     describe('PASS: GOTO N', () => {
@@ -234,6 +243,13 @@ describe('next command', () => {
         const result = runCli('next --fail', workspace);
 
         expect(result.stderr.length).toBeGreaterThan(0);
+      });
+
+      it('should set variables.blocked=true when STOP action triggered', async () => {
+        runCli('next --fail', workspace);
+
+        const state = await getActiveState(workspace);
+        expect(state?.variables.blocked).toBe(true);
       });
     });
 

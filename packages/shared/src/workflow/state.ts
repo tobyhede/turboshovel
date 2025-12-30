@@ -390,4 +390,48 @@ export class WorkflowStateManager {
     await fs.mkdir(path.dirname(this.sessionPath), { recursive: true });
     await fs.writeFile(this.sessionPath, JSON.stringify(session, null, 2));
   }
+
+  /**
+   * Get the result of a child workflow.
+   *
+   * Completion detection:
+   * 1. If child state doesn't exist → 'pass' (cleaned up after completion)
+   * 2. If child.variables.blocked === true → 'fail' (workflow hit STOP with error)
+   * 3. If child.variables.completed === true → 'pass' (workflow hit DONE)
+   * 4. If child is not active and not stashed → 'pass' (completed without explicit flag)
+   * 5. Otherwise → null (still running)
+   *
+   * The CLI `complete` and `next` commands set these variables
+   * when a workflow terminates via DONE or STOP actions.
+   */
+  async getChildWorkflowResult(childId: string): Promise<'pass' | 'fail' | null> {
+    const child = await this.load(childId);
+    if (!child) {
+      // Workflow state deleted = completed and cleaned up
+      return 'pass';
+    }
+
+    // Explicit failure: workflow blocked via STOP action
+    if (child.variables.blocked === true) {
+      return 'fail';
+    }
+
+    // Explicit success: workflow completed via DONE action
+    if (child.variables.completed === true) {
+      return 'pass';
+    }
+
+    // Check if child is still the active workflow
+    const session = await this.loadSession();
+    if (session.activeWorkflow === childId) {
+      return null; // Still running
+    }
+
+    // Child not active and not stashed = completed
+    if (session.stashedWorkflowId !== childId) {
+      return 'pass';
+    }
+
+    return null; // Stashed, so technically still pending
+  }
 }
