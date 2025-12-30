@@ -22,6 +22,7 @@ import {
   type Task,
   type PendingTask
 } from '@turboshovel/shared';
+import { resolveWorkflowFile } from './helpers/resolve-workflow.js';
 
 const program = new Command();
 
@@ -87,9 +88,40 @@ program
         await manager.bindAgent(state.id, options.agent, pending.taskId);
         console.log(`Agent ${options.agent} bound to task ${taskIdToString(pending.taskId)}`);
 
-        // If file also provided, start child workflow (future enhancement)
-        if (file) {
-          console.log(`Child workflow from ${file} not yet implemented`);
+        // If workflow specified, create child workflow
+        if (pending.workflow) {
+          const workflowPath = await resolveWorkflowFile(cwd, pending.workflow);
+          if (!workflowPath) {
+            console.error(`Error: Workflow file not found: ${pending.workflow}`);
+            process.exit(1);
+          }
+
+          const content = await fs.readFile(workflowPath, 'utf8');
+          const tasks = parseWorkflow(content);
+
+          if (tasks.length === 0) {
+            console.error('Error: Child workflow has no tasks');
+            process.exit(1);
+          }
+
+          // Create child workflow linked to parent
+          const childState = await manager.create(pending.workflow, tasks[0].description, {
+            agentId: options.agent,
+            parentWorkflowId: state.id,
+            parentTaskId: pending.taskId
+          });
+
+          // Update agent binding with child workflow ID
+          await manager.updateAgentBinding(state.id, options.agent, {
+            childWorkflowId: childState.id
+          });
+
+          // Set child as active (agent will work on child)
+          await manager.setActive(childState.id);
+
+          console.log(`Started child workflow: ${pending.workflow}`);
+          console.log(`Child ID: ${childState.id}`);
+          console.log(`Task 1: ${tasks[0].description}`);
         }
         return;
       }

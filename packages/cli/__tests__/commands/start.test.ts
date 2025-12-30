@@ -5,6 +5,7 @@ import {
   readSession,
   getActiveState,
   listWorkflowStates,
+  readWorkflowState,
   type TestWorkspace,
 } from '../helpers/test-utils.js';
 
@@ -196,6 +197,46 @@ describe('start command', () => {
       const result = runCli('start --agent test-agent', workspace);
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('No active workflow');
+    });
+
+    it('should create child workflow linked to parent', async () => {
+      // The beforeEach queues task 1 without a workflow.
+      // Replace it with a task that has a workflow by clearing and requeiing.
+      // Pop the task without workflow
+      runCli('start --agent temp-agent', workspace);
+
+      // Now queue task 1 with a workflow
+      runCli('start --task 1 workflows/simple.workflow.md', workspace);
+
+      // Bind agent - should create child workflow
+      const result = runCli('start --agent test-agent-123', workspace);
+      expect(result.exitCode).toBe(0);
+
+      // Verify child workflow was created
+      const stateFiles = await listWorkflowStates(workspace);
+      expect(stateFiles.length).toBe(2); // parent + child
+
+      // Get session to find parent workflow ID (child is now active)
+      const session = await readSession(workspace);
+      expect(session.active).toBeTruthy(); // Child is now active
+
+      // Find the parent workflow ID - look for the state file that has this child as active
+      const allStates = await Promise.all(
+        stateFiles.map(file => readWorkflowState(workspace, file.replace('.json', '')))
+      );
+      const parentState = allStates.find(state =>
+        Object.values(state?.agentBindings as Record<string, unknown> || {})
+          .some((binding: unknown) =>
+            typeof binding === 'object' &&
+            binding !== null &&
+            'childWorkflowId' in binding &&
+            (binding as Record<string, unknown>).childWorkflowId === session.active
+          )
+      );
+
+      expect(parentState).toBeTruthy();
+      const agentBinding = (parentState?.agentBindings as Record<string, unknown>)?.['test-agent-123'];
+      expect((agentBinding as Record<string, unknown>)?.childWorkflowId).toBe(session.active);
     });
   });
 });

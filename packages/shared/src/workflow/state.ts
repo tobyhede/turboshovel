@@ -39,6 +39,15 @@ interface SessionData {
 }
 
 /**
+ * Options for creating a child workflow linked to a parent
+ */
+interface CreateOptions {
+  readonly agentId?: string;
+  readonly parentWorkflowId?: string;
+  readonly parentTaskId?: TaskId;
+}
+
+/**
  * Manages persistent workflow state stored in `.claude/turboshovel/workflows/`.
  *
  * Each workflow gets a unique JSON state file that persists across conversations.
@@ -77,7 +86,7 @@ export class WorkflowStateManager {
     return path.join(this.stateDir, `${id}.json`);
   }
 
-  async create(workflow: string, taskName: string): Promise<WorkflowState> {
+  async create(workflow: string, taskName: string, options?: CreateOptions): Promise<WorkflowState> {
     const id = generateId();
     const now = new Date().toISOString();
 
@@ -97,6 +106,9 @@ export class WorkflowStateManager {
       tasks: [],
       pendingTasks: [],
       agentBindings: {},
+      agentId: options?.agentId,
+      parentWorkflowId: options?.parentWorkflowId,
+      parentTaskId: options?.parentTaskId,
       startedAt: now,
       updatedAt: now
     };
