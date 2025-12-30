@@ -4,3 +4,6 @@ dist/
 *.log
 coverage/
 .claude-docker/
+
+.c8_output/
+.work/
