@@ -267,4 +267,64 @@ describe('next command', () => {
       });
     });
   });
+
+  describe('child workflow completion restores parent', () => {
+    it('should restore parent workflow as active when child completes via next', async () => {
+      // Start parent workflow
+      runCli('start workflows/simple.workflow.md', workspace);
+      const session1 = await readSession(workspace);
+      const parentId = session1.active;
+      expect(parentId).not.toBeNull();
+
+      // Queue task and bind agent with child workflow
+      runCli(['start', '--task', '1.1', 'workflows/simple.workflow.md'], workspace);
+      runCli(['start', '--agent', 'test-agent', 'workflows/simple.workflow.md'], workspace);
+
+      // Verify child is now active
+      const session2 = await readSession(workspace);
+      const childId = session2.active;
+      expect(childId).not.toBe(parentId);
+      expect(childId).not.toBeNull();
+
+      // Verify child has parent reference
+      const allStates = await getAllStates(workspace);
+      const childState = allStates.find((s) => s.id === childId);
+      expect(childState?.parentWorkflowId).toBe(parentId);
+
+      // Complete child workflow (advance to end)
+      runCli('next', workspace); // Task 1 -> 2
+      runCli('next', workspace); // Task 2 -> complete
+
+      // Parent should now be active
+      const session3 = await readSession(workspace);
+      expect(session3.active).toBe(parentId);
+
+      // Verify output confirms parent restoration
+      const result = runCli('status', workspace);
+      expect(result.stdout).toContain('simple.workflow.md');
+    });
+
+    it('should restore parent workflow as active when child completes via --pass', async () => {
+      // Start parent workflow
+      runCli('start workflows/simple.workflow.md', workspace);
+      const session1 = await readSession(workspace);
+      const parentId = session1.active;
+
+      // Queue task and bind agent with child workflow
+      runCli(['start', '--task', '1.1', 'workflows/simple.workflow.md'], workspace);
+      runCli(['start', '--agent', 'test-agent', 'workflows/simple.workflow.md'], workspace);
+
+      // Verify child is now active
+      const session2 = await readSession(workspace);
+      const childId = session2.active;
+
+      // Mark child workflow task as passed
+      runCli('next --pass', workspace); // Task 1: CONTINUE -> Task 2
+      runCli('next --pass', workspace); // Task 2: DONE -> complete
+
+      // Parent should now be active
+      const session3 = await readSession(workspace);
+      expect(session3.active).toBe(parentId);
+    });
+  });
 });

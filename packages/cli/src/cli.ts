@@ -301,7 +301,15 @@ program
                 variables: { ...state.variables, completed: true }
               });
               console.log(`Workflow complete: ${state.workflow}`);
-              await manager.setActive(null);
+
+              // If this is a child workflow, restore parent as active
+              if (state.parentWorkflowId) {
+                await manager.setActive(state.parentWorkflowId);
+                console.log(`Restored parent workflow: ${state.parentWorkflowId}`);
+              } else {
+                // Only clear active if no parent
+                await manager.setActive(null);
+              }
               return;
 
             case 'blocked':
@@ -444,7 +452,15 @@ program
             variables: { ...state.variables, completed: true }
           });
           console.log(`Workflow complete: ${state.workflow}`);
-          await manager.setActive(null);
+
+          // If this is a child workflow, restore parent as active
+          if (state.parentWorkflowId) {
+            await manager.setActive(state.parentWorkflowId);
+            console.log(`Restored parent workflow: ${state.parentWorkflowId}`);
+          } else {
+            // Only clear active if no parent
+            await manager.setActive(null);
+          }
           return;
         }
 
