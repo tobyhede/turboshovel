@@ -9,28 +9,28 @@ import * as path from 'path';
  * Parses skill frontmatter for `workflow:` field and auto-starts
  * the declared workflow when a skill begins.
  */
-export async function execute(input: HookInput): Promise<GateResult> {
+export function execute(input: HookInput): Promise<GateResult> {
   // Only handle SkillStart
   if (input.hook_event_name !== 'SkillStart') {
-    return {};
+    return Promise.resolve({});
   }
 
   const skillName = input.skill;
-  if (!skillName) return {};
+  if (!skillName) return Promise.resolve({});
 
   // Find skill file and parse frontmatter
   const workflow = findSkillWorkflow(skillName, input.cwd);
-  if (!workflow) return {};
+  if (!workflow) return Promise.resolve({});
 
   // Start workflow via CLI
   try {
     execSync(`tsv start ${workflow}`, { cwd: input.cwd, stdio: 'pipe' });
-    return {
+    return Promise.resolve({
       additionalContext: `Started workflow: ${workflow}`
-    };
+    });
   } catch {
     // Graceful degradation - workflow start failed
-    return {};
+    return Promise.resolve({});
   }
 }
 
