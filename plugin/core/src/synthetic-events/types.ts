@@ -5,7 +5,8 @@ export type SyntheticEventName =
   | 'SkillEnd'
   | 'SlashCommandStart'
   | 'SlashCommandEnd'
-  | 'SubagentStart';
+  | 'SubagentStart'
+  | 'SubagentEnd';
 
 export interface SyntheticEvent {
   /** The Claude Code event that triggered detection */
@@ -39,6 +40,7 @@ export function isSyntheticEvent(eventName: string): eventName is SyntheticEvent
     'SkillEnd',
     'SlashCommandStart',
     'SlashCommandEnd',
-    'SubagentStart'
+    'SubagentStart',
+    'SubagentEnd'
   ].includes(eventName);
 }

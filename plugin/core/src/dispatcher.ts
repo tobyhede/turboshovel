@@ -247,7 +247,9 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
   // Inject workflow context if active
   const workflowContext = await getWorkflowContext(input.cwd);
   if (workflowContext) {
-    accumulatedContext += '\n\n' + workflowContext;
+    accumulatedContext = accumulatedContext
+      ? accumulatedContext + '\n\n' + workflowContext
+      : workflowContext;
   }
 
 
@@ -271,7 +273,9 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
       };
     }
     if (result.context) {
-      accumulatedContext += '\n\n' + result.context;
+      accumulatedContext = accumulatedContext
+        ? accumulatedContext + '\n\n' + result.context
+        : result.context;
     }
   }
 
@@ -284,7 +288,9 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
       };
     }
     if (result.context) {
-      accumulatedContext += '\n\n' + result.context;
+      accumulatedContext = accumulatedContext
+        ? accumulatedContext + '\n\n' + result.context
+        : result.context;
     }
   }
 
@@ -294,11 +300,13 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
   // trigger additional synthetic detection because detectSyntheticEvents()
   // only maps real Claude Code events.
   if (!isSyntheticEvent(hookEvent)) {
+    // Reuse single Session instance for synthetic dispatch
+    const syntheticSession = new Session(input.cwd);
+
     // Special handling: Clear active_command on every UserPromptSubmit
     // BEFORE potentially setting new one via SlashCommandStart
     if (hookEvent === 'UserPromptSubmit') {
-      const session = new Session(input.cwd);
-      await session.set('active_command', null);
+      await syntheticSession.set('active_command', null);
     }
 
     const syntheticEvents = detectSyntheticEvents(input);
@@ -308,8 +316,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
       // and needs to pass the command name for context injection
       let slashCommandEndCommand: string | undefined;
       if (synthetic.syntheticEvent === 'SlashCommandEnd') {
-        const session = new Session(input.cwd);
-        const activeCommand = await session.get('active_command');
+        const activeCommand = await syntheticSession.get('active_command');
         if (!activeCommand) {
           continue;  // Skip SlashCommandEnd if no active command
         }
@@ -331,9 +338,11 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
       // Recursive dispatch for synthetic event (full pipeline)
       const syntheticResult = await dispatch(syntheticInput);
 
-      // Accumulate context from synthetic events
+      // Accumulate context from synthetic events (avoid leading newlines)
       if (syntheticResult.context) {
-        accumulatedContext += '\n\n' + syntheticResult.context;
+        accumulatedContext = accumulatedContext
+          ? accumulatedContext + '\n\n' + syntheticResult.context
+          : syntheticResult.context;
       }
 
       // Propagate blocks from synthetic events

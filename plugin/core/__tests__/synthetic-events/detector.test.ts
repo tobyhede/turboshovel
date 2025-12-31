@@ -104,6 +104,24 @@ describe('detectSyntheticEvents', () => {
         })
       );
     });
+
+    it('detects skill without namespace', () => {
+      const input: HookInput = {
+        hook_event_name: 'PreToolUse',
+        cwd: '/test',
+        tool_name: 'Skill',
+        tool_input: { skill: 'verify' }
+      };
+
+      const events = detectSyntheticEvents(input);
+
+      expect(events).toContainEqual(
+        expect.objectContaining({
+          syntheticEvent: 'SkillStart',
+          skillName: 'verify'  // No namespace, just skill name
+        })
+      );
+    });
   });
 
   describe('SubagentStart (from PostToolUse Task)', () => {
@@ -170,6 +188,7 @@ describe('isSyntheticEvent', () => {
     expect(isSyntheticEvent('SlashCommandStart')).toBe(true);
     expect(isSyntheticEvent('SlashCommandEnd')).toBe(true);
     expect(isSyntheticEvent('SubagentStart')).toBe(true);
+    expect(isSyntheticEvent('SubagentEnd')).toBe(true);
   });
 
   it('returns false for real Claude Code events', () => {

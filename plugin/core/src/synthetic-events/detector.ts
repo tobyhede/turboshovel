@@ -5,6 +5,13 @@ import type { SyntheticEvent } from './types.js';
  * Detect synthetic events from Claude Code primitive events.
  *
  * IMPORTANT: Namespaces are preserved (cipherpowers:verify, not verify)
+ *
+ * TaskId Format:
+ * - Must start with one or more digits (e.g., "1", "12")
+ * - May have optional decimal subtask (e.g., "1.1", "1.2", "12.3")
+ * - Must be followed by a dash separator (-, –, or —)
+ * - Examples: "1 - Task", "1.1 - Subtask", "12.3 – Description"
+ * - Invalid: ".1 - Task" (no leading digit), "a.1 - Task" (not numeric)
  */
 export function detectSyntheticEvents(input: HookInput): SyntheticEvent[] {
   const events: SyntheticEvent[] = [];
