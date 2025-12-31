@@ -3,7 +3,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
 import { dispatch } from '../../src/dispatcher.js';
-import { WorkflowStateManager, createTaskNumber, type HookInput } from '@turboshovel/shared';
+import { WorkflowStateManager, type HookInput } from '@turboshovel/shared';
 
 describe('Dispatcher Workflow Integration', () => {
   let testDir: string;
@@ -59,64 +59,8 @@ describe('Dispatcher Workflow Integration', () => {
   });
 });
 
-describe('dispatcher with orchestration hooks', () => {
-  let testDir: string;
-  let manager: WorkflowStateManager;
-
-  beforeEach(async () => {
-    testDir = join(tmpdir(), `dispatcher-integration-test-${String(Date.now())}`);
-    await fs.mkdir(testDir, { recursive: true });
-    manager = new WorkflowStateManager(testDir);
-  });
-
-  afterEach(async () => {
-    await fs.rm(testDir, { recursive: true, force: true });
-  });
-
-  it('returns violation when Task dispatched without TaskId', async () => {
-    const state = await manager.create('test.workflow.md', 'Test');
-    await manager.setActive(state.id);
-
-    const input: HookInput = {
-      hook_event_name: 'PostToolUse',
-      cwd: testDir,
-      tool_name: 'Task',
-      tool_input: { description: 'Missing task prefix' }
-    };
-
-    const result = await dispatch(input);
-
-    expect(result.blockReason).toContain('TaskId');
-  });
-
-  it('injects agent context on SubagentStart', async () => {
-    const state = await manager.create('test.workflow.md', 'Test');
-    await manager.setActive(state.id);
-    await manager.pushPendingTask(state.id, { task: createTaskNumber(1)! });
-
-    const input: HookInput = {
-      hook_event_name: 'SubagentStart',
-      cwd: testDir,
-      agent_id: 'agent-xyz'
-    };
-
-    const result = await dispatch(input);
-
-    expect(result.context).toContain('AGENT_ID: agent-xyz');
-  });
-
-  it('returns violation on SubagentStop for unknown agent', async () => {
-    const state = await manager.create('test.workflow.md', 'Test');
-    await manager.setActive(state.id);
-
-    const input: HookInput = {
-      hook_event_name: 'SubagentStop',
-      cwd: testDir,
-      agent_id: 'unknown-agent'
-    };
-
-    const result = await dispatch(input);
-
-    expect(result.blockReason).toContain('unknown agent');
-  });
-});
+// Hardcoded workflow hook validation has been moved to gates:
+// - Task validation (workflow-task-tracker gate)
+// - SubagentStart context injection (workflow-subagent-start gate)
+// - SubagentStop validation (workflow-subagent-stop gate)
+// Tests for these gate-based behaviors will be added in Task 8
