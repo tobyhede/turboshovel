@@ -142,6 +142,17 @@ const PendingTaskSchema = z.union([
 ]);
 
 /**
+ * Zod schema for SubtaskState
+ * Tracks runtime state of a subtask within a task
+ */
+const SubtaskStateSchema = z.object({
+  id: z.string(),
+  status: z.enum(['pending', 'running', 'done']),
+  agentId: z.string().optional(),
+  result: z.enum(['pass', 'fail']).optional()
+});
+
+/**
  * Workflow State Schema - Runtime Validation for Persisted WorkflowState
  *
  * Validates the structure of workflow state files to ensure data integrity
@@ -169,6 +180,7 @@ export const WorkflowStateSchema = z.object({
     status: z.enum(['running', 'done', 'stopped']),
     result: z.enum(['pass', 'fail']).optional()
   })),
+  subtaskStates: z.array(SubtaskStateSchema).optional(),
   agentId: z.string().optional(),
   parentWorkflowId: z.string().optional(),
   parentTaskId: TaskIdSchema.optional(),

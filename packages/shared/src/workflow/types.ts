@@ -96,6 +96,16 @@ export type AgentStatus = 'running' | 'done' | 'stopped';
 export type AgentResult = 'pass' | 'fail';
 
 /**
+ * Runtime state of a subtask within a task
+ */
+export interface SubtaskState {
+  readonly id: string;            // Matches Subtask.id ("1", "2", or dynamic instance)
+  readonly status: 'pending' | 'running' | 'done';
+  readonly agentId?: string;      // Agent bound to this subtask
+  readonly result?: AgentResult;  // 'pass' | 'fail' when done
+}
+
+/**
  * Agent binding - tracks which task an agent is working on
  */
 export interface AgentBinding {
@@ -179,6 +189,9 @@ export interface WorkflowState {
   // Orchestration fields
   readonly pendingTasks: readonly PendingTask[];
   readonly agentBindings: Readonly<Record<string, AgentBinding>>;
+
+  // Subtask tracking (only populated when current task has subtasks)
+  readonly subtaskStates?: readonly SubtaskState[];
 
   // Child workflow fields (optional)
   readonly agentId?: string;
