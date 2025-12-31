@@ -1,7 +1,7 @@
 // src/workflow/state.ts
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { createTaskNumber, type WorkflowState, type AgentBinding, type PendingTask } from './types.js';
+import { createTaskNumber, type WorkflowState, type AgentBinding, type PendingTask, type Subtask, type SubtaskState } from './types.js';
 import type { TaskId } from './task-id.js';
 import { WorkflowStateSchema } from '../schemas.js';
 
@@ -422,5 +422,28 @@ export class WorkflowStateManager {
 
     // No explicit termination - child is still running
     return null;
+  }
+
+  /**
+   * Initialize subtask states for static subtasks in a task.
+   * Dynamic subtasks ({n}) are created on-demand via addDynamicSubtask.
+   */
+  async initializeSubtasks(id: string, subtasks: readonly Subtask[]): Promise<void> {
+    const state = await this.load(id);
+    if (!state) {
+      throw new Error(`Workflow ${id} not found`);
+    }
+
+    // Only initialize static subtasks (isDynamic: false)
+    const staticSubtasks = subtasks.filter(s => !s.isDynamic);
+
+    const subtaskStates: SubtaskState[] = staticSubtasks.map(s => ({
+      id: s.id,
+      status: 'pending',
+      agentId: undefined,
+      result: undefined
+    }));
+
+    await this.update(id, { subtaskStates });
   }
 }

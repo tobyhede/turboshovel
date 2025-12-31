@@ -57,4 +57,43 @@ describe('WorkflowStateManager', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('WorkflowStateManager subtask initialization', () => {
+    it('initializes subtaskStates when task has static subtasks', async () => {
+      const manager = new WorkflowStateManager(testDir);
+
+      // Subtask definitions from parsed workflow
+      const subtasks = [
+        { id: '1', description: 'First reviewer', isDynamic: false },
+        { id: '2', description: 'Second reviewer', isDynamic: false }
+      ];
+
+      const state = await manager.create('test.workflow.md', 'Dispatch reviewers');
+      await manager.initializeSubtasks(state.id, subtasks);
+
+      const updated = await manager.load(state.id);
+      expect(updated?.subtaskStates).toHaveLength(2);
+      expect(updated?.subtaskStates?.[0]).toEqual({
+        id: '1',
+        status: 'pending',
+        agentId: undefined,
+        result: undefined
+      });
+    });
+
+    it('does not initialize for dynamic subtasks', async () => {
+      const manager = new WorkflowStateManager(testDir);
+
+      const subtasks = [
+        { id: '{n}', description: 'Dynamic task', isDynamic: true }
+      ];
+
+      const state = await manager.create('test.workflow.md', 'Dynamic task');
+      await manager.initializeSubtasks(state.id, subtasks);
+
+      const updated = await manager.load(state.id);
+      // Dynamic subtasks are not pre-initialized - they're created on demand
+      expect(updated?.subtaskStates).toEqual([]);
+    });
+  });
 });
