@@ -36,7 +36,13 @@ export const HookInputSchema = z.object({
 
   // SlashCommand/Skill
   command: z.string().optional(),
-  skill: z.string().optional()
+  skill: z.string().optional(),
+
+  // Synthetic event fields
+  tool_use_id: z.string().optional(),
+  tool_response: z.unknown().optional(),
+  task_id: z.string().optional(),
+  subagent_type: z.string().optional()
 });
 
 export type HookInput = z.infer<typeof HookInputSchema>;
