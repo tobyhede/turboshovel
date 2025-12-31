@@ -446,4 +446,31 @@ export class WorkflowStateManager {
 
     await this.update(id, { subtaskStates });
   }
+
+  /**
+   * Add a dynamic subtask (for {n} pattern).
+   * Returns the assigned subtask ID.
+   */
+  async addDynamicSubtask(id: string): Promise<string> {
+    const state = await this.load(id);
+    if (!state) {
+      throw new Error(`Workflow ${id} not found`);
+    }
+
+    const existing = state.subtaskStates ?? [];
+    const nextId = String(existing.length + 1);
+
+    const newSubtask: SubtaskState = {
+      id: nextId,
+      status: 'pending',
+      agentId: undefined,
+      result: undefined
+    };
+
+    await this.update(id, {
+      subtaskStates: [...existing, newSubtask]
+    });
+
+    return nextId;
+  }
 }

@@ -96,4 +96,26 @@ describe('WorkflowStateManager', () => {
       expect(updated?.subtaskStates).toEqual([]);
     });
   });
+
+  describe('WorkflowStateManager dynamic subtasks', () => {
+    it('adds dynamic subtask with incrementing ID', async () => {
+      const manager = new WorkflowStateManager(testDir);
+
+      const state = await manager.create('test.workflow.md', 'Execute batch');
+      await manager.update(state.id, { subtaskStates: [] });
+
+      // Add first dynamic subtask
+      const id1 = await manager.addDynamicSubtask(state.id);
+      expect(id1).toBe('1');
+
+      // Add second
+      const id2 = await manager.addDynamicSubtask(state.id);
+      expect(id2).toBe('2');
+
+      const updated = await manager.load(state.id);
+      expect(updated?.subtaskStates).toHaveLength(2);
+      expect(updated?.subtaskStates?.[0].id).toBe('1');
+      expect(updated?.subtaskStates?.[1].id).toBe('2');
+    });
+  });
 });
