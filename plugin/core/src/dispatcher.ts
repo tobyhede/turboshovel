@@ -14,6 +14,8 @@ import { getWorkflowContext } from './workflow/context.js';
 import { trackTaskDispatch, handleSubagentStart, handleSubagentStop } from './workflow/hooks/index.js';
 import { minimatch } from 'minimatch';
 import path from 'path';
+import { detectSyntheticEvents } from './synthetic-events/detector.js';
+import { isSyntheticEvent } from './synthetic-events/types.js';
 
 export function shouldProcessHook(input: HookInput, hookConfig: HookConfig): boolean {
   const hookEvent = input.hook_event_name;
@@ -283,6 +285,61 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
     }
     if (result.context) {
       accumulatedContext += '\n\n' + result.context;
+    }
+  }
+
+  // Synthetic event dispatch
+  // SAFETY: isSyntheticEvent() prevents recursive synthetic detection.
+  // If synthetic events are ever added to hooks.json, they would NOT
+  // trigger additional synthetic detection because detectSyntheticEvents()
+  // only maps real Claude Code events.
+  if (!isSyntheticEvent(hookEvent)) {
+    // Special handling: Clear active_command on every UserPromptSubmit
+    // BEFORE potentially setting new one via SlashCommandStart
+    if (hookEvent === 'UserPromptSubmit') {
+      const session = new Session(input.cwd);
+      await session.set('active_command', null);
+    }
+
+    const syntheticEvents = detectSyntheticEvents(input);
+
+    for (const synthetic of syntheticEvents) {
+      // Special handling: SlashCommandEnd should only dispatch if there was an active command
+      if (synthetic.syntheticEvent === 'SlashCommandEnd') {
+        const session = new Session(input.cwd);
+        const activeCommand = await session.get('active_command');
+        if (!activeCommand) {
+          continue;  // Skip SlashCommandEnd if no active command
+        }
+      }
+
+      // Build synthetic input with event-specific fields
+      const syntheticInput: HookInput = {
+        ...input,
+        hook_event_name: synthetic.syntheticEvent,
+        // Add event-specific fields
+        ...(synthetic.commandName && { command: synthetic.commandName }),
+        ...(synthetic.skillName && { skill: synthetic.skillName }),
+        ...(synthetic.taskId && { task_id: synthetic.taskId }),
+        ...(synthetic.toolUseId && { tool_use_id: synthetic.toolUseId }),
+        ...(synthetic.subagentType && { subagent_type: synthetic.subagentType })
+      };
+
+      // Recursive dispatch for synthetic event (full pipeline)
+      const syntheticResult = await dispatch(syntheticInput);
+
+      // Accumulate context from synthetic events
+      if (syntheticResult.context) {
+        accumulatedContext += '\n\n' + syntheticResult.context;
+      }
+
+      // Propagate blocks from synthetic events
+      if (syntheticResult.blockReason) {
+        return {
+          context: accumulatedContext,
+          blockReason: syntheticResult.blockReason
+        };
+      }
     }
   }
 
