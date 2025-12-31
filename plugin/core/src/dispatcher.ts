@@ -305,20 +305,23 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
 
     for (const synthetic of syntheticEvents) {
       // Special handling: SlashCommandEnd should only dispatch if there was an active command
+      // and needs to pass the command name for context injection
+      let slashCommandEndCommand: string | undefined;
       if (synthetic.syntheticEvent === 'SlashCommandEnd') {
         const session = new Session(input.cwd);
         const activeCommand = await session.get('active_command');
         if (!activeCommand) {
           continue;  // Skip SlashCommandEnd if no active command
         }
+        slashCommandEndCommand = activeCommand as string;
       }
 
       // Build synthetic input with event-specific fields
       const syntheticInput: HookInput = {
         ...input,
         hook_event_name: synthetic.syntheticEvent,
-        // Add event-specific fields
-        ...(synthetic.commandName && { command: synthetic.commandName }),
+        // Add event-specific fields (slashCommandEndCommand for SlashCommandEnd, synthetic.commandName for others)
+        ...(slashCommandEndCommand ? { command: slashCommandEndCommand } : synthetic.commandName && { command: synthetic.commandName }),
         ...(synthetic.skillName && { skill: synthetic.skillName }),
         ...(synthetic.taskId && { task_id: synthetic.taskId }),
         ...(synthetic.toolUseId && { tool_use_id: synthetic.toolUseId }),
