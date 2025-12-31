@@ -158,8 +158,9 @@ async function updateSessionState(input: HookInput): Promise<void> {
   try {
     switch (event) {
       case 'SlashCommandStart':
+        // command field set by synthetic dispatcher
         if (input.command) {
-          await session.set('active_command', input.command);
+          await session.set('active_command', input.command);  // Full name preserved
         }
         break;
 
@@ -168,8 +169,9 @@ async function updateSessionState(input: HookInput): Promise<void> {
         break;
 
       case 'SkillStart':
+        // skill field set by synthetic dispatcher
         if (input.skill) {
-          await session.set('active_skill', input.skill);
+          await session.set('active_skill', input.skill);  // Full name preserved
         }
         break;
 
@@ -177,9 +179,20 @@ async function updateSessionState(input: HookInput): Promise<void> {
         await session.set('active_skill', null);
         break;
 
-      // Note: SubagentStart/SubagentStop NOT tracked - Claude Code does not
-      // provide unique agent identifiers, making reliable agent tracking impossible
-      // when multiple agents of the same type run in parallel.
+      case 'SubagentStart':
+        // Store tool_use_id → taskId mapping for correlation
+        if (input.tool_use_id && input.task_id) {
+          const metadata = (await session.get('metadata')) as Record<string, unknown>;
+          const mapping = (metadata.toolUseIdToTaskId ?? {}) as Record<string, string>;
+          await session.set('metadata', {
+            ...metadata,
+            toolUseIdToTaskId: {
+              ...mapping,
+              [input.tool_use_id as string]: input.task_id as string
+            }
+          });
+        }
+        break;
 
       case 'PostToolUse':
         if (input.file_path) {
