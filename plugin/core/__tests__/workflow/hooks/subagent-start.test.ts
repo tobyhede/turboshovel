@@ -83,3 +83,28 @@ describe('handleSubagentStart calls CLI', () => {
   });
 });
 
+describe('handleSubagentStart via synthetic dispatch', () => {
+  let testDir: string;
+
+  beforeEach(async () => {
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'subagent-synthetic-test-'));
+  });
+
+  afterEach(async () => {
+    await fs.rm(testDir, { recursive: true, force: true });
+  });
+
+  it('handles PostToolUse Task → SubagentStart', async () => {
+    const input: HookInput = {
+      hook_event_name: 'SubagentStart',  // Synthetic event
+      cwd: testDir,
+      agent_id: 'code-review-agent-1',
+      task_id: '1.1',
+      subagent_type: 'code-review-agent'
+    };
+
+    const result = await handleSubagentStart(input);
+    expect(result).toBeDefined();
+  });
+});
+

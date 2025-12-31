@@ -76,60 +76,29 @@ describe('Integration Tests', () => {
       expect(containsTs).toBe(true);
     });
 
-    test('SlashCommandStart/End updates session', async () => {
-      // Start command
-      const startInput = JSON.stringify({
-        hook_event_name: 'SlashCommandStart',
-        command: '/execute',
+    test('UserPromptSubmit with /command sets active_command', async () => {
+      const input = JSON.stringify({
+        hook_event_name: 'UserPromptSubmit',
+        user_message: '/execute do something',
         cwd: testDir
       });
-      await execAsync(`echo '${startInput}' | node ${cliPath}`);
+      await execAsync(`echo '${input}' | node ${cliPath}`);
 
-      const { stdout: activeCmd } = await execAsync(
-        `node ${cliPath} session get active_command ${testDir}`
-      );
-      expect(activeCmd.trim()).toBe('/execute');
-
-      // End command
-      const endInput = JSON.stringify({
-        hook_event_name: 'SlashCommandEnd',
-        command: '/execute',
-        cwd: testDir
-      });
-      await execAsync(`echo '${endInput}' | node ${cliPath}`);
-
-      const { stdout: cleared } = await execAsync(
-        `node ${cliPath} session get active_command ${testDir}`
-      );
-      expect(cleared.trim()).toBe('');
+      const { stdout } = await execAsync(`node ${cliPath} session get active_command ${testDir}`);
+      expect(stdout.trim()).toBe('execute');
     });
 
-    test('SkillStart/End updates session', async () => {
-      // Start skill
-      const startInput = JSON.stringify({
-        hook_event_name: 'SkillStart',
-        skill: 'executing-plans',
+    test('PreToolUse Skill sets active_skill', async () => {
+      const input = JSON.stringify({
+        hook_event_name: 'PreToolUse',
+        tool_name: 'Skill',
+        tool_input: { skill: 'executing-plans' },
         cwd: testDir
       });
-      await execAsync(`echo '${startInput}' | node ${cliPath}`);
+      await execAsync(`echo '${input}' | node ${cliPath}`);
 
-      const { stdout: activeSkill } = await execAsync(
-        `node ${cliPath} session get active_skill ${testDir}`
-      );
-      expect(activeSkill.trim()).toBe('executing-plans');
-
-      // End skill
-      const endInput = JSON.stringify({
-        hook_event_name: 'SkillEnd',
-        skill: 'executing-plans',
-        cwd: testDir
-      });
-      await execAsync(`echo '${endInput}' | node ${cliPath}`);
-
-      const { stdout: cleared } = await execAsync(
-        `node ${cliPath} session get active_skill ${testDir}`
-      );
-      expect(cleared.trim()).toBe('');
+      const { stdout } = await execAsync(`node ${cliPath} session get active_skill ${testDir}`);
+      expect(stdout.trim()).toBe('executing-plans');
     });
   });
 
