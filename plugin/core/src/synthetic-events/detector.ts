@@ -20,7 +20,7 @@ export function detectSyntheticEvents(input: HookInput): SyntheticEvent[] {
 
   // UserPromptSubmit → SlashCommandStart
   if (hookEvent === 'UserPromptSubmit' && input.user_message) {
-    const cmdMatch = input.user_message.match(/^\/(\S+)/);
+    const cmdMatch = /^\/(\S+)/.exec(input.user_message);
     if (cmdMatch) {
       events.push({
         originalEvent: 'UserPromptSubmit',
@@ -41,7 +41,7 @@ export function detectSyntheticEvents(input: HookInput): SyntheticEvent[] {
 
   // PreToolUse Skill → SkillStart
   if (hookEvent === 'PreToolUse' && toolName === 'Skill') {
-    const skillName = input.tool_input?.skill as string | undefined;
+    const skillName = input.tool_input?.skill;
     events.push({
       originalEvent: 'PreToolUse',
       syntheticEvent: 'SkillStart',
@@ -51,7 +51,7 @@ export function detectSyntheticEvents(input: HookInput): SyntheticEvent[] {
 
   // PostToolUse Skill → SkillEnd
   if (hookEvent === 'PostToolUse' && toolName === 'Skill') {
-    const skillName = input.tool_input?.skill as string | undefined;
+    const skillName = input.tool_input?.skill;
     events.push({
       originalEvent: 'PostToolUse',
       syntheticEvent: 'SkillEnd',
@@ -61,12 +61,12 @@ export function detectSyntheticEvents(input: HookInput): SyntheticEvent[] {
 
   // PostToolUse Task → SubagentStart
   if (hookEvent === 'PostToolUse' && toolName === 'Task') {
-    const description = input.tool_input?.description as string | undefined;
-    const subagentType = input.tool_input?.subagent_type as string | undefined;
-    const toolUseId = (input as HookInput & { tool_use_id?: string }).tool_use_id;
+    const description = input.tool_input?.description;
+    const subagentType = input.tool_input?.subagent_type;
+    const toolUseId = input.tool_use_id;
 
     // Parse TaskId: "1.1 - Description" → "1.1"
-    const taskIdMatch = description?.match(/^(\d+(?:\.\d+)?)\s*[-–—]/);
+    const taskIdMatch = description ? /^(\d+(?:\.\d+)?)\s*[-–—]/.exec(description) : null;
 
     events.push({
       originalEvent: 'PostToolUse',
