@@ -176,6 +176,8 @@ async function discoverAgentCommandContext(
  * - PreToolUse → { name: tool_name, stage: 'pre' }
  * - PostToolUse → { name: tool_name, stage: 'post' }
  * - SubagentStop → { name: agent_name, stage: 'end' } (special handling)
+ * - SubagentStart → { name: subagent_type, stage: 'start' } (synthetic event)
+ * - SubagentEnd → { name: subagent_type, stage: 'end' } (synthetic event)
  * - UserPromptSubmit → { name: 'prompt', stage: 'submit' }
  * - Stop → { name: 'agent', stage: 'stop' }
  * - SessionStart → { name: 'session', stage: 'start' }
@@ -227,6 +229,17 @@ function extractNameAndStage(
 
     case 'Notification':
       return { name: 'notification', stage: 'receive' };
+
+    case 'SubagentStart':
+      // Use agent type for context discovery
+      return input.subagent_type
+        ? { name: input.subagent_type.split(':').pop() ?? input.subagent_type, stage: 'start' }
+        : null;
+
+    case 'SubagentEnd':
+      return input.subagent_type
+        ? { name: input.subagent_type.split(':').pop() ?? input.subagent_type, stage: 'end' }
+        : null;
 
     default:
       return null;

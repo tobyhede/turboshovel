@@ -151,3 +151,123 @@ describe('extractNameAndStage coverage', () => {
     expect(result).toBeNull();
   });
 });
+
+describe('Synthetic event context injection', () => {
+  let testDir: string;
+
+  beforeEach(async () => {
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'hooks-test-'));
+  });
+
+  afterEach(async () => {
+    await fs.rm(testDir, { recursive: true, force: true });
+  });
+
+  it('handles SlashCommandStart', async () => {
+    const input = {
+      hook_event_name: 'SlashCommandStart',
+      cwd: testDir,
+      command: 'cipherpowers:verify'
+    };
+    await fs.mkdir(path.join(testDir, '.claude', 'context'), { recursive: true });
+    await fs.writeFile(
+      path.join(testDir, '.claude', 'context', 'verify-start.md'),
+      'Verify context'
+    );
+    const result = await injectContext('SlashCommandStart', input as any);
+    expect(result).toBe('Verify context');
+  });
+
+  it('handles SlashCommandEnd', async () => {
+    const input = {
+      hook_event_name: 'SlashCommandEnd',
+      cwd: testDir,
+      command: 'cipherpowers:brainstorm'
+    };
+    await fs.mkdir(path.join(testDir, '.claude', 'context'), { recursive: true });
+    await fs.writeFile(
+      path.join(testDir, '.claude', 'context', 'brainstorm-end.md'),
+      'Brainstorm end context'
+    );
+    const result = await injectContext('SlashCommandEnd', input as any);
+    expect(result).toBe('Brainstorm end context');
+  });
+
+  it('handles SkillStart', async () => {
+    const input = {
+      hook_event_name: 'SkillStart',
+      cwd: testDir,
+      skill: 'turboshovel:brainstorm'
+    };
+    await fs.mkdir(path.join(testDir, '.claude', 'context'), { recursive: true });
+    await fs.writeFile(
+      path.join(testDir, '.claude', 'context', 'brainstorm-start.md'),
+      'Brainstorm context'
+    );
+    const result = await injectContext('SkillStart', input as any);
+    expect(result).toBe('Brainstorm context');
+  });
+
+  it('handles SkillEnd', async () => {
+    const input = {
+      hook_event_name: 'SkillEnd',
+      cwd: testDir,
+      skill: 'cipherpowers:code-review'
+    };
+    await fs.mkdir(path.join(testDir, '.claude', 'context'), { recursive: true });
+    await fs.writeFile(
+      path.join(testDir, '.claude', 'context', 'code-review-end.md'),
+      'Code review end context'
+    );
+    const result = await injectContext('SkillEnd', input as any);
+    expect(result).toBe('Code review end context');
+  });
+
+  it('handles SubagentStart', async () => {
+    const input = {
+      hook_event_name: 'SubagentStart',
+      cwd: testDir,
+      subagent_type: 'cipherpowers:code-review-agent'
+    };
+    await fs.mkdir(path.join(testDir, '.claude', 'context'), { recursive: true });
+    await fs.writeFile(
+      path.join(testDir, '.claude', 'context', 'code-review-agent-start.md'),
+      'Review context'
+    );
+    const result = await injectContext('SubagentStart', input as any);
+    expect(result).toBe('Review context');
+  });
+
+  it('handles SubagentEnd', async () => {
+    const input = {
+      hook_event_name: 'SubagentEnd',
+      cwd: testDir,
+      subagent_type: 'turboshovel:verify-agent'
+    };
+    await fs.mkdir(path.join(testDir, '.claude', 'context'), { recursive: true });
+    await fs.writeFile(
+      path.join(testDir, '.claude', 'context', 'verify-agent-end.md'),
+      'Verify agent end context'
+    );
+    const result = await injectContext('SubagentEnd', input as any);
+    expect(result).toBe('Verify agent end context');
+  });
+
+  it('SubagentStart returns null when subagent_type is missing', async () => {
+    const input = {
+      hook_event_name: 'SubagentStart',
+      cwd: testDir
+    };
+    const result = await injectContext('SubagentStart', input as any);
+    expect(result).toBeNull();
+  });
+
+  it('SubagentEnd returns null when subagent_type is missing', async () => {
+    const input = {
+      hook_event_name: 'SubagentEnd',
+      cwd: testDir
+    };
+    const result = await injectContext('SubagentEnd', input as any);
+    expect(result).toBeNull();
+  });
+});
