@@ -37,6 +37,26 @@
       "command": "test -f .work/walkthrough-marker && echo 'gate-check-ran' >> .work/walkthrough.log",
       "on_pass": "CONTINUE",
       "on_fail": "BLOCK"
+    },
+    "workflow-task-tracker": {
+      "description": "Track Task dispatch for workflow orchestration",
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
+    },
+    "workflow-subagent-start": {
+      "description": "Bind agent to pending task in workflow",
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
+    },
+    "workflow-subagent-stop": {
+      "description": "Handle agent completion and advance workflow",
+      "on_pass": "CONTINUE",
+      "on_fail": "CONTINUE"
+    },
+    "workflow-skill-start": {
+      "description": "Auto-start workflow declared in skill frontmatter",
+      "on_pass": "CONTINUE",
+      "on_fail": "CONTINUE"
     }
   },
   "hooks": {
@@ -44,12 +64,18 @@
       "gates": ["check", "test", "build"]
     },
     "PostToolUse": {
-      "enabled_tools": ["Edit", "Write"],
-      "gates": ["check"]
+      "enabled_tools": ["Edit", "Write", "Task"],
+      "gates": ["check", "workflow-task-tracker"]
+    },
+    "SubagentStart": {
+      "gates": ["workflow-subagent-start"]
     },
     "SubagentStop": {
       "enabled_agents": [],
-      "gates": ["check", "test"]
+      "gates": ["check", "test", "workflow-subagent-stop"]
+    },
+    "SkillStart": {
+      "gates": ["workflow-skill-start"]
     }
   }
 }
