@@ -97,29 +97,80 @@ Hook Event → Context Injection (AUTOMATIC) → [OPTIONAL: turboshovel.json Gat
 
 See **[ARCHITECTURE.md](ARCHITECTURE.md)** for detailed system design.
 
-## Supported Hook Events
+## Supported Events
 
-All 11 registered Claude Code hook types are supported:
+Turboshovel handles **15 events**: 10 real Claude Code hooks + 5 synthetic events.
 
-| Event | Context Pattern | Context Injection | Default Behavior |
-|-------|----------------|-------------------|------------------|
+### Real Claude Code Events (10)
+
+These are fired directly by Claude Code:
+
+| Event | Context Pattern | Context Injection | Notes |
+|-------|----------------|-------------------|-------|
 | `SessionStart` | `session-start.md` | ✅ Supported | Plugin provides environment context |
 | `SessionEnd` | `session-end.md` | ✅ Supported | - |
-| `UserPromptSubmit` | `prompt-submit.md` | ✅ Supported | Keyword-triggered gates (check, test, build) |
-| `SubagentStart` | `{agent}-start.md` | ❌ Not implemented | Gates only |
+| `UserPromptSubmit` | `prompt-submit.md` | ✅ Supported | Also triggers SlashCommandStart |
 | `SubagentStop` | `{agent}-end.md` | ✅ Supported | - |
-| `PreToolUse` | `{tool}-pre.md` | ✅ Supported | - |
-| `PostToolUse` | `{tool}-post.md` | ✅ Supported | - |
-| `Stop` | `agent-stop.md` | ✅ Supported | - |
+| `PreToolUse` | `{tool}-pre.md` | ✅ Supported | Also triggers SkillStart |
+| `PostToolUse` | `{tool}-post.md` | ✅ Supported | Also triggers SkillEnd, SubagentStart |
+| `Stop` | `agent-stop.md` | ✅ Supported | Also triggers SlashCommandEnd |
 | `Notification` | `notification-receive.md` | ✅ Supported | - |
 | `PreCompact` | `pre-compact.md` | ❌ Not implemented | Gates only |
 | `PermissionRequest` | `permission-request.md` | ❌ Not implemented | Gates only |
 
-**Note:** SessionStart fires at the beginning of each Claude Code session and injects context from `session-start.md`.
+### Synthetic Events (5)
 
-**Note:** SubagentStart, PreCompact, and PermissionRequest are registered hooks but context injection is not yet implemented for them. Gates still work for these hooks.
+These are derived from real events and run through the full dispatch pipeline (session state, context injection, gates):
 
-**Planned hooks (not yet registered):** SlashCommandStart, SlashCommandEnd, SkillStart, SkillEnd - context patterns exist but hooks are not registered in `hooks.json`.
+| Synthetic Event | Triggered By | Context Pattern | Session State |
+|-----------------|--------------|-----------------|---------------|
+| `SkillStart` | PreToolUse with `tool_name='Skill'` | `{skill}-start.md` | Sets `active_skill` |
+| `SkillEnd` | PostToolUse with `tool_name='Skill'` | `{skill}-end.md` | Clears `active_skill` |
+| `SlashCommandStart` | UserPromptSubmit with `/command` | `{command}-start.md` | Sets `active_command` |
+| `SlashCommandEnd` | Stop (if active_command set) | `{command}-end.md` | Clears `active_command` |
+| `SubagentStart` | PostToolUse with `tool_name='Task'` | `{agent}-start.md` | Stores correlation mapping |
+
+**Key points:**
+- Synthetic events are first-class citizens with full context injection and gate support
+- Namespaces are preserved in session state (e.g., `cipherpowers:verify`)
+- Context files use short names without namespace (e.g., `verify-start.md`)
+- SlashCommandEnd only fires if a command was active (prevents spurious events)
+
+### Event Detection Flow
+
+```
+Claude Code Event
+    │
+    ├─→ dispatch(realEvent)
+    │       ├─→ updateSessionState
+    │       ├─→ injectContext
+    │       ├─→ run gates
+    │       │
+    │       └─→ detectSyntheticEvents()
+    │               │
+    │               └─→ For each synthetic:
+    │                       └─→ dispatch(syntheticEvent)  ← recursive
+    │                               ├─→ updateSessionState
+    │                               ├─→ injectContext
+    │                               └─→ run gates
+```
+
+### Example: Skill Context Injection
+
+```bash
+# Create context file for verify skill
+mkdir -p .claude/context
+cat > .claude/context/verify-start.md << 'EOF'
+## Verification Guidelines
+- Check for false positives
+- Cross-reference findings
+- Report confidence levels
+EOF
+
+# When /cipherpowers:verify runs, context auto-injects!
+```
+
+The context file uses the short name `verify` (namespace stripped for file discovery).
 
 ## Context Injection
 
