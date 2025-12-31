@@ -24,3 +24,8 @@ export {
 
 // New session exports
 export { Session } from './session.js';
+
+// Synthetic events
+export { detectSyntheticEvents } from './synthetic-events/detector.js';
+export { isSyntheticEvent } from './synthetic-events/types.js';
+export type { SyntheticEvent, SyntheticEventName } from './synthetic-events/types.js';
