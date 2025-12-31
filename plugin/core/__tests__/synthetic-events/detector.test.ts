@@ -1,4 +1,5 @@
 import { detectSyntheticEvents } from '../../src/synthetic-events/detector.js';
+import { isSyntheticEvent } from '../../src/synthetic-events/types.js';
 import type { HookInput } from '@turboshovel/shared';
 
 describe('detectSyntheticEvents', () => {
@@ -159,5 +160,28 @@ describe('detectSyntheticEvents', () => {
     };
 
     expect(detectSyntheticEvents(input)).toEqual([]);
+  });
+});
+
+describe('isSyntheticEvent', () => {
+  it('returns true for synthetic events', () => {
+    expect(isSyntheticEvent('SkillStart')).toBe(true);
+    expect(isSyntheticEvent('SkillEnd')).toBe(true);
+    expect(isSyntheticEvent('SlashCommandStart')).toBe(true);
+    expect(isSyntheticEvent('SlashCommandEnd')).toBe(true);
+    expect(isSyntheticEvent('SubagentStart')).toBe(true);
+  });
+
+  it('returns false for real Claude Code events', () => {
+    expect(isSyntheticEvent('PreToolUse')).toBe(false);
+    expect(isSyntheticEvent('PostToolUse')).toBe(false);
+    expect(isSyntheticEvent('UserPromptSubmit')).toBe(false);
+    expect(isSyntheticEvent('Stop')).toBe(false);
+    expect(isSyntheticEvent('SubagentStop')).toBe(false);
+  });
+
+  it('returns false for unknown events', () => {
+    expect(isSyntheticEvent('RandomEvent')).toBe(false);
+    expect(isSyntheticEvent('')).toBe(false);
   });
 });

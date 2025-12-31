@@ -8,7 +8,8 @@ const ToolInputSchema = z
   .object({
     description: z.string().optional(),
     subagent_type: z.string().optional(),
-    prompt: z.string().optional()
+    prompt: z.string().optional(),
+    skill: z.string().optional()
   })
   .optional();
 
