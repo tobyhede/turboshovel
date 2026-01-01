@@ -728,9 +728,50 @@ program
   .description('Test command that returns scripted PASS/FAIL results for workflow testing')
   .option('-r, --result <outcome>', 'Add result to sequence (pass|fail)', collect, [])
   .action(async (command: string[] | undefined, options: { result: string[] }) => {
-    const args = command ?? [];
-    console.log('Test command placeholder');
-    process.exit(0);
+    try {
+      const cwd = getCwd();
+      const manager = new WorkflowStateManager(cwd);
+      const state = await manager.getActive();
+
+      if (!state) {
+        console.error('Error: No active workflow. Run "tsv start" first.');
+        process.exit(1);
+      }
+
+      // Build result sequence, default to ['pass'] if empty
+      const sequence = options.result.length > 0
+        ? options.result.map(r => r.toLowerCase())
+        : ['pass'];
+
+      // Validate all results are 'pass' or 'fail'
+      for (const r of sequence) {
+        if (r !== 'pass' && r !== 'fail') {
+          console.error(`Error: Invalid result "${r}". Use "pass" or "fail".`);
+          process.exit(1);
+        }
+      }
+
+      // Get current retry count and index into sequence
+      const retryCount = state.retryCount;
+      const index = Math.min(retryCount, sequence.length - 1);
+      const result = sequence[index] as 'pass' | 'fail';
+
+      // Format command string
+      const args = command ?? [];
+      const commandStr = args.length > 0 ? args.join(' ') : '(no command)';
+
+      // Output verbose status
+      const retryMax = state.retryMax;
+      const attempt = retryCount + 1;
+      const resultUpper = result.toUpperCase();
+      console.log(`${commandStr} -> ${resultUpper} (task ${state.task}, attempt ${attempt}/${retryMax + 1})`);
+
+      // Exit with appropriate code
+      process.exit(result === 'pass' ? 0 : 1);
+    } catch (error) {
+      console.error(`Error: ${getErrorMessage(error)}`);
+      process.exit(1);
+    }
   });
 
 function printTaskGuidance(task: Task): void {
