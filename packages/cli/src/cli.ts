@@ -592,22 +592,29 @@ program
 
       if (!state) return;
 
+      const statePath = path.join('.claude/turboshovel/workflows', `${state.id}.json`);
       console.log(`Workflow: ${state.workflow}`);
-      console.log(`ID: ${state.id}`);
+      console.log(`Path: ${statePath}`);
       console.log(`Task ${state.task}: ${state.taskName}`);
 
-      // Load workflow to get task for retry max
+      // Load workflow to get task for retry max and task guidance
       const workflowPath = await findWorkflowFile(getCwd(), state.workflow);
       let retryMax = 0;
+      let currentTask: Task | undefined;
       if (workflowPath) {
         const content = await fs.readFile(workflowPath, 'utf8');
         const tasks = parseWorkflow(content);
-        const currentTask = tasks[state.task - 1];
+        currentTask = tasks[state.task - 1];
         if (currentTask) {
           retryMax = getTaskRetryMax(currentTask);
         }
       }
       console.log(`Retry: ${state.retryCount}/${retryMax}`);
+
+      // Show task guidance
+      if (currentTask) {
+        printTaskGuidance(currentTask);
+      }
 
       if (Object.keys(state.variables).length > 0) {
         console.log('Variables:', JSON.stringify(state.variables, null, 2));
@@ -841,7 +848,12 @@ function printTaskGuidance(task: Task): void {
     console.log(`\nPrompt: ${task.prompts[0].text}`);
   }
 
-  if (task.conditions) {
+  // Use raw conditions if available, otherwise format from parsed
+  if (task.rawConditions) {
+    console.log('\nConditions:');
+    console.log(`  --PASS: ${task.rawConditions.pass}`);
+    console.log(`  --FAIL: ${task.rawConditions.fail}`);
+  } else if (task.conditions) {
     console.log('\nConditions:');
     console.log(`  PASS: ${formatAction(task.conditions.pass)}`);
     console.log(`  FAIL: ${formatAction(task.conditions.fail)}`);
@@ -862,8 +874,14 @@ function formatAction(action: Action): string {
       return `GOTO ${action.task}`;
     case 'DONE':
       return 'DONE';
-    case 'RETRY':
-      return action.max ? `RETRY ${action.max}` : 'RETRY';
+    case 'RETRY': {
+      const maxStr = action.max === 1 ? '' : `${action.max} `;
+      // Omit "STOP" if default with no message
+      if (action.then.type === 'STOP' && !action.then.message) {
+        return action.max === 1 ? 'RETRY' : `RETRY ${action.max}`;
+      }
+      return `RETRY ${maxStr}${formatAction(action.then)}`.trim();
+    }
     default:
       return 'UNKNOWN';
   }
