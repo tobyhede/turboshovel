@@ -8,3 +8,6 @@ logs/
 
 .c8_output/
 .work/
+
+# Workflow state files (dev artifacts)
+.claude/turboshovel/workflows/

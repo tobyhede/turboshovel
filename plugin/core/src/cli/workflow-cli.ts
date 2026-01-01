@@ -378,6 +378,11 @@ program
           const newRetryCount = state.retryCount + 1;
           const retryMax = getTaskRetryMax(currentTask);
 
+          if (retryMax === 0) {
+            console.error(`Error: Task ${state.task} has no RETRY action configured`);
+            process.exit(1);
+          }
+
           if (newRetryCount > retryMax) {
             console.error(`Error: Max retries exceeded (${retryMax})`);
             process.exit(1);
