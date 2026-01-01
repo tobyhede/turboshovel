@@ -1,6 +1,6 @@
 // src/workflow/parser/helpers.ts
 
-import { createTaskNumber, type Action, type Conditions, type TaskNumber } from '../types.js';
+import { createTaskNumber, type Action, type NonRetryAction, type Conditions, type TaskNumber } from '../types.js';
 import type { ParsedConditional, AggregationModifier } from './types.js';
 import { WorkflowSyntaxError } from './types.js';
 
@@ -125,16 +125,12 @@ export function parseAction(text: string): Action | null {
   }
 
   if (trimmed === 'RETRY') {
-    return { type: 'RETRY' };
+    return { type: 'RETRY', max: 1, then: { type: 'STOP' } };
   }
 
   if (trimmed.startsWith('RETRY ')) {
-    const maxStr = trimmed.slice(6).trim();
-    const max = parseInt(maxStr, 10);
-    if (isNaN(max)) {
-      return null;
-    }
-    return { type: 'RETRY', max };
+    const rest = trimmed.slice(6).trim();
+    return parseRetryWithArgs(rest);
   }
 
   // Backward compatibility: old syntax
@@ -145,6 +141,80 @@ export function parseAction(text: string): Action | null {
   if (trimmed.startsWith('STOP (') && trimmed.endsWith(')')) {
     const message = trimmed.slice(6, -1);
     return { type: 'STOP', message };
+  }
+
+  return null;
+}
+
+/**
+ * Parse RETRY action with arguments (called when input starts with "RETRY ")
+ */
+function parseRetryWithArgs(rest: string): Action | null {
+  let max = 1;
+  let remaining = rest;
+
+  // Check if starts with a number
+  const numberMatch = /^(\d+)(?:\s+(.*))?$/.exec(remaining);
+  if (numberMatch) {
+    max = parseInt(numberMatch[1], 10);
+    remaining = numberMatch[2]?.trim() ?? '';
+  }
+
+  // If nothing remaining, default to STOP
+  if (!remaining) {
+    return { type: 'RETRY', max, then: { type: 'STOP' } };
+  }
+
+  // Check for quoted message (implies STOP)
+  if (remaining.startsWith('"') && remaining.endsWith('"')) {
+    const message = remaining.slice(1, -1);
+    return { type: 'RETRY', max, then: { type: 'STOP', message } };
+  }
+
+  // Parse the exhaustion action
+  const thenAction = parseNonRetryAction(remaining);
+  if (!thenAction) {
+    return null;
+  }
+
+  return { type: 'RETRY', max, then: thenAction };
+}
+
+/**
+ * Parse a non-RETRY action (CONTINUE, STOP, GOTO, DONE)
+ */
+function parseNonRetryAction(input: string): NonRetryAction | null {
+  const trimmed = input.trim();
+
+  if (trimmed === 'CONTINUE') {
+    return { type: 'CONTINUE' };
+  }
+
+  if (trimmed === 'DONE') {
+    return { type: 'DONE' };
+  }
+
+  if (trimmed === 'STOP') {
+    return { type: 'STOP' };
+  }
+
+  if (trimmed.startsWith('STOP ')) {
+    const rest = trimmed.slice(5).trim();
+    // Handle quoted message
+    if (rest.startsWith('"') && rest.endsWith('"')) {
+      return { type: 'STOP', message: rest.slice(1, -1) };
+    }
+    return { type: 'STOP', message: rest };
+  }
+
+  if (trimmed.startsWith('GOTO ')) {
+    const taskStr = trimmed.slice(5).trim();
+    const taskNum = parseInt(taskStr, 10);
+    const task = createTaskNumber(taskNum);
+    if (!task) {
+      return null;
+    }
+    return { type: 'GOTO', task };
   }
 
   return null;
