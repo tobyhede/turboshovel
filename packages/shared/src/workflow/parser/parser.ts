@@ -16,7 +16,8 @@ import {
   extractSubtaskHeader,
   parseConditional,
   convertConditionals,
-  extractWorkflowList
+  extractWorkflowList,
+  extractRawConditions
 } from './helpers.js';
 import { WorkflowSyntaxError, type ParsedConditional } from './types.js';
 
@@ -305,13 +306,17 @@ function finalizeTask(
   // Convert conditionals
   const conditions = convertConditionals(pendingConditionals);
 
+  // Extract raw condition strings
+  const rawConditions = extractRawConditions(pendingConditionals);
+
   return {
     number: task.number,
     description: task.description,
     command: task.command,
     prompts: task.prompts,
     conditions: conditions ?? undefined,
-    subtasks: task.subtasks.length > 0 ? task.subtasks : undefined
+    subtasks: task.subtasks.length > 0 ? task.subtasks : undefined,
+    rawConditions
   };
 }
 

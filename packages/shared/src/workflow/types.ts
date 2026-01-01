@@ -157,6 +157,10 @@ export interface Task {
   readonly conditions?: Conditions;
   readonly subtasks?: readonly Subtask[];
   readonly nestedWorkflow?: string; // Reference to nested workflow file
+  readonly rawConditions?: {
+    readonly pass: string;
+    readonly fail: string;
+  };
 }
 
 /**

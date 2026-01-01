@@ -241,7 +241,7 @@ function parseConditionalPrefix(rest: string, type: 'pass' | 'fail'): ParsedCond
   if (!action) {
     return null;
   }
-  return { type, action, modifier };
+  return { type, action, modifier, raw: actionStr };
 }
 
 /**
@@ -267,7 +267,7 @@ export function parseConditional(text: string): ParsedConditional | null {
     if (!action) {
       return null;
     }
-    return { type: 'pass', action, modifier: null };
+    return { type: 'pass', action, modifier: null, raw: actionStr };
   }
 
   if (trimmed.startsWith('Fail:')) {
@@ -276,7 +276,7 @@ export function parseConditional(text: string): ParsedConditional | null {
     if (!action) {
       return null;
     }
-    return { type: 'fail', action, modifier: null };
+    return { type: 'fail', action, modifier: null, raw: actionStr };
   }
 
   return null;
@@ -352,6 +352,20 @@ export function convertConditionals(conditionals: ParsedConditional[]): Conditio
   }
 
   return null;
+}
+
+/**
+ * Extract raw condition strings from parsed conditionals
+ */
+export function extractRawConditions(
+  conditionals: ParsedConditional[]
+): { pass: string; fail: string } | undefined {
+  const passRaw = conditionals.find(c => c.type === 'pass')?.raw;
+  const failRaw = conditionals.find(c => c.type === 'fail')?.raw;
+  if (passRaw && failRaw) {
+    return { pass: passRaw, fail: failRaw };
+  }
+  return undefined;
 }
 
 /**

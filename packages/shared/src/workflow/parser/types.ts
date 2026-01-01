@@ -21,6 +21,7 @@ export interface ParsedConditional {
   type: 'pass' | 'fail';
   action: Action;
   modifier: AggregationModifier;
+  raw: string;  // original text after "PASS:" or "FAIL:"
 }
 
 // Note: With mdast-util-from-markdown, we use local variables in parseWorkflow()
