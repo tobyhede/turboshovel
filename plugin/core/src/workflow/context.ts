@@ -25,7 +25,7 @@ function formatWorkflowContext(state: WorkflowState): string {
 
   // Show retry info if relevant
   if (state.retryCount > 0) {
-    lines.push(`**Attempt:** ${String(state.retryCount + 1)} of ${String(state.retryMax)}`);
+    lines.push(`**Attempt:** ${String(state.retryCount + 1)}`);
   }
 
   // Show task progress if there are tasks

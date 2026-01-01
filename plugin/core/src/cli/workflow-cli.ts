@@ -31,6 +31,13 @@ function getCwd(): string {
   return process.cwd();
 }
 
+function getTaskRetryMax(task: Task): number {
+  if (task.conditions?.fail?.type === 'RETRY') {
+    return task.conditions.fail.max;
+  }
+  return 0;
+}
+
 program
   .command('start [file]')
   .description('Start a new workflow or queue a task')
@@ -184,13 +191,13 @@ program
             const tasks = parseWorkflow(content);
             const agentTask = tasks[binding.taskId.task - 1];
 
-            const conditionResult = evaluateFailCondition(agentTask, state.retryCount, state.retryMax);
+            const conditionResult = evaluateFailCondition(agentTask, state.retryCount);
 
             switch (conditionResult.action) {
               case 'retry':
                 // Keep agent running, increment retry, re-present task
                 await manager.update(state.id, { retryCount: conditionResult.newRetryCount });
-                console.log(`Retry ${conditionResult.newRetryCount}/${state.retryMax}`);
+                console.log(`Retry ${conditionResult.newRetryCount}/${getTaskRetryMax(agentTask)}`);
                 console.log(`Agent ${options.agent} retrying task ${binding.taskId.task}`);
                 return;
 
@@ -214,6 +221,16 @@ program
                   retryCount: 0
                 });
                 console.log(`Agent ${options.agent} failed, workflow jumped to task ${conditionResult.gotoTask}`);
+                return;
+
+              case 'done':
+                // Mark agent as done and complete workflow
+                await manager.updateAgentBinding(state.id, options.agent, {
+                  status: 'done',
+                  result: 'fail'
+                });
+                console.log('Workflow complete (via FAIL: DONE)');
+                await manager.setActive(null);
                 return;
 
               case 'continue':
@@ -303,12 +320,12 @@ program
           const tasks = parseWorkflow(content);
           const currentTask = tasks[state.task - 1];
 
-          const result = evaluateFailCondition(currentTask, state.retryCount, state.retryMax);
+          const result = evaluateFailCondition(currentTask, state.retryCount);
 
           switch (result.action) {
             case 'retry':
               await manager.update(state.id, { retryCount: result.newRetryCount });
-              console.log(`Retry ${result.newRetryCount}/${state.retryMax}`);
+              console.log(`Retry ${result.newRetryCount}/${getTaskRetryMax(currentTask)}`);
               console.log(`Task ${state.task}: ${currentTask.description}`);
               printTaskGuidance(currentTask);
               return;
@@ -334,6 +351,11 @@ program
               return;
             }
 
+            case 'done':
+              console.log('Workflow complete (via FAIL: DONE)');
+              await manager.setActive(null);
+              return;
+
             case 'continue':
               // Fall through to normal advance
               break;
@@ -342,13 +364,6 @@ program
 
         // Handle retry
         if (options.retry) {
-          const newRetryCount = state.retryCount + 1;
-
-          if (newRetryCount > state.retryMax) {
-            console.error(`Error: Max retries exceeded (${state.retryMax})`);
-            process.exit(1);
-          }
-
           // Load workflow to get current task
           const workflowPath = await findWorkflowFile(cwd, state.workflow);
           if (!workflowPath) {
@@ -360,11 +375,19 @@ program
           const tasks = parseWorkflow(content);
           const currentTask = tasks[state.task - 1];
 
+          const newRetryCount = state.retryCount + 1;
+          const retryMax = getTaskRetryMax(currentTask);
+
+          if (newRetryCount > retryMax) {
+            console.error(`Error: Max retries exceeded (${retryMax})`);
+            process.exit(1);
+          }
+
           await manager.update(state.id, {
             retryCount: newRetryCount
           });
 
-          console.log(`Retry ${newRetryCount}/${state.retryMax}`);
+          console.log(`Retry ${newRetryCount}/${retryMax}`);
           console.log(`Task ${state.task}: ${currentTask.description}`);
           printTaskGuidance(currentTask);
           return;
@@ -534,7 +557,19 @@ program
       console.log(`Workflow: ${state.workflow}`);
       console.log(`ID: ${state.id}`);
       console.log(`Task ${state.task}: ${state.taskName}`);
-      console.log(`Retry: ${state.retryCount}/${state.retryMax}`);
+
+      // Get retry max from current task
+      let retryMax = 0;
+      const workflowPath = await findWorkflowFile(cwd, state.workflow);
+      if (workflowPath) {
+        const content = await fs.readFile(workflowPath, 'utf8');
+        const tasks = parseWorkflow(content);
+        const currentTask = tasks[state.task - 1];
+        if (currentTask) {
+          retryMax = getTaskRetryMax(currentTask);
+        }
+      }
+      console.log(`Retry: ${state.retryCount}/${retryMax}`);
 
       if (Object.keys(state.variables).length > 0) {
         console.log('Variables:', JSON.stringify(state.variables, null, 2));
@@ -728,10 +763,30 @@ function formatAction(action: Action): string {
       return `GOTO ${action.task}`;
     case 'DONE':
       return 'DONE';
-    case 'RETRY':
-      return action.max ? `RETRY ${action.max}` : 'RETRY';
+    case 'RETRY': {
+      const maxStr = action.max === 1 ? '' : `${action.max} `;
+      const thenStr = formatNonRetryAction(action.then);
+      // Omit "STOP" if default with no message
+      if (action.then.type === 'STOP' && !action.then.message) {
+        return action.max === 1 ? 'RETRY' : `RETRY ${action.max}`;
+      }
+      return `RETRY ${maxStr}${thenStr}`.trim();
+    }
     default:
       return 'UNKNOWN';
+  }
+}
+
+function formatNonRetryAction(action: { readonly type: 'CONTINUE' | 'STOP' | 'GOTO' | 'DONE'; readonly message?: string; readonly task?: number }): string {
+  switch (action.type) {
+    case 'CONTINUE':
+      return 'CONTINUE';
+    case 'STOP':
+      return action.message ? `STOP "${action.message}"` : 'STOP';
+    case 'GOTO':
+      return `GOTO ${action.task}`;
+    case 'DONE':
+      return 'DONE';
   }
 }
 
