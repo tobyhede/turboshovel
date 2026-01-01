@@ -30,27 +30,27 @@ describe('test command', () => {
     it('returns pass by default (no flags)', () => {
       const result = runCli('test npm install', workspace);
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('-> PASS');
+      expect(result.stdout).toContain('[PASS]');
     });
 
     it('returns pass with explicit --result pass', () => {
       const result = runCli('test --result pass npm install', workspace);
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('-> PASS');
+      expect(result.stdout).toContain('[PASS]');
     });
 
     it('returns fail with --result fail', () => {
       const result = runCli('test --result fail npm install', workspace);
       expect(result.exitCode).toBe(1);
-      expect(result.stdout).toContain('-> FAIL');
+      expect(result.stdout).toContain('[FAIL]');
     });
 
     it('uses retry count to index into sequence', async () => {
       // First invocation: retryCount=0 -> fail
       let result = runCli('test --result fail --result pass npm test', workspace);
       expect(result.exitCode).toBe(1);
-      expect(result.stdout).toContain('-> FAIL');
-      expect(result.stdout).toContain('attempt 1/');
+      expect(result.stdout).toContain('[FAIL]');
+      expect(result.stdout).toContain('[1/');
 
       // Simulate retry via CLI (increments retryCount)
       runCli('next --retry', workspace);
@@ -58,8 +58,8 @@ describe('test command', () => {
       // Second invocation: retryCount=1 -> pass
       result = runCli('test --result fail --result pass npm test', workspace);
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('-> PASS');
-      expect(result.stdout).toContain('attempt 2/');
+      expect(result.stdout).toContain('[PASS]');
+      expect(result.stdout).toContain('[2/');
     });
 
     it('sticks on last result when retry exceeds sequence', async () => {
@@ -70,7 +70,7 @@ describe('test command', () => {
       // retryCount=2, sequence length=2, should stick on index 1 (pass)
       const result = runCli('test --result fail --result pass npm test', workspace);
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('-> PASS');
+      expect(result.stdout).toContain('[PASS]');
     });
   });
 

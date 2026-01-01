@@ -829,7 +829,7 @@ program
       // Output verbose status
       const attempt = retryCount + 1;
       const resultUpper = result.toUpperCase();
-      console.log(`${commandStr} -> ${resultUpper} (task ${String(state.task)}, attempt ${String(attempt)}/${String(retryMax + 1)})`);
+      console.log(`[${resultUpper}] ${commandStr} [${attempt}/${retryMax + 1}]`);
 
       // Exit with appropriate code
       process.exit(result === 'pass' ? 0 : 1);
