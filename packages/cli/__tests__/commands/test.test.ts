@@ -73,4 +73,20 @@ describe('test command', () => {
       expect(result.stdout).toContain('-> PASS');
     });
   });
+
+  describe('error handling', () => {
+    it('fails when no active workflow', () => {
+      const result = runCli('test npm install', workspace);
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('No active workflow');
+    });
+
+    it('fails with invalid result value', async () => {
+      runCli('start workflows/simple.workflow.md', workspace);
+
+      const result = runCli('test --result maybe npm install', workspace);
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('Invalid result');
+    });
+  });
 });
