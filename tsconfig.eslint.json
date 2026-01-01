@@ -15,6 +15,7 @@
     "packages/shared/src/**/*.ts",
     "packages/shared/__tests__/**/*.ts",
     "packages/cli/src/**/*.ts",
+    "packages/cli/__tests__/**/*.ts",
     "eslint.config.js"
   ],
   "exclude": ["node_modules", "**/dist/**"]
