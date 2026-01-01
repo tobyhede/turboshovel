@@ -44,5 +44,33 @@ describe('test command', () => {
       expect(result.exitCode).toBe(1);
       expect(result.stdout).toContain('-> FAIL');
     });
+
+    it('uses retry count to index into sequence', async () => {
+      // First invocation: retryCount=0 -> fail
+      let result = runCli('test --result fail --result pass npm test', workspace);
+      expect(result.exitCode).toBe(1);
+      expect(result.stdout).toContain('-> FAIL');
+      expect(result.stdout).toContain('attempt 1/');
+
+      // Simulate retry via CLI (increments retryCount)
+      runCli('next --retry', workspace);
+
+      // Second invocation: retryCount=1 -> pass
+      result = runCli('test --result fail --result pass npm test', workspace);
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain('-> PASS');
+      expect(result.stdout).toContain('attempt 2/');
+    });
+
+    it('sticks on last result when retry exceeds sequence', async () => {
+      // Sequence is [fail, pass], retry twice to get retryCount=2
+      runCli('next --retry', workspace); // retryCount=1
+      runCli('next --retry', workspace); // retryCount=2
+
+      // retryCount=2, sequence length=2, should stick on index 1 (pass)
+      const result = runCli('test --result fail --result pass npm test', workspace);
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain('-> PASS');
+    });
   });
 });
