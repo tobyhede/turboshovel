@@ -1,4 +1,4 @@
-// plugin/hooks/hooks-app/src/dispatcher.ts
+// plugin/core/src/dispatcher.ts
 import {
   type HookInput,
   type HookConfig,
@@ -11,7 +11,6 @@ import { executeGate } from './gate-loader.js';
 import { handleAction } from './action-handler.js';
 import { Session } from './session.js';
 import { getWorkflowContext } from './workflow/context.js';
-import { trackTaskDispatch, handleSubagentStart, handleSubagentStop } from './workflow/hooks/index.js';
 import { minimatch } from 'minimatch';
 import path from 'path';
 import { detectSyntheticEvents } from './synthetic-events/detector.js';
@@ -184,13 +183,13 @@ async function updateSessionState(input: HookInput): Promise<void> {
       case 'SubagentStart':
         // Store tool_use_id → taskId mapping for correlation
         if (input.tool_use_id && input.task_id) {
-          const metadata = (await session.get('metadata')) as Record<string, unknown>;
+          const metadata = (await session.get('metadata'));
           const mapping = (metadata.toolUseIdToTaskId ?? {}) as Record<string, string>;
           await session.set('metadata', {
             ...metadata,
             toolUseIdToTaskId: {
               ...mapping,
-              [input.tool_use_id as string]: input.task_id as string
+              [input.tool_use_id]: input.task_id
             }
           });
         }
@@ -252,48 +251,6 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
       : workflowContext;
   }
 
-
-  // Workflow orchestration hooks
-  if (input.hook_event_name === 'PostToolUse' && input.tool_name === 'Task') {
-    const result = await trackTaskDispatch(input);
-    if (result.violation) {
-      return {
-        context: accumulatedContext,
-        blockReason: result.violation
-      };
-    }
-  }
-
-  if (input.hook_event_name === 'SubagentStart') {
-    const result = await handleSubagentStart(input);
-    if (result.violation) {
-      return {
-        context: accumulatedContext,
-        blockReason: result.violation
-      };
-    }
-    if (result.context) {
-      accumulatedContext = accumulatedContext
-        ? accumulatedContext + '\n\n' + result.context
-        : result.context;
-    }
-  }
-
-  if (input.hook_event_name === 'SubagentStop') {
-    const result = await handleSubagentStop(input);
-    if (result.violation) {
-      return {
-        context: accumulatedContext,
-        blockReason: result.violation
-      };
-    }
-    if (result.context) {
-      accumulatedContext = accumulatedContext
-        ? accumulatedContext + '\n\n' + result.context
-        : result.context;
-    }
-  }
-
   // Synthetic event dispatch
   // SAFETY: isSyntheticEvent() prevents recursive synthetic detection.
   // If synthetic events are ever added to hooks.json, they would NOT
@@ -320,7 +277,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
         if (!activeCommand) {
           continue;  // Skip SlashCommandEnd if no active command
         }
-        slashCommandEndCommand = activeCommand as string;
+        slashCommandEndCommand = activeCommand;
       }
 
       // Build synthetic input with event-specific fields

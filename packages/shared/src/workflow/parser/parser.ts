@@ -112,7 +112,7 @@ export function parseWorkflow(markdown: string): Task[] {
 
   // Helper to finalize pending subtask
   const finalizePendingSubtask = () => {
-    if (currentTask && currentTask.pendingSubtask) {
+    if (currentTask?.pendingSubtask) {
       const workflows = extractWorkflowList(currentTask.pendingSubtask.content);
       const subtask: Subtask = {
         id: currentTask.pendingSubtask.id,

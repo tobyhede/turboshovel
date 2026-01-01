@@ -38,15 +38,23 @@ Dispatch N agents to independently review the same subject. Collate findings:
 
 1. Determine N (default 2, or from args)
 2. Select agents (from args, plugins, or built-ins)
-3. Start workflow: `workflow start ${CLAUDE_PLUGIN_ROOT}workflows/verify.workflow.md`
-4. For each agent 1..N (strictly in sequence):
-   - Queue task: `workflow start --task 1.{n}`
-   - Dispatch agent with Task tool (SubagentStart hook auto-binds agent to queued task)
-   - Agent writes findings to `.work/{date}-verify-{agentId}-{timestamp}.md`
+3. Start workflow: `workflow start workflows/verify.workflow.md`
+4. Dispatch agents with TaskId prefix in description:
+   ```
+   Task(description="1.1 - Review [subject]", prompt="...", subagent_type="...")
+   Task(description="1.2 - Review [subject]", prompt="...", subagent_type="...")
+   ```
 
-> **Important:** Each task MUST be queued immediately before dispatching its agent.
-> The SubagentStart hook pops the pending task and binds the agent automatically.
-> Do NOT queue all tasks first then dispatch all agents - this breaks binding.
+**Hooks automate task binding:**
+
+| Manual command | Hook trigger | When |
+|----------------|--------------|------|
+| `tsv start --task 1.1` | PostToolUse (Task) | TaskId detected in description |
+| `tsv start --agent {id}` | SubagentStart | Agent spawns |
+
+**Subagent protocol:**
+- Write findings to `.work/{date}-verify-{agentId}.md`
+- End response with `STATUS: PASS` or `STATUS: FAIL`
 
 ### Phase 2: Collate
 
@@ -56,7 +64,7 @@ After all agents complete, dispatch collation:
 - Categorize by consensus:
   - **Common (N/N):** All agents found this issue
   - **Exclusive:** Subcategorize by ratio (e.g., 2/3, 1/3)
-- Write collation to `.work/{date}-verify-collated-{timestamp}.md`
+- Write collation to `.work/{date}-verify-collated.md`
 
 **Present immediately:**
 ```
@@ -79,7 +87,7 @@ Cross-check starting for exclusive findings...
 Dispatch cross-check agent to validate ALL exclusive findings:
 - For each exclusive issue, verify against ground truth
 - Mark as: VALIDATED | INVALIDATED | UNCERTAIN
-- Write to `.work/{date}-verify-crosscheck-{timestamp}.md`
+- Write to `.work/{date}-verify-crosscheck.md`
 
 **Present when complete:**
 ```
@@ -98,10 +106,10 @@ workflow complete
 
 ## Output Files
 
-All files saved to `.work/` with timestamp-based naming:
-- `{date}-verify-{agent-index}-{time}.md` - Individual reviews
-- `{date}-verify-collated-{time}.md` - Collation report
-- `{date}-verify-crosscheck-{time}.md` - Cross-check results
+All files saved to `.work/`:
+- `{date}-verify-{agentId}.md` - Individual reviews
+- `{date}-verify-collated.md` - Collation report
+- `{date}-verify-crosscheck.md` - Cross-check results
 
 ## Templates
 

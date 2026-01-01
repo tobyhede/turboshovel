@@ -63,12 +63,19 @@ You orchestrate the workflow. Use these commands:
 
 ### Dispatching Tasks
 
-Include TaskId in Task description:
+Include TaskId in Task description - hooks handle the rest automatically:
 ```
 Task(description="2.1 - Review authentication code", ...)
 ```
 
 The TaskId format is `N.X` where N is task number, X is subtask number.
+
+**Hook automation:**
+- PostToolUse hook parses TaskId from description, calls `tsv start --task 2.1`
+- SubagentStart hook binds the agent to the queued task
+- SubagentStop hook parses STATUS line, calls `tsv next --pass/--fail --agent {id}`
+
+**Do NOT manually call `workflow start --task`** - hooks handle this.
 
 ### Parallel Subtasks
 
@@ -81,8 +88,14 @@ For parallel execution (e.g., `### 2.{n}` subtasks):
 
 `### N.{n}` marks dynamic subtasks - orchestrator decides count at runtime.
 
-- Queue with sequential numbers: `workflow start --task 3.1`, `--task 3.2`
-- `$n` in prompts substitutes with subtask number (1, 2, etc.)
+Dispatch with sequential TaskIds in description:
+```
+Task(description="3.1 - Agent 1 review", ...)
+Task(description="3.2 - Agent 2 review", ...)
+```
+
+- `$n` in workflow prompts substitutes with subtask number (1, 2, etc.)
+- Hooks handle task queuing and agent binding automatically
 
 ### Handling Failures
 
@@ -99,3 +112,4 @@ When subagent reports `STATUS: FAIL`: check output, discuss with user, then retr
 | Main agent auto-retries without user | Always discuss failures before retry |
 | Missing TaskId in dispatch | Include `N.X` format in Task description |
 | Parallel tasks without status check | Run `workflow status` before advancing |
+| Manually calling `workflow start --task` | Remove - hooks handle task queuing automatically |

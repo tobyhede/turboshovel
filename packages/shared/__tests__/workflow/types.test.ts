@@ -1,4 +1,4 @@
-import { SubtaskState } from '../../src/workflow/types';
+import { type SubtaskState } from '../../src/workflow/types';
 
 describe('SubtaskState type', () => {
   it('has required fields', () => {

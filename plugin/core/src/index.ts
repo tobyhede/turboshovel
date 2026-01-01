@@ -1,4 +1,4 @@
-// plugin/hooks/hooks-app/src/index.ts
+// plugin/core/src/index.ts
 
 // Existing exports
 export { dispatch } from './dispatcher.js';

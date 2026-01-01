@@ -81,7 +81,7 @@ describe('test command', () => {
       expect(result.stderr).toContain('No active workflow');
     });
 
-    it('fails with invalid result value', async () => {
+    it('fails with invalid result value', () => {
       runCli('start workflows/simple.workflow.md', workspace);
 
       const result = runCli('test --result maybe npm install', workspace);

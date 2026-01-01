@@ -1,0 +1,16 @@
+{
+  "id": "wf-2026-01-01-ggxgz9",
+  "workflow": "rundown/examples/build-and-deploy.workflow.md",
+  "task": 5,
+  "taskName": "Deploy to staging",
+  "retryCount": 0,
+  "retryMax": 3,
+  "variables": {
+    "completed": true
+  },
+  "tasks": [],
+  "pendingTasks": [],
+  "agentBindings": {},
+  "startedAt": "2026-01-01T03:00:33.701Z",
+  "updatedAt": "2026-01-01T03:00:50.449Z"
+}

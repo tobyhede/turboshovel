@@ -1,8 +1,7 @@
 # Dependencies
 node_modules/
 
-# Build outputs
-dist/
+# Build outputs (not dist/ - needed for verify-install.sh)
 *.tsbuildinfo
 
 # Git

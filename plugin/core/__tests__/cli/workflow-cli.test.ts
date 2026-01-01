@@ -852,7 +852,7 @@ echo "test"
       await runCli(['start', workflowPath]);
 
       const manager = new WorkflowStateManager(testDir);
-      let state = await manager.getActive();
+      const state = await manager.getActive();
 
       // Complete one as pass, one as fail
       await manager.completeSubtask(state!.id, '1', 'pass');

@@ -294,7 +294,7 @@ export function extractWorkflowList(content: string): string[] {
 
   for (const line of lines) {
     // Match " - filename.workflow.md" pattern
-    const match = line.match(/^\s*-\s+(\S+\.workflow\.md)\s*$/);
+    const match = /^\s*-\s+(\S+\.workflow\.md)\s*$/.exec(line);
     if (match) {
       workflows.push(match[1]);
     }

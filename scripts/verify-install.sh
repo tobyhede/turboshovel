@@ -22,13 +22,13 @@ if [ "$SOURCE" = "local" ]; then
   (cd packages/shared && npm pack --pack-destination "$ROOT_DIR/dist")
   (cd packages/cli && npm pack --pack-destination "$ROOT_DIR/dist")
 
-  # Build Docker image with local artifacts
+  # Build Docker image
   echo "Building Docker image..."
-  docker build -f scripts/Dockerfile.test --target local -t turboshovel-test .
+  docker compose build test-local
 else
   # Build minimal image for npm install
   echo "Building Docker image (npm source)..."
-  docker build -f scripts/Dockerfile.test --target npm -t turboshovel-test .
+  docker compose build test-npm
 fi
 
 # Persist Claude auth in project-local directory
@@ -53,13 +53,13 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   fi
 fi
 
-# Run interactive container with mounted volumes
-# Use fixed hostname so Claude credentials persist across runs
-# Mount .claude.json to home directory (config) and .claude/ for data
+# Run interactive container with docker compose
 echo "Starting interactive Docker container..."
 echo "Auth persisted in: $CLAUDE_DOCKER_DIR"
-docker run -it --rm \
-  --hostname claude-test \
-  -v "$CLAUDE_DOCKER_DIR:/home/testuser/.claude" \
-  -v "$CLAUDE_DOCKER_DIR/.claude.json:/home/testuser/.claude.json" \
-  turboshovel-test "$SOURCE"
+echo "Logs captured to: $ROOT_DIR/logs/"
+
+if [ "$SOURCE" = "local" ]; then
+  docker compose run --rm test-local
+else
+  docker compose run --rm test-npm
+fi

@@ -1,4 +1,4 @@
-// plugin/hooks/hooks-app/src/cli.ts
+// plugin/core/src/cli.ts
 import {
   type SessionState,
   type SessionStateArrayKey,

@@ -11,7 +11,7 @@ tsv test --result fail --result fail --result pass npm test
 ```
 
 - PASS: CONTINUE
-- FAIL: RETRY 3
+- FAIL: RETRY 2
 
 ## 2. Always passes
 

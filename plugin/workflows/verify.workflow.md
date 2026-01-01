@@ -8,11 +8,13 @@ Dispatch $count review agents in parallel. Each agent independently reviews
 the subject using verify-review.md template.
 
 ### 1.{n}
+ - workflow.one.md
+ - workflow.two.md
 
 Dispatch review agent.
 
 **Prompt:** Review the subject independently. Write findings to
-`.work/{date}-verify-{agent-index}-{timestamp}.md` using the template.
+`.work/{date}-verify-{agentId}.md` using the template.
 
 - PASS: CONTINUE
 - FAIL: RETRY 1
@@ -24,7 +26,7 @@ Compare all agent reviews. Categorize by consensus ratio:
 - Exclusive: (N-1)/N, (N-2)/N, ... 1/N
 
 **Prompt:** Read all review files from step 1. Use verify-collation.md template.
-Write collation to `.work/{date}-verify-collated-{timestamp}.md`.
+Write collation to `.work/{date}-verify-collated.md`.
 
 Present Common findings to user immediately.
 
@@ -37,7 +39,7 @@ Validate ALL exclusive findings against ground truth.
 Mark each as VALIDATED, INVALIDATED, or UNCERTAIN.
 
 **Prompt:** For each exclusive finding, verify against the actual implementation/docs/plan.
-Write results to `.work/{date}-verify-crosscheck-{timestamp}.md`.
+Write results to `.work/{date}-verify-crosscheck.md`.
 
 - PASS: CONTINUE
 - FAIL: CONTINUE

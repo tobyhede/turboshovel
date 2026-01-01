@@ -14,7 +14,12 @@
       "mcp__serena__read_file",
       "Skill(cipherpowers:commit-workflow)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Skill(turboshovel:n-verification)",
+      "mcp__serena__find_file",
+      "Skill(cipherpowers:brainstorm)",
+      "Skill(cipherpowers:plan)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,4 +1,4 @@
-// plugin/hooks/hooks-app/src/context.ts
+// plugin/core/src/context.ts
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { dirname } from 'path';

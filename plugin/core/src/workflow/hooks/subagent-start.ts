@@ -99,12 +99,12 @@ function parseStartAgentOutput(output: string, agentId: string): string {
   ];
 
   // Extract task ID and workflow from output
-  const taskMatch = output.match(/bound to task (\d+(?:\.\d+)?)/);
+  const taskMatch = /bound to task (\d+(?:\.\d+)?)/.exec(output);
   if (taskMatch) {
     lines.push(`TASK_ID: ${taskMatch[1]}`);
   }
 
-  const workflowMatch = output.match(/Started child workflow: (.+)/);
+  const workflowMatch = /Started child workflow: (.+)/.exec(output);
   if (workflowMatch) {
     lines.push(`WORKFLOW: ${workflowMatch[1]}`);
   }

@@ -1,4 +1,4 @@
-// plugin/hooks/hooks-app/src/action-handler.ts
+// plugin/core/src/action-handler.ts
 import { type GateResult, type TurboshovelConfig, type HookInput } from '@turboshovel/shared';
 
 export interface ActionResult {

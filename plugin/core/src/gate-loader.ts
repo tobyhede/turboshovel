@@ -1,4 +1,4 @@
-// plugin/hooks/hooks-app/src/gate-loader.ts
+// plugin/core/src/gate-loader.ts
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';

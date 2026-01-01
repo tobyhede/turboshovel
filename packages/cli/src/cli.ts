@@ -28,8 +28,14 @@ const program = new Command();
 
 program.name('turboshovel').description('Workflow orchestration CLI').version('1.0.0');
 
+const DEFAULT_RESULT_SEQUENCE: string[] = ['pass'];
+
 function getCwd(): string {
   return process.cwd();
+}
+
+function isValidResult(r: string): r is 'pass' | 'fail' {
+  return r === 'pass' || r === 'fail';
 }
 
 function collect(value: string, previous: string[]): string[] {
@@ -738,14 +744,14 @@ program
         process.exit(1);
       }
 
-      // Build result sequence, default to ['pass'] if empty
+      // Build result sequence, default to DEFAULT_RESULT_SEQUENCE if empty
       const sequence = options.result.length > 0
         ? options.result.map(r => r.toLowerCase())
-        : ['pass'];
+        : DEFAULT_RESULT_SEQUENCE;
 
       // Validate all results are 'pass' or 'fail'
       for (const r of sequence) {
-        if (r !== 'pass' && r !== 'fail') {
+        if (!isValidResult(r)) {
           console.error(`Error: Invalid result "${r}". Use "pass" or "fail".`);
           process.exit(1);
         }
@@ -764,7 +770,7 @@ program
       const retryMax = state.retryMax;
       const attempt = retryCount + 1;
       const resultUpper = result.toUpperCase();
-      console.log(`${commandStr} -> ${resultUpper} (task ${state.task}, attempt ${attempt}/${retryMax + 1})`);
+      console.log(`${commandStr} -> ${resultUpper} (task ${String(state.task)}, attempt ${String(attempt)}/${String(retryMax + 1)})`);
 
       // Exit with appropriate code
       process.exit(result === 'pass' ? 0 : 1);
