@@ -1,4 +1,4 @@
-import type { Task, TaskNumber } from './types.js';
+import type { Task, TaskNumber, SubtaskState, Action } from './types.js';
 
 export interface ConditionResult {
   action: 'retry' | 'blocked' | 'goto' | 'continue' | 'done';
@@ -110,6 +110,60 @@ export function evaluatePassCondition(task: Task): ConditionResult {
       // RETRY doesn't make sense for PASS, treat as continue
       return { action: 'continue' };
 
+    default:
+      return { action: 'continue' };
+  }
+}
+
+
+/**
+ * Evaluate aggregation conditions across subtask results.
+ *
+ * Returns null if not all subtasks are complete (can't evaluate yet).
+ * Otherwise returns the appropriate ConditionResult based on:
+ * - all: true  → PASS ALL, FAIL ANY
+ * - all: false → PASS ANY, FAIL ALL
+ */
+export function evaluateSubtaskAggregation(
+  subtaskStates: readonly SubtaskState[],
+  conditions: { all: boolean; pass: Action; fail: Action }
+): ConditionResult | null {
+  // Check if all subtasks are done
+  const allDone = subtaskStates.every(s => s.status === 'done');
+  if (!allDone) {
+    return null;
+  }
+
+  const passCount = subtaskStates.filter(s => s.result === 'pass').length;
+
+  if (conditions.all) {
+    // PASS ALL, FAIL ANY
+    const anyFailed = subtaskStates.some(s => s.result === 'fail');
+    if (anyFailed) {
+      return evaluateAction(conditions.fail);
+    }
+    return evaluateAction(conditions.pass);
+  } else {
+    // PASS ANY, FAIL ALL
+    if (passCount > 0) {
+      return evaluateAction(conditions.pass);
+    }
+    return evaluateAction(conditions.fail);
+  }
+}
+
+function evaluateAction(action: Action): ConditionResult {
+  switch (action.type) {
+    case 'CONTINUE':
+      return { action: 'continue' };
+    case 'STOP':
+      return { action: 'blocked', message: action.message };
+    case 'GOTO':
+      return { action: 'goto', gotoTask: action.task };
+    case 'DONE':
+      return { action: 'done' };
+    case 'RETRY':
+      return { action: 'retry' };
     default:
       return { action: 'continue' };
   }
