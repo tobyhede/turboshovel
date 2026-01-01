@@ -38,6 +38,13 @@ function isValidResult(r: string): r is 'pass' | 'fail' {
   return r === 'pass' || r === 'fail';
 }
 
+function getTaskRetryMax(task: Task): number {
+  if (task.conditions?.fail?.type === 'RETRY') {
+    return task.conditions.fail.max;
+  }
+  return 0; // No retry configured
+}
+
 function collect(value: string, previous: string[]): string[] {
   return previous.concat([value]);
 }
@@ -230,14 +237,14 @@ program
             const tasks = parseWorkflow(content);
             const agentTask = tasks[binding.taskId.task - 1];
 
-            const conditionResult = evaluateFailCondition(agentTask, state.retryCount, state.retryMax);
+            const conditionResult = evaluateFailCondition(agentTask, state.retryCount);
 
             switch (conditionResult.action) {
               case 'retry':
                 // Keep agent running, increment retry, re-present task
                 if (conditionResult.newRetryCount !== undefined) {
                   await manager.update(state.id, { retryCount: conditionResult.newRetryCount });
-                  console.log(`Retry ${conditionResult.newRetryCount}/${state.retryMax}`);
+                  console.log(`Retry ${conditionResult.newRetryCount}/${getTaskRetryMax(agentTask)}`);
                 }
                 console.log(`Agent ${options.agent} retrying task ${binding.taskId.task}`);
                 return;
@@ -262,6 +269,14 @@ program
                   retryCount: 0
                 });
                 console.log(`Agent ${options.agent} failed, workflow jumped to task ${conditionResult.gotoTask}`);
+                return;
+
+              case 'done':
+                await manager.update(state.id, {
+                  variables: { ...state.variables, completed: true }
+                });
+                console.log('Workflow complete (via FAIL: DONE)');
+                await manager.setActive(null);
                 return;
 
               case 'continue':
@@ -372,13 +387,13 @@ program
           const tasks = parseWorkflow(content);
           const currentTask = tasks[state.task - 1];
 
-          const result = evaluateFailCondition(currentTask, state.retryCount, state.retryMax);
+          const result = evaluateFailCondition(currentTask, state.retryCount);
 
           switch (result.action) {
             case 'retry': {
               if (result.newRetryCount !== undefined) {
                 await manager.update(state.id, { retryCount: result.newRetryCount });
-                console.log(`Retry ${result.newRetryCount}/${state.retryMax}`);
+                console.log(`Retry ${result.newRetryCount}/${getTaskRetryMax(currentTask)}`);
               }
               console.log(`Task ${state.task}: ${currentTask.description}`);
               printTaskGuidance(currentTask);
@@ -409,6 +424,14 @@ program
               return;
             }
 
+            case 'done':
+              await manager.update(state.id, {
+                variables: { ...state.variables, completed: true }
+              });
+              console.log('Workflow complete (via FAIL: DONE)');
+              await manager.setActive(null);
+              return;
+
             case 'continue':
               // Fall through to normal advance
               break;
@@ -417,13 +440,6 @@ program
 
         // Handle retry
         if (options.retry) {
-          const newRetryCount = state.retryCount + 1;
-
-          if (newRetryCount > state.retryMax) {
-            console.error(`Error: Max retries exceeded (${state.retryMax})`);
-            process.exit(1);
-          }
-
           // Load workflow to get current task
           const workflowPath = await findWorkflowFile(cwd, state.workflow);
           if (!workflowPath) {
@@ -435,11 +451,24 @@ program
           const tasks = parseWorkflow(content);
           const currentTask = tasks[state.task - 1];
 
+          const retryMax = getTaskRetryMax(currentTask);
+          if (retryMax === 0) {
+            console.error(`Error: Task ${state.task} has no RETRY action configured`);
+            process.exit(1);
+          }
+
+          const newRetryCount = state.retryCount + 1;
+
+          if (newRetryCount > retryMax) {
+            console.error(`Error: Max retries exceeded (${retryMax})`);
+            process.exit(1);
+          }
+
           await manager.update(state.id, {
             retryCount: newRetryCount
           });
 
-          console.log(`Retry ${newRetryCount}/${state.retryMax}`);
+          console.log(`Retry ${newRetryCount}/${retryMax}`);
           console.log(`Task ${state.task}: ${currentTask.description}`);
           printTaskGuidance(currentTask);
           return;
@@ -566,7 +595,19 @@ program
       console.log(`Workflow: ${state.workflow}`);
       console.log(`ID: ${state.id}`);
       console.log(`Task ${state.task}: ${state.taskName}`);
-      console.log(`Retry: ${state.retryCount}/${state.retryMax}`);
+
+      // Load workflow to get task for retry max
+      const workflowPath = await findWorkflowFile(getCwd(), state.workflow);
+      let retryMax = 0;
+      if (workflowPath) {
+        const content = await fs.readFile(workflowPath, 'utf8');
+        const tasks = parseWorkflow(content);
+        const currentTask = tasks[state.task - 1];
+        if (currentTask) {
+          retryMax = getTaskRetryMax(currentTask);
+        }
+      }
+      console.log(`Retry: ${state.retryCount}/${retryMax}`);
 
       if (Object.keys(state.variables).length > 0) {
         console.log('Variables:', JSON.stringify(state.variables, null, 2));
@@ -766,8 +807,19 @@ program
       const args = command ?? [];
       const commandStr = args.length > 0 ? args.join(' ') : '(no command)';
 
+      // Load workflow to get current task for retry max
+      const workflowPath = await findWorkflowFile(cwd, state.workflow);
+      let retryMax = 0;
+      if (workflowPath) {
+        const workflowContent = await fs.readFile(workflowPath, 'utf8');
+        const workflowTasks = parseWorkflow(workflowContent);
+        const currentTask = workflowTasks[state.task - 1];
+        if (currentTask) {
+          retryMax = getTaskRetryMax(currentTask);
+        }
+      }
+
       // Output verbose status
-      const retryMax = state.retryMax;
       const attempt = retryCount + 1;
       const resultUpper = result.toUpperCase();
       console.log(`${commandStr} -> ${resultUpper} (task ${String(state.task)}, attempt ${String(attempt)}/${String(retryMax + 1)})`);

@@ -33,7 +33,10 @@ describe('next command', () => {
     });
 
     it('resets retryCount to 0', async () => {
-      // First set retry count via --retry
+      // First set retry count via --retry on a workflow with RETRY configured
+      runCli('stop', workspace);
+      runCli('start workflows/retry.workflow.md', workspace);
+      
       runCli('next --retry', workspace);
       let state = await getActiveState(workspace);
       expect(state?.retryCount).toBe(1);
@@ -91,8 +94,12 @@ describe('next command', () => {
     });
 
     it('resets retryCount on jump', async () => {
+      // Use a workflow with RETRY configured
+      runCli('stop', workspace);
+      runCli('start workflows/retry.workflow.md', workspace);
+      
       runCli('next --retry', workspace);
-      runCli('next --step 3', workspace);
+      runCli('next --step 2', workspace);
 
       const state = await getActiveState(workspace);
       expect(state?.retryCount).toBe(0);
