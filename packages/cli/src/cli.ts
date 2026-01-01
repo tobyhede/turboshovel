@@ -32,6 +32,10 @@ function getCwd(): string {
   return process.cwd();
 }
 
+function collect(value: string, previous: string[]): string[] {
+  return previous.concat([value]);
+}
+
 program
   .command('start [file]')
   .description('Start a new workflow or queue a task')
@@ -717,6 +721,16 @@ program
       console.error(`Gate ${name}: FAIL`);
       process.exit(1);
     }
+  });
+
+program
+  .command('test [command...]')
+  .description('Test command that returns scripted PASS/FAIL results for workflow testing')
+  .option('-r, --result <outcome>', 'Add result to sequence (pass|fail)', collect, [])
+  .action(async (command: string[] | undefined, options: { result: string[] }) => {
+    const args = command ?? [];
+    console.log('Test command placeholder');
+    process.exit(0);
   });
 
 function printTaskGuidance(task: Task): void {
