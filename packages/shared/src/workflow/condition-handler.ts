@@ -1,4 +1,4 @@
-import type { Task, TaskNumber, SubtaskState, Action } from './types.js';
+import type { Task, TaskNumber, SubtaskState, Action, NonRetryAction } from './types.js';
 
 export interface ConditionResult {
   action: 'retry' | 'blocked' | 'goto' | 'continue' | 'done';
@@ -12,13 +12,11 @@ export interface ConditionResult {
  *
  * @param task - The task with conditions
  * @param currentRetryCount - Current retry count
- * @param retryMax - Maximum retries allowed
  * @returns Action to take based on FAIL condition
  */
 export function evaluateFailCondition(
   task: Task,
-  currentRetryCount: number,
-  retryMax: number
+  currentRetryCount: number
 ): ConditionResult {
   if (!task.conditions) {
     return {
@@ -32,13 +30,10 @@ export function evaluateFailCondition(
   switch (failAction.type) {
     case 'RETRY': {
       const newCount = currentRetryCount + 1;
-      const max = failAction.max ?? retryMax;
 
-      if (newCount > max) {
-        return {
-          action: 'blocked',
-          message: `Max retries exceeded (${String(max)})`
-        };
+      if (newCount > failAction.max) {
+        // Evaluate the exhaustion action
+        return evaluateNonRetryAction(failAction.then);
       }
 
       return {
@@ -152,7 +147,7 @@ export function evaluateSubtaskAggregation(
   }
 }
 
-function evaluateAction(action: Action): ConditionResult {
+function evaluateNonRetryAction(action: NonRetryAction): ConditionResult {
   switch (action.type) {
     case 'CONTINUE':
       return { action: 'continue' };
@@ -162,9 +157,13 @@ function evaluateAction(action: Action): ConditionResult {
       return { action: 'goto', gotoTask: action.task };
     case 'DONE':
       return { action: 'done' };
-    case 'RETRY':
-      return { action: 'retry' };
-    default:
-      return { action: 'continue' };
   }
+}
+
+function evaluateAction(action: Action): ConditionResult {
+  if (action.type === 'RETRY') {
+    // For aggregation, RETRY means retry (no max check here)
+    return { action: 'retry' };
+  }
+  return evaluateNonRetryAction(action);
 }
