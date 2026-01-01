@@ -473,4 +473,46 @@ export class WorkflowStateManager {
 
     return nextId;
   }
+
+  /**
+   * Bind an agent to a subtask
+   */
+  async bindSubtaskAgent(workflowId: string, subtaskId: string, agentId: string): Promise<void> {
+    const state = await this.load(workflowId);
+    if (!state) {
+      throw new Error(`Workflow ${workflowId} not found`);
+    }
+
+    const subtaskStates = state.subtaskStates ?? [];
+    const updated = subtaskStates.map(s =>
+      s.id === subtaskId
+        ? { ...s, status: 'running' as const, agentId }
+        : s
+    );
+
+    await this.update(workflowId, { subtaskStates: updated });
+  }
+
+  /**
+   * Complete a subtask with a result
+   */
+  async completeSubtask(
+    workflowId: string,
+    subtaskId: string,
+    result: 'pass' | 'fail'
+  ): Promise<void> {
+    const state = await this.load(workflowId);
+    if (!state) {
+      throw new Error(`Workflow ${workflowId} not found`);
+    }
+
+    const subtaskStates = state.subtaskStates ?? [];
+    const updated = subtaskStates.map(s =>
+      s.id === subtaskId
+        ? { ...s, status: 'done' as const, result }
+        : s
+    );
+
+    await this.update(workflowId, { subtaskStates: updated });
+  }
 }

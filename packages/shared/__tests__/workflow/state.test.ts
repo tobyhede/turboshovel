@@ -118,4 +118,44 @@ describe('WorkflowStateManager', () => {
       expect(updated?.subtaskStates?.[1].id).toBe('2');
     });
   });
+
+  describe('WorkflowStateManager subtask lifecycle', () => {
+    it('binds agent to subtask', async () => {
+      const manager = new WorkflowStateManager(testDir);
+
+      const state = await manager.create('test.workflow.md', 'Task');
+      await manager.update(state.id, {
+        subtaskStates: [{ id: '1', status: 'pending' }]
+      });
+
+      await manager.bindSubtaskAgent(state.id, '1', 'agent-123');
+
+      const updated = await manager.load(state.id);
+      expect(updated?.subtaskStates?.[0]).toEqual({
+        id: '1',
+        status: 'running',
+        agentId: 'agent-123',
+        result: undefined
+      });
+    });
+
+    it('completes subtask with result', async () => {
+      const manager = new WorkflowStateManager(testDir);
+
+      const state = await manager.create('test.workflow.md', 'Task');
+      await manager.update(state.id, {
+        subtaskStates: [{ id: '1', status: 'running', agentId: 'agent-123' }]
+      });
+
+      await manager.completeSubtask(state.id, '1', 'pass');
+
+      const updated = await manager.load(state.id);
+      expect(updated?.subtaskStates?.[0]).toEqual({
+        id: '1',
+        status: 'done',
+        agentId: 'agent-123',
+        result: 'pass'
+      });
+    });
+  });
 });
