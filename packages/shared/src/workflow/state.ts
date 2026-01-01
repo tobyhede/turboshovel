@@ -101,7 +101,6 @@ export class WorkflowStateManager {
       task: taskNum,
       taskName,
       retryCount: 0,
-      retryMax: 3,
       variables: {},
       tasks: [],
       pendingTasks: [],

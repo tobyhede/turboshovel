@@ -164,7 +164,6 @@ export const WorkflowStateSchema = z.object({
   task: TaskNumberSchema,
   taskName: z.string(),
   retryCount: z.number().nonnegative().int(),
-  retryMax: z.number().nonnegative().int(),
   variables: z.record(z.string(), z.union([z.boolean(), z.number(), z.string()])),
   tasks: z.array(z.object({
     id: z.string(),
