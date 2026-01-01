@@ -1,0 +1,14 @@
+{
+  "id": "wf-2026-01-01-75cm06",
+  "workflow": "rundown/examples/build-and-deploy.workflow.md",
+  "task": 2,
+  "taskName": "Run lint",
+  "retryCount": 0,
+  "retryMax": 3,
+  "variables": {},
+  "tasks": [],
+  "pendingTasks": [],
+  "agentBindings": {},
+  "startedAt": "2026-01-01T07:21:10.831Z",
+  "updatedAt": "2026-01-01T07:21:30.870Z"
+}

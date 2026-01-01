@@ -1,0 +1,15 @@
+{
+  "id": "wf-2026-01-01-bh7kpl",
+  "workflow": "rundown/examples/demo-retry.workflow.md",
+  "task": 2,
+  "taskName": "Always passes with exhaustion message",
+  "retryCount": 0,
+  "variables": {
+    "completed": true
+  },
+  "tasks": [],
+  "pendingTasks": [],
+  "agentBindings": {},
+  "startedAt": "2026-01-01T11:28:52.021Z",
+  "updatedAt": "2026-01-01T11:28:56.497Z"
+}

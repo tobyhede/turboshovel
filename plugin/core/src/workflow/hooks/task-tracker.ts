@@ -108,7 +108,7 @@ async function getSubtaskWorkflow(cwd: string, taskId: TaskId): Promise<string |
 
   // Find the task containing this subtask
   const task = tasks[taskId.task - 1];
-  if (!task || !task.subtasks || !taskId.subtask) return undefined;
+  if (!task?.subtasks || !taskId.subtask) return undefined;
 
   // Parse subtask index - handle non-numeric IDs gracefully
   const subtaskIndex = parseInt(taskId.subtask, 10);

@@ -98,11 +98,11 @@ describe('parseAction', () => {
   });
 
   test('parses RETRY without max', () => {
-    expect(parseAction('RETRY')).toEqual({ type: 'RETRY' });
+    expect(parseAction('RETRY')).toEqual({ type: 'RETRY', max: 1, then: { type: 'STOP' } });
   });
 
   test('parses RETRY with max', () => {
-    expect(parseAction('RETRY 3')).toEqual({ type: 'RETRY', max: 3 });
+    expect(parseAction('RETRY 3')).toEqual({ type: 'RETRY', max: 3, then: { type: 'STOP' } });
   });
 
   test('returns null for invalid action', () => {
@@ -135,7 +135,8 @@ describe('parseConditional', () => {
     expect(parseConditional('PASS: CONTINUE')).toEqual({
       type: 'pass',
       action: { type: 'CONTINUE' },
-      modifier: null
+      modifier: null,
+      raw: 'CONTINUE'
     });
   });
 
@@ -143,7 +144,8 @@ describe('parseConditional', () => {
     expect(parseConditional('FAIL: STOP fix tests')).toEqual({
       type: 'fail',
       action: { type: 'STOP', message: 'fix tests' },
-      modifier: null
+      modifier: null,
+      raw: 'STOP fix tests'
     });
   });
 
@@ -151,7 +153,8 @@ describe('parseConditional', () => {
     expect(parseConditional('PASS CONTINUE')).toEqual({
       type: 'pass',
       action: { type: 'CONTINUE' },
-      modifier: null
+      modifier: null,
+      raw: 'CONTINUE'
     });
   });
 
@@ -159,7 +162,8 @@ describe('parseConditional', () => {
     expect(parseConditional('FAIL - STOP')).toEqual({
       type: 'fail',
       action: { type: 'STOP' },
-      modifier: null
+      modifier: null,
+      raw: 'STOP'
     });
   });
 
@@ -178,7 +182,8 @@ describe('parseConditional with aggregation', () => {
     expect(result).toEqual({
       type: 'pass',
       action: { type: 'CONTINUE' },
-      modifier: 'ALL'
+      modifier: 'ALL',
+      raw: 'CONTINUE'
     });
   });
 
@@ -187,7 +192,8 @@ describe('parseConditional with aggregation', () => {
     expect(result).toEqual({
       type: 'fail',
       action: { type: 'STOP' },
-      modifier: 'ANY'
+      modifier: 'ANY',
+      raw: 'STOP'
     });
   });
 
@@ -196,7 +202,8 @@ describe('parseConditional with aggregation', () => {
     expect(result).toEqual({
       type: 'pass',
       action: { type: 'CONTINUE' },
-      modifier: null
+      modifier: null,
+      raw: 'CONTINUE'
     });
   });
 
@@ -205,7 +212,8 @@ describe('parseConditional with aggregation', () => {
     expect(result).toEqual({
       type: 'pass',
       action: { type: 'CONTINUE' },
-      modifier: 'ANY'
+      modifier: 'ANY',
+      raw: 'CONTINUE'
     });
   });
 
@@ -214,7 +222,8 @@ describe('parseConditional with aggregation', () => {
     expect(result).toEqual({
       type: 'fail',
       action: { type: 'STOP', message: 'All approaches failed' },
-      modifier: 'ALL'
+      modifier: 'ALL',
+      raw: 'STOP All approaches failed'
     });
   });
 });

@@ -50,7 +50,7 @@ describe('status command', () => {
 
     const result = runCli('status', workspace);
 
-    expect(result.stdout).toContain('ID:');
+    expect(result.stdout).toContain('Path:');
     expect(result.stdout).toMatch(/wf-\d{4}-\d{2}-\d{2}/);
   });
 

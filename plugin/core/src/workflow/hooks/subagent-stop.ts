@@ -60,7 +60,7 @@ export async function handleSubagentStop(input: HookInput): Promise<SubagentStop
     const manager = new WorkflowStateManager(input.cwd);
     const state = await manager.getActive();
 
-    if (state?.agentBindings && state.agentBindings[agentId]) {
+    if (state?.agentBindings?.[agentId]) {
       const binding = state.agentBindings[agentId];
       // If agent was bound to subtask, complete the subtask
       if (binding.taskId.subtask) {

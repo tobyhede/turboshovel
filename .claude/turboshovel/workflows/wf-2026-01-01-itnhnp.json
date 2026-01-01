@@ -1,0 +1,14 @@
+{
+  "id": "wf-2026-01-01-itnhnp",
+  "workflow": "rundown/examples/build-and-deploy.workflow.md",
+  "task": 1,
+  "taskName": "Install project dependencies",
+  "retryCount": 0,
+  "retryMax": 3,
+  "variables": {},
+  "tasks": [],
+  "pendingTasks": [],
+  "agentBindings": {},
+  "startedAt": "2026-01-01T10:59:51.046Z",
+  "updatedAt": "2026-01-01T10:59:51.046Z"
+}

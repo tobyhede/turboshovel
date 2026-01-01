@@ -157,10 +157,10 @@ export async function getActiveState(
  */
 export async function getAllStates(
   workspace: TestWorkspace
-): Promise<Array<Record<string, unknown>>> {
+): Promise<Record<string, unknown>[]> {
   try {
     const files = await readdir(workspace.statePath());
-    const states: Array<Record<string, unknown>> = [];
+    const states: Record<string, unknown>[] = [];
 
     for (const file of files) {
       if (file.endsWith('.json')) {

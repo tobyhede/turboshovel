@@ -547,7 +547,7 @@ echo "test"
       const result = await runCli(['next', '--fail']); // should block
 
       expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain('Max retries exceeded');
+      expect(result.stderr).toContain('Task blocked');
     });
 
     it('blocks with message when FAIL: STOP', async () => {
