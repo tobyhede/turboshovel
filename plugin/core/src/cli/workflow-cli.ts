@@ -106,6 +106,11 @@ program
         const state = await manager.create(workflowPath, tasks[0].description);
         await manager.setActive(state.id);
 
+        // Initialize subtasks if the first task has static subtasks
+        if (tasks[0].subtasks && tasks[0].subtasks.length > 0) {
+          await manager.initializeSubtasks(state.id, tasks[0].subtasks);
+        }
+
         console.log(`Started workflow: ${workflowPath}`);
         console.log(`ID: ${state.id}`);
         console.log(`Task 1: ${tasks[0].description}`);
