@@ -79,6 +79,35 @@ echo "test"
       const files = await fs.readdir(stateDir);
       expect(files.length).toBe(1);
     });
+
+    it('initializes subtaskStates for task with static subtasks', async () => {
+      const workflowPath = join(testDir, 'subtask.workflow.md');
+      await fs.writeFile(
+        workflowPath,
+        `
+## 1. Dispatch reviewers
+
+### 1.1 First reviewer (code-review-agent)
+### 1.2 Second reviewer (code-agent)
+
+- PASS ALL: CONTINUE
+- FAIL ANY: STOP
+`
+      );
+
+      await runCli(['start', workflowPath]);
+
+      const manager = new WorkflowStateManager(testDir);
+      const state = await manager.getActive();
+
+      expect(state?.subtaskStates).toHaveLength(2);
+      expect(state?.subtaskStates?.[0]).toEqual({
+        id: '1',
+        status: 'pending',
+        agentId: undefined,
+        result: undefined
+      });
+    });
   });
 
   describe('workflow start --task', () => {
@@ -762,6 +791,77 @@ echo "test"
       const result = await runCli(['pop']);
 
       expect(result.stdout).toContain('No stashed workflow');
+    });
+  });
+
+  describe('workflow next with subtasks', () => {
+    it('evaluates aggregation when all subtasks complete', async () => {
+      const workflowPath = join(testDir, 'subtask.workflow.md');
+      await fs.writeFile(
+        workflowPath,
+        `
+## 1. Dispatch reviewers
+
+### 1.1 First reviewer
+### 1.2 Second reviewer
+
+- PASS ALL: CONTINUE
+- FAIL ANY: STOP
+
+## 2. Next task
+
+- PASS: DONE
+`
+      );
+
+      await runCli(['start', workflowPath]);
+
+      const manager = new WorkflowStateManager(testDir);
+      let state = await manager.getActive();
+
+      // Complete both subtasks as pass
+      await manager.completeSubtask(state!.id, '1', 'pass');
+      await manager.completeSubtask(state!.id, '2', 'pass');
+
+      // Running next should evaluate aggregation and advance
+      await runCli(['next']);
+
+      state = await manager.getActive();
+      expect(state?.task).toBe(2);
+    });
+
+    it('blocks when subtask aggregation fails', async () => {
+      const workflowPath = join(testDir, 'subtask-fail.workflow.md');
+      await fs.writeFile(
+        workflowPath,
+        `
+## 1. Dispatch reviewers
+
+### 1.1 First reviewer
+### 1.2 Second reviewer
+
+- PASS ALL: CONTINUE
+- FAIL ANY: STOP "Review failed"
+
+## 2. Next task
+
+- PASS: DONE
+`
+      );
+
+      await runCli(['start', workflowPath]);
+
+      const manager = new WorkflowStateManager(testDir);
+      let state = await manager.getActive();
+
+      // Complete one as pass, one as fail
+      await manager.completeSubtask(state!.id, '1', 'pass');
+      await manager.completeSubtask(state!.id, '2', 'fail');
+
+      // Running next should fail due to FAIL ANY
+      const result = await runCli(['next']);
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('Review failed');
     });
   });
 

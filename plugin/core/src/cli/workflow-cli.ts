@@ -19,7 +19,8 @@ import {
   isNodeError,
   getErrorMessage,
   evaluateFailCondition,
-  evaluatePassCondition
+  evaluatePassCondition,
+  evaluateSubtaskAggregation
 } from '@turboshovel/shared';
 
 const program = new Command();
@@ -379,6 +380,59 @@ program
         const content = await fs.readFile(workflowPath, 'utf8');
         const tasks = parseWorkflow(content);
 
+        // Check for subtask aggregation before advancing
+        const currentTask = tasks[state.task - 1];
+        if (currentTask.subtasks && currentTask.subtasks.length > 0 && state.subtaskStates && state.subtaskStates.length > 0) {
+          const aggregationResult = evaluateSubtaskAggregation(
+            state.subtaskStates,
+            currentTask.conditions!
+          );
+
+          if (aggregationResult === null) {
+            console.error('Error: Subtasks not all complete');
+            console.log('Complete all subtasks before advancing.');
+            process.exit(1);
+          }
+
+          // Apply aggregation result
+          switch (aggregationResult.action) {
+            case 'blocked':
+              console.error(`Error: ${aggregationResult.message ?? 'Subtask aggregation failed'}`);
+              await manager.update(state.id, { variables: { ...state.variables, blocked: true } });
+              process.exit(1);
+              break;
+
+            case 'goto':
+              // Handle goto - update task number
+              if (aggregationResult.gotoTask === undefined) {
+                console.error('Error: goto action missing target task');
+                process.exit(1);
+              }
+              const gotoTask = tasks[aggregationResult.gotoTask - 1];
+              await manager.update(state.id, {
+                task: aggregationResult.gotoTask,
+                taskName: gotoTask.description,
+                subtaskStates: [],
+                retryCount: 0
+              });
+              console.log(`Task ${aggregationResult.gotoTask}: ${gotoTask.description}`);
+              printTaskGuidance(gotoTask);
+              return;
+
+            case 'done':
+              // Handle workflow complete
+              await manager.update(state.id, { variables: { ...state.variables, completed: true } });
+              await manager.setActive(null);
+              console.log('Workflow complete!');
+              return;
+
+            case 'continue':
+              // Clear subtaskStates and advance normally
+              await manager.update(state.id, { subtaskStates: [] });
+              break;
+          }
+        }
+
         // Determine next task
         let nextTaskNumber: TaskNumber | null;
         if (options.step) {
@@ -400,6 +454,11 @@ program
         }
 
         const nextTask = tasks[nextTaskNumber - 1];
+
+        // Initialize subtasks if the next task has static subtasks
+        if (nextTask.subtasks && nextTask.subtasks.length > 0) {
+          await manager.initializeSubtasks(state.id, nextTask.subtasks);
+        }
 
         // Update state (taskNumber already validated)
         await manager.update(state.id, {
