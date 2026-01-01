@@ -1,58 +1,47 @@
 # Build and Deploy Workflow
 
-A sequential workflow demonstrating task execution, commands, conditions, retries, and branching.
+Basic sequential build & deploy workflow with retry and error handling.
 
-## 1. Install dependencies
-
-Install project dependencies.
+## 1. Install project dependencies
 
 ```bash
 tsv test npm install
 ```
-
 - PASS: CONTINUE
-- FAIL: STOP "Failed to install dependencies"
+- FAIL: STOP "Dependencies installation failed"
 
-## 2. Run linting
-
-Check code style and formatting.
+## 2. Run lint
 
 ```bash
 tsv test --result fail --result pass npm run lint
 ```
 
 - PASS: CONTINUE
-- FAIL: RETRY 2
+- FAIL: STOP "Lint check failed"
 
 ## 3. Run tests
-
-Execute the test suite.
 
 ```bash
 tsv test npm test
 ```
 
 - PASS: CONTINUE
-- FAIL: GOTO 5
+- FAIL: STOP "Tests failed"
 
-## 4. Build project
-
-Compile the project for production.
+## 4. Build with retry and GOTO
 
 ```bash
 tsv test --result fail --result fail --result pass npm run build
 ```
 
 - PASS: CONTINUE
-- FAIL: RETRY 3
+- FAIL: RETRY 3 GOTO 3
 
-## 5. Deploy to staging
-
-Deploy the build artifacts to staging environment.
+## 5. Deploy with exhaustion action
 
 ```bash
-tsv test npm run deploy:staging
+tsv test npm run deploy
 ```
 
 - PASS: DONE
-- FAIL: STOP "Deployment failed"
+- FAIL: RETRY 2 STOP "Deployment failed after retries"
