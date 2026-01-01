@@ -76,11 +76,11 @@ export async function trackTaskDispatch(input: HookInput): Promise<TaskDispatchR
     try {
       execSync(cmd, { cwd: input.cwd, stdio: 'pipe' });
       return { taskId };
-    } catch (error) {
+    } catch {
       // CLI returned non-zero - likely no active workflow or other issue
       return {};
     }
-  } catch (error) {
+  } catch (error: unknown) {
     // Log but don't throw - task tracking is non-critical
     console.error('Failed to track task dispatch:', error);
     return {};

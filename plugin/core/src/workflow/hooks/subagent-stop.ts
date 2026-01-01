@@ -1,9 +1,7 @@
 // src/workflow/hooks/subagent-stop.ts
 import {
   WorkflowStateManager,
-  taskIdToString,
-  type HookInput,
-  type AgentBinding
+  type HookInput
 } from '@turboshovel/shared';
 import { execSync as nodeExecSync } from 'child_process';
 
@@ -62,7 +60,7 @@ export async function handleSubagentStop(input: HookInput): Promise<SubagentStop
     const manager = new WorkflowStateManager(input.cwd);
     const state = await manager.getActive();
 
-    if (state?.agentBindings?.[agentId]) {
+    if (state?.agentBindings && state.agentBindings[agentId]) {
       const binding = state.agentBindings[agentId];
       // If agent was bound to subtask, complete the subtask
       if (binding.taskId.subtask) {
@@ -83,9 +81,10 @@ export async function handleSubagentStop(input: HookInput): Promise<SubagentStop
     // Format completion context
     const context = formatCompletionContext(output, agentId, status);
     return { context };
-  } catch (error) {
+  } catch (error: unknown) {
     // CLI returned non-zero
-    const stderr = (error as any).stderr?.toString() ?? '';
+    const execError = error as { stderr?: Buffer | string };
+    const stderr = execError.stderr?.toString() ?? '';
     if (stderr.includes('No binding for agent')) {
       return {
         violation: `SubagentStop for unknown agent: ${agentId}`
@@ -109,7 +108,7 @@ function formatCompletionContext(
   }
 
   // Include CLI output if available
-  if (cliOutput && cliOutput.trim()) {
+  if (cliOutput?.trim()) {
     lines.push(cliOutput);
   }
 
