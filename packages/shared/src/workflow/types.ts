@@ -54,15 +54,21 @@ export interface PendingTask {
 }
 
 /**
+ * Non-recursive action types (everything except RETRY)
+ */
+export type NonRetryAction =
+  | { readonly type: 'CONTINUE' }
+  | { readonly type: 'STOP'; readonly message?: string }
+  | { readonly type: 'GOTO'; readonly task: TaskNumber }
+  | { readonly type: 'DONE' };
+
+/**
  * Discriminated union for workflow actions
  * Prevents invalid states at compile time
  */
 export type Action =
-  | { readonly type: 'CONTINUE' }
-  | { readonly type: 'STOP'; readonly message?: string }
-  | { readonly type: 'GOTO'; readonly task: TaskNumber }
-  | { readonly type: 'DONE' }
-  | { readonly type: 'RETRY'; readonly max?: number };
+  | NonRetryAction
+  | { readonly type: 'RETRY'; readonly max: number; readonly then: NonRetryAction };
 
 /**
  * Aggregation conditions for subtasks
@@ -182,7 +188,6 @@ export interface WorkflowState {
   readonly task: TaskNumber;
   readonly taskName: string;
   readonly retryCount: number;
-  readonly retryMax: number;
   readonly variables: Record<string, boolean | number | string>;
   readonly tasks: readonly TaskState[];
 
