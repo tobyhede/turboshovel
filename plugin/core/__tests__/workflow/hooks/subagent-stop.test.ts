@@ -117,6 +117,30 @@ describe('handleSubagentStop with agent binding', () => {
       expect.any(Object)
     );
   });
+
+  it('completes subtask when agent stops', async () => {
+    // Setup workflow with subtask bound to agent
+    const state = await manager.create('test.workflow.md', 'Review');
+    await manager.update(state.id, {
+      subtaskStates: [{ id: '1', status: 'running', agentId: 'agent-123' }],
+      agentBindings: {
+        'agent-123': { taskId: { task: createTaskNumber(1)!, subtask: '1' }, status: 'running' }
+      }
+    });
+    await manager.setActive(state.id);
+
+    const input: HookInput = {
+      hook_event_name: 'SubagentStop',
+      agent_id: 'agent-123',
+      cwd: testDir
+    };
+
+    await handleSubagentStop(input);
+
+    // Verify subtaskState marked done
+    const updated = await manager.load(state.id);
+    expect(updated?.subtaskStates?.[0].status).toBe('done');
+  });
 });
 
 describe('handleSubagentStop calls CLI', () => {

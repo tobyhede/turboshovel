@@ -38,8 +38,9 @@ function parseAgentStatus(output?: string): 'pass' | 'fail' {
  *
  * Flow:
  * 1. Parse agent status from output
- * 2. Call CLI to advance workflow
- * 3. Report completion context
+ * 2. Check if agent is bound to a subtask, and if so, complete it
+ * 3. Call CLI to advance workflow
+ * 4. Report completion context
  */
 export async function handleSubagentStop(input: HookInput): Promise<SubagentStopResult> {
   if (input.hook_event_name !== 'SubagentStop') {
@@ -57,6 +58,22 @@ export async function handleSubagentStop(input: HookInput): Promise<SubagentStop
   const passFlag = status === 'pass' ? '--pass' : '--fail';
 
   try {
+    // Check if agent is bound to a subtask and complete it
+    const manager = new WorkflowStateManager(input.cwd);
+    const state = await manager.getActive();
+
+    if (state?.agentBindings?.[agentId]) {
+      const binding = state.agentBindings[agentId];
+      // If agent was bound to subtask, complete the subtask
+      if (binding.taskId.subtask) {
+        await manager.completeSubtask(
+          state.id,
+          binding.taskId.subtask,
+          binding.result ?? 'pass'
+        );
+      }
+    }
+
     const output = execSyncImpl(`tsv next ${passFlag} --agent ${agentId}`, {
       cwd: input.cwd,
       encoding: 'utf8',
