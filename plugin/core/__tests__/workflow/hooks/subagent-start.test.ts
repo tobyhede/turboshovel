@@ -1,6 +1,7 @@
 import {
   handleSubagentStart
 } from '../../../src/workflow/hooks/subagent-start.js';
+import { WorkflowStateManager, createTaskNumber } from '@turboshovel/shared';
 import type { HookInput } from '@turboshovel/shared';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -105,6 +106,51 @@ describe('handleSubagentStart via synthetic dispatch', () => {
 
     const result = await handleSubagentStart(input);
     expect(result).toBeDefined();
+  });
+});
+
+describe('handleSubagentStart with subtasks', () => {
+  let testDir: string;
+
+  beforeEach(async () => {
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'subagent-subtask-test-'));
+  });
+
+  afterEach(async () => {
+    await fs.rm(testDir, { recursive: true, force: true });
+  });
+
+  it('binds agent to subtask and updates subtaskState', async () => {
+    const manager = new WorkflowStateManager(testDir);
+
+    // Setup workflow with subtasks
+    const state = await manager.create('test.workflow.md', 'Review');
+    await manager.initializeSubtasks(state.id, [
+      { id: '1', description: 'First', isDynamic: false }
+    ]);
+    await manager.setActive(state.id);
+
+    // Queue subtask
+    await manager.pushPendingTask(state.id, {
+      taskId: { task: createTaskNumber(1)!, subtask: '1' }
+    });
+
+    const input: HookInput = {
+      hook_event_name: 'SubagentStart',
+      agent_id: 'agent-123',
+      cwd: testDir
+    };
+
+    await handleSubagentStart(input);
+
+    // Verify subtaskState updated
+    const updated = await manager.load(state.id);
+    expect(updated?.subtaskStates?.[0]).toEqual({
+      id: '1',
+      status: 'running',
+      agentId: 'agent-123',
+      result: undefined
+    });
   });
 });
 
