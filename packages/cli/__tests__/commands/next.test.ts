@@ -131,8 +131,8 @@ describe('next command', () => {
       expect(result.stdout).toContain('Retry 1/');
     });
 
-    it('fails if retryCount exceeds retryMax', async () => {
-      // Default retryMax is 3
+    it('fails when retry limit is exceeded', async () => {
+      // Default retry limit is 3
       runCli('next --retry', workspace); // 1
       runCli('next --retry', workspace); // 2
       runCli('next --retry', workspace); // 3

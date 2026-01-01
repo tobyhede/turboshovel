@@ -36,13 +36,13 @@ describe('status command', () => {
     expect(result.stdout).toContain('simple.workflow.md');
   });
 
-  it('shows retryCount/retryMax', async () => {
+  it('shows retryCount', async () => {
     runCli('start workflows/simple.workflow.md', workspace);
 
     const result = runCli('status', workspace);
 
     expect(result.stdout).toContain('Retry:');
-    expect(result.stdout).toContain('0/3'); // Default: 0 retries of max 3
+    expect(result.stdout).toContain('0'); // Default: 0 retries
   });
 
   it('shows workflow ID', async () => {

@@ -434,7 +434,7 @@ echo "test"
       expect(state?.task).toBe(1); // Still on task 1
     });
 
-    it('blocks when retryCount exceeds retryMax', async () => {
+    it('blocks when retry limit is exceeded', async () => {
       const workflowPath = join(testDir, 'test.workflow.md');
       await fs.writeFile(
         workflowPath,
@@ -451,7 +451,7 @@ echo "test"
       );
       await runCli(['start', workflowPath]);
 
-      // --retry uses state.retryMax (default 3), not workflow value
+      // --retry uses default limit (3), not workflow value
       // Use up retries
       await runCli(['next', '--retry']); // retry 1
       await runCli(['next', '--retry']); // retry 2
