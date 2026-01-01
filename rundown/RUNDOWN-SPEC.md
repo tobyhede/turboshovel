@@ -275,8 +275,10 @@ Actions define what happens after PASS or FAIL.
 | `STOP message` | Halt with error message |
 | `DONE` | Complete workflow (success) |
 | `GOTO N` | Jump to task N |
-| `RETRY` | Retry current task (uses default max) |
-| `RETRY N` | Retry up to N times |
+| `RETRY` | Retry current task (default: 1 attempt, then STOP) |
+| `RETRY N` | Retry up to N times, then STOP |
+| `RETRY N ACTION` | Retry up to N times, then execute ACTION |
+| `RETRY "message"` | Retry once, then STOP with message |
 
 ### Action Examples
 
@@ -287,11 +289,38 @@ Actions define what happens after PASS or FAIL.
 
 - FAIL: STOP              # Halt (no message)
 - FAIL: STOP "Build failed"  # Halt with message
-- FAIL: RETRY             # Retry with default max (3)
-- FAIL: RETRY 5           # Retry up to 5 times
+- FAIL: RETRY             # Retry once, then STOP (default)
+- FAIL: RETRY 3           # Retry up to 3 times, then STOP
+- FAIL: RETRY 3 GOTO 2    # Retry up to 3 times, then jump to task 2
+- FAIL: RETRY 5 CONTINUE  # Retry up to 5 times, then continue anyway
+- FAIL: RETRY 3 DONE      # Retry up to 3 times, then complete workflow
+- FAIL: RETRY "Tests failed" # Retry once, then STOP with message
 - FAIL: GOTO 1            # Jump back to task 1
 - FAIL: CONTINUE          # Ignore failure, continue
 ```
+
+### RETRY Syntax
+
+**Full syntax:** `RETRY [N:=1] [ACTION:=STOP]`
+
+Where:
+- `N` is the maximum retry attempts (default: 1)
+- `ACTION` is what happens when retries are exhausted (default: STOP)
+- Valid exhaustion actions: STOP, GOTO, CONTINUE, DONE
+
+**Breaking change (v1.0.0):** Default max retries changed from 3 to 1.
+
+**Valid combinations:**
+
+| Syntax | Max Retries | Exhaustion Action |
+|--------|-------------|-------------------|
+| `RETRY` | 1 | STOP |
+| `RETRY 3` | 3 | STOP |
+| `RETRY 3 GOTO 2` | 3 | GOTO 2 |
+| `RETRY 5 CONTINUE` | 5 | CONTINUE |
+| `RETRY 2 DONE` | 2 | DONE |
+| `RETRY "error"` | 1 | STOP "error" |
+| `RETRY 3 STOP "error"` | 3 | STOP "error" |
 
 ### GOTO Rules
 

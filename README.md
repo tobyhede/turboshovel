@@ -791,8 +791,10 @@ This pattern is the **recommended approach** until native IF/ELSE support is imp
 | `STOP` with message | `FAIL: STOP "Tests failed"` | End workflow with error message |
 | `DONE` | `PASS: DONE` | End workflow with success |
 | `GOTO` | `FAIL: GOTO 1` | Jump to specific task number |
-| `RETRY` | `FAIL: RETRY` | Retry current task (default max 3) |
-| `RETRY` with max | `FAIL: RETRY 5` | Retry with custom max attempts |
+| `RETRY` | `FAIL: RETRY` | Retry current task (default: 1 attempt, then STOP) |
+| `RETRY` with max | `FAIL: RETRY 3` | Retry up to 3 times before STOP |
+| `RETRY` with action | `FAIL: RETRY 3 GOTO 2` | Retry up to 3 times, then GOTO 2 |
+| `RETRY` with message | `FAIL: RETRY "error msg"` | Retry once, then STOP with message |
 
 **Action validation:**
 - GOTO targets must exist (validated at parse time)
@@ -1266,6 +1268,19 @@ If complete → `tsv next`
 
 #### Error Recovery with RETRY
 
+RETRY is an inline modifier with configurable retry count and exhaustion action.
+
+**Syntax:** `RETRY [N:=1] [ACTION:=STOP]`
+
+Where:
+- `N` is the maximum retry attempts (default: 1)
+- `ACTION` is what happens when retries are exhausted (default: STOP)
+- Valid exhaustion actions: STOP, GOTO, CONTINUE, DONE
+
+**Breaking change:** Default max retries changed from 3 to 1.
+
+**Examples:**
+
 ```markdown
 ## 3. Run integration tests
 
@@ -1274,12 +1289,16 @@ npm run test:integration
 \`\`\`
 
 - PASS: CONTINUE
-- FAIL: RETRY 3
+- FAIL: RETRY              # Retry once, then STOP
+- FAIL: RETRY 3            # Retry 3 times, then STOP
+- FAIL: RETRY 3 GOTO 2     # Retry 3 times, then jump to task 2
+- FAIL: RETRY 5 CONTINUE   # Retry 5 times, then continue anyway
+- FAIL: RETRY "Tests failed after retries"  # Retry once, then STOP with message
 ```
 
 **Retry behavior:**
 - Increments `retryCount` on each failure
-- Stops after `retryMax` attempts (default 3)
+- Executes exhaustion ACTION after `retryMax` attempts (default: 1)
 - Resets to 0 on task change
 - State persists between retries
 
