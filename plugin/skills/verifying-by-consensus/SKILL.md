@@ -38,18 +38,18 @@ Dispatch N agents to independently review the same subject. Collate findings:
 
 1. Determine N (default 2, or from args)
 2. Select agents (from args, plugins, or built-ins)
-3. Start workflow: `workflow start workflows/verify.workflow.md`
-4. Dispatch agents with TaskId prefix in description:
+3. Start workflow: `tsv start workflows/verify.workflow.md`
+4. Dispatch agents with StepId prefix in description:
    ```
-   Task(description="1.1 - Review [subject]", prompt="...", subagent_type="...")
-   Task(description="1.2 - Review [subject]", prompt="...", subagent_type="...")
+   Step(description="1.1 - Review [subject]", prompt="...", subagent_type="...")
+   Step(description="1.2 - Review [subject]", prompt="...", subagent_type="...")
    ```
 
-**Hooks automate task binding:**
+**Hooks automate step binding:**
 
 | Manual command | Hook trigger | When |
 |----------------|--------------|------|
-| `tsv start --task 1.1` | PostToolUse (Task) | TaskId detected in description |
+| `tsv start --step 1.1` | PostToolUse (Step) | StepId detected in description |
 | `tsv start --agent {id}` | SubagentStart | Agent spawns |
 
 **Subagent protocol:**
@@ -101,7 +101,7 @@ UNCERTAIN: X issues (user decides)
 ### Phase 4: Complete
 
 ```bash
-workflow complete
+tsv complete
 ```
 
 ## Output Files

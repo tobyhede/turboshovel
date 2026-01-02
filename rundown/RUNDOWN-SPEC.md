@@ -11,8 +11,8 @@ This document is the authoritative specification for Turboshovel workflow markdo
 
 1. [Overview](#overview)
 2. [Document Structure](#document-structure)
-3. [Tasks](#tasks)
-4. [Subtasks](#subtasks)
+3. [Steps](#steps)
+4. [Substeps](#substeps)
 5. [Subworkflows](#subworkflows)
 6. [Conditions](#conditions)
 7. [Actions](#actions)
@@ -27,10 +27,10 @@ This document is the authoritative specification for Turboshovel workflow markdo
 
 ## Overview
 
-A workflow is a markdown document that defines a sequence of tasks to be executed. Workflows support:
+A workflow is a markdown document that defines a sequence of steps to be executed. Workflows support:
 
-- Sequential task execution with numbered tasks
-- Parallel subtask execution within a task
+- Sequential step execution with numbered steps
+- Parallel substep execution within a step
 - Nested subworkflows for composition
 - Conditional branching based on pass/fail outcomes
 - Retry logic for transient failures
@@ -47,13 +47,13 @@ A workflow is a markdown document that defines a sequence of tasks to be execute
 
 Optional description paragraph.
 
-## 1. First Task
+## 1. First Step
 
-Task content...
+Step content...
 
-## 2. Second Task
+## 2. Second Step
 
-Task content...
+Step content...
 ```
 
 ### Heading Levels
@@ -61,19 +61,19 @@ Task content...
 | Level | Purpose | Required |
 |-------|---------|----------|
 | H1 (`#`) | Workflow title/metadata | Optional |
-| H2 (`##`) | Task headers | Required |
-| H3 (`###`) | Subtask headers | Optional |
+| H2 (`##`) | Step headers | Required |
+| H3 (`###`) | Substep headers | Optional |
 
-**Rule:** H1 headers MUST NOT look like task headers (start with a number). Use H2 for tasks.
+**Rule:** H1 headers MUST NOT look like step headers (start with a number). Use H2 for steps.
 
 ---
 
-## Tasks
+## Steps
 
 ### Format
 
 ```markdown
-## N. Task Description
+## N. Step Description
 ```
 
 Where:
@@ -90,30 +90,30 @@ Where:
 ## 4) Final verification
 ```
 
-### Task Content
+### Step Content
 
-A task may contain:
+A step may contain:
 
 1. **Prose** - Descriptive text (becomes implicit prompt if no explicit prompt)
 2. **Code block** - Bash command to execute
-3. **Subtasks** - Parallel execution units (H3 headers)
+3. **Substeps** - Parallel execution units (H3 headers)
 4. **Prompts** - Explicit agent instructions
 5. **Conditions** - PASS/FAIL outcome handlers
 
 ### Numbering Rules
 
-1. Tasks MUST be numbered sequentially starting from 1
+1. Steps MUST be numbered sequentially starting from 1
 2. No gaps allowed (1, 2, 3... not 1, 3, 5...)
 3. Numbers must be positive integers
-4. Maximum task number: 999,999
+4. Maximum step number: 999,999
 
 ---
 
-## Subtasks
+## Substeps
 
-Subtasks enable parallel execution within a single task. They are defined using H3 headers.
+Substeps enable parallel execution within a single step. They are defined using H3 headers.
 
-### Static Subtasks
+### Static Substeps
 
 Known at parse time, explicitly numbered:
 
@@ -135,20 +135,20 @@ Review for security issues.
 **Format:** `### N.M Description (optional-agent-type)`
 
 Where:
-- `N` matches the parent task number
+- `N` matches the parent step number
 - `M` is a positive integer (1, 2, 3...)
 - Agent type in parentheses is optional
 
-### Dynamic Subtasks
+### Dynamic Substeps
 
 Created at runtime, using `{n}` placeholder:
 
 ```markdown
 ## 1. Execute batch
 
-### 1.{n} Execute task (code-exec-agent)
+### 1.{n} Execute step (code-exec-agent)
 
-Execute the assigned task.
+Execute the assigned step.
 
 - PASS ALL: CONTINUE
 - FAIL ANY: STOP
@@ -156,20 +156,20 @@ Execute the assigned task.
 
 **Format:** `### N.{n} Description (optional-agent-type)`
 
-The `{n}` is replaced with incrementing numbers (1, 2, 3...) as subtasks are created.
+The `{n}` is replaced with incrementing numbers (1, 2, 3...) as substeps are created.
 
-### Subtask Rules
+### Substep Rules
 
-1. Subtask prefix MUST match parent task number (1.1 under task 1, not 2.1)
-2. Static and dynamic subtasks CANNOT be mixed in the same task
-3. Subtask IDs must be unique within a task
+1. Substep prefix MUST match parent step number (1.1 under step 1, not 2.1)
+2. Static and dynamic substeps CANNOT be mixed in the same step
+3. Substep IDs must be unique within a step
 4. Agent type in parentheses is extracted for dispatch
 
 ---
 
 ## Subworkflows
 
-Subtasks can reference child workflow files for composition.
+Substeps can reference child workflow files for composition.
 
 ### Subworkflow List Syntax
 
@@ -181,13 +181,13 @@ Subtasks can reference child workflow files for composition.
 Execute the subworkflow.
 ```
 
-**Format:** Bullet list under the subtask header with `.workflow.md` files.
+**Format:** Bullet list under the substep header with `.workflow.md` files.
 
 ### Workflow Cycling
 
-When dynamic subtasks reference multiple workflows, they cycle in order:
+When dynamic substeps reference multiple workflows, they cycle in order:
 
-| Subtask | Workflow |
+| Substep | Workflow |
 |---------|----------|
 | 1.1 | workflow-a.workflow.md |
 | 1.2 | workflow-b.workflow.md |
@@ -197,15 +197,15 @@ When dynamic subtasks reference multiple workflows, they cycle in order:
 ### Subworkflow Rules
 
 1. Workflow files must exist and be valid
-2. Number of subtasks MUST be >= number of listed workflows
-3. Workflows cycle in order when subtask count exceeds workflow count
+2. Number of substeps MUST be >= number of listed workflows
+3. Workflows cycle in order when substep count exceeds workflow count
 4. Child workflows inherit parent context
 
 ---
 
 ## Conditions
 
-Conditions define what happens when a task passes or fails.
+Conditions define what happens when a step passes or fails.
 
 ### Syntax
 
@@ -221,12 +221,12 @@ PASS [modifier]: ACTION
 FAIL [modifier]: ACTION
 ```
 
-### Modifiers (for subtasks)
+### Modifiers (for substeps)
 
 | Modifier | Meaning |
 |----------|---------|
-| `ALL` | All subtasks must satisfy condition |
-| `ANY` | At least one subtask must satisfy condition |
+| `ALL` | All substeps must satisfy condition |
+| `ANY` | At least one substep must satisfy condition |
 
 ### Valid Combinations
 
@@ -253,15 +253,6 @@ FAIL [modifier]: ACTION
 - FAIL ALL: STOP
 ```
 
-### Backward Compatibility
-
-Legacy syntax is supported:
-
-```markdown
-Pass: Continue
-Fail: STOP (error message)
-```
-
 ---
 
 ## Actions
@@ -270,12 +261,12 @@ Actions define what happens after PASS or FAIL.
 
 | Action | Description |
 |--------|-------------|
-| `CONTINUE` | Advance to next task |
+| `CONTINUE` | Advance to next step |
 | `STOP` | Halt workflow (failure) |
 | `STOP message` | Halt with error message |
 | `DONE` | Complete workflow (success) |
-| `GOTO N` | Jump to task N |
-| `RETRY` | Retry current task (default: 1 attempt, then STOP) |
+| `GOTO N` | Jump to step N |
+| `RETRY` | Retry current step (default: 1 attempt, then STOP) |
 | `RETRY N` | Retry up to N times, then STOP |
 | `RETRY N ACTION` | Retry up to N times, then execute ACTION |
 | `RETRY "message"` | Retry once, then STOP with message |
@@ -283,19 +274,19 @@ Actions define what happens after PASS or FAIL.
 ### Action Examples
 
 ```markdown
-- PASS: CONTINUE          # Next task
+- PASS: CONTINUE          # Next step
 - PASS: DONE              # Workflow complete
-- PASS: GOTO 5            # Jump to task 5
+- PASS: GOTO 5            # Jump to step 5
 
 - FAIL: STOP              # Halt (no message)
 - FAIL: STOP "Build failed"  # Halt with message
 - FAIL: RETRY             # Retry once, then STOP (default)
 - FAIL: RETRY 3           # Retry up to 3 times, then STOP
-- FAIL: RETRY 3 GOTO 2    # Retry up to 3 times, then jump to task 2
+- FAIL: RETRY 3 GOTO 2    # Retry up to 3 times, then jump to step 2
 - FAIL: RETRY 5 CONTINUE  # Retry up to 5 times, then continue anyway
 - FAIL: RETRY 3 DONE      # Retry up to 3 times, then complete workflow
 - FAIL: RETRY "Tests failed" # Retry once, then STOP with message
-- FAIL: GOTO 1            # Jump back to task 1
+- FAIL: GOTO 1            # Jump back to step 1
 - FAIL: CONTINUE          # Ignore failure, continue
 ```
 
@@ -324,7 +315,7 @@ Where:
 
 ### GOTO Rules
 
-1. Target task MUST exist (1 to total tasks)
+1. Target step MUST exist (1 to total steps)
 2. GOTO to self is invalid (use RETRY instead)
 3. GOTO resets retry counter
 
@@ -339,9 +330,9 @@ Bash commands are defined in fenced code blocks:
 
 Run the build process.
 
-\`\`\`bash
+```bash
 npm run build
-\`\`\`
+```
 
 - PASS: CONTINUE
 - FAIL: RETRY 2
@@ -350,7 +341,7 @@ npm run build
 ### Command Rules
 
 1. Only `bash` language is supported
-2. One code block per task (combine with `&&` or `;` if needed)
+2. One code block per step (combine with `&&` or `;` if needed)
 3. Commands are executed via CLI or hooks
 4. Exit code 0 = pass, non-zero = fail
 
@@ -358,11 +349,11 @@ npm run build
 
 ## Prompts
 
-Prompts provide instructions to agents executing tasks.
+Prompts provide instructions to agents executing steps.
 
 ### Implicit Prompts
 
-Any prose text in a task (not code blocks, conditions, or subtasks) becomes an implicit prompt:
+Any prose text in a step (not code blocks, conditions, or substeps) becomes an implicit prompt:
 
 ```markdown
 ## 1. Review the code
@@ -380,7 +371,7 @@ Use `**Prompt:**` marker for explicit prompts:
 ```markdown
 ## 1. Review the code
 
-This task reviews code quality.
+This step reviews code quality.
 
 **Prompt:** Look for bugs and security issues. Focus on authentication.
 ```
@@ -403,8 +394,8 @@ Variables enable dynamic content in workflows.
 
 | Variable | Scope | Description |
 |----------|-------|-------------|
-| `$n` | Subtask | Current subtask number (1, 2, 3...) |
-| `$count` | Workflow | Number of items (for dynamic subtasks) |
+| `$n` | Substep | Current substep number (1, 2, 3...) |
+| `$count` | Workflow | Number of items (for dynamic substeps) |
 | `{date}` | Workflow | Current date (YYYY-MM-DD) |
 | `{agentId}` | Agent | Current agent's ID |
 
@@ -415,15 +406,15 @@ Variables enable dynamic content in workflows.
 
 ### 1.{n}
 
-**Prompt:** Execute task $n of $count. Write output to `.work/{date}-task-$n.md`.
+**Prompt:** Execute step $n of $count. Write output to `.work/{date}-step-$n.md`.
 ```
 
-For subtask 1.3 with count=5:
-> Execute task 3 of 5. Write output to `.work/2025-01-01-task-3.md`.
+For substep 1.3 with count=5:
+> Execute step 3 of 5. Write output to `.work/2025-01-01-step-3.md`.
 
 ### State Variables
 
-Variables are stored in workflow state and persist across tasks:
+Variables are stored in workflow state and persist across steps:
 
 ```markdown
 ## 1. Check prerequisites
@@ -433,7 +424,7 @@ Variables are stored in workflow state and persist across tasks:
 
 ## 2. Deploy
 
-(Only runs if task 1 passed)
+(Only runs if step 1 passed)
 ```
 
 Variables set by the system:
@@ -448,22 +439,22 @@ The parser enforces these rules:
 
 ### Document Level
 
-1. Must have at least one task (H2 header)
-2. Tasks must be numbered sequentially (1, 2, 3...)
-3. H1 headers cannot look like task headers
+1. Must have at least one step (H2 header)
+2. Steps must be numbered sequentially (1, 2, 3...)
+3. H1 headers cannot look like step headers
 
-### Task Level
+### Step Level
 
-1. Task number must be positive integer (1 to 999,999)
-2. Task must have description after number
-3. Only one bash code block per task
+1. Step number must be positive integer (1 to 999,999)
+2. Step must have description after number
+3. Only one bash code block per step
 4. GOTO targets must exist and not self-reference
 
-### Subtask Level
+### Substep Level
 
-1. Subtask prefix must match parent task number
-2. Cannot mix static (1.1) and dynamic (1.{n}) subtasks
-3. No duplicate subtask IDs within a task
+1. Substep prefix must match parent step number
+2. Cannot mix static (1.1) and dynamic (1.{n}) substeps
+3. No duplicate substep IDs within a step
 4. Agent type is optional
 
 ### Condition Level
@@ -494,14 +485,14 @@ Workflow state is persisted to enable resumption across sessions.
 |-------|-------------|
 | `id` | Unique workflow identifier |
 | `workflow` | Source file path |
-| `task` | Current task number |
-| `taskName` | Current task description |
+| `step` | Current step number |
+| `stepName` | Current step description |
 | `retryCount` | Current retry attempt |
-| `retryMax` | Maximum retries allowed |
 | `variables` | Key-value state storage |
-| `pendingTasks` | Queue of tasks awaiting agent binding |
-| `agentBindings` | Map of agent ID to task binding |
-| `subtaskStates` | (Future) State of subtasks within current task |
+| `pendingSteps` | Queue of steps awaiting agent binding |
+| `agentBindings` | Map of agent ID to step binding |
+| `substepStates` | State of substeps within current step |
+| `snapshot` | XState state machine snapshot |
 
 ### Child Workflow State
 
@@ -509,7 +500,7 @@ Workflow state is persisted to enable resumption across sessions.
 |-------|-------------|
 | `agentId` | Agent executing this child workflow |
 | `parentWorkflowId` | Parent workflow ID |
-| `parentTaskId` | Task in parent that spawned this child |
+| `parentStepId` | Step in parent that spawned this child |
 
 ---
 
@@ -520,33 +511,33 @@ Workflow state is persisted to enable resumption across sessions.
 ```markdown
 ## 1. Install dependencies
 
-\`\`\`bash
+```bash
 npm install
-\`\`\`
+```
 
 - PASS: CONTINUE
 - FAIL: STOP "Installation failed"
 
 ## 2. Run tests
 
-\`\`\`bash
+```bash
 npm test
-\`\`\`
+```
 
 - PASS: CONTINUE
 - FAIL: RETRY 2
 
 ## 3. Build
 
-\`\`\`bash
+```bash
 npm run build
-\`\`\`
+```
 
 - PASS: DONE
 - FAIL: STOP "Build failed"
 ```
 
-### Parallel Review with Subtasks
+### Parallel Review with Substeps
 
 ```markdown
 ## 1. Dispatch reviewers
@@ -575,7 +566,7 @@ Combine all review findings.
 - PASS: DONE
 ```
 
-### Dynamic Subtasks with Subworkflows
+### Dynamic Substeps with Subworkflows
 
 ```markdown
 ## 1. Execute verification rounds
@@ -601,9 +592,9 @@ Combine all verification results.
 ```markdown
 ## 1. Flaky integration test
 
-\`\`\`bash
+```bash
 npm run test:integration
-\`\`\`
+```
 
 - PASS: CONTINUE
 - FAIL: RETRY 3
@@ -632,13 +623,13 @@ Features under consideration for future versions:
 
 1. **Frontmatter metadata** - YAML block for workflow metadata
 2. **Parameterized workflows** - Input parameters at start
-3. **Conditional tasks** - Skip tasks based on conditions
-4. **Parallel task groups** - Multiple tasks in parallel (not just subtasks)
-5. **Timeout handling** - Per-task and per-workflow timeouts
-6. **Event hooks** - Custom hooks at task boundaries
+3. **Conditional steps** - Skip steps based on conditions
+4. **Parallel step groups** - Multiple steps in parallel (not just substeps)
+5. **Timeout handling** - Per-step and per-workflow timeouts
+6. **Event hooks** - Custom hooks at step boundaries
 
 ---
 
 ## Changelog
 
-- **1.0.0** (2026-01-01): Initial specification
+- **1.0.0** (2026-01-01): Initial specification (Updated to Step/Substep terminology)

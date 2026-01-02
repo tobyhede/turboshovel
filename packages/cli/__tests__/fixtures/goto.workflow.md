@@ -1,6 +1,6 @@
 ## 1. Start
 
-Initial task.
+Initial step.
 
 - PASS: GOTO 3
 - FAIL: STOP
@@ -14,7 +14,7 @@ This gets skipped by GOTO.
 
 ## 3. Jump target
 
-Jumped here from task 1.
+Jumped here from step 1.
 
 - PASS: DONE
 - FAIL: STOP

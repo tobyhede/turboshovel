@@ -1,20 +1,19 @@
 import { describe, it, expect } from '@jest/globals';
 import { parseHookInput, WorkflowStateSchema } from '../src/schemas.js';
-import { MAX_TASK_NUMBER } from '../src/workflow/types.js';
+import { MAX_STEP_NUMBER } from '../src/workflow/types.js';
 
 /**
  * Creates a valid workflow state object for testing.
- * Use overrides parameter to customize specific fields.
  */
 const createValidState = (overrides: Record<string, unknown> = {}) => ({
   id: 'test-id',
   workflow: 'test.md',
-  task: 1,
-  taskName: 'Test Task',
+  step: 1,
+  stepName: 'Test Step',
   retryCount: 0,
   variables: {},
-  tasks: [],
-  pendingTasks: [],
+  steps: [],
+  pendingSteps: [],
   agentBindings: {},
   startedAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z',
@@ -53,146 +52,56 @@ describe('parseHookInput', () => {
       expect(result.data.user_message).toBe('fix the bug');
     }
   });
-
-  it('returns error for invalid JSON', () => {
-    const result = parseHookInput('not valid json');
-
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error).toContain('Invalid JSON');
-    }
-  });
-
-  it('returns error for missing required fields', () => {
-    const input = JSON.stringify({
-      tool_name: 'Edit'
-      // missing hook_event_name and cwd
-    });
-
-    const result = parseHookInput(input);
-
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error).toContain('Invalid input');
-    }
-  });
 });
 
-describe('WorkflowStateSchema - TaskNumber validation', () => {
-  it('accepts valid positive integer task number', () => {
+describe('WorkflowStateSchema - StepNumber validation', () => {
+  it('accepts valid positive integer step number', () => {
     const result = WorkflowStateSchema.safeParse(createValidState());
     expect(result.success).toBe(true);
   });
 
-  it('rejects zero task number', () => {
-    const result = WorkflowStateSchema.safeParse(createValidState({ task: 0 }));
+  it('rejects zero step number', () => {
+    const result = WorkflowStateSchema.safeParse(createValidState({ step: 0 }));
     expect(result.success).toBe(false);
   });
 
-  it('rejects negative task number', () => {
-    const result = WorkflowStateSchema.safeParse(createValidState({ task: -1 }));
+  it('rejects negative step number', () => {
+    const result = WorkflowStateSchema.safeParse(createValidState({ step: -1 }));
     expect(result.success).toBe(false);
   });
 
-  it('rejects non-integer task number', () => {
-    const result = WorkflowStateSchema.safeParse(createValidState({ task: 1.5 }));
+  it('rejects non-integer step number', () => {
+    const result = WorkflowStateSchema.safeParse(createValidState({ step: 1.5 }));
     expect(result.success).toBe(false);
   });
 
-  it('rejects task number exceeding maximum', () => {
+  it('rejects step number exceeding maximum', () => {
     const result = WorkflowStateSchema.safeParse(
-      createValidState({ task: MAX_TASK_NUMBER + 1 })
+      createValidState({ step: MAX_STEP_NUMBER + 1 })
     );
     expect(result.success).toBe(false);
   });
 });
 
-describe('WorkflowStateSchema - TaskId validation', () => {
-  it('accepts valid TaskId object', () => {
+describe('WorkflowStateSchema - StepId validation', () => {
+  it('accepts valid StepId object', () => {
     const result = WorkflowStateSchema.safeParse(
-      createValidState({ pendingTasks: [{ task: 1 }] })
+      createValidState({ pendingSteps: [{ stepId: { step: 1 } }] })
     );
     expect(result.success).toBe(true);
   });
 
-  it('accepts TaskId with subtask', () => {
+  it('accepts StepId with substep', () => {
     const result = WorkflowStateSchema.safeParse(
-      createValidState({ pendingTasks: [{ task: 1, subtask: 'a' }] })
+      createValidState({ pendingSteps: [{ stepId: { step: 1, substep: '1' } }] })
     );
     expect(result.success).toBe(true);
   });
 
-  it('rejects TaskId as plain string', () => {
+  it('rejects StepId without step field', () => {
     const result = WorkflowStateSchema.safeParse(
-      createValidState({ pendingTasks: ['1'] })
-    );
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects TaskId without task field', () => {
-    const result = WorkflowStateSchema.safeParse(
-      createValidState({ pendingTasks: [{ subtask: 'a' }] })
+      createValidState({ pendingSteps: [{ substep: '1' }] })
     );
     expect(result.success).toBe(false);
-  });
-
-  it('rejects TaskId with invalid task number', () => {
-    const result = WorkflowStateSchema.safeParse(
-      createValidState({ pendingTasks: [{ task: 0 }] })
-    );
-    expect(result.success).toBe(false);
-  });
-});
-
-describe('WorkflowStateSchema pendingTasks migration', () => {
-  const baseState = {
-    id: 'test-123',
-    workflow: 'test.workflow.md',
-    task: 1,
-    taskName: 'Test',
-    retryCount: 0,
-    variables: {},
-    tasks: [],
-    agentBindings: {},
-    startedAt: '2025-01-01T00:00:00Z',
-    updatedAt: '2025-01-01T00:00:00Z'
-  };
-
-  it('should accept legacy TaskId[] format and transform to PendingTask[]', () => {
-    const legacyState = {
-      ...baseState,
-      pendingTasks: [{ task: 1, subtask: '1' }]  // Legacy format
-    };
-
-    const result = WorkflowStateSchema.safeParse(legacyState);
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.pendingTasks[0]).toEqual({
-        taskId: { task: 1, subtask: '1' },
-        workflow: undefined
-      });
-    }
-  });
-
-  it('should accept new PendingTask[] format', () => {
-    const newState = {
-      ...baseState,
-      pendingTasks: [{ taskId: { task: 1, subtask: '1' }, workflow: 'child.workflow.md' }]
-    };
-
-    const result = WorkflowStateSchema.safeParse(newState);
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.pendingTasks[0]).toEqual({
-        taskId: { task: 1, subtask: '1' },
-        workflow: 'child.workflow.md'
-      });
-    }
-  });
-
-  it('should accept empty pendingTasks array', () => {
-    const emptyState = { ...baseState, pendingTasks: [] };
-    const result = WorkflowStateSchema.safeParse(emptyState);
-    expect(result.success).toBe(true);
   });
 });

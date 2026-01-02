@@ -1,12 +1,18 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { mkdir, mkdtemp, rm } from 'fs/promises';
+import { mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { WorkflowStateManager } from '../../src/workflow/state.js';
+import { Step, StepNumber } from '../../src/workflow/types.js';
 
 describe('WorkflowStateManager', () => {
   let testDir: string;
   let manager: WorkflowStateManager;
+  const mockSteps: Step[] = [{
+    number: 1 as StepNumber,
+    description: 'Initial step',
+    prompts: []
+  }];
 
   beforeEach(async () => {
     testDir = await mkdtemp(join(tmpdir(), 'ws-test-'));
@@ -19,7 +25,7 @@ describe('WorkflowStateManager', () => {
 
   describe('getChildWorkflowResult', () => {
     it('should return pass when child has completed=true', async () => {
-      const child = await manager.create('child.workflow.md', 'Child');
+      const child = await manager.create('child.workflow.md', mockSteps);
       await manager.update(child.id, { variables: { completed: true } });
 
       const result = await manager.getChildWorkflowResult(child.id);
@@ -27,7 +33,7 @@ describe('WorkflowStateManager', () => {
     });
 
     it('should return fail when child has blocked=true', async () => {
-      const child = await manager.create('child.workflow.md', 'Child');
+      const child = await manager.create('child.workflow.md', mockSteps);
       await manager.update(child.id, { variables: { blocked: true } });
 
       const result = await manager.getChildWorkflowResult(child.id);
@@ -35,7 +41,7 @@ describe('WorkflowStateManager', () => {
     });
 
     it('should return null when child is still active', async () => {
-      const child = await manager.create('child.workflow.md', 'Child');
+      const child = await manager.create('child.workflow.md', mockSteps);
       await manager.setActive(child.id);
 
       const result = await manager.getChildWorkflowResult(child.id);
@@ -43,13 +49,12 @@ describe('WorkflowStateManager', () => {
     });
 
     it('should return pass when child state deleted', async () => {
-      // Child doesn't exist = already cleaned up = pass
       const result = await manager.getChildWorkflowResult('nonexistent-id');
       expect(result).toBe('pass');
     });
 
     it('should return null when child is stashed', async () => {
-      const child = await manager.create('child.workflow.md', 'Child');
+      const child = await manager.create('child.workflow.md', mockSteps);
       await manager.setActive(child.id);
       await manager.stash();
 
@@ -58,22 +63,19 @@ describe('WorkflowStateManager', () => {
     });
   });
 
-  describe('WorkflowStateManager subtask initialization', () => {
-    it('initializes subtaskStates when task has static subtasks', async () => {
-      const manager = new WorkflowStateManager(testDir);
-
-      // Subtask definitions from parsed workflow
-      const subtasks = [
+  describe('WorkflowStateManager substep initialization', () => {
+    it('initializes substepStates when step has static substeps', async () => {
+      const substeps = [
         { id: '1', description: 'First reviewer', isDynamic: false },
         { id: '2', description: 'Second reviewer', isDynamic: false }
       ];
 
-      const state = await manager.create('test.workflow.md', 'Dispatch reviewers');
-      await manager.initializeSubtasks(state.id, subtasks);
+      const state = await manager.create('test.workflow.md', mockSteps);
+      await manager.initializeSubsteps(state.id, substeps);
 
       const updated = await manager.load(state.id);
-      expect(updated?.subtaskStates).toHaveLength(2);
-      expect(updated?.subtaskStates?.[0]).toEqual({
+      expect(updated?.substepStates).toHaveLength(2);
+      expect(updated?.substepStates?.[0]).toEqual({
         id: '1',
         status: 'pending',
         agentId: undefined,
@@ -81,57 +83,48 @@ describe('WorkflowStateManager', () => {
       });
     });
 
-    it('does not initialize for dynamic subtasks', async () => {
-      const manager = new WorkflowStateManager(testDir);
-
-      const subtasks = [
-        { id: '{n}', description: 'Dynamic task', isDynamic: true }
+    it('does not initialize for dynamic substeps', async () => {
+      const substeps = [
+        { id: '{n}', description: 'Dynamic step', isDynamic: true }
       ];
 
-      const state = await manager.create('test.workflow.md', 'Dynamic task');
-      await manager.initializeSubtasks(state.id, subtasks);
+      const state = await manager.create('test.workflow.md', mockSteps);
+      await manager.initializeSubsteps(state.id, substeps);
 
       const updated = await manager.load(state.id);
-      // Dynamic subtasks are not pre-initialized - they're created on demand
-      expect(updated?.subtaskStates).toEqual([]);
+      expect(updated?.substepStates).toEqual([]);
     });
   });
 
-  describe('WorkflowStateManager dynamic subtasks', () => {
-    it('adds dynamic subtask with incrementing ID', async () => {
-      const manager = new WorkflowStateManager(testDir);
+  describe('WorkflowStateManager dynamic substeps', () => {
+    it('adds dynamic substep with incrementing ID', async () => {
+      const state = await manager.create('test.workflow.md', mockSteps);
+      await manager.update(state.id, { substepStates: [] });
 
-      const state = await manager.create('test.workflow.md', 'Execute batch');
-      await manager.update(state.id, { subtaskStates: [] });
-
-      // Add first dynamic subtask
-      const id1 = await manager.addDynamicSubtask(state.id);
+      const id1 = await manager.addDynamicSubstep(state.id);
       expect(id1).toBe('1');
 
-      // Add second
-      const id2 = await manager.addDynamicSubtask(state.id);
+      const id2 = await manager.addDynamicSubstep(state.id);
       expect(id2).toBe('2');
 
       const updated = await manager.load(state.id);
-      expect(updated?.subtaskStates).toHaveLength(2);
-      expect(updated?.subtaskStates?.[0].id).toBe('1');
-      expect(updated?.subtaskStates?.[1].id).toBe('2');
+      expect(updated?.substepStates).toHaveLength(2);
+      expect(updated?.substepStates?.[0].id).toBe('1');
+      expect(updated?.substepStates?.[1].id).toBe('2');
     });
   });
 
-  describe('WorkflowStateManager subtask lifecycle', () => {
-    it('binds agent to subtask', async () => {
-      const manager = new WorkflowStateManager(testDir);
-
-      const state = await manager.create('test.workflow.md', 'Task');
+  describe('WorkflowStateManager substep lifecycle', () => {
+    it('binds agent to substep', async () => {
+      const state = await manager.create('test.workflow.md', mockSteps);
       await manager.update(state.id, {
-        subtaskStates: [{ id: '1', status: 'pending' }]
+        substepStates: [{ id: '1', status: 'pending' }]
       });
 
-      await manager.bindSubtaskAgent(state.id, '1', 'agent-123');
+      await manager.bindSubstepAgent(state.id, '1', 'agent-123');
 
       const updated = await manager.load(state.id);
-      expect(updated?.subtaskStates?.[0]).toEqual({
+      expect(updated?.substepStates?.[0]).toEqual({
         id: '1',
         status: 'running',
         agentId: 'agent-123',
@@ -139,18 +132,16 @@ describe('WorkflowStateManager', () => {
       });
     });
 
-    it('completes subtask with result', async () => {
-      const manager = new WorkflowStateManager(testDir);
-
-      const state = await manager.create('test.workflow.md', 'Task');
+    it('completes substep with result', async () => {
+      const state = await manager.create('test.workflow.md', mockSteps);
       await manager.update(state.id, {
-        subtaskStates: [{ id: '1', status: 'running', agentId: 'agent-123' }]
+        substepStates: [{ id: '1', status: 'running', agentId: 'agent-123' }]
       });
 
-      await manager.completeSubtask(state.id, '1', 'pass');
+      await manager.completeSubstep(state.id, '1', 'pass');
 
       const updated = await manager.load(state.id);
-      expect(updated?.subtaskStates?.[0]).toEqual({
+      expect(updated?.substepStates?.[0]).toEqual({
         id: '1',
         status: 'done',
         agentId: 'agent-123',

@@ -1,11 +1,17 @@
 import {
   handleSubagentStart
 } from '../../../src/workflow/hooks/subagent-start.js';
-import { WorkflowStateManager, createTaskNumber } from '@turboshovel/shared';
+import { WorkflowStateManager, createStepNumber, Step, StepNumber } from '@turboshovel/shared';
 import type { HookInput } from '@turboshovel/shared';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
+
+const mockSteps: Step[] = [{
+  number: 1 as StepNumber,
+  description: 'Initial step',
+  prompts: []
+}];
 
 describe('handleSubagentStart', () => {
   let testDir: string;
@@ -22,7 +28,6 @@ describe('handleSubagentStart', () => {
     const input: HookInput = {
       hook_event_name: 'SubagentStart',
       cwd: testDir
-      // No agent_id
     };
 
     const result = await handleSubagentStart(input);
@@ -32,7 +37,6 @@ describe('handleSubagentStart', () => {
   });
 
   it('gracefully handles CLI not available', async () => {
-    // When CLI is not available, should return empty object
     const input: HookInput = {
       hook_event_name: 'SubagentStart',
       cwd: testDir,
@@ -40,8 +44,6 @@ describe('handleSubagentStart', () => {
     };
 
     const result = await handleSubagentStart(input);
-
-    // Should either return empty or violation depending on CLI output
     expect(result).toBeDefined();
   });
 
@@ -63,7 +65,6 @@ describe('handleSubagentStart calls CLI', () => {
   it('should call tsv start --agent with correct parameters', async () => {
     const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'subagent-cli-test-'));
     try {
-      // Import module fresh to test CLI invocation
       const { handleSubagentStart } = await import('../../../src/workflow/hooks/subagent-start.js');
 
       const input: HookInput = {
@@ -72,11 +73,7 @@ describe('handleSubagentStart calls CLI', () => {
         cwd: testDir
       };
 
-      // Should handle the case where CLI returns output with agent binding info
-      // In real usage, the CLI will handle the state management
       const result = await handleSubagentStart(input);
-
-      // Result should contain context when CLI succeeds
       expect(result.context || result.violation || !result.violation).toBeDefined();
     } finally {
       await fs.rm(testDir, { recursive: true, force: true });
@@ -95,12 +92,12 @@ describe('handleSubagentStart via synthetic dispatch', () => {
     await fs.rm(testDir, { recursive: true, force: true });
   });
 
-  it('handles PostToolUse Task → SubagentStart', async () => {
+  it('handles PostToolUse Step → SubagentStart', async () => {
     const input: HookInput = {
-      hook_event_name: 'SubagentStart',  // Synthetic event
+      hook_event_name: 'SubagentStart',
       cwd: testDir,
       agent_id: 'code-review-agent-1',
-      task_id: '1.1',
+      step_id: '1.1',
       subagent_type: 'code-review-agent'
     };
 
@@ -109,30 +106,28 @@ describe('handleSubagentStart via synthetic dispatch', () => {
   });
 });
 
-describe('handleSubagentStart with subtasks', () => {
+describe('handleSubagentStart with substeps', () => {
   let testDir: string;
 
   beforeEach(async () => {
-    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'subagent-subtask-test-'));
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'subagent-substep-test-'));
   });
 
   afterEach(async () => {
     await fs.rm(testDir, { recursive: true, force: true });
   });
 
-  it('binds agent to subtask and updates subtaskState', async () => {
+  it('binds agent to substep and updates substepState', async () => {
     const manager = new WorkflowStateManager(testDir);
 
-    // Setup workflow with subtasks
-    const state = await manager.create('test.workflow.md', 'Review');
-    await manager.initializeSubtasks(state.id, [
+    const state = await manager.create('test.workflow.md', mockSteps);
+    await manager.initializeSubsteps(state.id, [
       { id: '1', description: 'First', isDynamic: false }
     ]);
     await manager.setActive(state.id);
 
-    // Queue subtask
-    await manager.pushPendingTask(state.id, {
-      taskId: { task: createTaskNumber(1)!, subtask: '1' }
+    await manager.pushPendingStep(state.id, {
+      stepId: { step: createStepNumber(1)!, substep: '1' }
     });
 
     const input: HookInput = {
@@ -143,9 +138,8 @@ describe('handleSubagentStart with subtasks', () => {
 
     await handleSubagentStart(input);
 
-    // Verify subtaskState updated
     const updated = await manager.load(state.id);
-    expect(updated?.subtaskStates?.[0]).toEqual({
+    expect(updated?.substepStates?.[0]).toEqual({
       id: '1',
       status: 'running',
       agentId: 'agent-123',
@@ -153,4 +147,3 @@ describe('handleSubagentStart with subtasks', () => {
     });
   });
 });
-

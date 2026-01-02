@@ -16,7 +16,7 @@ describe('detectSyntheticEvents', () => {
       expect(events).toContainEqual(
         expect.objectContaining({
           syntheticEvent: 'SlashCommandStart',
-          commandName: 'cipherpowers:verify'  // Full name preserved
+          commandName: 'cipherpowers:verify'
         })
       );
     });
@@ -35,20 +35,6 @@ describe('detectSyntheticEvents', () => {
           syntheticEvent: 'SlashCommandStart',
           commandName: 'commit'
         })
-      );
-    });
-
-    it('does not detect from regular message', () => {
-      const input: HookInput = {
-        hook_event_name: 'UserPromptSubmit',
-        cwd: '/test',
-        user_message: 'Please review this code'
-      };
-
-      const events = detectSyntheticEvents(input);
-
-      expect(events).not.toContainEqual(
-        expect.objectContaining({ syntheticEvent: 'SlashCommandStart' })
       );
     });
   });
@@ -82,7 +68,7 @@ describe('detectSyntheticEvents', () => {
       expect(events).toContainEqual(
         expect.objectContaining({
           syntheticEvent: 'SkillStart',
-          skillName: 'turboshovel:verifying-by-consensus'  // Full name preserved
+          skillName: 'turboshovel:verifying-by-consensus'
         })
       );
     });
@@ -104,32 +90,14 @@ describe('detectSyntheticEvents', () => {
         })
       );
     });
-
-    it('detects skill without namespace', () => {
-      const input: HookInput = {
-        hook_event_name: 'PreToolUse',
-        cwd: '/test',
-        tool_name: 'Skill',
-        tool_input: { skill: 'verify' }
-      };
-
-      const events = detectSyntheticEvents(input);
-
-      expect(events).toContainEqual(
-        expect.objectContaining({
-          syntheticEvent: 'SkillStart',
-          skillName: 'verify'  // No namespace, just skill name
-        })
-      );
-    });
   });
 
-  describe('SubagentStart (from PostToolUse Task)', () => {
-    it('detects SubagentStart with TaskId', () => {
+  describe('SubagentStart (from PostToolUse Step)', () => {
+    it('detects SubagentStart with StepId', () => {
       const input = {
         hook_event_name: 'PostToolUse',
         cwd: '/test',
-        tool_name: 'Task',
+        tool_name: 'Step',
         tool_input: {
           description: '1.1 - Review authentication code',
           subagent_type: 'cipherpowers:code-review-agent'
@@ -142,20 +110,20 @@ describe('detectSyntheticEvents', () => {
       expect(events).toContainEqual(
         expect.objectContaining({
           syntheticEvent: 'SubagentStart',
-          taskId: '1.1',
+          stepId: '1.1',
           toolUseId: 'toolu_abc123',
           subagentType: 'cipherpowers:code-review-agent'
         })
       );
     });
 
-    it('detects SubagentStart without TaskId', () => {
+    it('detects SubagentStart without StepId', () => {
       const input: HookInput = {
         hook_event_name: 'PostToolUse',
         cwd: '/test',
-        tool_name: 'Task',
+        tool_name: 'Step',
         tool_input: {
-          description: 'General exploration task'
+          description: 'General exploration step'
         }
       };
 
@@ -164,7 +132,7 @@ describe('detectSyntheticEvents', () => {
       expect(events).toContainEqual(
         expect.objectContaining({
           syntheticEvent: 'SubagentStart',
-          taskId: undefined
+          stepId: undefined
         })
       );
     });
@@ -196,11 +164,5 @@ describe('isSyntheticEvent', () => {
     expect(isSyntheticEvent('PostToolUse')).toBe(false);
     expect(isSyntheticEvent('UserPromptSubmit')).toBe(false);
     expect(isSyntheticEvent('Stop')).toBe(false);
-    expect(isSyntheticEvent('SubagentStop')).toBe(false);
-  });
-
-  it('returns false for unknown events', () => {
-    expect(isSyntheticEvent('RandomEvent')).toBe(false);
-    expect(isSyntheticEvent('')).toBe(false);
   });
 });

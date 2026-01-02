@@ -10,7 +10,7 @@ Run the turboshovel feature walkthrough to see all workflow features in action.
 ## Instructions
 
 This walkthrough exercises all workflow features:
-- Parallel subtask dispatch
+- Parallel substep dispatch
 - Agent binding and tracking
 - Conditional branching (GOTO, RETRY)
 - Gate integration
@@ -21,15 +21,15 @@ This walkthrough exercises all workflow features:
 
 1. Start the workflow:
    ```bash
-   node ${CLAUDE_PLUGIN_ROOT}/core/dist/cli/workflow-cli.js start ${CLAUDE_PLUGIN_ROOT}/workflows/walkthrough.workflow.md
+   tsv start ${CLAUDE_PLUGIN_ROOT}/workflows/walkthrough.workflow.md
    ```
 
 2. Check status anytime:
    ```bash
-   node ${CLAUDE_PLUGIN_ROOT}/core/dist/cli/workflow-cli.js status
+   tsv status
    ```
 
-3. Follow the workflow prompts to progress through tasks.
+3. Follow the workflow prompts to progress through steps.
 
 4. On completion, the verification script validates the entire execution.
 
@@ -40,9 +40,9 @@ This walkthrough exercises all workflow features:
 
 ## Troubleshooting
 
-If a task fails:
+If a step fails:
 - Check `.work/walkthrough.log` for the last successful step
-- Use `node ${CLAUDE_PLUGIN_ROOT}/core/dist/cli/workflow-cli.js status` to see current state
-- Use `node ${CLAUDE_PLUGIN_ROOT}/core/dist/cli/workflow-cli.js stop` to abort and start fresh
+- Use `tsv status` to see current state
+- Use `tsv stop` to abort and start fresh
 
 </instructions>

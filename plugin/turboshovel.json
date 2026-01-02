@@ -1,81 +1,15 @@
 {
   "gates": {
-    "plugin-path": {
-      "description": "Verify plugin path resolution in subagents",
-      "on_pass": "CONTINUE",
-      "on_fail": "CONTINUE"
-    },
     "check": {
-      "description": "Run project quality checks (formatting, linting, types)",
-      "keywords": ["lint", "check", "format", "quality", "clippy", "typecheck"],
-      "command": "echo '[PLACEHOLDER] Quality checks passed. Configure with actual project check command (e.g., npm run lint, cargo clippy)'",
+      "command": "npm run lint",
       "on_pass": "CONTINUE",
       "on_fail": "BLOCK"
-    },
-    "test": {
-      "description": "Run project test suite",
-      "keywords": ["test", "testing", "spec", "verify"],
-      "command": "echo '[PLACEHOLDER] Tests passed. Configure with actual project test command (e.g., npm test, cargo test)'",
-      "on_pass": "CONTINUE",
-      "on_fail": "BLOCK"
-    },
-    "build": {
-      "description": "Run project build",
-      "keywords": ["build", "compile", "package"],
-      "command": "echo '[PLACEHOLDER] Build passed. Configure with actual project build command (e.g., npm run build, cargo build)'",
-      "on_pass": "CONTINUE",
-      "on_fail": "CONTINUE"
-    },
-    "walkthrough:log": {
-      "description": "Append message to walkthrough log",
-      "command": "echo \"$1\" >> .work/walkthrough.log",
-      "on_pass": "CONTINUE",
-      "on_fail": "CONTINUE"
-    },
-    "walkthrough:gate-check": {
-      "description": "Test gate - checks marker file and logs execution",
-      "command": "test -f .work/walkthrough-marker && echo 'gate-check-ran' >> .work/walkthrough.log",
-      "on_pass": "CONTINUE",
-      "on_fail": "BLOCK"
-    },
-    "workflow-task-tracker": {
-      "description": "Track Task dispatch for workflow orchestration",
-      "on_pass": "CONTINUE",
-      "on_fail": "BLOCK"
-    },
-    "workflow-subagent-start": {
-      "description": "Bind agent to pending task in workflow",
-      "on_pass": "CONTINUE",
-      "on_fail": "BLOCK"
-    },
-    "workflow-subagent-stop": {
-      "description": "Handle agent completion and advance workflow",
-      "on_pass": "CONTINUE",
-      "on_fail": "CONTINUE"
-    },
-    "workflow-skill-start": {
-      "description": "Auto-start workflow declared in skill frontmatter",
-      "on_pass": "CONTINUE",
-      "on_fail": "CONTINUE"
     }
   },
   "hooks": {
-    "UserPromptSubmit": {
-      "gates": ["check", "test", "build"]
-    },
     "PostToolUse": {
-      "enabled_tools": ["Edit", "Write", "Task"],
-      "gates": ["check", "workflow-task-tracker"]
-    },
-    "SubagentStart": {
-      "gates": ["workflow-subagent-start"]
-    },
-    "SubagentStop": {
-      "enabled_agents": [],
-      "gates": ["check", "test", "workflow-subagent-stop"]
-    },
-    "SkillStart": {
-      "gates": ["workflow-skill-start"]
+      "enabled_tools": ["Edit", "Write", "Step", "Task"],
+      "gates": ["check"]
     }
   }
 }

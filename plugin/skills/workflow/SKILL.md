@@ -7,7 +7,7 @@ description: Use when executing multi-step processes requiring state persistence
 
 ## Overview
 
-Workflows are multi-step processes with state tracking. **Two-tier orchestration:** subagents execute individual tasks and report outcomes; main agent dispatches, monitors, and handles failures.
+Workflows are multi-step processes with state tracking. **Two-tier orchestration:** subagents execute individual steps and report outcomes; main agent dispatches, monitors, and handles failures.
 
 **Core principle:** Subagents fail fast, main agent troubleshoots.
 
@@ -18,19 +18,19 @@ Workflows are multi-step processes with state tracking. **Two-tier orchestration
 - PASS/FAIL signaling between agents
 - Processes requiring retry/resume capability
 
-**Not for:** Single-step tasks, ad-hoc commands
+**Not for:** Single-step steps, ad-hoc commands
 
 ---
 
 ## For Subagents
 
-You're executing a workflow task. Your context shows:
-- **Task N:** What you need to do
+You're executing a workflow step. Your context shows:
+- **Step N:** What you need to do
 - **Attempt:** Retry count if applicable
 
 ### Protocol
 
-1. Execute the task as described in the prompt
+1. Execute the step as described in the prompt
 2. End your response with a status line: `STATUS: PASS` or `STATUS: FAIL`
 3. If stuck, blocked, or unclear, report `STATUS: FAIL` - main agent will handle
 
@@ -49,57 +49,57 @@ You orchestrate the workflow. Use these commands:
 
 | Command | Purpose |
 |---------|---------|
-| `workflow start <file>` | Begin a workflow |
-| `workflow next` | Advance after task completes |
-| `workflow next --step N` | Jump to specific task |
-| `workflow next --pass --agent <id>` | Mark agent task as passed |
-| `workflow next --fail --agent <id>` | Mark agent task as failed |
-| `workflow status` | Check current state |
-| `workflow complete` | Mark workflow finished |
-| `workflow stop` | Abort workflow |
-| `workflow stash` | Pause enforcement (for ad-hoc work) |
-| `workflow pop` | Resume enforcement |
-| `workflow gate <name>` | Run a gate by name |
+| `tsv start <file>` | Begin a workflow |
+| `tsv next` | Advance after step completes |
+| `tsv next --goto N` | Jump to specific step |
+| `tsv next --pass --agent <id>` | Mark agent step as passed |
+| `tsv next --fail --agent <id>` | Mark agent step as failed |
+| `tsv status` | Check current state |
+| `tsv complete` | Mark workflow finished |
+| `tsv stop` | Abort workflow |
+| `tsv stash` | Pause enforcement (for ad-hoc work) |
+| `tsv pop` | Resume enforcement |
+| `tsv gate <name>` | Run a gate by name |
 
-### Dispatching Tasks
+### Dispatching Steps
 
-Include TaskId in Task description - hooks handle the rest automatically:
+Include StepId in Step tool description - hooks handle the rest automatically:
 ```
-Task(description="2.1 - Review authentication code", ...)
+Step(description="2.1 - Review authentication code", ...)
 ```
 
-The TaskId format is `N.X` where N is task number, X is subtask number.
+The StepId format is `N.X` where N is step number, X is substep number.
 
 **Hook automation:**
-- PostToolUse hook parses TaskId from description, calls `tsv start --task 2.1`
-- SubagentStart hook binds the agent to the queued task
+- PostToolUse hook parses StepId from description, calls `tsv start --step 2.1`
+- SubagentStart hook binds the agent to the queued step
 - SubagentStop hook parses STATUS line, calls `tsv next --pass/--fail --agent {id}`
 
-**Do NOT manually call `workflow start --task`** - hooks handle this.
+**Do NOT manually call `tsv start --step`** - hooks handle this.
 
-### Parallel Subtasks
+### Parallel Substeps
 
-For parallel execution (e.g., `### 2.{n}` subtasks):
-1. Dispatch all agents in one message (multiple Task calls)
-2. Run `workflow status` to check agent completion
-3. When all agents report done, run `workflow next`
+For parallel execution (e.g., `### 2.{n}` substeps):
+1. Dispatch all agents in one message (multiple Step tool calls)
+2. Run `tsv status` to check agent completion
+3. When all agents report done, run `tsv next`
 
-### Dynamic Subtask `{n}` Syntax
+### Dynamic Substep `{n}` Syntax
 
-`### N.{n}` marks dynamic subtasks - orchestrator decides count at runtime.
+`### N.{n}` marks dynamic substeps - orchestrator decides count at runtime.
 
-Dispatch with sequential TaskIds in description:
+Dispatch with sequential StepIds in description:
 ```
-Task(description="3.1 - Agent 1 review", ...)
-Task(description="3.2 - Agent 2 review", ...)
+Step(description="3.1 - Agent 1 review", ...)
+Step(description="3.2 - Agent 2 review", ...)
 ```
 
-- `$n` in workflow prompts substitutes with subtask number (1, 2, etc.)
-- Hooks handle task queuing and agent binding automatically
+- `$n` in workflow prompts substitutes with substep number (1, 2, etc.)
+- Hooks handle step queuing and agent binding automatically
 
 ### Handling Failures
 
-When subagent reports `STATUS: FAIL`: check output, discuss with user, then retry (`--step N`) or abort (`stop`).
+When subagent reports `STATUS: FAIL`: check output, discuss with user, then retry or jump (`--goto N`) or abort (`stop`).
 
 ---
 
@@ -110,6 +110,6 @@ When subagent reports `STATUS: FAIL`: check output, discuss with user, then retr
 | Subagent advances parent workflow | Only advance your own nested workflow, not parent's |
 | Subagent auto-retries on failure | Report `STATUS: FAIL` and let main handle |
 | Main agent auto-retries without user | Always discuss failures before retry |
-| Missing TaskId in dispatch | Include `N.X` format in Task description |
-| Parallel tasks without status check | Run `workflow status` before advancing |
-| Manually calling `workflow start --task` | Remove - hooks handle task queuing automatically |
+| Missing StepId in dispatch | Include `N.X` format in Step tool description |
+| Parallel steps without status check | Run `tsv status` before advancing |
+| Manually calling `tsv start --step` | Remove - hooks handle step queuing automatically |

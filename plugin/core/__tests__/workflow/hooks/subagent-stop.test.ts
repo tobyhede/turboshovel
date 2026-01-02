@@ -3,7 +3,7 @@ import { jest } from '@jest/globals';
 import {
   handleSubagentStop
 } from '../../../src/workflow/hooks/subagent-stop.js';
-import { WorkflowStateManager, type HookInput, createTaskNumber } from '@turboshovel/shared';
+import { WorkflowStateManager, type HookInput, createStepNumber, Step, StepNumber } from '@turboshovel/shared';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -12,30 +12,32 @@ describe('handleSubagentStop with agent binding', () => {
   let testDir: string;
   let manager: WorkflowStateManager;
   const mockExecSync = jest.fn(() => 'Workflow advanced');
+  const mockSteps: Step[] = [{
+    number: 1 as StepNumber,
+    description: 'Initial step',
+    prompts: []
+  }];
 
   beforeEach(async () => {
     testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'subagent-stop-test-'));
     manager = new WorkflowStateManager(testDir);
     jest.clearAllMocks();
 
-    // Set the mock for this test suite
     const module = await import('../../../src/workflow/hooks/subagent-stop.js');
     module.setExecSync(mockExecSync);
   });
 
   afterEach(async () => {
     await fs.rm(testDir, { recursive: true, force: true });
-    // Reset to original execSync
     const module = await import('../../../src/workflow/hooks/subagent-stop.js');
     const { execSync } = await import('child_process');
     module.setExecSync(execSync);
   });
 
   it('calls CLI with --pass flag on success', async () => {
-    const state = await manager.create('test.workflow.md', 'Test');
+    const state = await manager.create('test.workflow.md', mockSteps);
     await manager.setActive(state.id);
-    await manager.pushPendingTask(state.id, { task: createTaskNumber(2)! });
-    await manager.bindAgent(state.id, 'agent-xyz', { task: createTaskNumber(2)! });
+    await manager.bindAgent(state.id, 'agent-xyz', { step: createStepNumber(1)! });
 
     const input: HookInput = {
       hook_event_name: 'SubagentStop',
@@ -54,15 +56,15 @@ describe('handleSubagentStop with agent binding', () => {
   });
 
   it('calls CLI with --fail flag on failure', async () => {
-    const state = await manager.create('test.workflow.md', 'Test');
+    const state = await manager.create('test.workflow.md', mockSteps);
     await manager.setActive(state.id);
-    await manager.bindAgent(state.id, 'agent-abc', { task: createTaskNumber(1)! });
+    await manager.bindAgent(state.id, 'agent-abc', { step: createStepNumber(1)! });
 
     const input: HookInput = {
       hook_event_name: 'SubagentStop',
       cwd: testDir,
       agent_id: 'agent-abc',
-      output: 'STATUS: BLOCKED\nCould not complete task.'
+      output: 'STATUS: BLOCKED\nCould not complete step.'
     };
 
     const result = await handleSubagentStop(input);
@@ -75,7 +77,6 @@ describe('handleSubagentStop with agent binding', () => {
   });
 
   it('returns violation when CLI rejects unknown agent', async () => {
-    // Mock execSync to throw an error for unknown agent
     const errorMock = jest.fn(() => {
       const error = new Error('No binding for agent');
       (error as any).stderr = 'No binding for agent unknown-agent';
@@ -84,7 +85,7 @@ describe('handleSubagentStop with agent binding', () => {
     const module = await import('../../../src/workflow/hooks/subagent-stop.js');
     module.setExecSync(errorMock);
 
-    const state = await manager.create('test.workflow.md', 'Test');
+    const state = await manager.create('test.workflow.md', mockSteps);
     await manager.setActive(state.id);
 
     const input: HookInput = {
@@ -99,15 +100,15 @@ describe('handleSubagentStop with agent binding', () => {
   });
 
   it('defaults to pass flag when no STATUS in output', async () => {
-    const state = await manager.create('test.workflow.md', 'Test');
+    const state = await manager.create('test.workflow.md', mockSteps);
     await manager.setActive(state.id);
-    await manager.bindAgent(state.id, 'agent-xyz', { task: createTaskNumber(1)! });
+    await manager.bindAgent(state.id, 'agent-xyz', { step: createStepNumber(1)! });
 
     const input: HookInput = {
       hook_event_name: 'SubagentStop',
       cwd: testDir,
       agent_id: 'agent-xyz',
-      output: 'Task completed successfully.'
+      output: 'Step completed successfully.'
     };
 
     await handleSubagentStop(input);
@@ -118,13 +119,12 @@ describe('handleSubagentStop with agent binding', () => {
     );
   });
 
-  it('completes subtask when agent stops', async () => {
-    // Setup workflow with subtask bound to agent
-    const state = await manager.create('test.workflow.md', 'Review');
+  it('completes substep when agent stops', async () => {
+    const state = await manager.create('test.workflow.md', mockSteps);
     await manager.update(state.id, {
-      subtaskStates: [{ id: '1', status: 'running', agentId: 'agent-123' }],
+      substepStates: [{ id: '1', status: 'running', agentId: 'agent-123' }],
       agentBindings: {
-        'agent-123': { taskId: { task: createTaskNumber(1)!, subtask: '1' }, status: 'running' }
+        'agent-123': { stepId: { step: createStepNumber(1)!, substep: '1' }, status: 'running' }
       }
     });
     await manager.setActive(state.id);
@@ -137,9 +137,8 @@ describe('handleSubagentStop with agent binding', () => {
 
     await handleSubagentStop(input);
 
-    // Verify subtaskState marked done
     const updated = await manager.load(state.id);
-    expect(updated?.subtaskStates?.[0].status).toBe('done');
+    expect(updated?.substepStates?.[0].status).toBe('done');
   });
 });
 
@@ -151,14 +150,12 @@ describe('handleSubagentStop calls CLI', () => {
     testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'subagent-stop-cli-test-'));
     jest.clearAllMocks();
 
-    // Import and set mock
     const module = await import('../../../src/workflow/hooks/subagent-stop.js');
     module.setExecSync(mockExecSync);
   });
 
   afterEach(async () => {
     await fs.rm(testDir, { recursive: true, force: true });
-    // Reset to original execSync
     const module = await import('../../../src/workflow/hooks/subagent-stop.js');
     const { execSync } = await import('child_process');
     module.setExecSync(execSync);

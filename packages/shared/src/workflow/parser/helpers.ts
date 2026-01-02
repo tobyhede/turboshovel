@@ -1,11 +1,11 @@
 // src/workflow/parser/helpers.ts
 
-import { createTaskNumber, type Action, type NonRetryAction, type Conditions, type TaskNumber } from '../types.js';
+import { createStepNumber, type Action, type NonRetryAction, type Conditions, type StepNumber } from '../types.js';
 import type { ParsedConditional, AggregationModifier } from './types.js';
 import { WorkflowSyntaxError } from './types.js';
 
-export interface ParsedSubtaskHeader {
-  taskNumber: number;
+export interface ParsedSubstepHeader {
+  stepNumber: number;
   id: string; // "1", "2", or "{n}" for dynamic
   description: string;
   agentType?: string;
@@ -20,12 +20,12 @@ export function stripSeparator(text: string): string {
 }
 
 /**
- * Extract task number and description from header text
- * Returns null if not a valid task header
+ * Extract step number and description from header text
+ * Returns null if not a valid step header
  */
-export function extractTaskHeader(
+export function extractStepHeader(
   text: string
-): { number: TaskNumber; description: string } | null {
+): { number: StepNumber; description: string } | null {
   const trimmed = text.trim();
 
   // Find where the number ends
@@ -40,50 +40,43 @@ export function extractTaskHeader(
 
   // Parse the number
   const number = parseInt(trimmed.slice(0, numEnd), 10);
-  const taskNumber = createTaskNumber(number);
-  if (!taskNumber) {
-    return null; // Invalid task number (zero or negative)
+  const stepNumber = createStepNumber(number);
+  if (!stepNumber) {
+    return null; // Invalid step number (zero or negative)
   }
 
   // Strip separator and extract description
   const description = stripSeparator(trimmed.slice(numEnd));
 
-  // Keep the guard unchanged - still rejects "Step ..." to discourage old terminology
-  // Descriptions like "Task setup" are legitimate, so don't reject "Task ..."
-  if (description.startsWith('Step ') || description === 'Step') {
-    return null;
-  }
-
   if (!description) {
     return null;
   }
 
-  return { number: taskNumber, description };
+  return { number: stepNumber, description };
 }
 
 /**
- * Extract subtask header from H3 text
+ * Extract substep header from H3 text
  * Patterns:
- *   "1.1 First reviewer (code-agent)" -> { taskNumber: 1, id: "1", ... }
- *   "3.{n} Execute task" -> { taskNumber: 3, id: "{n}", isDynamic: true }
+ *   "1.1 First reviewer (code-agent)" -> { stepNumber: 1, id: "1", ... }
+ *   "3.{n} Execute step" -> { stepNumber: 3, id: "{n}", isDynamic: true }
  */
-export function extractSubtaskHeader(text: string): ParsedSubtaskHeader | null {
+export function extractSubstepHeader(text: string): ParsedSubstepHeader | null {
   const trimmed = text.trim();
 
   // Match: "N.M description" or "N.{n} description" with optional (agent-type)
-  // Subtasks are now numeric (e.g., 1.1, 1.2) not alphabetic (1.A, 1.B)
   const match = /^(\d+)\.(\{n\}|\d+)\s+(.+?)(?:\s+\(([^)]+)\))?$/.exec(trimmed);
   if (!match) return null;
 
-  const [, taskStr, subtaskId, desc, agent] = match;
-  const taskNumber = parseInt(taskStr, 10);
-  if (taskNumber <= 0) return null;
+  const [, stepStr, substepId, desc, agent] = match;
+  const stepNumber = parseInt(stepStr, 10);
+  if (stepNumber <= 0) return null;
 
-  const isDynamic = subtaskId === '{n}';
-  const id = subtaskId; // Keep as-is: "{n}" or numeric string
+  const isDynamic = substepId === '{n}';
+  const id = substepId; // Keep as-is: "{n}" or numeric string
 
   return {
-    taskNumber,
+    stepNumber,
     id,
     description: desc.trim(),
     agentType: agent ? agent.trim() : undefined,
@@ -115,13 +108,13 @@ export function parseAction(text: string): Action | null {
   }
 
   if (trimmed.startsWith('GOTO ')) {
-    const taskStr = trimmed.slice(5).trim();
-    const taskNum = parseInt(taskStr, 10);
-    const task = createTaskNumber(taskNum);
-    if (!task) {
+    const stepStr = trimmed.slice(5).trim();
+    const stepNum = parseInt(stepStr, 10);
+    const step = createStepNumber(stepNum);
+    if (!step) {
       return null;
     }
-    return { type: 'GOTO', task };
+    return { type: 'GOTO', step };
   }
 
   if (trimmed === 'RETRY') {
@@ -131,16 +124,6 @@ export function parseAction(text: string): Action | null {
   if (trimmed.startsWith('RETRY ')) {
     const rest = trimmed.slice(6).trim();
     return parseRetryWithArgs(rest);
-  }
-
-  // Backward compatibility: old syntax
-  if (trimmed === 'Continue') {
-    return { type: 'CONTINUE' };
-  }
-
-  if (trimmed.startsWith('STOP (') && trimmed.endsWith(')')) {
-    const message = trimmed.slice(6, -1);
-    return { type: 'STOP', message };
   }
 
   return null;
@@ -208,13 +191,13 @@ function parseNonRetryAction(input: string): NonRetryAction | null {
   }
 
   if (trimmed.startsWith('GOTO ')) {
-    const taskStr = trimmed.slice(5).trim();
-    const taskNum = parseInt(taskStr, 10);
-    const task = createTaskNumber(taskNum);
-    if (!task) {
+    const stepStr = trimmed.slice(5).trim();
+    const stepNum = parseInt(stepStr, 10);
+    const step = createStepNumber(stepNum);
+    if (!step) {
       return null;
     }
-    return { type: 'GOTO', task };
+    return { type: 'GOTO', step };
   }
 
   return null;
@@ -246,37 +229,17 @@ function parseConditionalPrefix(rest: string, type: 'pass' | 'fail'): ParsedCond
 
 /**
  * Parse a conditional line (PASS [ALL|ANY]: action or FAIL [ALL|ANY]: action)
- * Supports new syntax with aggregation modifiers and backward compatibility
+ * Supports new syntax with aggregation modifiers
  */
 export function parseConditional(text: string): ParsedConditional | null {
   const trimmed = text.trim();
 
-  // Try ALLCAPS first (new syntax)
   if (trimmed.startsWith('PASS')) {
     return parseConditionalPrefix(trimmed.slice(4), 'pass');
   }
 
   if (trimmed.startsWith('FAIL')) {
     return parseConditionalPrefix(trimmed.slice(4), 'fail');
-  }
-
-  // Backward compatibility: old syntax (Pass: / Fail:)
-  if (trimmed.startsWith('Pass:')) {
-    const actionStr = trimmed.slice(5).trim();
-    const action = parseAction(actionStr);
-    if (!action) {
-      return null;
-    }
-    return { type: 'pass', action, modifier: null, raw: actionStr };
-  }
-
-  if (trimmed.startsWith('Fail:')) {
-    const actionStr = trimmed.slice(5).trim();
-    const action = parseAction(actionStr);
-    if (!action) {
-      return null;
-    }
-    return { type: 'fail', action, modifier: null, raw: actionStr };
   }
 
   return null;
@@ -355,21 +318,7 @@ export function convertConditionals(conditionals: ParsedConditional[]): Conditio
 }
 
 /**
- * Extract raw condition strings from parsed conditionals
- */
-export function extractRawConditions(
-  conditionals: ParsedConditional[]
-): { pass: string; fail: string } | undefined {
-  const passRaw = conditionals.find(c => c.type === 'pass')?.raw;
-  const failRaw = conditionals.find(c => c.type === 'fail')?.raw;
-  if (passRaw && failRaw) {
-    return { pass: passRaw, fail: failRaw };
-  }
-  return undefined;
-}
-
-/**
- * Extract workflow file references from subtask content.
+ * Extract workflow file references from substep content.
  * Looks for markdown list items ending in .workflow.md
  */
 export function extractWorkflowList(content: string): string[] {

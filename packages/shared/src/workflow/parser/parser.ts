@@ -10,20 +10,18 @@ import type {
   Paragraph,
   PhrasingContent
 } from 'mdast';
-import type { Task, Action, TaskNumber, Subtask } from '../types.js';
+import type { Step, Action, StepNumber, Substep, Workflow } from '../types.js';
 import {
-  extractTaskHeader,
-  extractSubtaskHeader,
+  extractStepHeader,
+  extractSubstepHeader,
   parseConditional,
   convertConditionals,
-  extractWorkflowList,
-  extractRawConditions
+  extractWorkflowList
 } from './helpers.js';
 import { WorkflowSyntaxError, type ParsedConditional } from './types.js';
 
 /**
  * Type guard to narrow Node to Heading
- * Required because unist-util-visit types callback node as base Node
  */
 function isHeading(node: Node): node is Heading {
   return node.type === 'heading' && 'depth' in node;
@@ -77,7 +75,7 @@ function extractPromptText(node: Paragraph): string {
   return promptText.trim();
 }
 
-interface SubtaskBuilder {
+interface SubstepBuilder {
   id: string;
   description: string;
   agentType?: string;
@@ -85,121 +83,109 @@ interface SubtaskBuilder {
   content: string;
 }
 
-interface TaskBuilder {
-  number: TaskNumber;
+interface StepBuilder {
+  number: StepNumber;
   description: string;
   command?: { code: string };
   prompts: { text: string }[];
-  subtasks: Subtask[];
-  pendingSubtask?: SubtaskBuilder;
+  substeps: Substep[];
+  pendingSubstep?: SubstepBuilder;
 }
 
 /**
- * Parse workflow markdown into Task array
- *
- * Uses mdast-util-from-markdown to parse markdown into AST,
- * then walks the tree to extract workflow semantics.
- * This mirrors the Rust pulldown-cmark pattern.
+ * Parse workflow markdown into Step array
  */
-export function parseWorkflow(markdown: string): Task[] {
+export function parseWorkflow(markdown: string): Step[] {
   // Parse markdown to AST
   const tree = fromMarkdown(markdown);
 
   // State for walking
-  const tasks: Task[] = [];
-  let currentTask: TaskBuilder | null = null;
+  const steps: Step[] = [];
+  let currentStep: StepBuilder | null = null;
   let pendingConditionals: ParsedConditional[] = [];
   let implicitText = '';
 
-  // Helper to finalize pending subtask
-  const finalizePendingSubtask = () => {
-    if (currentTask?.pendingSubtask) {
-      const workflows = extractWorkflowList(currentTask.pendingSubtask.content);
-      const subtask: Subtask = {
-        id: currentTask.pendingSubtask.id,
-        description: currentTask.pendingSubtask.description,
-        agentType: currentTask.pendingSubtask.agentType,
-        isDynamic: currentTask.pendingSubtask.isDynamic,
+  // Helper to finalize pending substep
+  const finalizePendingSubstep = () => {
+    if (currentStep?.pendingSubstep) {
+      const workflows = extractWorkflowList(currentStep.pendingSubstep.content);
+      const substep: Substep = {
+        id: currentStep.pendingSubstep.id,
+        description: currentStep.pendingSubstep.description,
+        agentType: currentStep.pendingSubstep.agentType,
+        isDynamic: currentStep.pendingSubstep.isDynamic,
         workflows: workflows.length > 0 ? workflows : undefined
       };
-      currentTask.subtasks.push(subtask);
-      currentTask.pendingSubtask = undefined;
+      currentStep.substeps.push(substep);
+      currentStep.pendingSubstep = undefined;
     }
   };
 
   // Walk AST nodes
-  visit(tree, (node: Node, _index: number | undefined, _parent: Node | undefined) => {
-    // Handle H1 headings - reject if they look like task headers
+  visit(tree, (node: Node) => {
+    // Handle H1 headings - reject if they look like step headers
     if (isHeading(node) && node.depth === 1) {
       const headingText = extractText(node);
-      const looksLikeTask = /^\d+[.:\-)\s]/.test(headingText);
-      if (looksLikeTask) {
+      const looksLikeStep = /^\d+[.:\-)\s]/.test(headingText);
+      if (looksLikeStep) {
         throw new WorkflowSyntaxError(
-          `H1 headers (# ...) cannot be used as task headers. Use H2 (## ${headingText}) instead.`
+          `H1 headers (# ...) cannot be used as step headers. Use H2 (## ${headingText}) instead.`
         );
       }
     }
 
-    // Handle H2 headings - these are task headers
+    // Handle H2 headings - these are step headers
     if (isHeading(node) && node.depth === 2) {
-      // Finalize pending subtask
-      finalizePendingSubtask();
+      finalizePendingSubstep();
 
-      // Finalize previous task
-      if (currentTask) {
-        tasks.push(finalizeTask(currentTask, pendingConditionals, implicitText));
+      if (currentStep) {
+        steps.push(finalizeStep(currentStep, pendingConditionals, implicitText));
         pendingConditionals = [];
         implicitText = '';
       }
 
-      // Start new task
       const headingText = extractText(node);
-      const parsed = extractTaskHeader(headingText);
+      const parsed = extractStepHeader(headingText);
       if (parsed) {
-        currentTask = {
+        currentStep = {
           number: parsed.number,
           description: parsed.description,
           prompts: [],
-          subtasks: []
+          substeps: []
         };
       }
     }
 
-    // Handle H3 headings - these are subtask headers
-    if (isHeading(node) && node.depth === 3 && currentTask) {
-      // Finalize pending subtask from previous H3
-      finalizePendingSubtask();
+    // Handle H3 headings - these are substep headers
+    if (isHeading(node) && node.depth === 3 && currentStep) {
+      finalizePendingSubstep();
 
       const headingText = extractText(node);
-      const parsed = extractSubtaskHeader(headingText);
+      const parsed = extractSubstepHeader(headingText);
 
       if (parsed) {
-        // Validate subtask prefix matches current task number
-        if (parsed.taskNumber !== currentTask.number) {
+        if (parsed.stepNumber !== currentStep.number) {
           throw new WorkflowSyntaxError(
-            `Subtask ${headingText} does not belong to task ${String(currentTask.number)} (it belongs to task ${String(parsed.taskNumber)})`
+            `Substep ${headingText} does not belong to step ${String(currentStep.number)}`
           );
         }
 
-        // Check for duplicate subtask IDs
-        const duplicateId = currentTask.subtasks.find((s) => s.id === parsed.id);
+        const duplicateId = currentStep.substeps.find((s) => s.id === parsed.id);
         if (duplicateId) {
           throw new WorkflowSyntaxError(
-            `Duplicate subtask ID '${parsed.id}' in task ${String(currentTask.number)}`
+            `Duplicate substep ID '${parsed.id}' in step ${String(currentStep.number)}`
           );
         }
 
-        // Check for mixing static and dynamic subtasks
-        const hasStatic = currentTask.subtasks.some((s) => !s.isDynamic);
-        const hasDynamic = currentTask.subtasks.some((s) => s.isDynamic);
+        const hasStatic = currentStep.substeps.some((s) => !s.isDynamic);
+        const hasDynamic = currentStep.substeps.some((s) => s.isDynamic);
         if ((hasStatic && parsed.isDynamic) || (hasDynamic && !parsed.isDynamic)) {
           throw new WorkflowSyntaxError(
-            `Cannot mix static subtasks (like 1.1) and dynamic subtasks (like 1.{n}) in task ${String(currentTask.number)}`
+            `Cannot mix static and dynamic substeps in step ${String(currentStep.number)}`
           );
         }
 
-        // Start new pending subtask
-        currentTask.pendingSubtask = {
+        currentStep.pendingSubstep = {
           id: parsed.id,
           description: parsed.description,
           agentType: parsed.agentType,
@@ -210,36 +196,32 @@ export function parseWorkflow(markdown: string): Task[] {
     }
 
     // Handle code blocks
-    if (node.type === 'code' && currentTask) {
+    if (node.type === 'code' && currentStep) {
       const codeNode = node as Code;
       const lang = codeNode.lang?.split(/\s+/)[0];
 
       if (lang === 'bash') {
-        if (currentTask.command) {
+        if (currentStep.command) {
           throw new WorkflowSyntaxError(
-            `Multiple code blocks per task not allowed. Task ${String(currentTask.number)} already has a command block. ` +
-              `Suggestion: (1) Combine commands using && or ; operators, or (2) Split into separate tasks.`
+            `Multiple code blocks per step not allowed in Step ${String(currentStep.number)}.`
           );
         }
-        currentTask.command = { code: codeNode.value };
+        currentStep.command = { code: codeNode.value };
       }
     }
 
-    // Handle paragraphs - check for conditionals or prompts
-    if (node.type === 'paragraph' && currentTask) {
+    // Handle paragraphs
+    if (node.type === 'paragraph' && currentStep) {
       const paragraphNode = node as Paragraph;
 
-      // Check for **Prompt:** marker
       if (hasPromptMarker(paragraphNode)) {
         const promptText = extractPromptText(paragraphNode);
         if (promptText) {
-          currentTask.prompts.push({ text: promptText });
+          currentStep.prompts.push({ text: promptText });
         }
         return;
       }
 
-      // Check for conditionals (PASS:/FAIL:)
-      // A paragraph may contain multiple lines, each potentially a conditional
       const text = extractText(paragraphNode);
       const lines = text.split('\n');
       let hasConditional = false;
@@ -250,7 +232,6 @@ export function parseWorkflow(markdown: string): Task[] {
           pendingConditionals.push(conditional);
           hasConditional = true;
         } else if (line.trim()) {
-          // Non-conditional, non-empty line
           implicitText += line.trim() + '\n';
         }
       }
@@ -260,105 +241,89 @@ export function parseWorkflow(markdown: string): Task[] {
       }
     }
 
-    // Handle list items - check for conditionals or accumulate for pending subtask
-    if (node.type === 'listItem' && currentTask) {
+    // Handle list items
+    if (node.type === 'listItem' && currentStep) {
       const listItemNode = node as ListItem;
-      // Get text from first paragraph child
       const firstParagraph = listItemNode.children.find((c) => c.type === 'paragraph');
       if (firstParagraph) {
-        const text = extractText(firstParagraph);
+        const text = extractText(firstParagraph as Paragraph);
         const conditional = parseConditional(text);
         if (conditional) {
           pendingConditionals.push(conditional);
-        } else if (currentTask.pendingSubtask) {
-          // Accumulate list item content for pending subtask
-          currentTask.pendingSubtask.content += ' - ' + text + '\n';
+        } else if (currentStep.pendingSubstep) {
+          currentStep.pendingSubstep.content += ' - ' + text + '\n';
         }
       }
     }
   });
 
-  // Finalize pending subtask
-  finalizePendingSubtask();
+  finalizePendingSubstep();
 
-  // Finalize last task
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard for uninitialized currentTask from loop
-  if (currentTask) {
-    tasks.push(finalizeTask(currentTask, pendingConditionals, implicitText));
+  if (currentStep) {
+    steps.push(finalizeStep(currentStep, pendingConditionals, implicitText));
   }
 
-  // Validate workflow
-  validateWorkflow(tasks);
+  validateWorkflow(steps);
 
-  return tasks;
+  return steps;
 }
 
-function finalizeTask(
-  task: TaskBuilder,
+function finalizeStep(
+  step: StepBuilder,
   pendingConditionals: ParsedConditional[],
   implicitText: string
-): Task {
-  // Create implicit prompt if: no code block AND no explicit prompts
-  if (!task.command && task.prompts.length === 0 && implicitText.trim()) {
-    task.prompts.push({ text: implicitText.trim() });
+): Step {
+  if (!step.command && step.prompts.length === 0 && implicitText.trim()) {
+    step.prompts.push({ text: implicitText.trim() });
   }
 
-  // Convert conditionals
   const conditions = convertConditionals(pendingConditionals);
 
-  // Extract raw condition strings
-  const rawConditions = extractRawConditions(pendingConditionals);
-
   return {
-    number: task.number,
-    description: task.description,
-    command: task.command,
-    prompts: task.prompts,
+    number: step.number,
+    description: step.description,
+    command: step.command,
+    prompts: step.prompts,
     conditions: conditions ?? undefined,
-    subtasks: task.subtasks.length > 0 ? task.subtasks : undefined,
-    rawConditions
+    substeps: step.substeps.length > 0 ? step.substeps : undefined
   };
 }
 
-function validateWorkflow(tasks: Task[]): void {
-  // Validate non-empty
-  if (tasks.length === 0) {
+function validateWorkflow(steps: Step[]): void {
+  if (steps.length === 0) {
     throw new WorkflowSyntaxError(
-      "Workflow must contain at least one task (heading starting with '##')"
+      "Workflow must contain at least one step (heading starting with '##')"
     );
   }
 
-  // Validate sequential numbering
-  for (let i = 0; i < tasks.length; i++) {
+  for (let i = 0; i < steps.length; i++) {
     const expected = i + 1;
-    if (tasks[i].number !== expected) {
+    if (steps[i].number !== expected) {
       throw new WorkflowSyntaxError(
-        `Tasks must be numbered sequentially. Expected task ${String(expected)}, found task ${String(tasks[i].number)}.\n` +
-          `Workflows must have exactly one algorithm with continuous numbering (1, 2, 3...).`
+        `Steps must be numbered sequentially. Expected step ${String(expected)}, found step ${String(steps[i].number)}.`
       );
     }
   }
 
-  // Validate GOTO targets
-  for (const task of tasks) {
-    if (task.conditions) {
-      validateAction(task.conditions.pass, task.number, tasks.length);
-      validateAction(task.conditions.fail, task.number, tasks.length);
+  for (const step of steps) {
+    if (step.conditions) {
+      validateAction(step.conditions.pass, step.number, steps.length);
+      validateAction(step.conditions.fail, step.number, steps.length);
     }
   }
 }
 
-function validateAction(action: Action, taskNum: number, totalTasks: number): void {
+function validateAction(action: Action, stepNum: number, totalSteps: number): void {
   if (action.type === 'GOTO') {
-    const target = action.task as number;
-    if (target < 1 || target > totalTasks) {
+    const target = action.step as number;
+    if (target < 1 || target > totalSteps) {
       throw new WorkflowSyntaxError(
-        `Task ${String(taskNum)}: GOTO target Task ${String(target)} does not exist (workflow has ${String(totalTasks)} tasks)`
+        `Step ${String(stepNum)}: GOTO target Step ${String(target)} does not exist.`
       );
     }
-    if (target === taskNum) {
+    if (target === stepNum) {
       throw new WorkflowSyntaxError(
-        `Task ${String(taskNum)}: GOTO self creates infinite loop (use RETRY instead)`
+        `Step ${String(stepNum)}: GOTO self creates infinite loop (use RETRY instead)`
       );
     }
   }

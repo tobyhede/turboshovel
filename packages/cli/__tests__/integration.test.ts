@@ -18,16 +18,16 @@ describe('integration: full workflow scenarios', () => {
     await workspace.cleanup();
   });
 
-  it('completes simple two-task workflow', async () => {
+  it('completes simple two-step workflow', async () => {
     // Start workflow
     let result = runCli('start workflows/simple.workflow.md', workspace);
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('Task 1');
+    expect(result.stdout).toContain('Step 1');
 
-    // Advance to task 2
+    // Advance to step 2
     result = runCli('next', workspace);
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('Task 2');
+    expect(result.stdout).toContain('Step 2');
 
     // Complete workflow
     result = runCli('next', workspace);
@@ -51,7 +51,7 @@ describe('integration: full workflow scenarios', () => {
 
     // Pass third attempt
     result = runCli('next --pass', workspace);
-    expect(result.stdout).toContain('Task 2');
+    expect(result.stdout).toContain('Step 2');
 
     // Complete
     result = runCli('next --pass', workspace);
@@ -61,22 +61,22 @@ describe('integration: full workflow scenarios', () => {
   it('handles GOTO flow', async () => {
     runCli('start workflows/goto.workflow.md', workspace);
 
-    // Pass task 1 which GOTOs task 3
+    // Pass step 1 which GOTOs step 3
     let result = runCli('next --pass', workspace);
-    expect(result.stdout).toContain('Task 3');
+    expect(result.stdout).toContain('Step 3');
 
-    // Verify we're at task 3
+    // Verify we're at step 3
     const state = await getActiveState(workspace);
-    expect(state?.task).toBe(3);
+    expect(state?.step).toBe(3);
 
-    // Complete from task 3
+    // Complete from step 3
     result = runCli('next --pass', workspace);
     expect(result.stdout).toContain('complete');
   });
 
   it('handles stash and pop during workflow', async () => {
     runCli('start workflows/simple.workflow.md', workspace);
-    runCli('next', workspace); // Advance to task 2
+    runCli('next', workspace); // Advance to step 2
 
     // Stash
     let result = runCli('stash', workspace);
@@ -89,7 +89,7 @@ describe('integration: full workflow scenarios', () => {
     // Pop
     result = runCli('pop', workspace);
     expect(result.stdout).toContain('restored');
-    expect(result.stdout).toContain('Task 2');
+    expect(result.stdout).toContain('Step 2');
 
     // Continue and complete
     result = runCli('next', workspace);
@@ -99,9 +99,9 @@ describe('integration: full workflow scenarios', () => {
   it('handles agent binding workflow', async () => {
     runCli('start workflows/simple.workflow.md', workspace);
 
-    // Queue tasks for agents
-    runCli('start --task 1', workspace);
-    runCli('start --task 2', workspace);
+    // Queue steps for agents
+    runCli('start --step 1', workspace);
+    runCli('start --step 2', workspace);
 
     // Bind first agent
     let result = runCli('start --agent agent-1', workspace);

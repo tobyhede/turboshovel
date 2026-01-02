@@ -128,7 +128,7 @@ These are derived from real events and run through the full dispatch pipeline (s
 | `SkillEnd` | PostToolUse with `tool_name='Skill'` | `{skill}-end.md` | Clears `active_skill` |
 | `SlashCommandStart` | UserPromptSubmit with `/command` | `{command}-start.md` | Sets `active_command` |
 | `SlashCommandEnd` | Stop (if active_command set) | `{command}-end.md` | Clears `active_command` |
-| `SubagentStart` | PostToolUse with `tool_name='Task'` | `{agent}-start.md` | Stores correlation mapping |
+| `SubagentStart` | PostToolUse with `tool_name='Step'` | `{agent}-start.md` | Stores correlation mapping |
 
 **Key points:**
 - Synthetic events are first-class citizens with full context injection and gate support
@@ -524,7 +524,7 @@ Traditional skills and agents are guidance-only. Workflows enforce process:
 
 - **State Persistence**: Survives context clears and session restarts
 - **Conditional Logic**: PASS/FAIL branches, GOTO for loops, agent-controlled decisions
-- **Task Tracking**: Monitor progress across multiple subtasks
+- **Step Tracking**: Monitor progress across multiple substeps
 - **Retry Management**: Automatic retry counts and limits
 - **Variable Storage**: Pass data between workflow tasks
 
@@ -535,31 +535,31 @@ Traditional skills and agents are guidance-only. Workflows enforce process:
 | Component | Who/What | Role |
 |-----------|----------|------|
 | **Workflow file** | Markdown document | Instructions for Claude (like a skill) |
-| **Workflow CLI** | Human/Claude control | Tracks state: current task, variables, retry count |
-| **Claude** | AI agent | Executes tasks using Task, Bash, Edit, etc. |
+| **Workflow CLI** | Human/Claude control | Tracks state: current step, variables, retry count |
+| **Claude** | AI agent | Executes steps using Step, Bash, Edit, etc. |
 
 **What the workflow provides:**
 - **Persistent state** - survives context clears, session restarts
-- **Progress tracking** - current task, retry counts, variables
-- **CLI control** - human can check status, jump tasks, stop workflow
+- **Progress tracking** - current step, retry counts, variables
+- **CLI control** - human can check status, jump steps, stop workflow
 - **Context injection** - active workflow prompt auto-injects into conversation
 
 **What the workflow does NOT do:**
 - Execute bash commands automatically (Claude runs them)
-- Dispatch agents automatically (Claude uses Task tool)
+- Dispatch agents automatically (Claude uses Step tool)
 - Make decisions automatically (Claude interprets PASS/FAIL outcomes)
 
 **Example flow:**
 ```
 1. Human: tsv start my-workflow.md
-2. Workflow: Sets state to Task 1, injects prompt into conversation
-3. Claude: Reads prompt, executes task using tools (Task, Bash, Edit, etc.)
+2. Workflow: Sets state to Step 1, injects prompt into conversation
+3. Claude: Reads prompt, executes step using tools (Step, Bash, Edit, etc.)
 4. Claude: Determines outcome (PASS/FAIL based on results)
-5. Claude: Runs `tsv next` or `tsv next --step N` (to jump to step N)
+5. Claude: Runs `tsv next` or `tsv next --goto N` (to jump to step N)
 6. Repeat until DONE
 ```
 
-**Key insight:** A workflow is essentially a **skill with persistent state + CLI control**. The task text is guidance for Claude, just like skill instructions.
+**Key insight:** A workflow is essentially a **skill with persistent state + CLI control**. The step text is guidance for Claude, just like skill instructions.
 
 ### Workflow CLI Setup
 
@@ -605,11 +605,11 @@ tsv start my-workflow.md
 # Check status
 tsv status
 
-# Advance to next task
+# Advance to next step
 tsv next
 
 # Jump to specific step
-tsv next --step 3
+tsv next --goto 3
 
 # List all workflows
 tsv list
@@ -620,13 +620,13 @@ tsv stop
 
 ### Orchestration (Subagent Dispatch)
 
-Queue tasks for subagent binding:
+Queue steps for subagent binding:
 ```bash
-tsv start --task 3.A      # Queue task 3.A
-tsv start --agent xyz123  # Bind agent xyz123 to pending task
+tsv start --step 3.1      # Queue step 3.1
+tsv start --agent xyz123  # Bind agent xyz123 to pending step
 ```
 
-Mark task completion:
+Mark step completion:
 ```bash
 tsv next --pass --agent xyz123  # Mark agent as passed
 tsv next --fail --agent xyz123  # Mark agent as failed
@@ -641,16 +641,16 @@ tsv pop     # Resume enforcement
 
 ### Complete Workflow Syntax Reference
 
-#### Task Format
+#### Step Format
 
-Tasks must use H2 headers (`##`) with sequential numbering:
+Steps must use H2 headers (`##`) with sequential numbering:
 
 ```markdown
-## 1. Task title
+## 1. Step title
 
-Task content here.
+Step content here.
 
-## 2. Next task
+## 2. Next step
 
 More content.
 ```
@@ -690,7 +690,7 @@ Prompts guide agent behavior. Two types:
 **Prompt:** Review the implementation for security issues.
 ```
 
-**Implicit prompts** (task description becomes prompt):
+**Implicit prompts** (step description becomes prompt):
 
 ```markdown
 ## 1. Review code
@@ -699,7 +699,7 @@ Review the implementation for security issues.
 Check for SQL injection, XSS, and auth bypasses.
 ```
 
-If no code block and no explicit prompt, all task text becomes the implicit prompt.
+If no code block and no explicit prompt, all step text becomes the implicit prompt.
 
 #### Conditions (PASS/FAIL)
 
@@ -739,24 +739,24 @@ Variables would be set programmatically by agents or workflow logic.
 
 ##### Agent-Controlled Branching (Current Workaround)
 
-Since IF/ELSE is not yet implemented, use agent-driven decisions with the `--step` flag to create loops and conditional branching:
+Since IF/ELSE is not yet implemented, use agent-driven decisions with the `--goto` flag to create loops and conditional branching:
 
 ```markdown
-## 5. Check remaining tasks
+## 5. Check remaining steps
 
-**Prompt:** Check TodoWrite for remaining tasks.
+**Prompt:** Check TodoWrite for remaining steps.
 
-If more tasks remain → `tsv next --step 3`
+If more steps remain → `tsv next --goto 3`
 If all done → `tsv next`
 
 - PASS: CONTINUE
 ```
 
 **How it works:**
-1. Agent reads the task guidance with decision instructions
-2. Agent evaluates the condition (e.g., checks TodoWrite for remaining tasks)
+1. Agent reads the step guidance with decision instructions
+2. Agent evaluates the condition (e.g., checks TodoWrite for remaining steps)
 3. Agent executes the appropriate CLI command:
-   - **Loop back:** `tsv next --step 3` (jumps to step 3)
+   - **Loop back:** `tsv next --goto 3` (jumps to step 3)
    - **Continue forward:** `tsv next` (proceeds to step 6)
 
 **Advantages over parsed IF/ELSE:**
@@ -770,11 +770,11 @@ If all done → `tsv next`
 ```markdown
 ## 3. Execute batch
 
-**Prompt:** Execute next 3 tasks from plan.
+**Prompt:** Execute next 3 steps from plan.
 
 After batch completes, check remaining work:
-- If more batches needed → `tsv next --step 2` (review + loop)
-- If all tasks complete → `tsv next` (continue to finalization)
+- If more batches needed → `tsv next --goto 2` (review + loop)
+- If all steps complete → `tsv next` (continue to finalization)
 
 - PASS: CONTINUE
 - FAIL: RETRY 3
@@ -786,11 +786,11 @@ This pattern is the **recommended approach** until native IF/ELSE support is imp
 
 | Action | Syntax | Description |
 |--------|--------|-------------|
-| `CONTINUE` | `PASS: CONTINUE` | Proceed to next task |
+| `CONTINUE` | `PASS: CONTINUE` | Proceed to next step |
 | `STOP` | `FAIL: STOP` | End workflow with failure |
 | `STOP` with message | `FAIL: STOP "Tests failed"` | End workflow with error message |
 | `DONE` | `PASS: DONE` | End workflow with success |
-| `GOTO` | `FAIL: GOTO 1` | Jump to specific task number |
+| `GOTO` | `FAIL: GOTO 1` | Jump to specific step number |
 | `RETRY` | `FAIL: RETRY` | Retry current task (default: 1 attempt, then STOP) |
 | `RETRY` with max | `FAIL: RETRY 3` | Retry up to 3 times before STOP |
 | `RETRY` with action | `FAIL: RETRY 3 GOTO 2` | Retry up to 3 times, then GOTO 2 |
@@ -962,11 +962,11 @@ tsv start examples/code-review.workflow.md
 - Validates syntax (numbering, GOTO targets)
 - Creates state file
 - Sets as active workflow
-- Displays Task 1 guidance
+- Displays Step 1 guidance
 
 #### `tsv next`
 
-Advance to the next task (task + 1).
+Advance to the next step (step + 1).
 
 ```bash
 tsv next
@@ -974,17 +974,17 @@ tsv next
 
 **Behavior:**
 - Loads active workflow
-- Increments task number
+- Increments step number
 - Resets retry count
-- Displays task guidance
-- Auto-completes if past final task
+- Displays step guidance
+- Auto-completes if past final step
 
-#### `tsv next --step N`
+#### `tsv next --goto N`
 
 Jump to a specific step (for GOTO actions).
 
 ```bash
-tsv next --step 3
+tsv next --goto 3
 ```
 
 **Use cases:**
@@ -993,8 +993,8 @@ tsv next --step 3
 - Skipping optional steps
 
 **Flag clarification:**
-- `--step N` jumps to workflow step N (for GOTO/loops)
-- `--task <id>` specifies which parallel subtask (e.g., 3.A, 3.B) when multiple tasks run concurrently
+- `--goto N` jumps to workflow step N (for GOTO/loops)
+- `--step <id>` specifies which parallel substep (e.g., 3.1, 3.2) when multiple steps run concurrently
 
 #### `tsv status`
 
@@ -1008,15 +1008,11 @@ tsv status
 ```
 Workflow: my-workflow.md
 ID: wf-2025-01-15-abc123
-Task 3: Execute batch
+Step 3: Execute batch
 Retry: 0/3
 Variables: {
   "more_batches": true
 }
-Tasks: 3
-  - task-001: complete
-  - task-002: running
-  - task-003: pending
 ```
 
 #### `tsv stop`
@@ -1042,8 +1038,8 @@ tsv list
 
 **Output:**
 ```
-wf-2025-01-15-abc123 (active): my-workflow.md - Task 3
-wf-2025-01-14-def456: code-review.workflow.md - Task 2
+wf-2025-01-15-abc123 (active): my-workflow.md - Step 3
+wf-2025-01-14-def456: code-review.workflow.md - Step 2
 ```
 
 ### Writing Workflows for Agents
@@ -1318,7 +1314,7 @@ npm run test:integration
 
 **Prompt:** Check if queue has more items.
 
-If queue not empty → `tsv next --step 1`
+If queue not empty → `tsv next --goto 1`
 If queue empty → `tsv next`
 
 - PASS: CONTINUE
@@ -1375,7 +1371,7 @@ Execute implementation plans in batches.
 
 **Prompt:** Check if more batches remain.
 
-If more batches → `tsv next --step 2`
+If more batches remain → `tsv next --goto 2`
 If complete → `tsv next`
 
 - PASS: CONTINUE
@@ -1398,15 +1394,15 @@ If complete → `tsv next`
 Workflows automatically integrate with hook system:
 
 **SubagentStop hook:**
-- Detects task completion
-- Updates task status
+- Detects step completion
+- Updates step status
 - Sets variables (`has_blocked_task`)
 - Suggests `tsv next`
 
 **SessionStart hook:**
 - Auto-injects active workflow context
-- Shows current task and progress
-- Displays variables and tasks
+- Shows current step and progress
+- Displays variables and substeps
 
 **No configuration needed** - works automatically when workflow is active.
 
@@ -1414,7 +1410,7 @@ Workflows automatically integrate with hook system:
 
 Full workflow examples in `examples/`:
 
-- **`code-review.workflow.md`** - Code review dispatch and triage (4 tasks)
+- **`code-review.workflow.md`** - Code review dispatch and triage (4 steps)
 
 See this file for a complete, production-ready workflow pattern.
 

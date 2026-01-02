@@ -4,14 +4,10 @@ import type { SyntheticEvent } from './types.js';
 /**
  * Detect synthetic events from Claude Code primitive events.
  *
- * IMPORTANT: Namespaces are preserved (cipherpowers:verify, not verify)
- *
- * TaskId Format:
+ * StepId Format:
  * - Must start with one or more digits (e.g., "1", "12")
- * - May have optional decimal subtask (e.g., "1.1", "1.2", "12.3")
+ * - May have optional decimal substep (e.g., "1.1", "1.2", "12.3")
  * - Must be followed by a dash separator (-, –, or —)
- * - Examples: "1 - Task", "1.1 - Subtask", "12.3 – Description"
- * - Invalid: ".1 - Task" (no leading digit), "a.1 - Task" (not numeric)
  */
 export function detectSyntheticEvents(input: HookInput): SyntheticEvent[] {
   const events: SyntheticEvent[] = [];
@@ -25,13 +21,12 @@ export function detectSyntheticEvents(input: HookInput): SyntheticEvent[] {
       events.push({
         originalEvent: 'UserPromptSubmit',
         syntheticEvent: 'SlashCommandStart',
-        commandName: cmdMatch[1]  // Preserves namespace if present
+        commandName: cmdMatch[1]
       });
     }
   }
 
   // Stop → SlashCommandEnd
-  // Dispatcher checks active_command before acting
   if (hookEvent === 'Stop') {
     events.push({
       originalEvent: 'Stop',
@@ -45,7 +40,7 @@ export function detectSyntheticEvents(input: HookInput): SyntheticEvent[] {
     events.push({
       originalEvent: 'PreToolUse',
       syntheticEvent: 'SkillStart',
-      skillName  // Full name with namespace
+      skillName
     });
   }
 
@@ -59,19 +54,19 @@ export function detectSyntheticEvents(input: HookInput): SyntheticEvent[] {
     });
   }
 
-  // PostToolUse Task → SubagentStart
-  if (hookEvent === 'PostToolUse' && toolName === 'Task') {
+  // PostToolUse Step/Task → SubagentStart
+  if (hookEvent === 'PostToolUse' && (toolName === 'Step' || toolName === 'Task')) {
     const description = input.tool_input?.description;
     const subagentType = input.tool_input?.subagent_type;
     const toolUseId = input.tool_use_id;
 
-    // Parse TaskId: "1.1 - Description" → "1.1"
-    const taskIdMatch = description ? /^(\d+(?:\.\d+)?)\s*[-–—]/.exec(description) : null;
+    // Parse StepId: "1.1 - Description" → "1.1"
+    const stepIdMatch = description ? /^(\d+(?:\.\d+)?)\s*[-–—]/.exec(description) : null;
 
     events.push({
       originalEvent: 'PostToolUse',
       syntheticEvent: 'SubagentStart',
-      taskId: taskIdMatch?.[1],
+      stepId: stepIdMatch?.[1] || input.step_id || input.task_id,
       toolUseId,
       subagentType
     });

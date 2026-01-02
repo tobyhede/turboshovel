@@ -181,15 +181,15 @@ async function updateSessionState(input: HookInput): Promise<void> {
         break;
 
       case 'SubagentStart':
-        // Store tool_use_id → taskId mapping for correlation
-        if (input.tool_use_id && input.task_id) {
+        // Store tool_use_id → stepId mapping for correlation
+        if (input.tool_use_id && input.step_id) {
           const metadata = (await session.get('metadata'));
-          const mapping = (metadata.toolUseIdToTaskId ?? {}) as Record<string, string>;
+          const mapping = (metadata.toolUseIdToStepId ?? {}) as Record<string, string>;
           await session.set('metadata', {
             ...metadata,
-            toolUseIdToTaskId: {
+            toolUseIdToStepId: {
               ...mapping,
-              [input.tool_use_id]: input.task_id
+              [input.tool_use_id]: input.step_id
             }
           });
         }
@@ -287,7 +287,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
         // Add event-specific fields (slashCommandEndCommand for SlashCommandEnd, synthetic.commandName for others)
         ...(slashCommandEndCommand ? { command: slashCommandEndCommand } : synthetic.commandName && { command: synthetic.commandName }),
         ...(synthetic.skillName && { skill: synthetic.skillName }),
-        ...(synthetic.taskId && { task_id: synthetic.taskId }),
+        ...(synthetic.stepId && { step_id: synthetic.stepId }),
         ...(synthetic.toolUseId && { tool_use_id: synthetic.toolUseId }),
         ...(synthetic.subagentType && { subagent_type: synthetic.subagentType })
       };

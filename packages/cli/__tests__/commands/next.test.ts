@@ -25,15 +25,14 @@ describe('next command', () => {
       runCli('start workflows/simple.workflow.md', workspace);
     });
 
-    it('increments task number', async () => {
+    it('increments step number', async () => {
       runCli('next', workspace);
 
       const state = await getActiveState(workspace);
-      expect(state?.task).toBe(2);
+      expect(state?.step).toBe(2);
     });
 
     it('resets retryCount to 0', async () => {
-      // First set retry count via --retry on a workflow with RETRY configured
       runCli('stop', workspace);
       runCli('start workflows/retry.workflow.md', workspace);
       
@@ -47,19 +46,19 @@ describe('next command', () => {
       expect(state?.retryCount).toBe(0);
     });
 
-    it('updates taskName from workflow', async () => {
+    it('updates stepName from workflow', async () => {
       runCli('next', workspace);
 
       const state = await getActiveState(workspace);
-      expect(state?.taskName).toContain('Second task');
+      expect(state?.stepName).toContain('Second step');
     });
 
-    it('outputs next task info', async () => {
+    it('outputs next step info', async () => {
       const result = runCli('next', workspace);
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Task 2');
-      expect(result.stdout).toContain('Second task');
+      expect(result.stdout).toContain('Step 2');
+      expect(result.stdout).toContain('Second step');
     });
 
     it('fails if no active workflow', async () => {
@@ -69,10 +68,10 @@ describe('next command', () => {
       expect(result.stdout).toContain('No active workflow');
     });
 
-    it('completes workflow when advancing past last task', async () => {
-      runCli('next', workspace); // Task 1 -> 2
+    it('completes workflow when advancing past last step', async () => {
+      runCli('next', workspace); // Step 1 -> 2
 
-      const result = runCli('next', workspace); // Task 2 -> complete
+      const result = runCli('next', workspace); // Step 2 -> complete
       expect(result.stdout).toContain('complete');
 
       const session = await readSession(workspace);
@@ -80,35 +79,34 @@ describe('next command', () => {
     });
   });
 
-  describe('step jump (--step N)', () => {
+  describe('step jump (--goto N)', () => {
     beforeEach(async () => {
       runCli('start workflows/goto.workflow.md', workspace);
     });
 
-    it('jumps to specified task number', async () => {
-      const result = runCli('next --step 3', workspace);
+    it('jumps to specified step number', async () => {
+      const result = runCli('next --goto 3', workspace);
 
       expect(result.exitCode).toBe(0);
       const state = await getActiveState(workspace);
-      expect(state?.task).toBe(3);
+      expect(state?.step).toBe(3);
     });
 
     it('resets retryCount on jump', async () => {
-      // Use a workflow with RETRY configured
       runCli('stop', workspace);
       runCli('start workflows/retry.workflow.md', workspace);
       
       runCli('next --retry', workspace);
-      runCli('next --step 2', workspace);
+      runCli('next --goto 2', workspace);
 
       const state = await getActiveState(workspace);
       expect(state?.retryCount).toBe(0);
     });
 
-    it('outputs jumped task info', async () => {
-      const result = runCli('next --step 3', workspace);
+    it('outputs jumped step info', async () => {
+      const result = runCli('next --goto 3', workspace);
 
-      expect(result.stdout).toContain('Task 3');
+      expect(result.stdout).toContain('Step 3');
       expect(result.stdout).toContain('Jump target');
     });
   });
@@ -125,11 +123,11 @@ describe('next command', () => {
       expect(state?.retryCount).toBe(1);
     });
 
-    it('keeps same task number', async () => {
+    it('keeps same step number', async () => {
       runCli('next --retry', workspace);
 
       const state = await getActiveState(workspace);
-      expect(state?.task).toBe(1);
+      expect(state?.step).toBe(1);
     });
 
     it('outputs retry count', async () => {
@@ -139,7 +137,6 @@ describe('next command', () => {
     });
 
     it('fails when retry limit is exceeded', async () => {
-      // Default retry limit is 3
       runCli('next --retry', workspace); // 1
       runCli('next --retry', workspace); // 2
       runCli('next --retry', workspace); // 3
@@ -156,19 +153,19 @@ describe('next command', () => {
         runCli('start workflows/simple.workflow.md', workspace);
       });
 
-      it('advances to next task', async () => {
+      it('advances to next step', async () => {
         const result = runCli('next --pass', workspace);
 
         expect(result.exitCode).toBe(0);
         const state = await getActiveState(workspace);
-        expect(state?.task).toBe(2);
+        expect(state?.step).toBe(2);
       });
     });
 
     describe('PASS: DONE', () => {
       beforeEach(async () => {
         runCli('start workflows/simple.workflow.md', workspace);
-        runCli('next', workspace); // Advance to task 2 which has PASS: DONE
+        runCli('next', workspace); // Advance to step 2 which has PASS: DONE
       });
 
       it('marks workflow complete', async () => {
@@ -198,19 +195,19 @@ describe('next command', () => {
         runCli('start workflows/goto.workflow.md', workspace);
       });
 
-      it('jumps to specified task', async () => {
+      it('jumps to specified step', async () => {
         const result = runCli('next --pass', workspace);
 
         expect(result.exitCode).toBe(0);
         const state = await getActiveState(workspace);
-        expect(state?.task).toBe(3); // GOTO 3
+        expect(state?.step).toBe(3); // GOTO 3
       });
 
-      it('skips intermediate tasks', async () => {
+      it('skips intermediate steps', async () => {
         runCli('next --pass', workspace);
 
         const state = await getActiveState(workspace);
-        expect(state?.taskName).toContain('Jump target');
+        expect(state?.stepName).toContain('Jump target');
       });
     });
   });
@@ -226,7 +223,7 @@ describe('next command', () => {
 
         const state = await getActiveState(workspace);
         expect(state?.retryCount).toBe(1);
-        expect(state?.task).toBe(1); // Same task
+        expect(state?.step).toBe(1); // Same step
       });
 
       it('outputs retry info', async () => {
@@ -266,12 +263,12 @@ describe('next command', () => {
         runCli('start workflows/fail-goto.workflow.md', workspace);
       });
 
-      it('jumps to specified task on failure', async () => {
+      it('jumps to specified step on failure', async () => {
         const result = runCli('next --fail', workspace);
 
         expect(result.exitCode).toBe(0);
         const state = await getActiveState(workspace);
-        expect(state?.task).toBe(3); // GOTO 3 on FAIL
+        expect(state?.step).toBe(3); // GOTO 3 on FAIL
       });
     });
   });
@@ -284,8 +281,8 @@ describe('next command', () => {
       const parentId = session1.active;
       expect(parentId).not.toBeNull();
 
-      // Queue task and bind agent with child workflow
-      runCli(['start', '--task', '1.1', 'workflows/simple.workflow.md'], workspace);
+      // Queue step and bind agent with child workflow
+      runCli(['start', '--step', '1.1', 'workflows/simple.workflow.md'], workspace);
       runCli(['start', '--agent', 'test-agent', 'workflows/simple.workflow.md'], workspace);
 
       // Verify child is now active
@@ -300,8 +297,8 @@ describe('next command', () => {
       expect(childState?.parentWorkflowId).toBe(parentId);
 
       // Complete child workflow (advance to end)
-      runCli('next', workspace); // Task 1 -> 2
-      runCli('next', workspace); // Task 2 -> complete
+      runCli('next', workspace); // Step 1 -> 2
+      runCli('next', workspace); // Step 2 -> complete
 
       // Parent should now be active
       const session3 = await readSession(workspace);
@@ -318,17 +315,17 @@ describe('next command', () => {
       const session1 = await readSession(workspace);
       const parentId = session1.active;
 
-      // Queue task and bind agent with child workflow
-      runCli(['start', '--task', '1.1', 'workflows/simple.workflow.md'], workspace);
+      // Queue step and bind agent with child workflow
+      runCli(['start', '--step', '1.1', 'workflows/simple.workflow.md'], workspace);
       runCli(['start', '--agent', 'test-agent', 'workflows/simple.workflow.md'], workspace);
 
       // Verify child is now active
       const session2 = await readSession(workspace);
       const childId = session2.active;
 
-      // Mark child workflow task as passed
-      runCli('next --pass', workspace); // Task 1: CONTINUE -> Task 2
-      runCli('next --pass', workspace); // Task 2: DONE -> complete
+      // Mark child workflow step as passed
+      runCli('next --pass', workspace); // Step 1: CONTINUE -> Step 2
+      runCli('next --pass', workspace); // Step 2: DONE -> complete
 
       // Parent should now be active
       const session3 = await readSession(workspace);
@@ -343,8 +340,8 @@ describe('next command', () => {
       const session1 = await readSession(workspace);
       const parentId = session1.active;
 
-      // Queue task and bind agent with child workflow
-      runCli(['start', '--task', '1.1', 'workflows/simple.workflow.md'], workspace);
+      // Queue step and bind agent with child workflow
+      runCli(['start', '--step', '1.1', 'workflows/simple.workflow.md'], workspace);
       runCli(['start', '--agent', 'test-agent', 'workflows/simple.workflow.md'], workspace);
 
       // Child workflow is now active - DO NOT complete it

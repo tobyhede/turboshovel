@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { MAX_TASK_NUMBER, type TaskNumber, type TaskId } from './workflow/types.js';
+import { MAX_STEP_NUMBER, type StepNumber, type StepId } from './workflow/types.js';
 
 /**
- * Zod schema for tool_input in Task tool calls
+ * Zod schema for tool_input in Step tool calls
  */
 const ToolInputSchema = z
   .object({
@@ -42,7 +42,8 @@ export const HookInputSchema = z.object({
   // Synthetic event fields
   tool_use_id: z.string().optional(),
   tool_response: z.unknown().optional(),
-  task_id: z.string().optional(),
+  step_id: z.string().optional(),
+  task_id: z.string().optional(), // Keep for Tool Protocol compatibility during synthetic event detection
   subagent_type: z.string().optional()
 });
 
@@ -80,13 +81,6 @@ export function parseHookInput(json: string): ParseResult<HookInput> {
 
 /**
  * Session State Schema - Runtime Validation for Persisted State
- *
- * API Contract:
- * - All fields have defaults for backward compatibility
- * - File not found: Silent initialization (expected on first run)
- * - Parse/validation error: Log warning, reinitialize
- * - metadata uses Record<string, unknown> - callers must narrow types
- * - stashedWorkflowId NOT included - workflow-specific, lives in WorkflowStateManager
  */
 export const SessionStateSchema = z.object({
   session_id: z.string().default(() => {
@@ -104,48 +98,40 @@ export const SessionStateSchema = z.object({
 export type ValidatedSessionState = z.infer<typeof SessionStateSchema>;
 
 /**
- * Zod schema for TaskNumber branded type
- * Validates and transforms plain number to branded TaskNumber
+ * Zod schema for StepNumber branded type
+ * Validates and transforms plain number to branded StepNumber
  */
-const TaskNumberSchema = z
+const StepNumberSchema = z
   .number()
-  .int('Task number must be an integer')
-  .positive('Task number must be positive')
-  .max(MAX_TASK_NUMBER, 'Task number exceeds maximum')
-  .transform((n): TaskNumber => n as TaskNumber);
+  .int('Step number must be an integer')
+  .positive('Step number must be positive')
+  .max(MAX_STEP_NUMBER, 'Step number exceeds maximum')
+  .transform((n): StepNumber => n as StepNumber);
 
 /**
- * Zod schema for TaskId branded type
- * Validates object structure and transforms to branded TaskId
+ * Zod schema for StepId branded type
+ * Validates object structure and transforms to branded StepId
  */
-const TaskIdSchema = z
+const StepIdSchema = z
   .object({
-    task: TaskNumberSchema,
-    subtask: z.string().optional(),
+    step: StepNumberSchema,
+    substep: z.string().optional(),
   })
-  .transform((obj): TaskId => obj as TaskId);
+  .transform((obj): StepId => obj as StepId);
 
 /**
- * Schema for pending task with backward compatibility.
- * Accepts:
- * - New format: { taskId: TaskId, workflow?: string }
- * - Legacy format: TaskId (transforms to { taskId, workflow: undefined })
+ * Schema for pending step.
  */
-const PendingTaskSchema = z.union([
-  // New format (preferred)
-  z.object({
-    taskId: TaskIdSchema,
-    workflow: z.string().optional()
-  }),
-  // Legacy format - transforms on parse
-  TaskIdSchema.transform(taskId => ({ taskId, workflow: undefined }))
-]);
+const PendingStepSchema = z.object({
+  stepId: StepIdSchema,
+  workflow: z.string().optional()
+});
 
 /**
- * Zod schema for SubtaskState
- * Tracks runtime state of a subtask within a task
+ * Zod schema for SubstepState
+ * Tracks runtime state of a substep within a step
  */
-const SubtaskStateSchema = z.object({
+const SubstepStateSchema = z.object({
   id: z.string(),
   status: z.enum(['pending', 'running', 'done']),
   agentId: z.string().optional(),
@@ -154,41 +140,39 @@ const SubtaskStateSchema = z.object({
 
 /**
  * Workflow State Schema - Runtime Validation for Persisted WorkflowState
- *
- * Validates the structure of workflow state files to ensure data integrity
- * when loading from disk. Uses safeParse() for non-fatal validation errors.
  */
 export const WorkflowStateSchema = z.object({
   id: z.string(),
   workflow: z.string(),
-  task: TaskNumberSchema,
-  taskName: z.string(),
+  step: StepNumberSchema,
+  stepName: z.string(),
   retryCount: z.number().nonnegative().int(),
   variables: z.record(z.string(), z.union([z.boolean(), z.number(), z.string()])),
-  tasks: z.array(z.object({
+  steps: z.array(z.object({
     id: z.string(),
     status: z.enum(['pending', 'running', 'complete', 'blocked']),
     subagentType: z.string().optional(),
     startedAt: z.string().optional(),
     completedAt: z.string().optional()
   })),
-  pendingTasks: z.array(PendingTaskSchema).readonly(),
+  pendingSteps: z.array(PendingStepSchema).readonly(),
   agentBindings: z.record(z.string(), z.object({
-    taskId: TaskIdSchema,
+    stepId: StepIdSchema,
     childWorkflowId: z.string().optional(),
     status: z.enum(['running', 'done', 'stopped']),
     result: z.enum(['pass', 'fail']).optional()
   })),
-  subtaskStates: z.array(SubtaskStateSchema).optional(),
+  substepStates: z.array(SubstepStateSchema).optional(),
   agentId: z.string().optional(),
   parentWorkflowId: z.string().optional(),
-  parentTaskId: TaskIdSchema.optional(),
+  parentStepId: StepIdSchema.optional(),
   nested: z.object({
     workflow: z.string(),
     instanceId: z.string()
   }).optional(),
   startedAt: z.string(),
-  updatedAt: z.string()
+  updatedAt: z.string(),
+  snapshot: z.unknown().optional() // XState snapshot
 });
 
 export type ValidatedWorkflowState = z.infer<typeof WorkflowStateSchema>;

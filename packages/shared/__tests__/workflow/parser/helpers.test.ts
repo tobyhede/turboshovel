@@ -52,7 +52,7 @@ describe('parseAction RETRY with exhaustion', () => {
     expect(result).toEqual({
       type: 'RETRY',
       max: 3,
-      then: { type: 'GOTO', task: expect.any(Number) }
+      then: { type: 'GOTO', step: 2 }
     });
   });
 
@@ -61,7 +61,7 @@ describe('parseAction RETRY with exhaustion', () => {
     expect(result).toEqual({
       type: 'RETRY',
       max: 1,
-      then: { type: 'GOTO', task: expect.any(Number) }
+      then: { type: 'GOTO', step: 2 }
     });
   });
 

@@ -1,11 +1,11 @@
-## 1. Retry task
+## 1. Retry step
 
 May need multiple attempts.
 
 - PASS: CONTINUE
 - FAIL: RETRY 3
 
-## 2. Final task
+## 2. Final step
 
 Complete workflow.
 

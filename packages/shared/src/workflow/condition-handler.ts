@@ -1,38 +1,33 @@
-import type { Task, TaskNumber, SubtaskState, Action, NonRetryAction } from './types.js';
+import type { Step, StepNumber, SubstepState, Action, NonRetryAction } from './types.js';
 
 export interface ConditionResult {
   action: 'retry' | 'blocked' | 'goto' | 'continue' | 'done';
   newRetryCount?: number;
-  gotoTask?: TaskNumber;
+  gotoStep?: StepNumber;
   message?: string;
 }
 
 /**
- * Evaluate the FAIL condition for a task.
- *
- * @param task - The task with conditions
- * @param currentRetryCount - Current retry count
- * @returns Action to take based on FAIL condition
+ * Evaluate the FAIL condition for a step.
  */
 export function evaluateFailCondition(
-  task: Task,
+  step: Step,
   currentRetryCount: number
 ): ConditionResult {
-  if (!task.conditions) {
+  if (!step.conditions) {
     return {
       action: 'blocked',
-      message: 'No FAIL condition defined for task'
+      message: 'No FAIL condition defined for step'
     };
   }
 
-  const failAction = task.conditions.fail;
+  const failAction = step.conditions.fail;
 
   switch (failAction.type) {
     case 'RETRY': {
       const newCount = currentRetryCount + 1;
 
       if (newCount > failAction.max) {
-        // Evaluate the exhaustion action
         return evaluateNonRetryAction(failAction.then);
       }
 
@@ -51,12 +46,10 @@ export function evaluateFailCondition(
     case 'GOTO':
       return {
         action: 'goto',
-        gotoTask: failAction.task
+        gotoStep: failAction.step
       };
 
     case 'CONTINUE':
-      return { action: 'continue' };
-
     case 'DONE':
       return { action: 'continue' };
 
@@ -69,18 +62,14 @@ export function evaluateFailCondition(
 }
 
 /**
- * Evaluate the PASS condition for a task.
- *
- * @param task - The task with conditions
- * @returns Action to take based on PASS condition
+ * Evaluate the PASS condition for a step.
  */
-export function evaluatePassCondition(task: Task): ConditionResult {
-  if (!task.conditions) {
-    // Default: PASS means continue to next task
+export function evaluatePassCondition(step: Step): ConditionResult {
+  if (!step.conditions) {
     return { action: 'continue' };
   }
 
-  const passAction = task.conditions.pass;
+  const passAction = step.conditions.pass;
 
   switch (passAction.type) {
     case 'DONE':
@@ -89,7 +78,7 @@ export function evaluatePassCondition(task: Task): ConditionResult {
     case 'GOTO':
       return {
         action: 'goto',
-        gotoTask: passAction.task
+        gotoStep: passAction.step
       };
 
     case 'STOP':
@@ -99,10 +88,7 @@ export function evaluatePassCondition(task: Task): ConditionResult {
       };
 
     case 'CONTINUE':
-      return { action: 'continue' };
-
     case 'RETRY':
-      // RETRY doesn't make sense for PASS, treat as continue
       return { action: 'continue' };
 
     default:
@@ -110,39 +96,24 @@ export function evaluatePassCondition(task: Task): ConditionResult {
   }
 }
 
-
 /**
- * Evaluate aggregation conditions across subtask results.
- *
- * Returns null if not all subtasks are complete (can't evaluate yet).
- * Otherwise returns the appropriate ConditionResult based on:
- * - all: true  → PASS ALL, FAIL ANY
- * - all: false → PASS ANY, FAIL ALL
+ * Evaluate aggregation conditions across substep results.
  */
-export function evaluateSubtaskAggregation(
-  subtaskStates: readonly SubtaskState[],
+export function evaluateSubstepAggregation(
+  substepStates: readonly SubstepState[],
   conditions: { all: boolean; pass: Action; fail: Action }
 ): ConditionResult | null {
-  // Check if all subtasks are done
-  const allDone = subtaskStates.every(s => s.status === 'done');
-  if (!allDone) {
-    return null;
-  }
+  const allDone = substepStates.every(s => s.status === 'done');
+  if (!allDone) return null;
 
-  const passCount = subtaskStates.filter(s => s.result === 'pass').length;
+  const passCount = substepStates.filter(s => s.result === 'pass').length;
 
   if (conditions.all) {
-    // PASS ALL, FAIL ANY
-    const anyFailed = subtaskStates.some(s => s.result === 'fail');
-    if (anyFailed) {
-      return evaluateAction(conditions.fail);
-    }
+    const anyFailed = substepStates.some(s => s.result === 'fail');
+    if (anyFailed) return evaluateAction(conditions.fail);
     return evaluateAction(conditions.pass);
   } else {
-    // PASS ANY, FAIL ALL
-    if (passCount > 0) {
-      return evaluateAction(conditions.pass);
-    }
+    if (passCount > 0) return evaluateAction(conditions.pass);
     return evaluateAction(conditions.fail);
   }
 }
@@ -154,16 +125,13 @@ function evaluateNonRetryAction(action: NonRetryAction): ConditionResult {
     case 'STOP':
       return { action: 'blocked', message: action.message };
     case 'GOTO':
-      return { action: 'goto', gotoTask: action.task };
+      return { action: 'goto', gotoStep: action.step };
     case 'DONE':
       return { action: 'done' };
   }
 }
 
 function evaluateAction(action: Action): ConditionResult {
-  if (action.type === 'RETRY') {
-    // For aggregation, RETRY means retry (no max check here)
-    return { action: 'retry' };
-  }
+  if (action.type === 'RETRY') return { action: 'retry' };
   return evaluateNonRetryAction(action);
 }

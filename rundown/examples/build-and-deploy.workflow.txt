@@ -1,0 +1,63 @@
+> tsv start rundown/examples/build-and-deploy.workflow.md
+
+Workflow: rundown/examples/build-and-deploy.workflow.md
+State: .claude/turboshovel/workflows/wf-2026-01-01-g50rvs.json
+Tasks: {N}
+
+## 1. Install project dependencies
+
+// Execute: tsv test npm install
+{output}
+
+
+---------------------------------------------
+
+
+> tsv next
+
+## 2. Run lint
+
+// Execute: tsv test npm lint
+{output}
+
+
+---------------------------------------------
+
+
+> tsv next
+
+## 3. Run tests
+
+// Execute: tsv test npm test
+{output}
+
+
+---------------------------------------------
+
+
+> tsv next
+
+## 4. Build
+
+// Execute: tsv test --result fail --result pass npm run build
+{output}
+
+// Execute: tsv test --result fail --result pass npm run build
+{output}
+
+
+---------------------------------------------
+
+
+> tsv next
+
+## 5. Deploy
+
+// Execute: tsv test --result fail --result fail --result pass npm run deploy
+{output}
+
+// Execute: tsv test --result fail --result fail --result pass npm run deploy
+{output}
+
+// Execute: tsv test --result fail --result fail --result pass npm run deploy
+{output}

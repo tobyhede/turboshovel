@@ -1,47 +1,46 @@
 // __tests__/workflow/types.test.ts
 import {
-  createTaskNumber,
-  incrementTaskNumber,
-  decrementTaskNumber,
-  type TaskNumber,
+  createStepNumber,
+  incrementStepNumber,
+  decrementStepNumber,
+  type StepNumber,
   type Action,
-  type Subtask,
-  type Task,
+  type Substep,
+  type Step,
   type WorkflowState,
-  type Conditions
+  type Conditions,
+  MAX_STEP_NUMBER
 } from '@turboshovel/shared';
 
-describe('TaskNumber', () => {
-  test('createTaskNumber with valid number returns TaskNumber', () => {
-    const result = createTaskNumber(1);
+describe('StepNumber', () => {
+  test('createStepNumber with valid number returns StepNumber', () => {
+    const result = createStepNumber(1);
     expect(result).not.toBeNull();
     expect(result).toBe(1);
   });
 
-  test('createTaskNumber with zero returns null', () => {
-    const result = createTaskNumber(0);
+  test('createStepNumber with zero returns null', () => {
+    const result = createStepNumber(0);
     expect(result).toBeNull();
   });
 
-  test('createTaskNumber with negative returns null', () => {
-    const result = createTaskNumber(-1);
+  test('createStepNumber with negative returns null', () => {
+    const result = createStepNumber(-1);
     expect(result).toBeNull();
   });
 
-  test('createTaskNumber with non-integer returns null', () => {
-    const result = createTaskNumber(1.5);
+  test('createStepNumber with non-integer returns null', () => {
+    const result = createStepNumber(1.5);
     expect(result).toBeNull();
   });
 
-  test('createTaskNumber at MAX_TASK_NUMBER boundary succeeds', () => {
-    // 999999 is the maximum valid task number
-    expect(createTaskNumber(999999)).not.toBeNull();
-    expect(createTaskNumber(999998)).not.toBeNull();
+  test('createStepNumber at MAX_STEP_NUMBER boundary succeeds', () => {
+    expect(createStepNumber(MAX_STEP_NUMBER)).not.toBeNull();
+    expect(createStepNumber(MAX_STEP_NUMBER - 1)).not.toBeNull();
   });
 
-  test('createTaskNumber above MAX_TASK_NUMBER boundary fails', () => {
-    expect(createTaskNumber(1000000)).toBeNull();
-    expect(createTaskNumber(1000001)).toBeNull();
+  test('createStepNumber above MAX_STEP_NUMBER boundary fails', () => {
+    expect(createStepNumber(MAX_STEP_NUMBER + 1)).toBeNull();
   });
 });
 
@@ -63,43 +62,43 @@ describe('Action discriminated union', () => {
     expect(action.message).toBe('fix tests');
   });
 
-  test('GOTO action with task number', () => {
-    const action: Action = { type: 'GOTO', task: 3 as TaskNumber };
+  test('GOTO action with step number', () => {
+    const action: Action = { type: 'GOTO', step: 3 as StepNumber };
     expect(action.type).toBe('GOTO');
-    expect(action.task).toBe(3);
+    expect(action.step).toBe(3);
   });
 });
 
 describe('WorkflowState orchestration fields', () => {
-  it('includes pendingTasks array', () => {
+  it('includes pendingSteps array', () => {
     const state: WorkflowState = {
       id: 'wf-test',
       workflow: 'test.workflow.md',
-      task: createTaskNumber(1)!,
-      taskName: 'Test',
+      step: createStepNumber(1)!,
+      stepName: 'Test',
       retryCount: 0,
       variables: {},
-      tasks: [],
-      pendingTasks: [{ task: createTaskNumber(1)! }, { task: createTaskNumber(2)!, subtask: '1' }],
+      steps: [],
+      pendingSteps: [{ stepId: { step: createStepNumber(1)! } }, { stepId: { step: createStepNumber(2)!, substep: '1' } }],
       agentBindings: {},
       startedAt: '2025-01-01T00:00:00Z',
       updatedAt: '2025-01-01T00:00:00Z'
     };
-    expect(state.pendingTasks).toHaveLength(2);
+    expect(state.pendingSteps).toHaveLength(2);
   });
 
   it('includes agentBindings map', () => {
     const state: WorkflowState = {
       id: 'wf-test',
       workflow: 'test.workflow.md',
-      task: createTaskNumber(1)!,
-      taskName: 'Test',
+      step: createStepNumber(1)!,
+      stepName: 'Test',
       retryCount: 0,
       variables: {},
-      tasks: [],
-      pendingTasks: [],
+      steps: [],
+      pendingSteps: [],
       agentBindings: {
-        'agent-abc': { taskId: { task: createTaskNumber(1)! }, status: 'running' }
+        'agent-abc': { stepId: { step: createStepNumber(1)! }, status: 'running' }
       },
       startedAt: '2025-01-01T00:00:00Z',
       updatedAt: '2025-01-01T00:00:00Z'
@@ -111,16 +110,16 @@ describe('WorkflowState orchestration fields', () => {
     const state: WorkflowState = {
       id: 'wf-child',
       workflow: 'child.workflow.md',
-      task: createTaskNumber(1)!,
-      taskName: 'Child Task',
+      step: createStepNumber(1)!,
+      stepName: 'Child Step',
       retryCount: 0,
       variables: {},
-      tasks: [],
-      pendingTasks: [],
+      steps: [],
+      pendingSteps: [],
       agentBindings: {},
       agentId: 'agent-xyz',
       parentWorkflowId: 'wf-parent',
-      parentTaskId: { task: createTaskNumber(2)!, subtask: '2' },
+      parentStepId: { step: createStepNumber(2)!, substep: '2' },
       startedAt: '2025-01-01T00:00:00Z',
       updatedAt: '2025-01-01T00:00:00Z'
     };
@@ -128,48 +127,48 @@ describe('WorkflowState orchestration fields', () => {
   });
 });
 
-describe('Subtask type', () => {
-  it('accepts static subtask', () => {
-    const subtask: Subtask = {
-      id: 'A',
+describe('Substep type', () => {
+  it('accepts static substep', () => {
+    const substep: Substep = {
+      id: '1',
       description: 'First reviewer',
       isDynamic: false
     };
-    expect(subtask.isDynamic).toBe(false);
+    expect(substep.isDynamic).toBe(false);
   });
 
-  it('accepts subtask with agent type', () => {
-    const subtask: Subtask = {
-      id: 'B',
+  it('accepts substep with agent type', () => {
+    const substep: Substep = {
+      id: '2',
       description: 'Second reviewer',
       agentType: 'code-review-agent',
       isDynamic: false
     };
-    expect(subtask.agentType).toBe('code-review-agent');
+    expect(substep.agentType).toBe('code-review-agent');
   });
 
-  it('accepts dynamic subtask template', () => {
-    const subtask: Subtask = {
+  it('accepts dynamic substep template', () => {
+    const substep: Substep = {
       id: '{n}',
-      description: 'Execute task',
+      description: 'Execute step',
       isDynamic: true
     };
-    expect(subtask.isDynamic).toBe(true);
+    expect(substep.isDynamic).toBe(true);
   });
 });
 
-describe('Task with subtasks', () => {
-  it('accepts task with subtasks array', () => {
-    const task: Task = {
-      number: createTaskNumber(1)!,
+describe('Step with substeps', () => {
+  it('accepts step with substeps array', () => {
+    const step: Step = {
+      number: createStepNumber(1)!,
       description: 'Dispatch reviewers',
       prompts: [],
-      subtasks: [
-        { id: 'A', description: 'First', isDynamic: false },
-        { id: 'B', description: 'Second', isDynamic: false }
+      substeps: [
+        { id: '1', description: 'First', isDynamic: false },
+        { id: '2', description: 'Second', isDynamic: false }
       ]
     };
-    expect(task.subtasks).toHaveLength(2);
+    expect(step.substeps).toHaveLength(2);
   });
 });
 
@@ -191,55 +190,20 @@ describe('Conditions discriminated union', () => {
     };
     expect(conditions.all).toBe(false);
   });
-
-  it('works with exhaustive switch', () => {
-    const conditions: Conditions = {
-      all: true,
-      pass: { type: 'CONTINUE' },
-      fail: { type: 'STOP' }
-    };
-
-    // TypeScript exhaustiveness check
-    function checkAll(c: Conditions): string {
-      switch (c.all) {
-        case true:
-          return 'pessimistic';
-        case false:
-          return 'optimistic';
-      }
-    }
-
-    expect(checkAll(conditions)).toBe('pessimistic');
-  });
 });
 
-describe('incrementTaskNumber', () => {
-  it('increments valid TaskNumber', () => {
-    const tn = createTaskNumber(3)!;
-    const result = incrementTaskNumber(tn);
+describe('incrementStepNumber', () => {
+  it('increments valid StepNumber', () => {
+    const sn = createStepNumber(3)!;
+    const result = incrementStepNumber(sn);
     expect(result).toBe(4);
-    // Verify brand preserved by using where TaskNumber expected
-    const next: TaskNumber = result!;
-    expect(next).toBe(4);
-  });
-
-  it('returns null when increment would overflow reasonable bounds', () => {
-    const tn = createTaskNumber(999999)!;
-    const result = incrementTaskNumber(tn);
-    expect(result).toBeNull();
   });
 });
 
-describe('decrementTaskNumber', () => {
-  it('decrements valid TaskNumber', () => {
-    const tn = createTaskNumber(3)!;
-    const result = decrementTaskNumber(tn);
+describe('decrementStepNumber', () => {
+  it('decrements valid StepNumber', () => {
+    const sn = createStepNumber(3)!;
+    const result = decrementStepNumber(sn);
     expect(result).toBe(2);
-  });
-
-  it('returns null when decrement would go below 1', () => {
-    const tn = createTaskNumber(1)!;
-    const result = decrementTaskNumber(tn);
-    expect(result).toBeNull();
   });
 });

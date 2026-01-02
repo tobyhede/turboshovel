@@ -48,9 +48,9 @@ Complete the work.
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('Started workflow');
 
-    // 3. Queue task with workflow
-    result = runCli(['start', '--task', '1.1', 'workflows/child.workflow.md'], workspace);
-    expect(result.stdout).toContain('Task 1.1 queued');
+    // 3. Queue step with workflow
+    result = runCli(['start', '--step', '1.1', 'workflows/child.workflow.md'], workspace);
+    expect(result.stdout).toContain('Step 1.1 queued');
 
     // 4. Bind agent - should create child workflow
     result = runCli(['start', '--agent', 'test-agent'], workspace);

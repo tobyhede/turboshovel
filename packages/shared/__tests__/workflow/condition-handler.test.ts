@@ -1,72 +1,72 @@
-import { createTaskNumber } from '../../src/workflow/types.js';
-import { evaluateFailCondition, evaluateSubtaskAggregation } from '../../src/workflow/condition-handler.js';
-import type { SubtaskState } from '../../src/workflow/types.js';
+import { createStepNumber } from '../../src/workflow/types.js';
+import { evaluateFailCondition, evaluateSubstepAggregation } from '../../src/workflow/condition-handler.js';
+import type { SubstepState } from '../../src/workflow/types.js';
 
-describe('evaluateSubtaskAggregation', () => {
+describe('evaluateSubstepAggregation', () => {
   // PASS ALL mode (all: true)
   const passAllConditions = {
     all: true,
     pass: { type: 'CONTINUE' as const },
-    fail: { type: 'STOP' as const, message: 'Subtask failed' }
+    fail: { type: 'STOP' as const, message: 'Substep failed' }
   };
 
   // PASS ANY mode (all: false)
   const passAnyConditions = {
     all: false,
     pass: { type: 'CONTINUE' as const },
-    fail: { type: 'STOP' as const, message: 'All subtasks failed' }
+    fail: { type: 'STOP' as const, message: 'All substeps failed' }
   };
 
   describe('PASS ALL mode', () => {
-    it('returns null when subtasks still running', () => {
-      const states: SubtaskState[] = [
+    it('returns null when substeps still running', () => {
+      const states: SubstepState[] = [
         { id: '1', status: 'done', result: 'pass' },
         { id: '2', status: 'running' }
       ];
 
-      const result = evaluateSubtaskAggregation(states, passAllConditions);
+      const result = evaluateSubstepAggregation(states, passAllConditions);
       expect(result).toBeNull();
     });
 
-    it('returns pass action when ALL subtasks pass', () => {
-      const states: SubtaskState[] = [
+    it('returns pass action when ALL substeps pass', () => {
+      const states: SubstepState[] = [
         { id: '1', status: 'done', result: 'pass' },
         { id: '2', status: 'done', result: 'pass' }
       ];
 
-      const result = evaluateSubtaskAggregation(states, passAllConditions);
+      const result = evaluateSubstepAggregation(states, passAllConditions);
       expect(result?.action).toBe('continue');
     });
 
-    it('returns fail action when ANY subtask fails', () => {
-      const states: SubtaskState[] = [
+    it('returns fail action when ANY substep fails', () => {
+      const states: SubstepState[] = [
         { id: '1', status: 'done', result: 'pass' },
         { id: '2', status: 'done', result: 'fail' }
       ];
 
-      const result = evaluateSubtaskAggregation(states, passAllConditions);
+      const result = evaluateSubstepAggregation(states, passAllConditions);
       expect(result?.action).toBe('blocked');
     });
   });
 
   describe('PASS ANY mode', () => {
-    it('returns pass action when ANY subtask passes', () => {
-      const states: SubtaskState[] = [
+    it('returns pass action when ANY substep passes', () => {
+      const states: SubstepState[] = [
         { id: '1', status: 'done', result: 'fail' },
         { id: '2', status: 'done', result: 'pass' }
       ];
 
-      const result = evaluateSubtaskAggregation(states, passAnyConditions);
+      const result = evaluateSubstepAggregation(states, passAnyConditions);
       expect(result?.action).toBe('continue');
     });
 
-    it('returns fail action when ALL subtasks fail', () => {
-      const states: SubtaskState[] = [
+    it('returns fail action when ALL substeps fail', () => {
+      const states: SubstepState[] = [
         { id: '1', status: 'done', result: 'fail' },
         { id: '2', status: 'done', result: 'fail' }
       ];
 
-      const result = evaluateSubtaskAggregation(states, passAnyConditions);
+      const result = evaluateSubstepAggregation(states, passAnyConditions);
       expect(result?.action).toBe('blocked');
     });
   });
@@ -74,24 +74,24 @@ describe('evaluateSubtaskAggregation', () => {
 
 describe('evaluateFailCondition with RETRY exhaustion', () => {
   it('returns GOTO when retries exhausted with GOTO action', () => {
-    const task = {
-      number: createTaskNumber(1)!,
+    const step = {
+      number: createStepNumber(1)!,
       description: 'Test',
       prompts: [],
       conditions: {
         all: true as const,
         pass: { type: 'CONTINUE' as const },
-        fail: { type: 'RETRY' as const, max: 2, then: { type: 'GOTO' as const, task: createTaskNumber(5)! } }
+        fail: { type: 'RETRY' as const, max: 2, then: { type: 'GOTO' as const, step: createStepNumber(5)! } }
       }
     };
 
-    const result = evaluateFailCondition(task, 2);
-    expect(result).toEqual({ action: 'goto', gotoTask: createTaskNumber(5) });
+    const result = evaluateFailCondition(step, 2);
+    expect(result).toEqual({ action: 'goto', gotoStep: createStepNumber(5) });
   });
 
   it('returns continue when retries exhausted with CONTINUE action', () => {
-    const task = {
-      number: createTaskNumber(1)!,
+    const step = {
+      number: createStepNumber(1)!,
       description: 'Test',
       prompts: [],
       conditions: {
@@ -101,13 +101,13 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       }
     };
 
-    const result = evaluateFailCondition(task, 1);
+    const result = evaluateFailCondition(step, 1);
     expect(result).toEqual({ action: 'continue' });
   });
 
   it('returns blocked with message when retries exhausted with STOP', () => {
-    const task = {
-      number: createTaskNumber(1)!,
+    const step = {
+      number: createStepNumber(1)!,
       description: 'Test',
       prompts: [],
       conditions: {
@@ -117,13 +117,13 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       }
     };
 
-    const result = evaluateFailCondition(task, 3);
+    const result = evaluateFailCondition(step, 3);
     expect(result).toEqual({ action: 'blocked', message: 'Build failed' });
   });
 
   it('returns done when retries exhausted with DONE action', () => {
-    const task = {
-      number: createTaskNumber(1)!,
+    const step = {
+      number: createStepNumber(1)!,
       description: 'Test',
       prompts: [],
       conditions: {
@@ -133,13 +133,13 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       }
     };
 
-    const result = evaluateFailCondition(task, 2);
+    const result = evaluateFailCondition(step, 2);
     expect(result).toEqual({ action: 'done' });
   });
 
   it('returns retry when not yet exhausted', () => {
-    const task = {
-      number: createTaskNumber(1)!,
+    const step = {
+      number: createStepNumber(1)!,
       description: 'Test',
       prompts: [],
       conditions: {
@@ -149,7 +149,7 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       }
     };
 
-    const result = evaluateFailCondition(task, 1);
+    const result = evaluateFailCondition(step, 1);
     expect(result).toEqual({ action: 'retry', newRetryCount: 2 });
   });
 });

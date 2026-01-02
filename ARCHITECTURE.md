@@ -101,41 +101,41 @@ plugin/
 ├── hooks.json                  # Hook registration (routes to CLI)
 ├── turboshovel.json            # Plugin default gates configuration
 └── core/
-    ├── src/
-    │   ├── cli.ts              # Entry point
-    │   ├── dispatcher.ts       # Main dispatch logic
-    │   ├── context.ts          # Context file discovery/injection
-    │   ├── config.ts           # Config loading/merging
-    │   ├── gate-loader.ts      # Gate execution
-    │   ├── action-handler.ts   # Action processing
-    │   ├── session.ts          # Session state management
-    │   ├── logger.ts           # Debug logging
-    │   ├── schemas.ts          # Zod validation schemas
-    │   ├── types.ts            # TypeScript interfaces
-    │   ├── errors.ts           # Custom error types
-    │   ├── utils.ts            # Utility functions
-    │   ├── cli/                # CLI subcommands
-    │   │   └── workflow-cli.ts # Workflow CLI entry point
-    │   ├── gates/              # Built-in TypeScript gates
-    │   │   ├── index.ts        # Gate registry
-    │   │   └── plugin-path.ts
-    │   └── workflow/           # Workflow system
-    │       ├── index.ts        # Workflow exports
-    │       ├── state.ts        # Workflow state management
-    │       ├── types.ts        # Workflow type definitions
-    │       ├── context.ts      # Workflow context injection
-    │       ├── evaluation.ts   # Step evaluation
-    │       ├── task-id.ts      # Task ID parsing
-    │       ├── parser/         # Workflow file parsing
-    │       │   ├── index.ts
-    │       │   ├── parser.ts
-    │       │   ├── helpers.ts
-    │       │   └── types.ts
-    │       └── hooks/          # Workflow hook handlers
-    │           ├── index.ts
-    │           ├── subagent-start.ts
-    │           ├── subagent-stop.ts
-    │           └── task-tracker.ts
+    └── src/
+        ├── cli.ts              # Entry point
+        ├── dispatcher.ts       # Main dispatch logic
+        ├── context.ts          # Context file discovery/injection
+        ├── config.ts           # Config loading/merging
+        ├── gate-loader.ts      # Gate execution
+        ├── action-handler.ts   # Action processing
+        ├── session.ts          # Session state management
+        ├── logger.ts           # Debug logging
+        ├── schemas.ts          # Zod validation schemas
+        ├── types.ts            # TypeScript interfaces
+        ├── errors.ts           # Custom error types
+        ├── utils.ts            # Utility functions
+        ├── cli/                # CLI subcommands
+        │   └── workflow-cli.ts # Workflow CLI entry point
+        ├── gates/              # Built-in TypeScript gates
+        │   ├── index.ts        # Gate registry
+        │   └── plugin-path.ts
+        └── workflow/           # Workflow system
+            ├── index.ts        # Workflow exports
+            ├── state.ts        # Workflow state management
+            ├── types.ts        # Workflow type definitions
+            ├── context.ts      # Workflow context injection
+            ├── compiler.ts     # XState Machine compiler
+            ├── step-id.ts      # Step ID parsing
+            ├── parser/         # Workflow file parsing
+            │   ├── index.ts
+            │   ├── parser.ts
+            │   ├── helpers.ts
+            │   └── types.ts
+            └── hooks/          # Workflow hook handlers
+                ├── index.ts
+                ├── subagent-start.ts
+                ├── subagent-stop.ts
+                └── step-tracker.ts
     └── dist/                   # Compiled JavaScript output
 
 examples/                       # Project root examples
@@ -348,10 +348,10 @@ Active workflow tracking (separate from hook session):
 State persists in `.claude/turboshovel/session.json` and tracks:
 - Active workflow ID
 - Stashed workflow ID (for paused enforcement)
-- Current task
+- Current step
 - Workflow variables
 
-**Workflow stashing:** Use `workflow stash` to pause enforcement for ad-hoc work, then `workflow pop` to resume. When stashed, workflow hooks pass through silently without enforcing task prefixes.
+**Workflow stashing:** Use `tsv stash` to pause enforcement for ad-hoc work, then `tsv pop` to resume. When stashed, workflow hooks pass through silently without enforcing step prefixes.
 
 **Important:** These are two distinct session mechanisms:
 - **Hook session** (`.claude/session/state.json`) - tracks active commands, edited files, etc.

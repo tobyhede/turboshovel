@@ -21,28 +21,11 @@ function formatWorkflowContext(state: WorkflowState): string {
   lines.push('## Active Workflow');
   lines.push('');
   lines.push(`**Workflow:** ${state.workflow}`);
-  lines.push(`**Task ${String(state.task)}:** ${state.taskName}`);
+  lines.push(`**Step ${String(state.step)}:** ${state.stepName}`);
 
   // Show retry info if relevant
   if (state.retryCount > 0) {
     lines.push(`**Attempt:** ${String(state.retryCount + 1)}`);
-  }
-
-  // Show task progress if there are tasks
-  if (state.tasks.length > 0) {
-    const complete = state.tasks.filter((t) => t.status === 'complete').length;
-    const running = state.tasks.filter((t) => t.status === 'running').length;
-    const blocked = state.tasks.filter((t) => t.status === 'blocked').length;
-
-    lines.push('');
-    lines.push(`**Tasks:** ${String(complete)}/${String(state.tasks.length)} complete`);
-
-    if (running > 0) {
-      lines.push(`  - ${String(running)} running`);
-    }
-    if (blocked > 0) {
-      lines.push(`  - ${String(blocked)} blocked`);
-    }
   }
 
   // Show variables
@@ -54,8 +37,8 @@ function formatWorkflowContext(state: WorkflowState): string {
     }
   }
 
-  // BLOCKED warning (using ASCII for terminal compatibility)
-  if (state.variables.has_blocked_task || state.variables.blocked) {
+  // BLOCKED warning
+  if (state.variables.blocked) {
     lines.push('');
     lines.push('*** WORKFLOW BLOCKED *** - Present options to user before continuing.');
   }
@@ -63,9 +46,9 @@ function formatWorkflowContext(state: WorkflowState): string {
   // Next action guidance
   lines.push('');
   lines.push('**Actions:**');
-  lines.push('- Continue: `workflow next`');
-  lines.push('- Jump to task: `workflow next --task N`');
-  lines.push('- Abort: `workflow stop`');
+  lines.push('- Continue: `tsv next`');
+  lines.push('- Jump to step: `tsv next --goto N`');
+  lines.push('- Abort: `tsv stop`');
 
   return lines.join('\n');
 }

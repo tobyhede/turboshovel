@@ -21,8 +21,8 @@ export interface SyntheticEvent {
   /** For SlashCommandStart/End - full command with namespace */
   commandName?: string;
 
-  /** For SubagentStart - parsed TaskId */
-  taskId?: string;
+  /** For SubagentStart - parsed StepId */
+  stepId?: string;
 
   /** For SubagentStart - tool_use_id for correlation */
   toolUseId?: string;

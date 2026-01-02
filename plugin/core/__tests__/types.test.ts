@@ -91,11 +91,11 @@ describe('HookInput subagent fields', () => {
     expect(input.agent_id).toBe('agent-abc-123');
   });
 
-  it('includes tool_input for Task tool', () => {
+  it('includes tool_input for Step/Task tool', () => {
     const input: HookInput = {
       hook_event_name: 'PostToolUse',
       cwd: '/test',
-      tool_name: 'Task',
+      tool_name: 'Step',
       tool_input: {
         description: '3.1 - Review code',
         subagent_type: 'code-review-agent'

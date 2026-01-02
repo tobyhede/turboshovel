@@ -143,6 +143,7 @@ Search order:
 - Tool names are **lowercased** for context file discovery
 - `Edit` tool → `edit-pre.md`, `edit-post.md`
 - `Write` tool → `write-pre.md`, `write-post.md`
+- `Step` tool → `step-pre.md`, `step-post.md`
 - `Task` tool → `task-pre.md`, `task-post.md`
 
 ### Stage Names

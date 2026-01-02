@@ -18,14 +18,14 @@ describe('status command', () => {
     await workspace.cleanup();
   });
 
-  it('displays current task info', async () => {
+  it('displays current step info', async () => {
     runCli('start workflows/simple.workflow.md', workspace);
 
     const result = runCli('status', workspace);
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('Task 1');
-    expect(result.stdout).toContain('First task');
+    expect(result.stdout).toContain('Step 1');
+    expect(result.stdout).toContain('First step');
   });
 
   it('shows workflow file path', async () => {
@@ -60,18 +60,18 @@ describe('status command', () => {
     expect(result.stdout).toContain('No active workflow');
   });
 
-  it('shows pending tasks count', async () => {
+  it('shows pending steps count', async () => {
     runCli('start workflows/simple.workflow.md', workspace);
-    runCli('start --task 2', workspace);
+    runCli('start --step 2', workspace);
 
     const result = runCli('status', workspace);
 
-    expect(result.stdout).toContain('Pending Tasks');
+    expect(result.stdout).toContain('Pending Steps');
   });
 
   it('shows agent bindings', async () => {
     runCli('start workflows/simple.workflow.md', workspace);
-    runCli('start --task 1', workspace);
+    runCli('start --step 1', workspace);
     runCli('start --agent test-agent', workspace);
 
     const result = runCli('status', workspace);
@@ -109,12 +109,12 @@ describe('list command', () => {
     expect(result.stdout).toContain('(active)');
   });
 
-  it('shows current task for each', async () => {
+  it('shows current step for each', async () => {
     runCli('start workflows/simple.workflow.md', workspace);
 
     const result = runCli('list', workspace);
 
-    expect(result.stdout).toContain('Task 1');
+    expect(result.stdout).toContain('Step 1');
   });
 
   it('outputs "No workflows" when empty', async () => {

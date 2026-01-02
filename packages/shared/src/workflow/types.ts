@@ -1,55 +1,55 @@
 // src/workflow/types.ts
 
-import type { TaskId } from './task-id.js';
+import type { StepId } from './step-id.js';
 
 /**
- * Branded type for task numbers (1-indexed, never zero)
+ * Branded type for step numbers (1-indexed, never zero)
  */
-export type TaskNumber = number & { readonly __brand: 'TaskNumber' };
+export type StepNumber = number & { readonly __brand: 'StepNumber' };
 
 /**
- * Maximum valid task number (prevent overflow, keep IDs reasonable)
+ * Maximum valid step number (prevent overflow, keep IDs reasonable)
  */
-export const MAX_TASK_NUMBER = 999999;
+export const MAX_STEP_NUMBER = 999999;
 
 /**
- * Factory function to create a valid TaskNumber
+ * Factory function to create a valid StepNumber
  * Returns null if the number is invalid (zero, negative, non-integer, or too large)
  */
-export function createTaskNumber(n: number): TaskNumber | null {
-  if (n <= 0 || !Number.isInteger(n) || n > MAX_TASK_NUMBER) {
+export function createStepNumber(n: number): StepNumber | null {
+  if (n <= 0 || !Number.isInteger(n) || n > MAX_STEP_NUMBER) {
     return null;
   }
-  return n as TaskNumber;
+  return n as StepNumber;
 }
 
 /**
- * Increment a TaskNumber, preserving the brand
+ * Increment a StepNumber, preserving the brand
  * Returns null if result would exceed maximum
  */
-export function incrementTaskNumber(tn: TaskNumber): TaskNumber | null {
-  return createTaskNumber(tn + 1);
+export function incrementStepNumber(sn: StepNumber): StepNumber | null {
+  return createStepNumber(sn + 1);
 }
 
 /**
- * Decrement a TaskNumber, preserving the brand
+ * Decrement a StepNumber, preserving the brand
  * Returns null if result would be less than 1
  */
-export function decrementTaskNumber(tn: TaskNumber): TaskNumber | null {
-  return createTaskNumber(tn - 1);
+export function decrementStepNumber(sn: StepNumber): StepNumber | null {
+  return createStepNumber(sn - 1);
 }
 
 /**
- * Re-export TaskId from task-id module
+ * Re-export StepId from step-id module
  */
-export type { TaskId } from './task-id.js';
+export type { StepId } from './step-id.js';
 
 /**
- * A task queued for agent binding, optionally with a child workflow.
- * Used in the pending task queue to correlate Task tool dispatch with SubagentStart.
+ * A step queued for agent binding, optionally with a child workflow.
+ * Used in the pending step queue to correlate Step tool dispatch with SubagentStart.
  */
-export interface PendingTask {
-  readonly taskId: TaskId;
+export interface PendingStep {
+  readonly stepId: StepId;
   readonly workflow?: string;  // Child workflow file path (relative)
 }
 
@@ -59,7 +59,7 @@ export interface PendingTask {
 export type NonRetryAction =
   | { readonly type: 'CONTINUE' }
   | { readonly type: 'STOP'; readonly message?: string }
-  | { readonly type: 'GOTO'; readonly task: TaskNumber }
+  | { readonly type: 'GOTO'; readonly step: StepNumber }
   | { readonly type: 'DONE' };
 
 /**
@@ -71,7 +71,7 @@ export type Action =
   | { readonly type: 'RETRY'; readonly max: number; readonly then: NonRetryAction };
 
 /**
- * Aggregation conditions for subtasks
+ * Aggregation conditions for substeps
  *
  * Valid combinations only:
  * - all: true  = PASS ALL + FAIL ANY (pessimistic, default)
@@ -102,20 +102,20 @@ export type AgentStatus = 'running' | 'done' | 'stopped';
 export type AgentResult = 'pass' | 'fail';
 
 /**
- * Runtime state of a subtask within a task
+ * Runtime state of a substep within a step
  */
-export interface SubtaskState {
-  readonly id: string;            // Matches Subtask.id ("1", "2", or dynamic instance)
+export interface SubstepState {
+  readonly id: string;            // Matches Substep.id ("1", "2", or dynamic instance)
   readonly status: 'pending' | 'running' | 'done';
-  readonly agentId?: string;      // Agent bound to this subtask
+  readonly agentId?: string;      // Agent bound to this substep
   readonly result?: AgentResult;  // 'pass' | 'fail' when done
 }
 
 /**
- * Agent binding - tracks which task an agent is working on
+ * Agent binding - tracks which step an agent is working on
  */
 export interface AgentBinding {
-  readonly taskId: TaskId;
+  readonly stepId: StepId;
   readonly childWorkflowId?: string;
   readonly status: AgentStatus;
   readonly result?: AgentResult;
@@ -136,9 +136,9 @@ export interface Prompt {
 }
 
 /**
- * A subtask within a task (H3 header)
+ * A substep within a step (H3 header)
  */
-export interface Subtask {
+export interface Substep {
   readonly id: string; // "1", "2", "3" or "{n}" for dynamic
   readonly description: string;
   readonly agentType?: string; // e.g., "code-review-agent" from "(code-review-agent)"
@@ -147,20 +147,16 @@ export interface Subtask {
 }
 
 /**
- * A single task in a workflow
+ * A single step in a workflow
  */
-export interface Task {
-  readonly number: TaskNumber;
+export interface Step {
+  readonly number: StepNumber;
   readonly description: string;
   readonly command?: Command;
   readonly prompts: readonly Prompt[];
   readonly conditions?: Conditions;
-  readonly subtasks?: readonly Subtask[];
+  readonly substeps?: readonly Substep[];
   readonly nestedWorkflow?: string; // Reference to nested workflow file
-  readonly rawConditions?: {
-    readonly pass: string;
-    readonly fail: string;
-  };
 }
 
 /**
@@ -169,13 +165,13 @@ export interface Task {
 export interface Workflow {
   readonly name: string;
   readonly description?: string;
-  readonly tasks: readonly Task[];
+  readonly steps: readonly Step[];
 }
 
 /**
- * Task state within a workflow
+ * Step state within a workflow
  */
-export interface TaskState {
+export interface StepState {
   readonly id: string;
   readonly status: 'pending' | 'running' | 'complete' | 'blocked';
   readonly subagentType?: string;
@@ -189,28 +185,38 @@ export interface TaskState {
 export interface WorkflowState {
   readonly id: string;
   readonly workflow: string;
-  readonly task: TaskNumber;
-  readonly taskName: string;
+  readonly step: StepNumber;
+  readonly stepName: string;
   readonly retryCount: number;
   readonly variables: Record<string, boolean | number | string>;
-  readonly tasks: readonly TaskState[];
+  readonly steps: readonly StepState[];
 
   // Orchestration fields
-  readonly pendingTasks: readonly PendingTask[];
+  readonly pendingSteps: readonly PendingStep[];
   readonly agentBindings: Readonly<Record<string, AgentBinding>>;
 
-  // Subtask tracking (only populated when current task has subtasks)
-  readonly subtaskStates?: readonly SubtaskState[];
+  // Substep tracking (only populated when current step has substeps)
+  readonly substepStates?: readonly SubstepState[];
 
   // Child workflow fields (optional)
   readonly agentId?: string;
   readonly parentWorkflowId?: string;
-  readonly parentTaskId?: TaskId;
+  readonly parentStepId?: StepId;
 
-  readonly nested?: {
-    readonly workflow: string;
-    readonly instanceId: string;
-  };
-  readonly startedAt: string;
-  readonly updatedAt: string;
-}
+    readonly nested?: {
+
+      readonly workflow: string;
+
+      readonly instanceId: string;
+
+    };
+
+    readonly startedAt: string;
+
+    readonly updatedAt: string;
+
+    readonly snapshot?: unknown;
+
+  }
+
+  

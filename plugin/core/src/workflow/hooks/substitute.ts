@@ -1,33 +1,22 @@
-import type { TaskId, Task } from '@turboshovel/shared';
+import type { StepId, Step } from '@turboshovel/shared';
 
 /**
  * Substitute workflow variables in a prompt string.
- *
- * Currently supported:
- * - $n → subtask number (e.g., "1", "2", "3")
- *
- * @param prompt - The prompt template containing $n placeholders
- * @param taskId - The TaskId with optional subtask
- * @returns The prompt with $n replaced by subtask number
  */
-export function substituteVariables(prompt: string, taskId: TaskId): string {
-  if (!taskId.subtask) {
+export function substituteVariables(prompt: string, stepId: StepId): string {
+  if (!stepId.substep) {
     return prompt;
   }
-  return prompt.replace(/\$n/g, taskId.subtask);
+  return prompt.replace(/\$n/g, stepId.substep);
 }
 
 /**
- * Get the prompt for a task from parsed workflow tasks.
- *
- * @param tasks - Parsed tasks from workflow
- * @param taskId - The TaskId to find prompt for
- * @returns The first prompt text, or undefined if not found
+ * Get the prompt for a step from parsed workflow steps.
  */
-export function getTaskPrompt(tasks: readonly Task[], taskId: TaskId): string | undefined {
-  const task = tasks.find(t => t.number === taskId.task);
-  if (!task || task.prompts.length === 0) {
+export function getStepPrompt(steps: readonly Step[], stepId: StepId): string | undefined {
+  const step = steps.find(s => s.number === stepId.step);
+  if (!step || step.prompts.length === 0) {
     return undefined;
   }
-  return task.prompts[0].text;
+  return step.prompts[0].text;
 }

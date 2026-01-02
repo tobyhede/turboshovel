@@ -5,10 +5,10 @@ export type { ParsedConditional } from './types.js';
 // Export helper functions for testing
 export {
   stripSeparator,
-  extractTaskHeader,
+  extractStepHeader,
   parseAction,
   parseConditional,
   convertConditionals,
-  extractSubtaskHeader,
+  extractSubstepHeader,
   extractWorkflowList
 } from './helpers.js';

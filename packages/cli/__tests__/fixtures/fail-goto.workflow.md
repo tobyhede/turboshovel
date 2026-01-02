@@ -1,4 +1,4 @@
-## 1. First task
+## 1. First step
 
 May fail and jump to recovery.
 
@@ -12,7 +12,7 @@ Skipped on failure.
 - PASS: CONTINUE
 - FAIL: STOP
 
-## 3. Recovery task
+## 3. Recovery step
 
 Jumped here on failure.
 

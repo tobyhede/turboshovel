@@ -172,7 +172,7 @@ Test real component interactions without mocks.
 ```typescript
 test('includes workflow context in dispatch output', async () => {
   const manager = new WorkflowStateManager(testDir);
-  const state = await manager.create('test.workflow.md', 'Run tests');
+  const state = await manager.create('test.workflow.md', mockSteps);
   await manager.setActive(state.id);
 
   const input: HookInput = {
@@ -195,12 +195,12 @@ Full end-to-end tests via subprocess execution.
 **Example:** `packages/cli/__tests__/integration.test.ts`
 
 ```typescript
-it('completes simple two-task workflow', async () => {
+it('completes simple two-step workflow', async () => {
   let result = runCli('start workflows/simple.workflow.md', workspace);
   expect(result.exitCode).toBe(0);
   
   result = runCli('next', workspace);
-  expect(result.stdout).toContain('Task 2');
+  expect(result.stdout).toContain('Step 2');
   
   result = runCli('next', workspace);
   expect(result.stdout).toContain('complete');
@@ -269,11 +269,11 @@ When fixing bugs:
 
 ```typescript
 // 100% covered but wrong
-function advanceTask(state) {
-  state.task++;  // Covered!
+function advanceStep(state) {
+  state.step++;  // Covered!
   return state;  // Covered!
 }
-// Missing: bounds checking, subtask handling, GOTO evaluation
+// Missing: bounds checking, substep handling, GOTO evaluation
 ```
 
 **Focus on:**

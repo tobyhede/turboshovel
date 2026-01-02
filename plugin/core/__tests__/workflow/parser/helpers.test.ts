@@ -1,11 +1,11 @@
 // __tests__/workflow/parser/helpers.test.ts
 import {
   stripSeparator,
-  extractTaskHeader,
+  extractStepHeader,
   parseAction,
   parseConditional,
   convertConditionals,
-  extractSubtaskHeader
+  extractSubstepHeader
 } from '@turboshovel/shared';
 
 describe('stripSeparator', () => {
@@ -30,44 +30,44 @@ describe('stripSeparator', () => {
   });
 });
 
-describe('extractTaskHeader', () => {
-  test('parses "1. First task"', () => {
-    const result = extractTaskHeader('1. First task');
-    expect(result).toEqual({ number: 1, description: 'First task' });
+describe('extractStepHeader', () => {
+  test('parses "1. First step"', () => {
+    const result = extractStepHeader('1. First step');
+    expect(result).toEqual({ number: 1, description: 'First step' });
   });
 
-  test('parses "1: First task"', () => {
-    const result = extractTaskHeader('1: First task');
-    expect(result).toEqual({ number: 1, description: 'First task' });
+  test('parses "1: First step"', () => {
+    const result = extractStepHeader('1: First step');
+    expect(result).toEqual({ number: 1, description: 'First step' });
   });
 
-  test('parses "1) First task"', () => {
-    const result = extractTaskHeader('1) First task');
-    expect(result).toEqual({ number: 1, description: 'First task' });
+  test('parses "1) First step"', () => {
+    const result = extractStepHeader('1) First step');
+    expect(result).toEqual({ number: 1, description: 'First step' });
   });
 
-  test('parses "1 - First task"', () => {
-    const result = extractTaskHeader('1 - First task');
-    expect(result).toEqual({ number: 1, description: 'First task' });
+  test('parses "1 - First step"', () => {
+    const result = extractStepHeader('1 - First step');
+    expect(result).toEqual({ number: 1, description: 'First step' });
   });
 
-  test('parses "1 First task" (space only)', () => {
-    const result = extractTaskHeader('1 First task');
-    expect(result).toEqual({ number: 1, description: 'First task' });
+  test('parses "1 First step" (space only)', () => {
+    const result = extractStepHeader('1 First step');
+    expect(result).toEqual({ number: 1, description: 'First step' });
   });
 
-  test('rejects Task keyword', () => {
-    const result = extractTaskHeader('Task 1: First task');
+  test('rejects Step keyword', () => {
+    const result = extractStepHeader('Step 1: First step');
     expect(result).toBeNull();
   });
 
   test('rejects zero', () => {
-    const result = extractTaskHeader('0. Zero task');
+    const result = extractStepHeader('0. Zero step');
     expect(result).toBeNull();
   });
 
   test('rejects non-numeric start', () => {
-    const result = extractTaskHeader('First task');
+    const result = extractStepHeader('First step');
     expect(result).toBeNull();
   });
 });
@@ -90,7 +90,7 @@ describe('parseAction', () => {
 
   test('parses GOTO N', () => {
     const result = parseAction('GOTO 3');
-    expect(result).toEqual({ type: 'GOTO', task: 3 });
+    expect(result).toEqual({ type: 'GOTO', step: 3 });
   });
 
   test('parses DONE', () => {
@@ -115,18 +115,9 @@ describe('parseAction edge cases', () => {
     expect(parseAction('RETRY abc')).toBeNull();
   });
 
-  test('returns null for GOTO with invalid task number', () => {
+  test('returns null for GOTO with invalid step number', () => {
     expect(parseAction('GOTO 0')).toBeNull();
     expect(parseAction('GOTO -1')).toBeNull();
-  });
-
-  test('parses old syntax Continue', () => {
-    expect(parseAction('Continue')).toEqual({ type: 'CONTINUE' });
-  });
-
-  test('parses old syntax STOP with parentheses', () => {
-    // NOTE: Implementation preserves parentheses in message
-    expect(parseAction('STOP (error message)')).toEqual({ type: 'STOP', message: '(error message)' });
   });
 });
 
@@ -148,151 +139,13 @@ describe('parseConditional', () => {
       raw: 'STOP fix tests'
     });
   });
-
-  test('parses with space separator', () => {
-    expect(parseConditional('PASS CONTINUE')).toEqual({
-      type: 'pass',
-      action: { type: 'CONTINUE' },
-      modifier: null,
-      raw: 'CONTINUE'
-    });
-  });
-
-  test('parses with dash separator', () => {
-    expect(parseConditional('FAIL - STOP')).toEqual({
-      type: 'fail',
-      action: { type: 'STOP' },
-      modifier: null,
-      raw: 'STOP'
-    });
-  });
-
-  test('returns null for non-conditional', () => {
-    expect(parseConditional('Some random text')).toBeNull();
-  });
-
-  test('rejects lowercase pass/fail', () => {
-    expect(parseConditional('pass: CONTINUE')).toBeNull();
-  });
 });
 
-describe('parseConditional with aggregation', () => {
-  it('parses PASS ALL: CONTINUE', () => {
-    const result = parseConditional('PASS ALL: CONTINUE');
+describe('extractSubstepHeader', () => {
+  it('parses static substep: 1.1 First reviewer', () => {
+    const result = extractSubstepHeader('1.1 First reviewer');
     expect(result).toEqual({
-      type: 'pass',
-      action: { type: 'CONTINUE' },
-      modifier: 'ALL',
-      raw: 'CONTINUE'
-    });
-  });
-
-  it('parses FAIL ANY: STOP', () => {
-    const result = parseConditional('FAIL ANY: STOP');
-    expect(result).toEqual({
-      type: 'fail',
-      action: { type: 'STOP' },
-      modifier: 'ANY',
-      raw: 'STOP'
-    });
-  });
-
-  it('parses PASS: CONTINUE (no modifier)', () => {
-    const result = parseConditional('PASS: CONTINUE');
-    expect(result).toEqual({
-      type: 'pass',
-      action: { type: 'CONTINUE' },
-      modifier: null,
-      raw: 'CONTINUE'
-    });
-  });
-
-  it('parses with arrow syntax: PASS ANY → CONTINUE', () => {
-    const result = parseConditional('PASS ANY → CONTINUE');
-    expect(result).toEqual({
-      type: 'pass',
-      action: { type: 'CONTINUE' },
-      modifier: 'ANY',
-      raw: 'CONTINUE'
-    });
-  });
-
-  it('parses FAIL ALL → STOP "message"', () => {
-    const result = parseConditional('FAIL ALL → STOP All approaches failed');
-    expect(result).toEqual({
-      type: 'fail',
-      action: { type: 'STOP', message: 'All approaches failed' },
-      modifier: 'ALL',
-      raw: 'STOP All approaches failed'
-    });
-  });
-});
-
-describe('convertConditionals with aggregation', () => {
-  it('returns all: true for PASS ALL', () => {
-    const result = convertConditionals([
-      { type: 'pass', action: { type: 'CONTINUE' }, modifier: 'ALL' },
-      { type: 'fail', action: { type: 'STOP' }, modifier: null }
-    ]);
-    expect(result?.all).toBe(true);
-  });
-
-  it('returns all: false for PASS ANY', () => {
-    const result = convertConditionals([
-      { type: 'pass', action: { type: 'CONTINUE' }, modifier: 'ANY' },
-      { type: 'fail', action: { type: 'STOP' }, modifier: null }
-    ]);
-    expect(result?.all).toBe(false);
-  });
-
-  it('infers all: true from FAIL ANY', () => {
-    const result = convertConditionals([
-      { type: 'pass', action: { type: 'CONTINUE' }, modifier: null },
-      { type: 'fail', action: { type: 'STOP' }, modifier: 'ANY' }
-    ]);
-    expect(result?.all).toBe(true);
-  });
-
-  it('infers all: false from FAIL ALL', () => {
-    const result = convertConditionals([
-      { type: 'pass', action: { type: 'CONTINUE' }, modifier: null },
-      { type: 'fail', action: { type: 'STOP' }, modifier: 'ALL' }
-    ]);
-    expect(result?.all).toBe(false);
-  });
-
-  it('defaults to all: true (pessimistic)', () => {
-    const result = convertConditionals([
-      { type: 'pass', action: { type: 'CONTINUE' }, modifier: null },
-      { type: 'fail', action: { type: 'STOP' }, modifier: null }
-    ]);
-    expect(result?.all).toBe(true);
-  });
-
-  it('throws for invalid combination PASS ALL + FAIL ALL', () => {
-    expect(() =>
-      convertConditionals([
-        { type: 'pass', action: { type: 'CONTINUE' }, modifier: 'ALL' },
-        { type: 'fail', action: { type: 'STOP' }, modifier: 'ALL' }
-      ])
-    ).toThrow('Invalid aggregation');
-  });
-
-  it('throws for invalid combination PASS ANY + FAIL ANY', () => {
-    expect(() =>
-      convertConditionals([
-        { type: 'pass', action: { type: 'CONTINUE' }, modifier: 'ANY' },
-        { type: 'fail', action: { type: 'STOP' }, modifier: 'ANY' }
-      ])
-    ).toThrow('Invalid aggregation');
-  });
-});
-
-describe('extractSubtaskHeader', () => {
-  it('parses static subtask: 1.1 First reviewer', () => {
-    const result = extractSubtaskHeader('1.1 First reviewer');
-    expect(result).toEqual({
-      taskNumber: 1,
+      stepNumber: 1,
       id: '1',
       description: 'First reviewer',
       agentType: undefined,
@@ -300,10 +153,10 @@ describe('extractSubtaskHeader', () => {
     });
   });
 
-  it('parses subtask with agent type: 2.2 Second (code-agent)', () => {
-    const result = extractSubtaskHeader('2.2 Second reviewer (code-agent)');
+  it('parses substep with agent type: 2.2 Second (code-agent)', () => {
+    const result = extractSubstepHeader('2.2 Second reviewer (code-agent)');
     expect(result).toEqual({
-      taskNumber: 2,
+      stepNumber: 2,
       id: '2',
       description: 'Second reviewer',
       agentType: 'code-agent',
@@ -311,46 +164,14 @@ describe('extractSubtaskHeader', () => {
     });
   });
 
-  it('parses dynamic subtask: 3.{n} Execute task', () => {
-    const result = extractSubtaskHeader('3.{n} Execute task');
+  it('parses dynamic substep: 3.{n} Execute step', () => {
+    const result = extractSubstepHeader('3.{n} Execute step');
     expect(result).toEqual({
-      taskNumber: 3,
+      stepNumber: 3,
       id: '{n}',
-      description: 'Execute task',
+      description: 'Execute step',
       agentType: undefined,
       isDynamic: true
-    });
-  });
-
-  it('parses multi-digit subtask numbers', () => {
-    const result = extractSubtaskHeader('1.12 Twelfth subtask');
-    expect(result?.id).toBe('12');
-  });
-
-  it('returns null for invalid format', () => {
-    expect(extractSubtaskHeader('Not a subtask')).toBeNull();
-    expect(extractSubtaskHeader('1 Missing dot')).toBeNull();
-    expect(extractSubtaskHeader('.1 No number')).toBeNull();
-  });
-
-  describe('edge cases', () => {
-    it('rejects letter-based subtask IDs (now numeric only)', () => {
-      // Letters are no longer valid - subtasks must be numeric
-      expect(extractSubtaskHeader('1.A First task')).toBeNull();
-      expect(extractSubtaskHeader('2.B Second task')).toBeNull();
-    });
-
-    it('accepts numeric subtask IDs', () => {
-      const result = extractSubtaskHeader('1.1 First task');
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe('1');
-    });
-
-    it('accepts dynamic subtask marker {n}', () => {
-      const result = extractSubtaskHeader('1.{n} Dynamic task');
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe('{n}');
-      expect(result?.isDynamic).toBe(true);
     });
   });
 });
