@@ -299,7 +299,20 @@ program
             console.error('Error: Invalid step number for --goto');
             process.exit(1);
           }
-          await manager.update(state.id, { step: target, retryCount: 0 });
+          // Perform manual jump by constructing a fresh snapshot
+          // This ensures the XState machine rehydrates at the correct step
+          await manager.update(state.id, {
+            step: target,
+            retryCount: 0,
+            snapshot: {
+              status: 'active',
+              value: `step_${target}`,
+              context: {
+                retryCount: 0,
+                variables: state.variables
+              }
+            }
+          });
           const nextStep = steps[target - 1];
           console.log(`Step ${target}: ${nextStep.description}`);
           printStepGuidance(nextStep);
