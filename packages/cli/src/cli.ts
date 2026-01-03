@@ -308,11 +308,7 @@ program
           await manager.setActive(childState.id);
 
           // Print metadata and action
-          printMetadata({
-            file: pending.workflow,
-            state: `.claude/turboshovel/workflows/${childState.id}.json`,
-            prompted: parentPrompted || undefined,
-          });
+          printMetadata(buildMetadata(childState));
           printActionBlock({ action: 'START' });
 
           // Update lastAction
@@ -348,11 +344,7 @@ program
         }
 
         // Print metadata and action
-        printMetadata({
-          file: workflowPath,
-          state: `.claude/turboshovel/workflows/${state.id}.json`,
-          prompted: options.prompted || undefined,
-        });
+        printMetadata(buildMetadata(state));
         printActionBlock({ action: 'START' });
 
         // Update lastAction
