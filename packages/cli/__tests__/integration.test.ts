@@ -22,7 +22,7 @@ describe('integration: full workflow scenarios', () => {
     // Start workflow
     let result = runCli('start workflows/simple.workflow.md', workspace);
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('Step 1');
+    expect(result.stdout).toContain('## 1.');
 
     // Advance to step 2
     result = runCli('next', workspace);
@@ -89,7 +89,7 @@ describe('integration: full workflow scenarios', () => {
     // Pop
     result = runCli('pop', workspace);
     expect(result.stdout).toContain('restored');
-    expect(result.stdout).toContain('Step 2');
+    expect(result.stdout).toContain('Second step');
 
     // Continue and complete
     result = runCli('next', workspace);

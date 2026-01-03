@@ -55,7 +55,7 @@ describe('start command', () => {
     it('outputs first step description', async () => {
       const result = runCli('start workflows/simple.workflow.md', workspace);
 
-      expect(result.stdout).toContain('Step 1');
+      expect(result.stdout).toContain('## 1.');
       expect(result.stdout).toContain('First step');
     });
 
@@ -98,7 +98,7 @@ describe('start command', () => {
       const result = runCli('start --step 1', workspace);
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Step 1');
+      expect(result.stdout).toContain('Step 1 queued');
     });
 
     it('accepts substep format', async () => {
