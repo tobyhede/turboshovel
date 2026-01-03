@@ -43,13 +43,22 @@ function nonRetryActionToTransition(
   switch (action.type) {
     case 'CONTINUE':
       if (currentStep >= maxSteps) return { target: 'complete' };
-      return { target: `step_${currentStep + 1}`, actions: assign({ retryCount: 0 }) };
+      return {
+        target: `step_${currentStep + 1}`,
+        actions: assign({ retryCount: 0, substep: undefined })
+      };
     case 'DONE':
       return { target: 'complete' };
     case 'STOP':
       return { target: 'blocked' };
     case 'GOTO':
-      return { target: `step_${action.step}`, actions: assign({ retryCount: 0 }) };
+      return {
+        target: `step_${action.target.step}`,
+        actions: assign({
+          retryCount: 0,
+          substep: action.target.substep
+        })
+      };
   }
 }
 
