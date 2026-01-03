@@ -34,6 +34,7 @@ interface CreateOptions {
   readonly agentId?: string;
   readonly parentWorkflowId?: string;
   readonly parentStepId?: StepId;
+  readonly prompted?: boolean;  // Add this line
 }
 
 export class WorkflowStateManager {
@@ -76,7 +77,8 @@ export class WorkflowStateManager {
       parentWorkflowId: options?.parentWorkflowId,
       parentStepId: options?.parentStepId,
       startedAt: now,
-      updatedAt: now
+      updatedAt: now,
+      prompted: options?.prompted  // Add this line (undefined = auto)
     };
 
     await this.save(state);
@@ -137,6 +139,15 @@ export class WorkflowStateManager {
 
     await this.save(updated);
     return updated;
+  }
+
+  async setLastResult(id: string, result: 'pass' | 'fail'): Promise<void> {
+    await this.update(id, { lastResult: result });
+  }
+
+  async isParentPrompted(parentWorkflowId: string): Promise<boolean> {
+    const parent = await this.load(parentWorkflowId);
+    return parent?.prompted ?? false;
   }
 
   /**
