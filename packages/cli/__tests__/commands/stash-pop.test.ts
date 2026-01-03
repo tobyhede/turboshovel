@@ -55,7 +55,7 @@ describe('stash command', () => {
 
   it('preserves workflow state', async () => {
     runCli('start workflows/simple.workflow.md', workspace);
-    runCli('next', workspace); // Advance to step 2
+    runCli('pass', workspace); // Advance to step 2
     const beforeState = await getActiveState(workspace);
 
     runCli('stash', workspace);
@@ -118,11 +118,11 @@ describe('pop command', () => {
 
   it('shows resuming step info', async () => {
     runCli('start workflows/simple.workflow.md', workspace);
-    runCli('next', workspace); // Advance to step 2
+    runCli('pass', workspace); // Advance to step 2
     runCli('stash', workspace);
 
     const result = runCli('pop', workspace);
 
-    expect(result.stdout).toContain('Step 2');
+    expect(result.stdout).toContain('Second step');
   });
 });

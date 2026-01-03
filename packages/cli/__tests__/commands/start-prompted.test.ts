@@ -54,7 +54,7 @@ describe('start --prompted', () => {
       expect(state?.step).toBe(1);
 
       // Manual pass should advance to next step
-      runCli('next --pass', workspace);
+      runCli('pass', workspace);
 
       state = await getActiveState(workspace);
       expect(state?.step).toBe(2);
@@ -152,17 +152,17 @@ describe('start --prompted', () => {
       runCli('start --prompted workflows/with-failing-command.workflow.md', workspace);
 
       // Step 1 with retry in prompted mode
-      let result = runCli('next --fail', workspace);
+      let result = runCli('fail', workspace);
       let state = await getActiveState(workspace);
       expect(state?.retryCount).toBe(1);
 
       // Step 2 with retry
-      result = runCli('next --fail', workspace);
+      result = runCli('fail', workspace);
       state = await getActiveState(workspace);
       expect(state?.retryCount).toBe(2);
 
       // Third fail should block (max retries exceeded)
-      result = runCli('next --fail', workspace);
+      result = runCli('fail', workspace);
       expect(result.exitCode).not.toBe(0);
     });
   });
@@ -193,7 +193,7 @@ describe('start --prompted', () => {
       expect(state1?.step).toBe(1);
 
       // Manually pass
-      runCli('next --pass', workspace);
+      runCli('pass', workspace);
 
       const state2 = await getActiveState(workspace);
       expect(state2?.step).toBe(2);

@@ -55,11 +55,11 @@ Complete the work.
     expect(result.stdout).toContain('Started child workflow');
 
     // 5. Complete child workflow
-    result = runCli(['next', '--pass'], workspace);
+    result = runCli('pass', workspace);
     expect(result.stdout).toContain('Workflow complete');
 
     // 6. Complete agent in parent
-    result = runCli(['next', '--pass', '--agent', 'test-agent'], workspace);
+    result = runCli(['pass', '--agent', 'test-agent'], workspace);
     expect(result.stdout).toContain('marked as pass');
 
     // 7. Verify parent sees completion
