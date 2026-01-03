@@ -49,11 +49,13 @@ This example shows both keyword-based filtering (check gate) and file pattern fi
 
 ## Development Commands
 
+**This project uses Jest for testing. Do NOT use Vitest.**
+
 From repository root:
 
 ```bash
 npm run build      # Build all packages
-npm run test       # Run all tests
+npm run test       # Run all tests (Jest)
 npm run lint       # Lint all packages
 npm run lint:fix   # Auto-fix lint issues
 ```
