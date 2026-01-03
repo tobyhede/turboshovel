@@ -1,6 +1,60 @@
 import { describe, it, expect } from '@jest/globals';
-import type { NonRetryAction, StepNumber } from '../../src/workflow/types.js';
+import type { NonRetryAction, StepNumber, Action, SubtaskState } from '../../src/workflow/types.js';
 import type { StepId } from '../../src/workflow/step-id.js';
+
+describe('SubtaskState type', () => {
+  it('has required fields', () => {
+    const subtaskState: SubtaskState = {
+      id: '1',
+      status: 'pending',
+      agentId: undefined,
+      result: undefined
+    };
+
+    expect(subtaskState.id).toBe('1');
+    expect(subtaskState.status).toBe('pending');
+  });
+});
+
+describe('Action type', () => {
+  it('RETRY action should have max and then properties', () => {
+    const retryAction: Action = {
+      type: 'RETRY',
+      max: 3,
+      then: { type: 'STOP', message: 'Build failed' }
+    };
+
+    expect(retryAction.type).toBe('RETRY');
+    if (retryAction.type === 'RETRY') {
+      expect(retryAction.max).toBe(3);
+      expect(retryAction.then).toEqual({ type: 'STOP', message: 'Build failed' });
+    }
+  });
+
+  it('RETRY then can be GOTO', () => {
+    const retryAction: Action = {
+      type: 'RETRY',
+      max: 2,
+      then: { type: 'GOTO', target: { step: 5 as StepNumber, substep: undefined } }
+    };
+
+    if (retryAction.type === 'RETRY') {
+      expect(retryAction.then.type).toBe('GOTO');
+    }
+  });
+
+  it('RETRY then can be CONTINUE', () => {
+    const retryAction: Action = {
+      type: 'RETRY',
+      max: 1,
+      then: { type: 'CONTINUE' }
+    };
+
+    if (retryAction.type === 'RETRY') {
+      expect(retryAction.then.type).toBe('CONTINUE');
+    }
+  });
+});
 
 describe('GOTO action type', () => {
   it('uses target: StepId instead of step: StepNumber', () => {
