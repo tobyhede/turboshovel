@@ -307,24 +307,67 @@ function validateWorkflow(steps: Step[]): void {
 
   for (const step of steps) {
     if (step.transitions) {
-      validateAction(step.transitions.pass, step.number, steps.length);
-      validateAction(step.transitions.fail, step.number, steps.length);
+      validateAction(step.transitions.pass, step.number, steps.length, steps);
+      validateAction(step.transitions.fail, step.number, steps.length, steps);
     }
   }
 }
 
-function validateAction(action: Action, stepNum: number, totalSteps: number): void {
+function validateAction(
+  action: Action,
+  stepNum: number,
+  totalSteps: number,
+  steps: Step[]
+): void {
   if (action.type === 'GOTO') {
-    const target = action.step as number;
-    if (target < 1 || target > totalSteps) {
+    const targetStep = action.target.step as number;
+    const targetSubstep = action.target.substep;
+
+    // Validate step exists
+    if (targetStep < 1 || targetStep > totalSteps) {
       throw new WorkflowSyntaxError(
-        `Step ${String(stepNum)}: GOTO target Step ${String(target)} does not exist.`
+        `Step ${String(stepNum)}: GOTO target step ${String(targetStep)} does not exist (workflow has ${String(totalSteps)} steps).`
       );
     }
-    if (target === stepNum) {
+
+    // Validate substep (if specified)
+    if (targetSubstep) {
+      const step = steps[targetStep - 1];
+
+      // Step must have substeps
+      if (!step.substeps || step.substeps.length === 0) {
+        throw new WorkflowSyntaxError(
+          `Step ${String(stepNum)}: GOTO ${String(targetStep)}.${targetSubstep} invalid - step ${String(targetStep)} has no substeps.`
+        );
+      }
+
+      // Reject GOTO into dynamic substeps
+      const hasDynamic = step.substeps.some(s => s.isDynamic);
+      if (hasDynamic) {
+        throw new WorkflowSyntaxError(
+          `Step ${String(stepNum)}: Cannot GOTO substep of dynamic step. Use GOTO ${String(targetStep)} instead.`
+        );
+      }
+
+      // Substep must exist
+      const substepExists = step.substeps.some(s => s.id === targetSubstep);
+      if (!substepExists) {
+        throw new WorkflowSyntaxError(
+          `Step ${String(stepNum)}: GOTO ${String(targetStep)}.${targetSubstep} invalid - substep does not exist.`
+        );
+      }
+    }
+
+    // Step-level self-reference check only
+    if (targetStep === stepNum && !targetSubstep) {
       throw new WorkflowSyntaxError(
         `Step ${String(stepNum)}: GOTO self creates infinite loop (use RETRY instead)`
       );
     }
+  }
+
+  // Recurse into RETRY exhaustion action
+  if (action.type === 'RETRY') {
+    validateAction(action.then, stepNum, totalSteps, steps);
   }
 }
