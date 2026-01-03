@@ -65,7 +65,7 @@ async function runExecutionLoop(
     const totalSteps = steps.length;
 
     // Print step block
-    printStepBlock({ current: state.step, total: totalSteps }, currentStep);
+    printStepBlock({ current: state.step, total: totalSteps, substep: state.substep }, currentStep);
 
     // If prompted mode OR no command, wait for manual tsv pass/fail
     if (prompted || !currentStep.command) {
@@ -81,6 +81,7 @@ async function runExecutionLoop(
 
     // Capture prev state BEFORE mutation
     const prevStep = state.step;
+    const prevSubstep = state.substep;
     const prevRetryCount = state.retryCount;
 
     // Send event to actor
@@ -99,6 +100,8 @@ async function runExecutionLoop(
     const action = deriveAction(
       prevStep,
       updatedState.step,
+      prevSubstep,
+      updatedState.substep,
       prevRetryCount,
       updatedState.retryCount,
       retryMax,
@@ -116,7 +119,7 @@ async function runExecutionLoop(
     printSeparator();
     printActionBlock({
       action,
-      from: { current: prevStep, total: totalSteps },
+      from: { current: prevStep, total: totalSteps, substep: prevSubstep },
       result: execResult.success ? 'PASS' : 'FAIL',
     });
 
@@ -134,7 +137,7 @@ async function runExecutionLoop(
 
     if (isBlocked) {
       await manager.update(workflowId, { variables: { ...updatedState.variables, blocked: true } });
-      printWorkflowBlocked({ current: prevStep, total: totalSteps });
+      printWorkflowBlocked({ current: prevStep, total: totalSteps, substep: prevSubstep });
       if (state.parentWorkflowId) {
         await manager.setActive(state.parentWorkflowId);
       } else {
@@ -200,6 +203,8 @@ function buildMetadata(state: WorkflowState): WorkflowMetadata {
 function deriveAction(
   prevStep: number,
   newStep: number,
+  prevSubstep: string | undefined,
+  newSubstep: string | undefined,
   prevRetryCount: number,
   newRetryCount: number,
   retryMax: number,
@@ -211,9 +216,21 @@ function deriveAction(
   if (newStep === prevStep && newRetryCount > prevRetryCount) {
     return `RETRY (${String(newRetryCount)}/${String(retryMax)})`;
   }
+
+  // CRITICAL FIX: Any transition with a substep target is a GOTO
+  // Even "sequential" step changes (1 → 2) are GOTO if substep is specified
+  // Because GOTO 2.1 is meaningfully different from CONTINUE to step 2
+  if (newSubstep) {
+    return `GOTO ${String(newStep)}.${newSubstep}`;
+  }
+
+  // Non-sequential step change without substep
   if (newStep !== prevStep + 1 && newStep !== prevStep) {
     return `GOTO ${String(newStep)}`;
   }
+
+  // Substep cleared (had substep, now doesn't) on same step = unusual, treat as CONTINUE
+  // Sequential step change without substep = CONTINUE
   return 'CONTINUE';
 }
 
@@ -395,7 +412,7 @@ program
         await manager.update(state.id, {
           variables: { ...state.variables, blocked: true }
         });
-        printWorkflowBlocked({ current: state.step, total: totalSteps });
+        printWorkflowBlocked({ current: state.step, total: totalSteps, substep: state.substep });
       } else {
         await manager.update(state.id, {
           variables: { ...state.variables, completed: true }
@@ -477,6 +494,7 @@ program
 
       // Capture prev state BEFORE mutation
       const prevStep = state.step;
+      const prevSubstep = state.substep;
       const prevRetryCount = state.retryCount;
       const totalSteps = steps.length;
 
@@ -493,6 +511,7 @@ program
       const retryMax = getStepRetryMax(currentStep);
       const action = deriveAction(
         prevStep, updatedState.step,
+        prevSubstep, updatedState.substep,
         prevRetryCount, updatedState.retryCount,
         retryMax, isComplete, isBlocked
       );
@@ -507,7 +526,7 @@ program
       printSeparator();
       printActionBlock({
         action,
-        from: { current: prevStep, total: totalSteps },
+        from: { current: prevStep, total: totalSteps, substep: prevSubstep },
         result: 'PASS',
       });
 
@@ -525,7 +544,7 @@ program
 
       if (isBlocked) {
         await manager.update(state.id, { variables: { ...state.variables, blocked: true } });
-        printWorkflowBlocked({ current: prevStep, total: totalSteps });
+        printWorkflowBlocked({ current: prevStep, total: totalSteps, substep: prevSubstep });
         process.exit(1);
       }
 
@@ -622,6 +641,7 @@ program
       // Main step fail - send FAIL event to actor
       // Capture prev state BEFORE mutation
       const prevStep = state.step;
+      const prevSubstep = state.substep;
       const prevRetryCount = state.retryCount;
       const totalSteps = steps.length;
 
@@ -637,6 +657,7 @@ program
       const retryMax = getStepRetryMax(currentStep);
       const action = deriveAction(
         prevStep, updatedState.step,
+        prevSubstep, updatedState.substep,
         prevRetryCount, updatedState.retryCount,
         retryMax, isComplete, isBlocked
       );
@@ -651,14 +672,14 @@ program
       printSeparator();
       printActionBlock({
         action,
-        from: { current: prevStep, total: totalSteps },
+        from: { current: prevStep, total: totalSteps, substep: prevSubstep },
         result: 'FAIL',
       });
 
       // Handle blocked
       if (isBlocked) {
         await manager.update(state.id, { variables: { ...state.variables, blocked: true } });
-        printWorkflowBlocked({ current: prevStep, total: totalSteps });
+        printWorkflowBlocked({ current: prevStep, total: totalSteps, substep: prevSubstep });
         if (state.parentWorkflowId) {
           await manager.setActive(state.parentWorkflowId);
         } else {
@@ -809,7 +830,7 @@ program
         if (stashed) {
           printMetadata(buildMetadata(stashed));
           const totalSteps = await getStepCount(cwd, stashed.workflow);
-          printWorkflowStashed({ current: stashed.step, total: totalSteps });
+          printWorkflowStashed({ current: stashed.step, total: totalSteps, substep: stashed.substep });
         }
         return;
       }
@@ -846,7 +867,7 @@ program
 
       // Print step block
       if (currentStep) {
-        printStepBlock({ current: state.step, total: totalSteps }, currentStep);
+        printStepBlock({ current: state.step, total: totalSteps, substep: state.substep }, currentStep);
       }
 
       // Show pending steps and agent bindings
