@@ -23,3 +23,64 @@ describe('parseWorkflow with substep workflows', () => {
     ]);
   });
 });
+
+describe('GOTO substep validation', () => {
+  it('accepts GOTO 2.1 when step 2 has static substep 1', () => {
+    const markdown = `
+## 1. First
+
+- PASS: GOTO 2.1
+- FAIL: STOP
+
+## 2. Second
+
+### 2.1 Substep one
+
+Do something.
+
+- PASS: CONTINUE
+- FAIL: STOP
+`;
+    const steps = parseWorkflow(markdown);
+    expect(steps[0].transitions?.pass).toEqual({
+      type: 'GOTO',
+      target: { step: 2, substep: '1' }
+    });
+  });
+
+  it('rejects GOTO 2.99 when substep does not exist', () => {
+    const markdown = `
+## 1. First
+
+- PASS: GOTO 2.99
+- FAIL: STOP
+
+## 2. Second
+
+### 2.1 Only substep
+
+- PASS: CONTINUE
+- FAIL: STOP
+`;
+    expect(() => parseWorkflow(markdown)).toThrow(/substep does not exist/i);
+  });
+
+  it('rejects GOTO N.M into dynamic substeps', () => {
+    const markdown = `
+## 1. First
+
+- PASS: GOTO 2.1
+- FAIL: STOP
+
+## 2. Dynamic
+
+### 2.{n} Agent dispatch
+
+Do work.
+
+- PASS ALL: CONTINUE
+- FAIL ANY: STOP
+`;
+    expect(() => parseWorkflow(markdown)).toThrow(/cannot GOTO substep.*dynamic|use GOTO 2 instead/i);
+  });
+});

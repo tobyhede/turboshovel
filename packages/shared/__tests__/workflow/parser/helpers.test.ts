@@ -52,7 +52,7 @@ describe('parseAction RETRY with exhaustion', () => {
     expect(result).toEqual({
       type: 'RETRY',
       max: 3,
-      then: { type: 'GOTO', step: 2 }
+      then: { type: 'GOTO', target: { step: 2, substep: undefined } }
     });
   });
 
@@ -61,7 +61,7 @@ describe('parseAction RETRY with exhaustion', () => {
     expect(result).toEqual({
       type: 'RETRY',
       max: 1,
-      then: { type: 'GOTO', step: 2 }
+      then: { type: 'GOTO', target: { step: 2, substep: undefined } }
     });
   });
 
@@ -90,6 +90,28 @@ describe('parseAction RETRY with exhaustion', () => {
       max: 2,
       then: { type: 'DONE' }
     });
+  });
+});
+
+describe('parseAction GOTO with substep', () => {
+  it('parses GOTO 3 as step-only target', () => {
+    const result = parseAction('GOTO 3');
+    expect(result).toEqual({
+      type: 'GOTO',
+      target: { step: 3, substep: undefined }
+    });
+  });
+
+  it('parses GOTO 2.1 as step with substep', () => {
+    const result = parseAction('GOTO 2.1');
+    expect(result).toEqual({
+      type: 'GOTO',
+      target: { step: 2, substep: '1' }
+    });
+  });
+
+  it('rejects GOTO 3.0', () => {
+    expect(parseAction('GOTO 3.0')).toBeNull();
   });
 });
 
