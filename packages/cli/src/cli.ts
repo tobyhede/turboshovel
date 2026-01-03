@@ -1029,7 +1029,7 @@ program
 
       // Print step block
       if (currentStep) {
-        printStepBlock({ current: state.step, total: totalSteps }, currentStep);
+        printStepBlock({ current: state.step, total: totalSteps, substep: state.substep }, currentStep);
       }
     } catch (error) {
       console.error(`Error: ${getErrorMessage(error)}`);
