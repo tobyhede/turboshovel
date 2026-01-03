@@ -730,8 +730,8 @@ Combine all review findings.
 ## 1. Execute verification rounds
 
 ### 1.{n}
- - verify-code.workflow.md
- - verify-docs.workflow.md
+ - implementation.workflow.md
+ - build-and-deploy.workflow.md
 
 Execute verification workflow.
 

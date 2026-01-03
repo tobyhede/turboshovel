@@ -954,7 +954,7 @@ tsv start my-workflow.md
 tsv start /path/to/workflow.md
 
 # Start from examples
-tsv start examples/code-review.workflow.md
+tsv start examples/implementation.workflow.md
 ```
 
 **Behavior:**
@@ -1054,7 +1054,7 @@ tsv list
 **Output:**
 ```
 wf-2025-01-15-abc123 (active): my-workflow.md - Step 3
-wf-2025-01-14-def456: code-review.workflow.md - Step 2
+wf-2025-01-14-def456: implementation.workflow.md - Step 2
 ```
 
 ### Writing Workflows for Agents
@@ -1425,9 +1425,10 @@ Workflows automatically integrate with hook system:
 
 Full workflow examples in `examples/`:
 
-- **`code-review.workflow.md`** - Code review dispatch and triage (4 steps)
+- **`implementation.workflow.md`** - Task implementation with quality gates (5 steps)
+- **`build-and-deploy.workflow.md`** - Build and deployment pipeline
 
-See this file for a complete, production-ready workflow pattern.
+See these files for complete, production-ready workflow patterns.
 
 ## Development
 
@@ -1463,4 +1464,4 @@ See `examples/` for ready-to-use configurations:
 - `permissive.json` - Warn only
 - `pipeline.json` - Gate chaining
 - `context/` - Example context files
-- `code-review.workflow.md` - Code review workflow
+- `implementation.workflow.md` - Implementation workflow with quality gates
