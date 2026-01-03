@@ -218,6 +218,7 @@ export interface WorkflowState {
     // Prompted(true = prompted/manual, false/undefined = execute)
     readonly prompted?: boolean;
     readonly lastResult?: 'pass' | 'fail';
+    readonly lastAction?: 'START' | 'CONTINUE' | 'GOTO' | 'COMPLETE' | 'STOP' | 'RETRY';
 
     readonly snapshot?: unknown;
 
