@@ -59,7 +59,8 @@ export async function handleSubagentStop(input: HookInput): Promise<SubagentStop
       }
     }
 
-    const output = execSyncImpl(`tsv next ${passFlag} --agent ${agentId}`, {
+    const command = passFlag === '--pass' ? 'pass' : 'fail';
+    const output = execSyncImpl(`tsv ${command} --agent ${agentId}`, {
       cwd: input.cwd,
       encoding: 'utf8',
       stdio: 'pipe'

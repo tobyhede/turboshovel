@@ -49,7 +49,7 @@ describe('handleSubagentStop with agent binding', () => {
     const result = await handleSubagentStop(input);
 
     expect(mockExecSync).toHaveBeenCalledWith(
-      'tsv next --pass --agent agent-xyz',
+      'tsv pass --agent agent-xyz',
       expect.any(Object)
     );
     expect(result.context).toContain('complete');
@@ -70,7 +70,7 @@ describe('handleSubagentStop with agent binding', () => {
     const result = await handleSubagentStop(input);
 
     expect(mockExecSync).toHaveBeenCalledWith(
-      'tsv next --fail --agent agent-abc',
+      'tsv fail --agent agent-abc',
       expect.any(Object)
     );
     expect(result.context).toContain('FAILED');
@@ -114,7 +114,7 @@ describe('handleSubagentStop with agent binding', () => {
     await handleSubagentStop(input);
 
     expect(mockExecSync).toHaveBeenCalledWith(
-      'tsv next --pass --agent agent-xyz',
+      'tsv pass --agent agent-xyz',
       expect.any(Object)
     );
   });
@@ -161,7 +161,7 @@ describe('handleSubagentStop calls CLI', () => {
     module.setExecSync(execSync);
   });
 
-  it('should call tsv next --pass --agent on success', async () => {
+  it('should call tsv pass --agent on success', async () => {
     const input: HookInput = {
       hook_event_name: 'SubagentStop',
       agent_id: 'abc123',
@@ -172,12 +172,12 @@ describe('handleSubagentStop calls CLI', () => {
     await handleSubagentStop(input);
 
     expect(mockExecSync).toHaveBeenCalledWith(
-      'tsv next --pass --agent abc123',
+      'tsv pass --agent abc123',
       expect.any(Object)
     );
   });
 
-  it('should call tsv next --fail --agent on failure', async () => {
+  it('should call tsv fail --agent on failure', async () => {
     const input: HookInput = {
       hook_event_name: 'SubagentStop',
       agent_id: 'abc123',
@@ -188,7 +188,7 @@ describe('handleSubagentStop calls CLI', () => {
     await handleSubagentStop(input);
 
     expect(mockExecSync).toHaveBeenCalledWith(
-      'tsv next --fail --agent abc123',
+      'tsv fail --agent abc123',
       expect.any(Object)
     );
   });

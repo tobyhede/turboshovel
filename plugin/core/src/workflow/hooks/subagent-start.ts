@@ -93,8 +93,8 @@ function parseStartAgentOutput(output: string, agentId: string): string {
   }
 
   lines.push('', '## Commands', '');
-  lines.push(`tsv next --pass --agent ${agentId}`);
-  lines.push(`tsv next --fail --agent ${agentId}`);
+  lines.push(`tsv pass --agent ${agentId}`);
+  lines.push(`tsv fail --agent ${agentId}`);
   lines.push('');
 
   return lines.join('\n');

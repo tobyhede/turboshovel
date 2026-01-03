@@ -46,8 +46,8 @@ function formatWorkflowContext(state: WorkflowState): string {
   // Next action guidance
   lines.push('');
   lines.push('**Actions:**');
-  lines.push('- Continue: `tsv next`');
-  lines.push('- Jump to step: `tsv next --goto N`');
+  lines.push('- Continue: `tsv pass`');
+  lines.push('- Jump to step: `tsv goto N`');
   lines.push('- Abort: `tsv stop`');
 
   return lines.join('\n');
