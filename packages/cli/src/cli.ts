@@ -880,13 +880,29 @@ program
       const manager = new WorkflowStateManager(cwd);
       const states = await manager.list();
       const active = await manager.getActive();
+      const stashedId = await manager.getStashedWorkflowId();
+
       if (states.length === 0) {
-        console.log('No workflows');
+        printNoWorkflows();
         return;
       }
+
       for (const state of states) {
-        const marker = active?.id === state.id ? ' (active)' : '';
-        console.log(`${state.id}${marker}: ${state.workflow} - Step ${state.step}`);
+        let status: string;
+        if (active?.id === state.id) {
+          status = 'active';
+        } else if (state.id === stashedId) {
+          status = 'stashed';
+        } else if (state.variables.completed) {
+          status = 'complete';
+        } else {
+          status = 'inactive';
+        }
+
+        const totalSteps = await getStepCount(cwd, state.workflow);
+        const stepStr = `${state.step}/${totalSteps}`;
+
+        printWorkflowListEntry(state.id, status, stepStr, state.workflow);
       }
     } catch (error) {
       console.error(`Error: ${getErrorMessage(error)}`);
