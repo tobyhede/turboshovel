@@ -1,5 +1,6 @@
 import { setup, assign } from 'xstate';
 import { type Step, type StepNumber, type Action, type NonRetryAction } from './types.js';
+import type { StepId } from './step-id.js';
 
 export interface WorkflowContext {
   retryCount: number;
@@ -10,7 +11,8 @@ export interface WorkflowContext {
 export type WorkflowEvent =
   | { type: 'PASS' }
   | { type: 'FAIL' }
-  | { type: 'RETRY' };
+  | { type: 'RETRY' }
+  | { type: 'GOTO'; target: StepId };
 
 function actionToTransition(
   action: Action,
@@ -54,6 +56,20 @@ function nonRetryActionToTransition(
 export function compileWorkflowToMachine(steps: Step[]) {
   const states: Record<string, any> = {};
 
+  // Generate GOTO transitions for all possible target steps
+  const gotoTransitions = steps.map((targetStep) => ({
+    guard: ({ event }: { event: WorkflowEvent }) => {
+      if (event.type !== 'GOTO') return false;
+      return event.target.step === targetStep.number;
+    },
+    target: `step_${targetStep.number}`,
+    actions: assign({
+      retryCount: 0,
+      substep: ({ event }: { event: WorkflowEvent }) =>
+        event.type === 'GOTO' ? event.target.substep : undefined
+    })
+  }));
+
   steps.forEach((step) => {
     const stepId = `step_${step.number}`;
     states[stepId] = {
@@ -62,7 +78,7 @@ export function compileWorkflowToMachine(steps: Step[]) {
           ? actionToTransition(step.transitions.pass, step.number, steps.length)
           : {
               target: step.number < steps.length ? `step_${step.number + 1}` : 'complete',
-              actions: assign({ retryCount: 0 })
+              actions: assign({ retryCount: 0, substep: undefined })
             },
         FAIL: step.transitions
           ? actionToTransition(step.transitions.fail, step.number, steps.length)
@@ -72,7 +88,8 @@ export function compileWorkflowToMachine(steps: Step[]) {
             retryCount: ({ context }) => context.retryCount + 1
           }),
           target: stepId
-        }
+        },
+        GOTO: gotoTransitions
       }
     };
   });
