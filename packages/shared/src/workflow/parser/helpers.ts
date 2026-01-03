@@ -3,6 +3,7 @@
 import { createStepNumber, type Action, type NonRetryAction, type Transitions, type StepNumber } from '../types.js';
 import type { ParsedConditional, AggregationModifier } from './types.js';
 import { WorkflowSyntaxError } from './types.js';
+import { parseStepIdFromString } from '../step-id.js';
 
 export interface ParsedSubstepHeader {
   stepNumber: number;
@@ -108,13 +109,12 @@ export function parseAction(text: string): Action | null {
   }
 
   if (trimmed.startsWith('GOTO ')) {
-    const stepStr = trimmed.slice(5).trim();
-    const stepNum = parseInt(stepStr, 10);
-    const step = createStepNumber(stepNum);
-    if (!step) {
+    const targetStr = trimmed.slice(5).trim();
+    const target = parseStepIdFromString(targetStr);
+    if (!target) {
       return null;
     }
-    return { type: 'GOTO', step };
+    return { type: 'GOTO', target };
   }
 
   if (trimmed === 'RETRY') {
@@ -191,13 +191,12 @@ function parseNonRetryAction(input: string): NonRetryAction | null {
   }
 
   if (trimmed.startsWith('GOTO ')) {
-    const stepStr = trimmed.slice(5).trim();
-    const stepNum = parseInt(stepStr, 10);
-    const step = createStepNumber(stepNum);
-    if (!step) {
+    const targetStr = trimmed.slice(5).trim();
+    const target = parseStepIdFromString(targetStr);
+    if (!target) {
       return null;
     }
-    return { type: 'GOTO', step };
+    return { type: 'GOTO', target };
   }
 
   return null;
