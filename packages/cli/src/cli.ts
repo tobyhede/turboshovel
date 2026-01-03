@@ -64,6 +64,9 @@ async function runExecutionLoop(
     const execResult = await executeCommand(currentStep.command.code, cwd);
     console.log(`--- Exit: ${execResult.exitCode} (${execResult.success ? 'PASS' : 'FAIL'}) ---`);
 
+    // Store the result for later inspection
+    await manager.setLastResult(workflowId, execResult.success ? 'pass' : 'fail');
+
     // Create actor and send event based on exit code
     const actor = await manager.createActor(workflowId, steps);
     if (!actor) return 'blocked';
@@ -194,10 +197,15 @@ program
             process.exit(1);
           }
 
+          // Inherit prompted flag from parent workflow
+          const parentState = await manager.load(state.id);
+          const parentPrompted = parentState?.prompted ?? false;
+
           const childState = await manager.create(pending.workflow, steps, {
             agentId: options.agent,
             parentWorkflowId: state.id,
-            parentStepId: pending.stepId
+            parentStepId: pending.stepId,
+            prompted: parentPrompted  // Inherit from parent
           });
 
           await manager.updateAgentBinding(state.id, options.agent, {
@@ -207,8 +215,15 @@ program
           await manager.setActive(childState.id);
 
           console.log(`Started child workflow: ${pending.workflow}`);
-          console.log(`Child ID: ${childState.id}`);
-          console.log(`Step 1: ${steps[0].description}`);
+          console.log(`ID: ${childState.id}`);
+          if (parentPrompted) console.log(`Mode: prompted (inherited)`);
+
+          // Run execution loop (chains command steps automatically)
+          const result = await runExecutionLoop(manager, childState.id, steps, cwd, parentPrompted);
+
+          if (result === 'blocked') {
+            process.exit(1);
+          }
         }
         return;
       }
@@ -225,7 +240,7 @@ program
         }
 
         const workflowPath = path.isAbsolute(file) ? path.relative(cwd, file) : file;
-        const state = await manager.create(workflowPath, steps);
+        const state = await manager.create(workflowPath, steps, { prompted: options.prompted });
         await manager.setActive(state.id);
 
         if (steps[0].substeps && steps[0].substeps.length > 0) {
@@ -234,8 +249,14 @@ program
 
         console.log(`Started workflow: ${workflowPath}`);
         console.log(`ID: ${state.id}`);
-        console.log(`Step 1: ${steps[0].description}`);
-        printStepGuidance(steps[0]);
+        if (options.prompted) console.log(`Mode: prompted`);
+
+        // Run execution loop (chains command steps automatically)
+        const result = await runExecutionLoop(manager, state.id, steps, cwd, !!options.prompted);
+
+        if (result === 'blocked') {
+          process.exit(1);
+        }
         return;
       }
 
