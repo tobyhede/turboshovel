@@ -186,6 +186,7 @@ export interface WorkflowState {
   readonly id: string;
   readonly workflow: string;
   readonly step: StepNumber;
+  readonly substep?: string;  // Current substep ID (derived from XState context)
   readonly stepName: string;
   readonly retryCount: number;
   readonly variables: Record<string, boolean | number | string>;

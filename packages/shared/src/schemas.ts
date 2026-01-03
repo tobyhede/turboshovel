@@ -145,6 +145,7 @@ export const WorkflowStateSchema = z.object({
   id: z.string(),
   workflow: z.string(),
   step: StepNumberSchema,
+  substep: z.string().optional(),
   stepName: z.string(),
   retryCount: z.number().nonnegative().int(),
   variables: z.record(z.string(), z.union([z.boolean(), z.number(), z.string()])),
