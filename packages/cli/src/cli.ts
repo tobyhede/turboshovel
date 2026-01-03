@@ -453,34 +453,62 @@ program
         return;
       }
 
-      // Main step pass - send PASS event to actor
+      // Capture prev state BEFORE mutation
+      const prevStep = state.step;
+      const prevRetryCount = state.retryCount;
+      const totalSteps = steps.length;
+
+      // Send PASS event
       actor.send({ type: 'PASS' });
 
-      await manager.updateFromActor(state.id, actor, steps);
+      const updatedState = await manager.updateFromActor(state.id, actor, steps);
       const snapshot = actor.getPersistedSnapshot() as any;
+      const isComplete = snapshot.status === 'done' && snapshot.value === 'complete';
+      const isBlocked = snapshot.status === 'done' && snapshot.value === 'blocked';
 
-      // Handle workflow completion
-      if (snapshot.status === 'done') {
-        if (snapshot.value === 'complete') {
-          await manager.update(state.id, { variables: { ...state.variables, completed: true } });
-          console.log(`Workflow complete: ${state.workflow}`);
-          if (state.parentWorkflowId) {
-            await manager.setActive(state.parentWorkflowId);
-            console.log(`Returning to parent workflow: ${state.parentWorkflowId}`);
-          } else {
-            await manager.setActive(null);
-          }
-        } else if (snapshot.value === 'blocked') {
-          await manager.update(state.id, { variables: { ...state.variables, blocked: true } });
-          console.error(`Workflow blocked: ${state.workflow}`);
-          process.exit(1);
+      // Derive action
+      const currentStep = steps[prevStep - 1];
+      const retryMax = getStepRetryMax(currentStep);
+      const action = deriveAction(
+        prevStep, updatedState.step,
+        prevRetryCount, updatedState.retryCount,
+        retryMax, isComplete, isBlocked
+      );
+
+      // Update lastAction
+      const actionType = action.startsWith('GOTO') ? 'GOTO' :
+                         action.startsWith('RETRY') ? 'RETRY' :
+                         action as 'CONTINUE' | 'COMPLETE' | 'STOP';
+      await manager.update(state.id, { lastAction: actionType });
+
+      // Print separator and action block
+      printSeparator();
+      printActionBlock({
+        action,
+        prev: { current: prevStep, total: totalSteps },
+        outcome: 'PASS',
+      });
+
+      // Handle completion
+      if (isComplete) {
+        await manager.update(state.id, { variables: { ...state.variables, completed: true } });
+        printWorkflowComplete();
+        if (state.parentWorkflowId) {
+          await manager.setActive(state.parentWorkflowId);
+        } else {
+          await manager.setActive(null);
         }
         return;
       }
 
-      // Continue with execution loop (chains command steps automatically)
-      const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted);
+      if (isBlocked) {
+        await manager.update(state.id, { variables: { ...state.variables, blocked: true } });
+        printWorkflowBlocked(prevStep);
+        process.exit(1);
+      }
 
+      // Continue with execution loop
+      const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted);
       if (loopResult === 'blocked') {
         process.exit(1);
       }
