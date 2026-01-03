@@ -741,9 +741,17 @@ program
         }
       });
 
-      console.log(`Jumped to step ${target}`);
+      // Update lastAction
+      await manager.update(state.id, { lastAction: 'GOTO' });
 
-      // Continue with execution loop (chains command steps automatically)
+      // Print separator and action block (no outcome for goto)
+      printSeparator();
+      printActionBlock({
+        action: `GOTO ${target}`,
+        prev: { current: state.step, total: steps.length },
+      });
+
+      // Continue with execution loop
       const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted);
 
       if (loopResult === 'blocked') {
