@@ -719,6 +719,69 @@ program
   });
 
 program
+  .command('goto <step>')
+  .description('Jump to specific step number')
+  .action(async (stepArg: string) => {
+    try {
+      const cwd = getCwd();
+      const manager = new WorkflowStateManager(cwd);
+      const state = await manager.getActive();
+
+      if (!state) {
+        console.log('No active workflow');
+        return;
+      }
+
+      const target = createStepNumber(parseInt(stepArg, 10));
+      if (!target) {
+        console.error(`Error: Invalid step number: ${stepArg}`);
+        process.exit(1);
+      }
+
+      const workflowPath = await resolveWorkflowFile(cwd, state.workflow);
+      if (!workflowPath) {
+        console.error(`Error: Workflow file ${state.workflow} not found`);
+        process.exit(1);
+      }
+      const content = await fs.readFile(workflowPath, 'utf8');
+      const steps = parseWorkflow(content);
+
+      if (target > steps.length) {
+        console.error(`Error: Step ${target} does not exist (workflow has ${steps.length} steps)`);
+        process.exit(1);
+      }
+
+      // Direct state update (not via actor - GOTO is manual override)
+      await manager.update(state.id, {
+        step: target,
+        retryCount: 0,
+        lastResult: undefined,  // Clear lastResult on GOTO
+        snapshot: {
+          status: 'active',
+          value: `step_${target}`,
+          context: {
+            retryCount: 0,
+            variables: state.variables
+          }
+        }
+      });
+
+      console.log(`Jumped to step ${target}`);
+
+      // Continue with execution loop (chains command steps automatically)
+      const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted);
+
+      if (loopResult === 'blocked') {
+        process.exit(1);
+      }
+
+    } catch (error) {
+      console.error(`Error: ${getErrorMessage(error)}`);
+      process.exit(1);
+    }
+  });
+
+program
   .command('status')
   .description('Show current workflow state')
   .action(async () => {
