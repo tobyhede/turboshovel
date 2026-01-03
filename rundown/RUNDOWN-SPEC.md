@@ -1,6 +1,6 @@
 # Turboshovel Workflow Specification
 
-Version: 1.0.0
+Version: 1.1.0
 Status: Draft
 
 This document is the authoritative specification for Turboshovel workflow markdown files (`.workflow.md`).
@@ -10,18 +10,22 @@ This document is the authoritative specification for Turboshovel workflow markdo
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Document Structure](#document-structure)
-3. [Steps](#steps)
-4. [Substeps](#substeps)
-5. [Subworkflows](#subworkflows)
-6. [Conditions](#conditions)
-7. [Actions](#actions)
-8. [Commands](#commands)
-9. [Prompts](#prompts)
-10. [Variables](#variables)
-11. [Validation Rules](#validation-rules)
-12. [State Management](#state-management)
-13. [Examples](#examples)
+2. [Execution Modes](#execution-modes)
+3. [Document Structure](#document-structure)
+4. [Steps](#steps)
+5. [Substeps](#substeps)
+6. [Subworkflows](#subworkflows)
+7. [Transitions](#transitions)
+8. [Actions](#actions)
+9. [Commands](#commands)
+10. [Prompts](#prompts)
+11. [Variables](#variables)
+12. [Validation Rules](#validation-rules)
+13. [State Management](#state-management)
+14. [CLI Commands](#cli-commands)
+15. [Examples](#examples)
+16. [Design Decisions](#design-decisions)
+17. [Future Considerations](#future-considerations)
 
 ---
 
@@ -37,6 +41,79 @@ A workflow is a markdown document that defines a sequence of steps to be execute
 - Variable substitution for dynamic content
 
 **File naming convention:** `*.workflow.md`
+
+---
+
+## Execution Modes
+
+Workflows run in one of two execution modes, controlled by the `--prompted` flag on `tsv start`.
+
+### Auto Mode (Default)
+
+**Command:** `tsv start workflow.md`
+
+In auto mode, bash commands execute automatically:
+
+| Behavior | Description |
+|----------|-------------|
+| Command execution | **Automatic** - bash commands execute immediately |
+| Output | Piped to stdout (inherited stdio) |
+| Outcome evaluation | Based on exit code: `0 = PASS`, `non-zero = FAIL` |
+| Prompt display | Shown before command execution |
+| Advancement | Agent calls `tsv pass` to confirm and advance |
+
+**Execution flow:**
+```
+tsv start workflow.md
+  → Show prompt (if present)
+  → Execute bash command automatically
+  → Display exit code result (PASS/FAIL)
+  → Wait for: tsv pass (or tsv fail to override)
+```
+
+### Prompted Mode
+
+**Command:** `tsv start --prompted workflow.md`
+
+In prompted mode, commands are displayed but NOT executed automatically:
+
+| Behavior | Description |
+|----------|-------------|
+| Command execution | **Manual** - agent runs commands themselves |
+| Output | Both prompt AND command displayed to stdout |
+| Outcome signaling | Agent signals with `tsv pass` or `tsv fail` |
+| Advancement | Agent calls `tsv pass/fail` after manual execution |
+
+**Execution flow:**
+```
+tsv start --prompted workflow.md
+  → Show prompt (if present)
+  → Show command (NOT executed)
+  → Wait for: agent runs command manually
+  → Wait for: tsv pass or tsv fail
+```
+
+### Mode Inheritance
+
+Child workflows **inherit** their parent's execution mode:
+
+```bash
+# Parent started with --prompted
+tsv start --prompted parent.workflow.md
+
+# Child workflow automatically uses prompted mode
+# (no flag needed - inherited from parent state)
+tsv start child.workflow.md  # → mode: prompted
+```
+
+The `prompted` flag is stored in `WorkflowState.prompted` and automatically propagated to child workflows.
+
+### Step Types
+
+| Type | Has bash block? | Auto mode | Prompted mode |
+|------|-----------------|-----------|---------------|
+| **COMMAND** | Yes | Execute automatically | Show command, wait for manual execution |
+| **PROMPT** | No | Show prompt, wait for `tsv pass` | Same as auto mode |
 
 ---
 
@@ -95,10 +172,32 @@ Where:
 A step may contain:
 
 1. **Prose** - Descriptive text (becomes implicit prompt if no explicit prompt)
-2. **Code block** - Bash command to execute
+2. **Code block** - Bash command to execute (see [Commands](#commands))
 3. **Substeps** - Parallel execution units (H3 headers)
 4. **Prompts** - Explicit agent instructions
-5. **Conditions** - PASS/FAIL outcome handlers
+5. **Transitions** - PASS/FAIL outcome handlers
+
+### Step Structure
+
+```
+## {StepNumber}. {StepTitle}
+
+{Prompt text: Optional}
+
+```bash
+{command}
+```
+
+{More prompt text: Optional}
+
+- PASS: ACTION
+- FAIL: ACTION
+```
+
+**Key points:**
+- Prompts can appear **before** and/or **after** the bash block
+- Only ONE bash block per step (use `&&` to chain commands)
+- Transitions typically appear at the end
 
 ### Numbering Rules
 
@@ -203,9 +302,18 @@ When dynamic substeps reference multiple workflows, they cycle in order:
 
 ---
 
-## Conditions
+## Transitions
 
-Conditions define what happens when a step passes or fails.
+A transition defines what action to take when a step produces an outcome.
+
+### Terminology
+
+| Term | Meaning |
+|------|---------|
+| **Outcome** | PASS or FAIL - the result of step execution |
+| **Action** | CONTINUE, STOP, GOTO, RETRY, DONE - what to do next |
+| **Transition** | Outcome → Action mapping (e.g., `PASS: CONTINUE`) |
+| **Modifier** | ALL, ANY - substep aggregation for outcomes |
 
 ### Syntax
 
@@ -225,8 +333,8 @@ FAIL [modifier]: ACTION
 
 | Modifier | Meaning |
 |----------|---------|
-| `ALL` | All substeps must satisfy condition |
-| `ANY` | At least one substep must satisfy condition |
+| `ALL` | All substeps must produce this outcome |
+| `ANY` | At least one substep must produce this outcome |
 
 ### Valid Combinations
 
@@ -257,7 +365,7 @@ FAIL [modifier]: ACTION
 
 ## Actions
 
-Actions define what happens after PASS or FAIL.
+Actions define what to do when a step produces an outcome.
 
 | Action | Description |
 |--------|-------------|
@@ -353,7 +461,7 @@ Prompts provide instructions to agents executing steps.
 
 ### Implicit Prompts
 
-Any prose text in a step (not code blocks, conditions, or substeps) becomes an implicit prompt:
+Any prose text in a step (not code blocks, transitions, or substeps) becomes an implicit prompt:
 
 ```markdown
 ## 1. Review the code
@@ -457,7 +565,7 @@ The parser enforces these rules:
 3. No duplicate substep IDs within a step
 4. Agent type is optional
 
-### Condition Level
+### Transition Level
 
 1. Only valid combinations: PASS ALL + FAIL ANY, or PASS ANY + FAIL ALL
 2. Modifiers infer the complement (PASS ALL implies FAIL ANY)
@@ -493,6 +601,8 @@ Workflow state is persisted to enable resumption across sessions.
 | `agentBindings` | Map of agent ID to step binding |
 | `substepStates` | State of substeps within current step |
 | `snapshot` | XState state machine snapshot |
+| `prompted` | Prompted mode flag: `true` = manual, `undefined`/`false` = auto |
+| `lastResult` | Last command result: `'pass'` or `'fail'` (for transition evaluation) |
 
 ### Child Workflow State
 
@@ -501,6 +611,54 @@ Workflow state is persisted to enable resumption across sessions.
 | `agentId` | Agent executing this child workflow |
 | `parentWorkflowId` | Parent workflow ID |
 | `parentStepId` | Step in parent that spawned this child |
+
+---
+
+## CLI Commands
+
+The `tsv` (or `turboshovel`) CLI provides commands for workflow execution.
+
+### Workflow Lifecycle
+
+| Command | Description |
+|---------|-------------|
+| `tsv start <file>` | Start a new workflow (auto mode) |
+| `tsv start --prompted <file>` | Start in prompted mode (no auto-execution) |
+| `tsv stop` | Abort the active workflow |
+| `tsv complete` | Mark the active workflow as complete |
+| `tsv status` | Show current workflow state |
+| `tsv list` | List all workflows |
+
+### Step Progression
+
+| Command | Description |
+|---------|-------------|
+| `tsv pass` | Mark current step as passed (triggers PASS transition) |
+| `tsv fail` | Mark current step as failed (triggers FAIL transition) |
+| `tsv goto <n>` | Jump to step N directly |
+
+### Workflow Control
+
+| Command | Description |
+|---------|-------------|
+| `tsv stash` | Pause workflow enforcement (stash active workflow) |
+| `tsv pop` | Resume stashed workflow |
+
+### Agent Commands
+
+| Command | Description |
+|---------|-------------|
+| `tsv start --step <stepId>` | Queue step for agent binding |
+| `tsv start --agent <agentId>` | Bind agent to pending step |
+| `tsv pass --agent <agentId>` | Mark agent's step as passed |
+| `tsv fail --agent <agentId>` | Mark agent's step as failed |
+
+### Utility Commands
+
+| Command | Description |
+|---------|-------------|
+| `tsv gate <name>` | Run a named gate |
+| `tsv test [command...]` | Test command execution (for workflow testing) |
 
 ---
 
@@ -617,6 +775,64 @@ Continue without integration verification.
 
 ---
 
+## Design Decisions
+
+This section documents key design decisions and their rationale.
+
+### Heading Level Restrictions
+
+| Level | Purpose | Status |
+|-------|---------|--------|
+| H1 (`#`) | Document title | Reserved |
+| H2 (`##`) | Steps | Required |
+| H3 (`###`) | Substeps | Optional |
+| H4+ (`####`) | — | Not supported |
+
+#### Why H1 is Reserved for Title
+
+H1 headers that look like step headers (start with a number) are rejected:
+
+```markdown
+# 1. Build project    ← ERROR: Use ## instead
+# My Workflow Title   ← OK: Not a step header
+```
+
+**Rationale:**
+1. **Title distinction**: H1 conventionally represents the document title
+2. **Unambiguous parsing**: Without this rule, the parser would need heuristics to distinguish `# My Title` from `# 1. Step`
+3. **Standard hierarchy**: Aligns with Markdown conventions (H1 = document, H2 = sections)
+4. **Clear error messages**: Users get immediate feedback to use H2 instead
+
+#### Why H4+ is Not Supported
+
+Sub-substeps via `####` (H4) are intentionally not supported.
+
+**Problems with deeper nesting:**
+1. **Execution semantics become unclear**: If substeps run in parallel, do sub-substeps also run in parallel within their parent? How do outcomes aggregate (`PASS ALL` of `PASS ALL`)?
+2. **Numbering complexity**: `1.1.1`, `1.2.3.4` becomes unwieldy; dynamic numbering (`1.{n}.{m}`) is complex to parse and track
+3. **State management explosion**: Each nesting level multiplies state complexity
+
+**Alternative: Use subworkflows**
+
+```markdown
+### 1.1 Frontend review
+ - frontend-review.workflow.md
+
+### 1.2 Backend review
+ - backend-review.workflow.md
+```
+
+Subworkflows provide:
+- Clean separation of concerns
+- Reusability across workflows
+- Independent testing
+- Clear execution boundaries
+- Inherited execution mode (auto/prompted)
+
+The two-level hierarchy (step → substep) handles most use cases. For deeper decomposition, compose with subworkflows.
+
+---
+
 ## Future Considerations
 
 Features under consideration for future versions:
@@ -632,4 +848,5 @@ Features under consideration for future versions:
 
 ## Changelog
 
+- **1.1.0** (2026-01-03): Added execution modes (auto/prompted), CLI commands section, step structure clarification, Design Decisions section (heading level restrictions), renamed Conditions to Transitions (ubiquitous language alignment)
 - **1.0.0** (2026-01-01): Initial specification (Updated to Step/Substep terminology)
