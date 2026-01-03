@@ -17,8 +17,25 @@ import {
   getErrorMessage,
   renderStep,
   executeCommand,
+  printMetadata,
+  printActionBlock,
+  printStepBlock,
+  printSeparator,
+  printCommandExec,
+  printWorkflowComplete,
+  printWorkflowStopped,
+  printWorkflowBlocked,
+  printWorkflowStashed,
+  printNoActiveWorkflow,
+  printNoWorkflows,
+  printWorkflowListEntry,
+  formatPosition,
   type Step,
-  type PendingStep
+  type PendingStep,
+  type WorkflowMetadata,
+  type ActionBlockData,
+  type StepPosition,
+  type WorkflowState,
 } from '@turboshovel/shared';
 import { resolveWorkflowFile } from './helpers/resolve-workflow.js';
 
@@ -123,6 +140,55 @@ function getStepRetryMax(step: Step): number {
 
 function collect(value: string, previous: string[]): string[] {
   return previous.concat([value]);
+}
+
+/**
+ * Get total step count for a workflow file.
+ */
+async function getStepCount(cwd: string, workflowPath: string): Promise<number> {
+  try {
+    const fullPath = await resolveWorkflowFile(cwd, workflowPath);
+    if (!fullPath) return 0;
+    const content = await fs.readFile(fullPath, 'utf8');
+    const steps = parseWorkflow(content);
+    return steps.length;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Build metadata object for output
+ */
+function buildMetadata(state: WorkflowState): WorkflowMetadata {
+  return {
+    file: state.workflow,
+    state: `.claude/turboshovel/workflows/${state.id}.json`,
+    prompted: state.prompted || undefined,
+  };
+}
+
+/**
+ * Derive action string from state transition
+ */
+function deriveAction(
+  prevStep: number,
+  newStep: number,
+  prevRetryCount: number,
+  newRetryCount: number,
+  retryMax: number,
+  isComplete: boolean,
+  isBlocked: boolean
+): string {
+  if (isComplete) return 'COMPLETE';
+  if (isBlocked) return 'STOP';
+  if (newStep === prevStep && newRetryCount > prevRetryCount) {
+    return `RETRY (${newRetryCount}/${retryMax})`;
+  }
+  if (newStep !== prevStep + 1 && newStep !== prevStep) {
+    return `GOTO ${newStep}`;
+  }
+  return 'CONTINUE';
 }
 
 program
