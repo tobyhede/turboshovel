@@ -162,6 +162,7 @@ export class WorkflowStateManager {
 
     return await this.update(id, {
       step: createStepNumber(stepNum) || steps[0].number,
+      substep: snapshot.context.substep,
       stepName: step.description,
       retryCount: snapshot.context.retryCount,
       variables: snapshot.context.variables,
