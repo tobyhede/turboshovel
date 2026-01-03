@@ -1,6 +1,6 @@
 # Code Review Workflow
 
-A workflow with static subtasks for parallel code review by multiple specialized agents.
+A workflow with static substeps for parallel code review by multiple specialized agents.
 
 ## 1. Dispatch reviewers
 

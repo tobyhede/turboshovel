@@ -1,6 +1,6 @@
 # Dual Verification Workflow
 
-A workflow with dynamic subtasks that cycles through subworkflows for comprehensive verification.
+A workflow with dynamic substeps that cycles through subworkflows for comprehensive verification.
 
 ## 1. Execute verification rounds
 
