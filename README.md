@@ -555,7 +555,7 @@ Traditional skills and agents are guidance-only. Workflows enforce process:
 2. Workflow: Sets state to Step 1, injects prompt into conversation
 3. Claude: Reads prompt, executes step using tools (Step, Bash, Edit, etc.)
 4. Claude: Determines outcome (PASS/FAIL based on results)
-5. Claude: Runs `tsv next` or `tsv next --goto N` (to jump to step N)
+5. Claude: Runs `tsv pass` or `tsv goto N` (to jump to step N)
 6. Repeat until DONE
 ```
 
@@ -576,7 +576,7 @@ tsv --help
 # After installing, use the simple command:
 tsv start my-workflow.md
 tsv status
-tsv next
+tsv pass
 ```
 
 **For development (without npm install):**
@@ -605,11 +605,11 @@ tsv start my-workflow.md
 # Check status
 tsv status
 
-# Advance to next step
-tsv next
+# Mark step as passed (advance to next step)
+tsv pass
 
 # Jump to specific step
-tsv next --goto 3
+tsv goto 3
 
 # List all workflows
 tsv list
@@ -628,8 +628,8 @@ tsv start --agent xyz123  # Bind agent xyz123 to pending step
 
 Mark step completion:
 ```bash
-tsv next --pass --agent xyz123  # Mark agent as passed
-tsv next --fail --agent xyz123  # Mark agent as failed
+tsv pass --agent xyz123  # Mark agent as passed
+tsv fail --agent xyz123  # Mark agent as failed
 ```
 
 Pause enforcement for ad-hoc work:
@@ -746,8 +746,8 @@ Since IF/ELSE is not yet implemented, use agent-driven decisions with the `--got
 
 **Prompt:** Check TodoWrite for remaining steps.
 
-If more steps remain → `tsv next --goto 3`
-If all done → `tsv next`
+If more steps remain → `tsv goto 3`
+If all done → `tsv pass`
 
 - PASS: CONTINUE
 ```
@@ -756,8 +756,8 @@ If all done → `tsv next`
 1. Agent reads the step guidance with decision instructions
 2. Agent evaluates the condition (e.g., checks TodoWrite for remaining steps)
 3. Agent executes the appropriate CLI command:
-   - **Loop back:** `tsv next --goto 3` (jumps to step 3)
-   - **Continue forward:** `tsv next` (proceeds to step 6)
+   - **Loop back:** `tsv goto 3` (jumps to step 3)
+   - **Continue forward:** `tsv pass` (proceeds to step 6)
 
 **Advantages over parsed IF/ELSE:**
 - Agent can apply contextual judgment
@@ -773,8 +773,8 @@ If all done → `tsv next`
 **Prompt:** Execute next 3 steps from plan.
 
 After batch completes, check remaining work:
-- If more batches needed → `tsv next --goto 2` (review + loop)
-- If all steps complete → `tsv next` (continue to finalization)
+- If more batches needed → `tsv goto 2` (review + loop)
+- If all steps complete → `tsv pass` (continue to finalization)
 
 - PASS: CONTINUE
 - FAIL: RETRY 3
@@ -848,8 +848,8 @@ Execute implementation plans in controlled batches.
 
 **Prompt:** Check TodoWrite for remaining tasks.
 
-If more batches needed → `tsv next --step 3`
-If all tasks complete → `tsv next`
+If more batches needed → `tsv goto 3`
+If all tasks complete → `tsv pass`
 
 - PASS: CONTINUE
 
@@ -964,27 +964,42 @@ tsv start examples/code-review.workflow.md
 - Sets as active workflow
 - Displays Step 1 guidance
 
-#### `tsv next`
+#### `tsv pass`
 
-Advance to the next step (step + 1).
+Mark current step as passed (evaluates PASS condition).
 
 ```bash
-tsv next
+tsv pass
 ```
 
 **Behavior:**
 - Loads active workflow
-- Increments step number
+- Evaluates PASS condition (typically CONTINUE to next step)
 - Resets retry count
-- Displays step guidance
-- Auto-completes if past final step
+- Displays next step guidance
+- Auto-completes if workflow done
 
-#### `tsv next --goto N`
+#### `tsv fail`
+
+Mark current step as failed (evaluates FAIL condition).
+
+```bash
+tsv fail
+```
+
+**Behavior:**
+- Loads active workflow
+- Evaluates FAIL condition (e.g., RETRY, STOP, GOTO)
+- Increments retry count if applicable
+- Takes appropriate action based on FAIL condition
+- May stop or jump to different step
+
+#### `tsv goto <n>`
 
 Jump to a specific step (for GOTO actions).
 
 ```bash
-tsv next --goto 3
+tsv goto 3
 ```
 
 **Use cases:**
@@ -992,8 +1007,8 @@ tsv next --goto 3
 - Manual navigation for debugging
 - Skipping optional steps
 
-**Flag clarification:**
-- `--goto N` jumps to workflow step N (for GOTO/loops)
+**Argument:**
+- `<n>` is the step number to jump to
 - `--step <id>` specifies which parallel substep (e.g., 3.1, 3.2) when multiple steps run concurrently
 
 #### `tsv status`
@@ -1182,8 +1197,8 @@ Execute implementation plans in controlled batches with review checkpoints.
 
 **Prompt:** Check TodoWrite for remaining tasks.
 
-If more batches needed → `tsv next --step 3`
-If all tasks complete → `tsv next`
+If more batches needed → `tsv goto 3`
+If all tasks complete → `tsv pass`
 
 - PASS: CONTINUE
 
@@ -1235,8 +1250,8 @@ If all tasks complete → `tsv next`
 
 **Prompt:** Check if more items remain.
 
-If more items → `tsv next --step 1`
-If complete → `tsv next`
+If more items → `tsv goto 1`
+If complete → `tsv pass`
 
 - PASS: CONTINUE
 ```
@@ -1314,8 +1329,8 @@ npm run test:integration
 
 **Prompt:** Check if queue has more items.
 
-If queue not empty → `tsv next --goto 1`
-If queue empty → `tsv next`
+If queue not empty → `tsv goto 1`
+If queue empty → `tsv pass`
 
 - PASS: CONTINUE
 ```
@@ -1371,8 +1386,8 @@ Execute implementation plans in batches.
 
 **Prompt:** Check if more batches remain.
 
-If more batches remain → `tsv next --goto 2`
-If complete → `tsv next`
+If more batches remain → `tsv goto 2`
+If complete → `tsv pass`
 
 - PASS: CONTINUE
 

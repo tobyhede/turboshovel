@@ -17,11 +17,14 @@ tsv start my-workflow.md
 # Check status
 tsv status
 
-# Advance to next step
-tsv next
+# Mark step as passed (advance to next step)
+tsv pass
 
-# Handle failure (evaluates FAIL condition)
-tsv next --fail
+# Mark step as failed (evaluates FAIL condition)
+tsv fail
+
+# Jump to specific step
+tsv goto 3
 
 # Stop workflow
 tsv stop
@@ -32,7 +35,9 @@ tsv stop
 | Command | Description |
 |---------|-------------|
 | `tsv start <file>` | Start a new workflow |
-| `tsv next` | Advance to next step |
+| `tsv pass` | Mark current step as passed (evaluates PASS condition) |
+| `tsv fail` | Mark current step as failed (evaluates FAIL condition) |
+| `tsv goto <n>` | Jump to specific step number |
 | `tsv status` | Show current state |
 | `tsv stop` | Abort workflow and delete workflow state |
 | `tsv complete` | Mark workflow as successfully completed |
