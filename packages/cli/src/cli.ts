@@ -53,7 +53,8 @@ program
   .description('Start a new workflow or queue a step')
   .option('--step <stepId>', 'Mark step as started (adds to pending queue)')
   .option('--agent <agentId>', 'Bind agent to pending step')
-  .action(async (file: string | undefined, options: { step?: string; agent?: string }) => {
+  .option('--prompted', 'Prompted mode: show commands without auto-executing')
+  .action(async (file: string | undefined, options: { step?: string; agent?: string; prompted?: boolean }) => {
     try {
       const cwd = getCwd();
       const manager = new WorkflowStateManager(cwd);
