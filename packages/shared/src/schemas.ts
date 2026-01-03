@@ -172,7 +172,9 @@ export const WorkflowStateSchema = z.object({
   }).optional(),
   startedAt: z.string(),
   updatedAt: z.string(),
-  snapshot: z.unknown().optional() // XState snapshot
+  snapshot: z.unknown().optional(), // XState snapshot
+  prompted: z.boolean().optional(),
+  lastResult: z.enum(['pass', 'fail']).optional()
 });
 
 export type ValidatedWorkflowState = z.infer<typeof WorkflowStateSchema>;
