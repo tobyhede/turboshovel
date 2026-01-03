@@ -31,8 +31,12 @@ describe('output formatter', () => {
   });
 
   describe('formatPosition', () => {
-    it('formats step position as n/N', () => {
+    it('formats position without substep', () => {
       expect(formatPosition({ current: 2, total: 5 })).toBe('2/5');
+    });
+
+    it('formats position with substep', () => {
+      expect(formatPosition({ current: 2, total: 5, substep: '1' })).toBe('2.1/5');
     });
   });
 
@@ -156,8 +160,13 @@ describe('output formatter', () => {
 
   describe('printWorkflowBlocked', () => {
     it('prints blocked message with step number', () => {
-      printWorkflowBlocked(2);
+      printWorkflowBlocked({ current: 2, total: 5 });
       expect(consoleOutput).toContain('Workflow blocked at step 2.');
+    });
+
+    it('prints blocked message with substep', () => {
+      printWorkflowBlocked({ current: 2, total: 5, substep: '1' });
+      expect(consoleOutput).toContain('Workflow blocked at step 2.1.');
     });
   });
 

@@ -8,7 +8,10 @@ const SEPARATOR = '-----';
  * Format step position as n/N
  */
 export function formatPosition(pos: StepPosition): string {
-  return `${String(pos.current)}/${String(pos.total)}`;
+  const stepPart = pos.substep
+    ? `${String(pos.current)}.${pos.substep}`
+    : String(pos.current);
+  return `${stepPart}/${String(pos.total)}`;
 }
 
 /**
@@ -80,9 +83,12 @@ export function printWorkflowStopped(): void {
 /**
  * Print workflow blocked message
  */
-export function printWorkflowBlocked(step: number): void {
+export function printWorkflowBlocked(pos: StepPosition): void {
   console.log('');
-  console.log(`Workflow blocked at step ${String(step)}.`);
+  const stepStr = pos.substep
+    ? `${String(pos.current)}.${pos.substep}`
+    : String(pos.current);
+  console.log(`Workflow blocked at step ${stepStr}.`);
 }
 
 /**

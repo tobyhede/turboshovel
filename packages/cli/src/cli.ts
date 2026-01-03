@@ -134,7 +134,7 @@ async function runExecutionLoop(
 
     if (isBlocked) {
       await manager.update(workflowId, { variables: { ...updatedState.variables, blocked: true } });
-      printWorkflowBlocked(prevStep);
+      printWorkflowBlocked({ current: prevStep, total: totalSteps });
       if (state.parentWorkflowId) {
         await manager.setActive(state.parentWorkflowId);
       } else {
@@ -391,10 +391,11 @@ program
       printMetadata(buildMetadata(state));
 
       if (options.status === 'blocked') {
+        const totalSteps = await getStepCount(cwd, state.workflow);
         await manager.update(state.id, {
           variables: { ...state.variables, blocked: true }
         });
-        printWorkflowBlocked(state.step);
+        printWorkflowBlocked({ current: state.step, total: totalSteps });
       } else {
         await manager.update(state.id, {
           variables: { ...state.variables, completed: true }
@@ -524,7 +525,7 @@ program
 
       if (isBlocked) {
         await manager.update(state.id, { variables: { ...state.variables, blocked: true } });
-        printWorkflowBlocked(prevStep);
+        printWorkflowBlocked({ current: prevStep, total: totalSteps });
         process.exit(1);
       }
 
@@ -657,7 +658,7 @@ program
       // Handle blocked
       if (isBlocked) {
         await manager.update(state.id, { variables: { ...state.variables, blocked: true } });
-        printWorkflowBlocked(prevStep);
+        printWorkflowBlocked({ current: prevStep, total: totalSteps });
         if (state.parentWorkflowId) {
           await manager.setActive(state.parentWorkflowId);
         } else {

@@ -13,6 +13,7 @@ export interface WorkflowMetadata {
 export interface StepPosition {
   current: number;
   total: number;
+  substep?: string;
 }
 
 /**
