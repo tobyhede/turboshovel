@@ -278,9 +278,16 @@ program
 
           await manager.setActive(childState.id);
 
-          console.log(`Started child workflow: ${pending.workflow}`);
-          console.log(`ID: ${childState.id}`);
-          if (parentPrompted) console.log(`Mode: prompted (inherited)`);
+          // Print metadata and action
+          printMetadata({
+            file: pending.workflow,
+            state: `.claude/turboshovel/workflows/${childState.id}.json`,
+            prompted: parentPrompted || undefined,
+          });
+          printActionBlock({ action: 'START' });
+
+          // Update lastAction
+          await manager.update(childState.id, { lastAction: 'START' });
 
           // Run execution loop (chains command steps automatically)
           const result = await runExecutionLoop(manager, childState.id, steps, cwd, parentPrompted);
@@ -311,9 +318,16 @@ program
           await manager.initializeSubsteps(state.id, steps[0].substeps);
         }
 
-        console.log(`Started workflow: ${workflowPath}`);
-        console.log(`ID: ${state.id}`);
-        if (options.prompted) console.log(`Mode: prompted`);
+        // Print metadata and action
+        printMetadata({
+          file: workflowPath,
+          state: `.claude/turboshovel/workflows/${state.id}.json`,
+          prompted: options.prompted || undefined,
+        });
+        printActionBlock({ action: 'START' });
+
+        // Update lastAction
+        await manager.update(state.id, { lastAction: 'START' });
 
         // Run execution loop (chains command steps automatically)
         const result = await runExecutionLoop(manager, state.id, steps, cwd, !!options.prompted);
