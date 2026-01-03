@@ -215,6 +215,10 @@ export interface WorkflowState {
 
     readonly updatedAt: string;
 
+    // Prompted(true = prompted/manual, false/undefined = execute)
+    readonly prompted?: boolean;
+    readonly lastResult?: 'pass' | 'fail';
+
     readonly snapshot?: unknown;
 
   }
