@@ -11,7 +11,6 @@ import {
   WorkflowSyntaxError,
   stepIdToString,
   parseStepIdFromString,
-  createStepNumber,
   evaluateFailCondition,
   isNodeError,
   getErrorMessage,
@@ -787,8 +786,6 @@ program
         lastAction: 'GOTO',
         lastResult: undefined  // CRITICAL: Clear stale result on manual goto
       });
-
-      const targetStep = steps[target.step - 1];
 
       // Print output
       printSeparator();
