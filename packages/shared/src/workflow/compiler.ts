@@ -3,6 +3,7 @@ import { type Step, type StepNumber, type Action, type NonRetryAction } from './
 
 export interface WorkflowContext {
   retryCount: number;
+  substep?: string;
   variables: Record<string, boolean | number | string>;
 }
 
@@ -86,6 +87,7 @@ export function compileWorkflowToMachine(steps: Step[]) {
     initial: 'step_1',
     context: {
       retryCount: 0,
+      substep: undefined,
       variables: {},
     },
     states: {
