@@ -693,7 +693,7 @@ program
 
 program
   .command('goto <step>')
-  .description('Jump to specific step number')
+  .description('Jump to specific step (e.g., "3" or "3.1" for substep)')
   .action(async (stepArg: string) => {
     try {
       const cwd = getCwd();
@@ -705,9 +705,11 @@ program
         return;
       }
 
-      const target = createStepNumber(parseInt(stepArg, 10));
+      // Parse target with StepId
+      const target = parseStepIdFromString(stepArg);
       if (!target) {
-        console.error(`Error: Invalid step number: ${stepArg}`);
+        console.error(`Error: Invalid step target: ${stepArg}`);
+        console.error('Format: N (step) or N.M (step.substep)');
         process.exit(1);
       }
 
@@ -719,34 +721,59 @@ program
       const content = await fs.readFile(workflowPath, 'utf8');
       const steps = parseWorkflow(content);
 
-      if (target > steps.length) {
-        console.error(`Error: Step ${target} does not exist (workflow has ${steps.length} steps)`);
+      // Validate step exists
+      if (target.step > steps.length) {
+        console.error(`Error: Step ${target.step} does not exist (workflow has ${steps.length} steps)`);
         process.exit(1);
       }
 
-      // Direct state update (not via actor - GOTO is manual override)
-      await manager.update(state.id, {
-        step: target,
-        retryCount: 0,
-        lastResult: undefined,  // Clear lastResult on GOTO
-        snapshot: {
-          status: 'active',
-          value: `step_${target}`,
-          context: {
-            retryCount: 0,
-            variables: state.variables
-          }
+      // Validate substep exists (if specified)
+      if (target.substep) {
+        const step = steps[target.step - 1];
+        if (!step.substeps || step.substeps.length === 0) {
+          console.error(`Error: Step ${target.step} has no substeps`);
+          process.exit(1);
         }
+        if (step.substeps.some(s => s.isDynamic)) {
+          console.error(`Error: Cannot goto substep of dynamic step. Use: tsv goto ${target.step}`);
+          process.exit(1);
+        }
+        const substepExists = step.substeps.some(s => s.id === target.substep);
+        if (!substepExists) {
+          console.error(`Error: Substep ${stepIdToString(target)} does not exist`);
+          process.exit(1);
+        }
+      }
+
+      // Create XState actor
+      const actor = await manager.createActor(state.id, steps);
+      if (!actor) {
+        console.error('Error: Failed to initialize workflow engine');
+        process.exit(1);
+      }
+
+      const prevStep = state.step;
+      const prevSubstep = state.substep;
+
+      // SEND GOTO EVENT TO XSTATE (not direct state manipulation!)
+      actor.send({ type: 'GOTO', target });
+
+      // Update state from XState (single source of truth)
+      const updatedState = await manager.updateFromActor(state.id, actor, steps);
+
+      // Update lastAction and CLEAR lastResult (prevent stale PASS/FAIL leaking)
+      await manager.update(state.id, {
+        lastAction: 'GOTO',
+        lastResult: undefined  // CRITICAL: Clear stale result on manual goto
       });
 
-      // Update lastAction
-      await manager.update(state.id, { lastAction: 'GOTO' });
+      const targetStep = steps[target.step - 1];
 
-      // Print separator and action block (no result for goto)
+      // Print output
       printSeparator();
       printActionBlock({
-        action: `GOTO ${target}`,
-        from: { current: state.step, total: steps.length },
+        action: `GOTO ${stepIdToString(target)}`,
+        from: { current: prevStep, total: steps.length, substep: prevSubstep },
       });
 
       // Continue with execution loop
