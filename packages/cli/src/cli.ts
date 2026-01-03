@@ -1054,10 +1054,6 @@ program
     }
   });
 
-function printStepGuidance(step: Step): void {
-  console.log('\n' + renderStep(step));
-}
-
 async function findWorkflowFile(cwd: string, filename: string): Promise<string | null> {
   const directPath = path.join(cwd, filename);
   try {

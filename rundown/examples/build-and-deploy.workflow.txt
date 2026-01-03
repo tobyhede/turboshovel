@@ -1,63 +1,159 @@
-> tsv start rundown/examples/build-and-deploy.workflow.md
+$ tsv start rundown/examples/build-and-deploy.workflow.md
 
-Workflow: rundown/examples/build-and-deploy.workflow.md
-State: .claude/turboshovel/workflows/wf-2026-01-01-g50rvs.json
-Tasks: {N}
+File:   rundown/examples/build-and-deploy.workflow.md
+State:  .claude/turboshovel/workflows/wf-2026-01-03-abc.json
+Prompt: No
+Action: START
 
+Step:   1/5
 ## 1. Install project dependencies
 
-// Execute: tsv test npm install
-{output}
+```bash
+tsv test npm install
+```
 
+$ tsv test npm install
 
----------------------------------------------
+added 150 packages in 2.5s
 
+-----
+Prev:    1/5
+Outcome: PASS
+Action:  CONTINUE
 
-> tsv next
-
+Step:    2/5
 ## 2. Run lint
 
-// Execute: tsv test npm lint
-{output}
+```bash
+tsv test npm run lint
+```
 
+- PASS: CONTINUE
+- FAIL: STOP
 
----------------------------------------------
+$ tsv test npm run lint
 
+✓ No linting errors
 
-> tsv next
+-----
+Prev:    2/5
+Outcome: PASS
+Action:  CONTINUE
 
+Step:    3/5
 ## 3. Run tests
 
-// Execute: tsv test npm test
-{output}
+```bash
+tsv test npm test
+```
 
+- PASS: CONTINUE
+- FAIL: STOP "Failed to run tests"
 
----------------------------------------------
+$ tsv test npm test
 
+PASS  src/index.test.ts
+Tests:  12 passed
 
-> tsv next
+-----
+Prev:    3/5
+Outcome: PASS
+Action:  CONTINUE
 
+Step:    4/5
 ## 4. Build
 
-// Execute: tsv test --result fail --result pass npm run build
-{output}
+```bash
+tsv test --result fail --result pass npm run build
+```
 
-// Execute: tsv test --result fail --result pass npm run build
-{output}
+- PASS: CONTINUE
+- FAIL: RETRY
 
+$ tsv test --result fail --result pass npm run build
 
----------------------------------------------
+Build failed: Missing dependencies
 
+-----
+Prev:    4/5
+Outcome: FAIL
+Action:  RETRY (1/∞)
 
-> tsv next
+Step:    4/5
+## 4. Build
 
+```bash
+tsv test --result fail --result pass npm run build
+```
+
+- PASS: CONTINUE
+- FAIL: RETRY
+
+$ tsv test --result fail --result pass npm run build
+
+Build complete: dist/bundle.js
+
+-----
+Prev:    4/5
+Outcome: PASS
+Action:  CONTINUE
+
+Step:    5/5
 ## 5. Deploy
 
-// Execute: tsv test --result fail --result fail --result pass npm run deploy
-{output}
+```bash
+tsv test --result fail --result fail --result pass npm run deploy
+```
 
-// Execute: tsv test --result fail --result fail --result pass npm run deploy
-{output}
+- PASS: DONE
+- FAIL: RETRY 3
 
-// Execute: tsv test --result fail --result fail --result pass npm run deploy
-{output}
+$ tsv test --result fail --result fail --result pass npm run deploy
+
+Deploy failed: Connection timeout
+
+-----
+Prev:    5/5
+Outcome: FAIL
+Action:  RETRY (1/3)
+
+Step:    5/5
+## 5. Deploy
+
+```bash
+tsv test --result fail --result fail --result pass npm run deploy
+```
+
+- PASS: DONE
+- FAIL: RETRY 3
+
+$ tsv test --result fail --result fail --result pass npm run deploy
+
+Deploy failed: Service unavailable
+
+-----
+Prev:    5/5
+Outcome: FAIL
+Action:  RETRY (2/3)
+
+Step:    5/5
+## 5. Deploy
+
+```bash
+tsv test --result fail --result fail --result pass npm run deploy
+```
+
+- PASS: DONE
+- FAIL: RETRY 3
+
+$ tsv test --result fail --result fail --result pass npm run deploy
+
+Deployed to production successfully
+
+-----
+Prev:    5/5
+Outcome: PASS
+Action:  COMPLETE
+
+Workflow complete.
+-----
