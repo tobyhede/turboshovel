@@ -203,25 +203,18 @@ export interface WorkflowState {
   readonly parentWorkflowId?: string;
   readonly parentStepId?: StepId;
 
-    readonly nested?: {
+  readonly nested?: {
+    readonly workflow: string;
+    readonly instanceId: string;
+  };
 
-      readonly workflow: string;
+  readonly startedAt: string;
+  readonly updatedAt: string;
 
-      readonly instanceId: string;
+  // Prompted(true = prompted/manual, false/undefined = execute)
+  readonly prompted?: boolean;
+  readonly lastResult?: 'pass' | 'fail';
+  readonly lastAction?: 'START' | 'CONTINUE' | 'GOTO' | 'COMPLETE' | 'STOP' | 'RETRY';
 
-    };
-
-    readonly startedAt: string;
-
-    readonly updatedAt: string;
-
-    // Prompted(true = prompted/manual, false/undefined = execute)
-    readonly prompted?: boolean;
-    readonly lastResult?: 'pass' | 'fail';
-    readonly lastAction?: 'START' | 'CONTINUE' | 'GOTO' | 'COMPLETE' | 'STOP' | 'RETRY';
-
-    readonly snapshot?: unknown;
-
-  }
-
-  
+  readonly snapshot?: unknown;
+}

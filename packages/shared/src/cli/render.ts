@@ -9,7 +9,7 @@ export function renderStepForCLI(step: Step): string {
   const lines: string[] = [];
 
   // Header
-  lines.push(`## ${step.number}. ${step.description}`);
+  lines.push(`## ${String(step.number)}. ${step.description}`);
 
   // Prompts (before command per spec)
   for (const prompt of step.prompts) {

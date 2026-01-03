@@ -8,7 +8,7 @@ const SEPARATOR = '-----';
  * Format step position as n/N
  */
 export function formatPosition(pos: StepPosition): string {
-  return `${pos.current}/${pos.total}`;
+  return `${String(pos.current)}/${String(pos.total)}`;
 }
 
 /**
@@ -82,7 +82,7 @@ export function printWorkflowStopped(): void {
  */
 export function printWorkflowBlocked(step: number): void {
   console.log('');
-  console.log(`Workflow blocked at step ${step}.`);
+  console.log(`Workflow blocked at step ${String(step)}.`);
 }
 
 /**
