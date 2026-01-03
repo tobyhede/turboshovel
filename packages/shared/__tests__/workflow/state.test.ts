@@ -149,4 +149,16 @@ describe('WorkflowStateManager', () => {
       });
     });
   });
+
+  describe('create with prompted flag', () => {
+    it('defaults to auto mode (prompted undefined)', async () => {
+      const state = await manager.create('test.md', mockSteps);
+      expect(state.prompted).toBeUndefined();
+    });
+
+    it('accepts prompted option', async () => {
+      const state = await manager.create('test.md', mockSteps, { prompted: true });
+      expect(state.prompted).toBe(true);
+    });
+  });
 });
