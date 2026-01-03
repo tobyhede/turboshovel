@@ -12,7 +12,7 @@ interface ExecSyncError extends Error {
 }
 
 function isExecSyncError(error: unknown): error is ExecSyncError {
-  return error instanceof Error;
+  return error instanceof Error && 'status' in error && 'stderr' in error;
 }
 
 /**
