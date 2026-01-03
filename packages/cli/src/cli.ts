@@ -593,6 +593,134 @@ program
   });
 
 program
+  .command('fail')
+  .description('Mark current step as failed (triggers FAIL transition)')
+  .option('--agent <agentId>', 'Specify agent completing step')
+  .action(async (options: { agent?: string }) => {
+    try {
+      const cwd = getCwd();
+      const manager = new WorkflowStateManager(cwd);
+      const state = await manager.getActive();
+
+      if (!state) {
+        console.log('No active workflow');
+        return;
+      }
+
+      const workflowPath = await resolveWorkflowFile(cwd, state.workflow);
+      if (!workflowPath) {
+        console.error(`Error: Workflow file ${state.workflow} not found`);
+        process.exit(1);
+      }
+      const content = await fs.readFile(workflowPath, 'utf8');
+      const steps = parseWorkflow(content);
+      const currentStep = steps[state.step - 1];
+      const actor = await manager.createActor(state.id, steps);
+      if (!actor) {
+        console.error('Error: Failed to initialize workflow engine');
+        process.exit(1);
+      }
+
+      // Handle agent completion (substep case) - REUSE evaluateFailCondition
+      if (options.agent) {
+        const binding = await manager.getAgentBinding(state.id, options.agent);
+        if (!binding) {
+          console.error(`Error: No binding for agent ${options.agent}`);
+          process.exit(1);
+        }
+
+        // Evaluate fail condition for the agent's step (preserves RETRY/GOTO behavior)
+        const agentStep = steps[binding.stepId.step - 1];
+        const failResult = evaluateFailCondition(agentStep, state.retryCount);
+
+        if (failResult.action === 'retry') {
+          actor.send({ type: 'FAIL' });
+          await manager.updateFromActor(state.id, actor, steps);
+          console.log(`Agent ${options.agent} retrying step ${binding.stepId.step}`);
+          // Continue with execution loop for retry
+          const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted);
+          if (loopResult === 'blocked') process.exit(1);
+          return;
+        } else if (failResult.action === 'goto') {
+          actor.send({ type: 'FAIL' });
+          const updated = await manager.updateFromActor(state.id, actor, steps);
+          console.log(`Agent ${options.agent} failed, workflow jumped to step ${updated.step}`);
+          // Continue with execution loop after GOTO
+          const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted);
+          if (loopResult === 'blocked') process.exit(1);
+          return;
+        }
+
+        // Only mark binding as fail if no retry/goto triggered
+        await manager.updateAgentBinding(state.id, options.agent, {
+          status: 'done',
+          result: 'fail'
+        });
+        console.log(`Agent ${options.agent} marked as fail`);
+
+        const updated = await manager.load(state.id);
+        const bindings = Object.values(updated?.agentBindings ?? {});
+        const running = bindings.filter((b) => b.status === 'running').length;
+
+        if (running > 0) {
+          console.log(`${running} agent(s) still running`);
+        } else {
+          console.log('All agents complete');
+        }
+        return;
+      }
+
+      // Main step fail - send FAIL event to actor
+      actor.send({ type: 'FAIL' });
+
+      const updatedState = await manager.updateFromActor(state.id, actor, steps);
+      const snapshot = actor.getPersistedSnapshot() as any;
+
+      // Handle workflow end states
+      if (snapshot.status === 'done') {
+        if (snapshot.value === 'blocked') {
+          await manager.update(state.id, { variables: { ...state.variables, blocked: true } });
+          console.error(`Workflow blocked: ${state.workflow}`);
+          if (state.parentWorkflowId) {
+            await manager.setActive(state.parentWorkflowId);
+            console.log(`Returning to parent workflow: ${state.parentWorkflowId}`);
+          } else {
+            await manager.setActive(null);
+          }
+          process.exit(1);
+        } else if (snapshot.value === 'complete') {
+          await manager.update(state.id, { variables: { ...state.variables, completed: true } });
+          console.log(`Workflow complete: ${state.workflow}`);
+          if (state.parentWorkflowId) {
+            await manager.setActive(state.parentWorkflowId);
+          } else {
+            await manager.setActive(null);
+          }
+        }
+        return;
+      }
+
+      // Check if actor triggered a retry (same step, incremented retryCount)
+      const isRetry = updatedState.step === state.step && updatedState.retryCount > state.retryCount;
+      if (isRetry) {
+        const retryMax = getStepRetryMax(currentStep);
+        console.log(`\nRetry ${updatedState.retryCount}/${retryMax}`);
+      }
+
+      // Continue with execution loop (chains command steps automatically)
+      const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted);
+
+      if (loopResult === 'blocked') {
+        process.exit(1);
+      }
+
+    } catch (error) {
+      console.error(`Error: ${getErrorMessage(error)}`);
+      process.exit(1);
+    }
+  });
+
+program
   .command('status')
   .description('Show current workflow state')
   .action(async () => {
