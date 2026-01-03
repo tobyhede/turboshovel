@@ -7,6 +7,14 @@ export interface SubagentStartResult {
   violation?: string;
 }
 
+interface ExecSyncError extends Error {
+  stderr?: Buffer | string;
+}
+
+function isExecSyncError(error: unknown): error is ExecSyncError {
+  return error instanceof Error;
+}
+
 /**
  * Handle SubagentStart hook
  */
@@ -43,7 +51,10 @@ export async function handleSubagentStart(input: HookInput): Promise<SubagentSta
     const context = parseStartAgentOutput(output, agentId);
     return { context };
   } catch (error) {
-    const stderr = (error as any).stderr?.toString() ?? '';
+    if (!isExecSyncError(error)) {
+      return {};
+    }
+    const stderr = error.stderr?.toString() ?? '';
     if (stderr.includes('No pending step')) {
       return {
         violation: 'SubagentStart with no pending step. Step dispatch must precede agent start.'
@@ -53,7 +64,7 @@ export async function handleSubagentStart(input: HookInput): Promise<SubagentSta
   }
 }
 
-async function handleCliCall(cwd: string, agentId: string): Promise<SubagentStartResult> {
+function handleCliCall(cwd: string, agentId: string): SubagentStartResult {
   try {
     const output = execSync(`tsv start --agent ${agentId}`, {
       cwd,
@@ -64,7 +75,10 @@ async function handleCliCall(cwd: string, agentId: string): Promise<SubagentStar
     const context = parseStartAgentOutput(output, agentId);
     return { context };
   } catch (error) {
-    const stderr = (error as any).stderr?.toString() ?? '';
+    if (!isExecSyncError(error)) {
+      return {};
+    }
+    const stderr = error.stderr?.toString() ?? '';
     if (stderr.includes('No pending step')) {
       return {
         violation: 'SubagentStart with no pending step. Step dispatch must precede agent start.'

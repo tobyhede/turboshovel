@@ -18,12 +18,18 @@ export function setExecSync(fn: typeof nodeExecSync): void {
 }
 
 /**
+ * Pattern for parsing STATUS field from agent output.
+ * Expected format: STATUS: OK|PASS|BLOCKED|FAIL (case-insensitive)
+ */
+const STATUS_PATTERN = /STATUS:\s*(OK|PASS|BLOCKED|FAIL)/i;
+
+/**
  * Parse STATUS field from subagent output
  */
 function parseAgentStatus(output?: string): 'pass' | 'fail' {
   if (!output) return 'pass';
 
-  const match = /STATUS:\s*(OK|PASS|BLOCKED|FAIL)/i.exec(output);
+  const match = STATUS_PATTERN.exec(output);
   if (!match) return 'pass';
 
   const status = match[1].toUpperCase();

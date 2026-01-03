@@ -172,7 +172,9 @@ export class WorkflowStateManager {
   async delete(id: string): Promise<void> {
     try {
       await fs.unlink(this.statePath(id));
-    } catch {}
+    } catch {
+      /* File may not exist, intentionally ignored */
+    }
   }
 
   async getActive(): Promise<WorkflowState | null> {
@@ -190,7 +192,9 @@ export class WorkflowStateManager {
     try {
       const content = await fs.readFile(this.sessionPath, 'utf8');
       session = JSON.parse(content) as SessionData;
-    } catch {}
+    } catch {
+      /* Session file may not exist yet, use default */
+    }
 
     session.activeWorkflow = id;
     await fs.writeFile(this.sessionPath, JSON.stringify(session, null, 2));
@@ -264,6 +268,7 @@ export class WorkflowStateManager {
     if (!state) throw new Error(`Workflow ${id} not found`);
 
     const existing = state.agentBindings[agentId];
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!existing) throw new Error(`No binding for agent ${agentId}`);
 
     await this.update(id, {
