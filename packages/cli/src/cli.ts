@@ -116,8 +116,8 @@ async function runExecutionLoop(
     printSeparator();
     printActionBlock({
       action,
-      prev: { current: prevStep, total: totalSteps },
-      outcome: execResult.success ? 'PASS' : 'FAIL',
+      from: { current: prevStep, total: totalSteps },
+      result: execResult.success ? 'PASS' : 'FAIL',
     });
 
     // Handle workflow end states
@@ -506,8 +506,8 @@ program
       printSeparator();
       printActionBlock({
         action,
-        prev: { current: prevStep, total: totalSteps },
-        outcome: 'PASS',
+        from: { current: prevStep, total: totalSteps },
+        result: 'PASS',
       });
 
       // Handle completion
@@ -650,8 +650,8 @@ program
       printSeparator();
       printActionBlock({
         action,
-        prev: { current: prevStep, total: totalSteps },
-        outcome: 'FAIL',
+        from: { current: prevStep, total: totalSteps },
+        result: 'FAIL',
       });
 
       // Handle blocked
@@ -741,11 +741,11 @@ program
       // Update lastAction
       await manager.update(state.id, { lastAction: 'GOTO' });
 
-      // Print separator and action block (no outcome for goto)
+      // Print separator and action block (no result for goto)
       printSeparator();
       printActionBlock({
         action: `GOTO ${target}`,
-        prev: { current: state.step, total: steps.length },
+        from: { current: state.step, total: steps.length },
       });
 
       // Continue with execution loop
@@ -809,10 +809,10 @@ program
                   state.lastAction,
         };
         if (state.lastResult) {
-          actionBlockData.outcome = state.lastResult === 'pass' ? 'PASS' : 'FAIL';
+          actionBlockData.result = state.lastResult === 'pass' ? 'PASS' : 'FAIL';
         }
-        // For status, prev would be the step before current... but we don't track that
-        // Just show action without prev for now
+        // For status, from would be the step before current... but we don't track that
+        // Just show action without from for now
         printActionBlock(actionBlockData);
       }
 
@@ -973,7 +973,7 @@ program
                   state.lastAction,
         };
         if (state.lastResult) {
-          actionBlockData.outcome = state.lastResult === 'pass' ? 'PASS' : 'FAIL';
+          actionBlockData.result = state.lastResult === 'pass' ? 'PASS' : 'FAIL';
         }
         printActionBlock(actionBlockData);
       }

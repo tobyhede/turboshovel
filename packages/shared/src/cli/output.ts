@@ -30,15 +30,15 @@ export function printMetadata(meta: WorkflowMetadata): void {
 }
 
 /**
- * Print action block (Action, optional Prev, optional Outcome)
+ * Print action block (Action, optional From, optional Result)
  */
 export function printActionBlock(data: ActionBlockData): void {
   console.log(`Action:   ${data.action}`);
-  if (data.prev) {
-    console.log(`Prev:     ${formatPosition(data.prev)}`);
+  if (data.from) {
+    console.log(`From:     ${formatPosition(data.from)}`);
   }
-  if (data.outcome) {
-    console.log(`Outcome:  ${data.outcome}`);
+  if (data.result) {
+    console.log(`Result:   ${data.result}`);
   }
 }
 

@@ -81,35 +81,35 @@ describe('output formatter', () => {
       expect(consoleOutput).toEqual(['Action:   START']);
     });
 
-    it('prints action with prev and outcome (pass command)', () => {
+    it('prints action with from and result (pass command)', () => {
       printActionBlock({
         action: 'CONTINUE',
-        prev: { current: 1, total: 5 },
-        outcome: 'PASS',
+        from: { current: 1, total: 5 },
+        result: 'PASS',
       });
       expect(consoleOutput).toEqual([
         'Action:   CONTINUE',
-        'Prev:     1/5',
-        'Outcome:  PASS',
+        'From:     1/5',
+        'Result:   PASS',
       ]);
     });
 
-    it('prints action with prev but no outcome (goto command)', () => {
+    it('prints action with from but no result (goto command)', () => {
       printActionBlock({
         action: 'GOTO 3',
-        prev: { current: 1, total: 5 },
+        from: { current: 1, total: 5 },
       });
       expect(consoleOutput).toEqual([
         'Action:   GOTO 3',
-        'Prev:     1/5',
+        'From:     1/5',
       ]);
     });
 
     it('prints retry with count', () => {
       printActionBlock({
         action: 'RETRY (1/3)',
-        prev: { current: 2, total: 5 },
-        outcome: 'FAIL',
+        from: { current: 2, total: 5 },
+        result: 'FAIL',
       });
       expect(consoleOutput).toContain('Action:   RETRY (1/3)');
     });

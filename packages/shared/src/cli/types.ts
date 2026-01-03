@@ -20,6 +20,6 @@ export interface StepPosition {
  */
 export interface ActionBlockData {
   action: string;  // START, CONTINUE, GOTO n, COMPLETE, STOP, RETRY (n/N)
-  prev?: StepPosition;
-  outcome?: 'PASS' | 'FAIL';
+  from?: StepPosition;  // Step that was just evaluated (where we transitioned from)
+  result?: 'PASS' | 'FAIL';  // Pass/fail result (aligns with --result flag)
 }
