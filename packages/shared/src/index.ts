@@ -19,3 +19,6 @@ export * from './logger.js';
 
 // Workflow system
 export * from './workflow/index.js';
+
+// CLI output module
+export * from './cli/index.js';
