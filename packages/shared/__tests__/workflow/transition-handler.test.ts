@@ -81,12 +81,12 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       transitions: {
         all: true as const,
         pass: { type: 'CONTINUE' as const },
-        fail: { type: 'RETRY' as const, max: 2, then: { type: 'GOTO' as const, step: createStepNumber(5)! } }
+        fail: { type: 'RETRY' as const, max: 2, then: { type: 'GOTO' as const, target: { step: createStepNumber(5)! } as any } }
       }
     };
 
     const result = evaluateFailCondition(step, 2);
-    expect(result).toEqual({ action: 'goto', gotoStep: createStepNumber(5) });
+    expect(result).toEqual({ action: 'goto', gotoTarget: { step: createStepNumber(5)! } });
   });
 
   it('returns continue when retries exhausted with CONTINUE action', () => {
