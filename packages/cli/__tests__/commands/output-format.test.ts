@@ -282,7 +282,6 @@ describe('output format integration tests', () => {
       expect(result.exitCode).toBe(0);
       // Metadata
       expect(result.stdout).toContain('simple.workflow.md');
-      // File metadata
       expect(result.stdout).toContain('File:');
       // Step block
       expect(result.stdout).toContain('Step:');

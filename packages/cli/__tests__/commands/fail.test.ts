@@ -53,7 +53,7 @@ describe('fail command', () => {
     it('outputs error message', async () => {
       const result = runCli('fail', workspace);
 
-      expect(result.stderr.length).toBeGreaterThan(0);
+      expect(result.stdout).toContain('blocked');
     });
 
     it('should set variables.blocked=true when STOP action triggered', async () => {

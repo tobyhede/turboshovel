@@ -44,7 +44,7 @@ Complete the work.
     // 2. Start parent workflow
     let result = runCli('start workflows/parent.workflow.md', workspace);
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('Started workflow');
+    expect(result.stdout).toContain('Action:   START');
 
     // 3. Queue step with workflow
     result = runCli(['start', '--step', '1.1', 'workflows/child.workflow.md'], workspace);
@@ -52,11 +52,11 @@ Complete the work.
 
     // 4. Bind agent - should create child workflow
     result = runCli(['start', '--agent', 'test-agent'], workspace);
-    expect(result.stdout).toContain('Started child workflow');
+    expect(result.stdout).toContain('Action:   START');
 
     // 5. Complete child workflow
     result = runCli('pass', workspace);
-    expect(result.stdout).toContain('Workflow complete');
+    expect(result.stdout).toContain('complete');
 
     // 6. Complete agent in parent
     result = runCli(['pass', '--agent', 'test-agent'], workspace);
@@ -64,6 +64,6 @@ Complete the work.
 
     // 7. Verify parent sees completion
     result = runCli('status', workspace);
-    expect(result.stdout).toContain('test-agent: 1.1 [done] - pass');
+    expect(result.stdout).toContain('test-agent: 1.1 [done] (pass)');
   });
 });

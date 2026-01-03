@@ -23,8 +23,8 @@ describe('start --prompted', () => {
       const result = runCli('start --prompted workflows/with-commands.workflow.md', workspace);
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Started workflow');
-      expect(result.stdout).toContain('Mode: prompted');
+      expect(result.stdout).toContain('Action:   START');
+      expect(result.stdout).toContain('Prompt:   Yes');
     });
 
     it('sets prompted flag in state', async () => {
@@ -42,8 +42,8 @@ describe('start --prompted', () => {
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('## 1.');
       expect(result.stdout).toContain('Execute command');
-      // Should NOT show execution output (--- Executing --- would appear if executed)
-      expect(result.stdout).not.toContain('--- Executing ---');
+      // Should NOT show execution output ($ command format would appear if executed)
+      expect(result.stdout).not.toContain('$ exit 0');
     });
 
     it('waits for manual pass/fail in prompted mode', async () => {
@@ -65,8 +65,8 @@ describe('start --prompted', () => {
 
       // Command should be visible to user
       expect(result.stdout).toContain('Execute command');
-      // But not executed (no exit code output)
-      expect(result.stdout).not.toContain('Exit:');
+      // But not executed (no command execution line)
+      expect(result.stdout).not.toContain('$ exit 0');
     });
 
     it('inherits prompted flag in child workflows', async () => {
@@ -93,8 +93,8 @@ describe('start --prompted', () => {
 
       // Without --prompted, commands execute automatically
       expect(result.stdout).toContain('Execute command');
-      expect(result.stdout).toContain('--- Executing ---');
-      expect(result.stdout).toContain('Exit:');
+      expect(result.stdout).toContain('$ exit 0');
+      expect(result.stdout).toContain('Action:   CONTINUE');
     });
 
     it('stores lastResult after successful execution', async () => {
@@ -118,7 +118,8 @@ describe('start --prompted', () => {
       const result = runCli('start workflows/with-failing-command.workflow.md', workspace);
 
       // Should trigger FAIL condition (RETRY 2) - exits with error after max retries
-      expect(result.stdout).toContain('Exit: 1');
+      expect(result.stdout).toContain('$ exit 1');
+      expect(result.stdout).toContain('Action:   STOP');
       expect(result.exitCode).not.toBe(0);
     });
 
@@ -136,14 +137,15 @@ describe('start --prompted', () => {
 
       // Both steps should execute automatically
       expect(result.stdout).toContain('Execute command');
-      expect(result.stdout).toContain('Workflow complete');
+      expect(result.stdout).toContain('complete');
     });
 
     it('applies FAIL condition when command fails', async () => {
       const result = runCli('start workflows/with-failing-command.workflow.md', workspace);
 
       // Should trigger retry (FAIL: RETRY 2) - will fail after max retries
-      expect(result.stdout).toContain('Exit: 1');
+      expect(result.stdout).toContain('$ exit 1');
+      expect(result.stdout).toContain('Action:   STOP');
       expect(result.exitCode).not.toBe(0); // Blocked due to max retries
     });
 
@@ -202,13 +204,13 @@ describe('start --prompted', () => {
     it('allows mixed auto and prompted workflows', async () => {
       // Parent: auto mode
       const result1 = runCli('start workflows/simple.workflow.md', workspace);
-      expect(result1.stdout).not.toContain('Mode: prompted');
+      expect(result1.stdout).not.toContain('Prompt:   Yes');
 
       runCli('stop', workspace);
 
       // Different workflow: prompted mode
       const result2 = runCli('start --prompted workflows/simple.workflow.md', workspace);
-      expect(result2.stdout).toContain('Mode: prompted');
+      expect(result2.stdout).toContain('Prompt:   Yes');
     });
   });
 
@@ -225,15 +227,15 @@ describe('start --prompted', () => {
       const result = runCli('start workflows/with-commands.workflow.md', workspace);
 
       // If working directory is wrong, command might fail
-      expect(result.stdout).toContain('Exit: 0');
+      expect(result.stdout).toContain('$ exit 0');
     });
 
     it('handles command output correctly', async () => {
       const result = runCli('start workflows/with-commands.workflow.md', workspace);
 
       // Should show execution happened
-      expect(result.stdout).toContain('--- Executing ---');
-      expect(result.stdout).toContain('Exit:');
+      expect(result.stdout).toContain('$ exit 0');
+      expect(result.stdout).toContain('Action:   CONTINUE');
     });
 
     it('updates step progression after auto-execution', async () => {

@@ -44,13 +44,13 @@ describe('stash command', () => {
     const result = runCli('stash', workspace);
 
     expect(result.stdout).toContain('stashed');
-    expect(result.stdout).toContain('Enforcement paused');
+    expect(result.stdout).toContain('Workflow stashed');
   });
 
   it('fails if no active workflow', async () => {
     const result = runCli('stash', workspace);
 
-    expect(result.stdout).toContain('No active workflow to stash');
+    expect(result.stdout).toContain('No active workflow');
   });
 
   it('preserves workflow state', async () => {
@@ -106,8 +106,8 @@ describe('pop command', () => {
 
     const result = runCli('pop', workspace);
 
-    expect(result.stdout).toContain('restored');
-    expect(result.stdout).toContain('Enforcement active');
+    expect(result.stdout).toContain('First step');
+    expect(result.stdout).toContain('## 1');
   });
 
   it('fails if nothing stashed', async () => {

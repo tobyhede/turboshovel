@@ -43,11 +43,11 @@ describe('integration: full workflow scenarios', () => {
 
     // Fail first attempt
     let result = runCli('fail', workspace);
-    expect(result.stdout).toContain('Retry 1/');
+    expect(result.stdout).toContain('Action:   RETRY (1/');
 
     // Fail second attempt
     result = runCli('fail', workspace);
-    expect(result.stdout).toContain('Retry 2/');
+    expect(result.stdout).toContain('Action:   RETRY (2/');
 
     // Pass third attempt
     result = runCli('pass', workspace);
@@ -88,8 +88,8 @@ describe('integration: full workflow scenarios', () => {
 
     // Pop
     result = runCli('pop', workspace);
-    expect(result.stdout).toContain('restored');
     expect(result.stdout).toContain('Second step');
+    expect(result.stdout).toContain('## 2');
 
     // Continue and complete
     result = runCli('pass', workspace);

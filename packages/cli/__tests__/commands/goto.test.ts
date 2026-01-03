@@ -45,7 +45,7 @@ describe('goto command', () => {
     it('outputs jumped step info', async () => {
       const result = runCli(['goto', '3'], workspace);
 
-      expect(result.stdout).toContain('Jumped to step 3');
+      expect(result.stdout).toContain('Action:   GOTO 3');
       expect(result.stdout).toContain('Jump target');
     });
   });

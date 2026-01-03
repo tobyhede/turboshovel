@@ -25,7 +25,7 @@ describe('start command', () => {
       const result = runCli('start workflows/simple.workflow.md', workspace);
 
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toContain('Started workflow');
+      expect(result.stdout).toContain('Action:   START');
       expect(result.stdout).toContain('simple.workflow.md');
     });
 
