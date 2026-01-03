@@ -386,21 +386,24 @@ program
       const state = await manager.getActive();
 
       if (!state) {
-        console.log('No active workflow');
+        printNoActiveWorkflow();
         return;
       }
+
+      // Print metadata
+      printMetadata(buildMetadata(state));
 
       if (options.status === 'blocked') {
         await manager.update(state.id, {
           variables: { ...state.variables, blocked: true }
         });
-        console.log(`Workflow BLOCKED: ${state.workflow}`);
+        printWorkflowBlocked(state.step);
       } else {
         await manager.update(state.id, {
           variables: { ...state.variables, completed: true }
         });
         await manager.setActive(null);
-        console.log(`Workflow complete: ${state.workflow}`);
+        printWorkflowComplete();
       }
     } catch (error) {
       console.error(`Error: ${getErrorMessage(error)}`);
