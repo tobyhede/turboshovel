@@ -767,43 +767,65 @@ program
       const stashedId = await manager.getStashedWorkflowId();
 
       if (!state && !stashedId) {
-        console.log('No active workflow');
+        printNoActiveWorkflow();
         return;
       }
 
       if (stashedId && !state) {
         const stashed = await manager.load(stashedId);
-        console.log(`Workflow stashed: ${stashed?.workflow ?? stashedId}`);
+        if (stashed) {
+          printMetadata(buildMetadata(stashed));
+          const totalSteps = await getStepCount(cwd, stashed.workflow);
+          printWorkflowStashed({ current: stashed.step, total: totalSteps });
+        }
         return;
       }
 
       if (!state) return;
 
-      const statePath = path.join('.claude/turboshovel/workflows', `${state.id}.json`);
-      console.log(`Workflow: ${state.workflow}`);
-      console.log(`Path: ${statePath}`);
-      console.log(`Step ${state.step}: ${state.stepName}`);
+      const workflowPath = await findWorkflowFile(cwd, state.workflow);
+      if (!workflowPath) {
+        console.error(`Error: Workflow file ${state.workflow} not found`);
+        process.exit(1);
+      }
+      const content = await fs.readFile(workflowPath, 'utf8');
+      const steps = parseWorkflow(content);
+      const currentStep = steps[state.step - 1];
+      const totalSteps = steps.length;
 
-      const workflowPath = await findWorkflowFile(getCwd(), state.workflow);
-      if (workflowPath) {
-        const content = await fs.readFile(workflowPath, 'utf8');
-        const steps = parseWorkflow(content);
-        const currentStep = steps[state.step - 1];
-        if (currentStep) {
-          console.log(`Retry: ${state.retryCount}/${getStepRetryMax(currentStep)}`);
-          printStepGuidance(currentStep);
+      // Print metadata
+      printMetadata(buildMetadata(state));
+
+      // Print action block if lastAction exists
+      if (state.lastAction) {
+        const actionBlockData: ActionBlockData = {
+          action: state.lastAction === 'GOTO' ? `GOTO ${state.step}` :
+                  state.lastAction === 'RETRY' ? `RETRY (${state.retryCount}/${getStepRetryMax(currentStep)})` :
+                  state.lastAction,
+        };
+        if (state.lastResult) {
+          actionBlockData.outcome = state.lastResult === 'pass' ? 'PASS' : 'FAIL';
         }
+        // For status, prev would be the step before current... but we don't track that
+        // Just show action without prev for now
+        printActionBlock(actionBlockData);
       }
 
+      // Print step block
+      if (currentStep) {
+        printStepBlock({ current: state.step, total: totalSteps }, currentStep);
+      }
+
+      // Show pending steps and agent bindings
       if (state.pendingSteps.length > 0) {
-        console.log(`\nPending Steps: ${state.pendingSteps.map((p) => stepIdToString(p.stepId)).join(', ')}`);
+        console.log(`\nPending: ${state.pendingSteps.map((p) => stepIdToString(p.stepId)).join(', ')}`);
       }
 
       if (Object.keys(state.agentBindings).length > 0) {
-        console.log('\nAgent Bindings:');
+        console.log('\nAgents:');
         for (const [agentId, binding] of Object.entries(state.agentBindings)) {
           const stepStr = stepIdToString(binding.stepId);
-          const resultStr = binding.result ? ` - ${binding.result}` : '';
+          const resultStr = binding.result ? ` (${binding.result})` : '';
           console.log(`  ${agentId}: ${stepStr} [${binding.status}]${resultStr}`);
         }
       }
