@@ -489,6 +489,110 @@ program
   });
 
 program
+  .command('pass')
+  .description('Mark current step as passed (triggers PASS transition)')
+  .option('--agent <agentId>', 'Specify agent completing step')
+  .action(async (options: { agent?: string }) => {
+    try {
+      const cwd = getCwd();
+      const manager = new WorkflowStateManager(cwd);
+      const state = await manager.getActive();
+
+      if (!state) {
+        console.log('No active workflow');
+        return;
+      }
+
+      const workflowPath = await resolveWorkflowFile(cwd, state.workflow);
+      if (!workflowPath) {
+        console.error(`Error: Workflow file ${state.workflow} not found`);
+        process.exit(1);
+      }
+      const content = await fs.readFile(workflowPath, 'utf8');
+      const steps = parseWorkflow(content);
+      const actor = await manager.createActor(state.id, steps);
+      if (!actor) {
+        console.error('Error: Failed to initialize workflow engine');
+        process.exit(1);
+      }
+
+      // Handle agent completion (substep case)
+      if (options.agent) {
+        const binding = await manager.getAgentBinding(state.id, options.agent);
+        if (!binding) {
+          console.error(`Error: No binding for agent ${options.agent}`);
+          process.exit(1);
+        }
+
+        let result: 'pass' | 'fail' = 'pass';
+
+        if (binding.childWorkflowId) {
+          const childResult = await manager.getChildWorkflowResult(binding.childWorkflowId);
+          if (childResult === null) {
+            console.error(`Error: Child workflow still active. Complete or stop it first.`);
+            console.error(`Child workflow: ${binding.childWorkflowId}`);
+            process.exit(1);
+          }
+          result = childResult;
+        }
+
+        await manager.updateAgentBinding(state.id, options.agent, {
+          status: 'done',
+          result
+        });
+        console.log(`Agent ${options.agent} marked as pass`);
+
+        const updated = await manager.load(state.id);
+        const bindings = Object.values(updated?.agentBindings ?? {});
+        const running = bindings.filter((b) => b.status === 'running').length;
+
+        if (running > 0) {
+          console.log(`${running} agent(s) still running`);
+        } else {
+          console.log('All agents complete');
+        }
+        return;
+      }
+
+      // Main step pass - send PASS event to actor
+      actor.send({ type: 'PASS' });
+
+      const updatedState = await manager.updateFromActor(state.id, actor, steps);
+      const snapshot = actor.getPersistedSnapshot() as any;
+
+      // Handle workflow completion
+      if (snapshot.status === 'done') {
+        if (snapshot.value === 'complete') {
+          await manager.update(state.id, { variables: { ...state.variables, completed: true } });
+          console.log(`Workflow complete: ${state.workflow}`);
+          if (state.parentWorkflowId) {
+            await manager.setActive(state.parentWorkflowId);
+            console.log(`Returning to parent workflow: ${state.parentWorkflowId}`);
+          } else {
+            await manager.setActive(null);
+          }
+        } else if (snapshot.value === 'blocked') {
+          await manager.update(state.id, { variables: { ...state.variables, blocked: true } });
+          console.error(`Workflow blocked: ${state.workflow}`);
+          process.exit(1);
+        }
+        return;
+      }
+
+      // Continue with execution loop (chains command steps automatically)
+      const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted);
+
+      if (loopResult === 'blocked') {
+        process.exit(1);
+      }
+
+    } catch (error) {
+      console.error(`Error: ${getErrorMessage(error)}`);
+      process.exit(1);
+    }
+  });
+
+program
   .command('status')
   .description('Show current workflow state')
   .action(async () => {
