@@ -1,17 +1,17 @@
 import { createStepNumber } from '../../src/workflow/types.js';
-import { evaluateFailCondition, evaluateSubstepAggregation } from '../../src/workflow/condition-handler.js';
+import { evaluateFailCondition, evaluateSubstepAggregation } from '../../src/workflow/transition-handler.js';
 import type { SubstepState } from '../../src/workflow/types.js';
 
 describe('evaluateSubstepAggregation', () => {
   // PASS ALL mode (all: true)
-  const passAllConditions = {
+  const passAllTransitions = {
     all: true,
     pass: { type: 'CONTINUE' as const },
     fail: { type: 'STOP' as const, message: 'Substep failed' }
   };
 
   // PASS ANY mode (all: false)
-  const passAnyConditions = {
+  const passAnyTransitions = {
     all: false,
     pass: { type: 'CONTINUE' as const },
     fail: { type: 'STOP' as const, message: 'All substeps failed' }
@@ -24,7 +24,7 @@ describe('evaluateSubstepAggregation', () => {
         { id: '2', status: 'running' }
       ];
 
-      const result = evaluateSubstepAggregation(states, passAllConditions);
+      const result = evaluateSubstepAggregation(states, passAllTransitions);
       expect(result).toBeNull();
     });
 
@@ -34,7 +34,7 @@ describe('evaluateSubstepAggregation', () => {
         { id: '2', status: 'done', result: 'pass' }
       ];
 
-      const result = evaluateSubstepAggregation(states, passAllConditions);
+      const result = evaluateSubstepAggregation(states, passAllTransitions);
       expect(result?.action).toBe('continue');
     });
 
@@ -44,7 +44,7 @@ describe('evaluateSubstepAggregation', () => {
         { id: '2', status: 'done', result: 'fail' }
       ];
 
-      const result = evaluateSubstepAggregation(states, passAllConditions);
+      const result = evaluateSubstepAggregation(states, passAllTransitions);
       expect(result?.action).toBe('blocked');
     });
   });
@@ -56,7 +56,7 @@ describe('evaluateSubstepAggregation', () => {
         { id: '2', status: 'done', result: 'pass' }
       ];
 
-      const result = evaluateSubstepAggregation(states, passAnyConditions);
+      const result = evaluateSubstepAggregation(states, passAnyTransitions);
       expect(result?.action).toBe('continue');
     });
 
@@ -66,7 +66,7 @@ describe('evaluateSubstepAggregation', () => {
         { id: '2', status: 'done', result: 'fail' }
       ];
 
-      const result = evaluateSubstepAggregation(states, passAnyConditions);
+      const result = evaluateSubstepAggregation(states, passAnyTransitions);
       expect(result?.action).toBe('blocked');
     });
   });
@@ -78,7 +78,7 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       number: createStepNumber(1)!,
       description: 'Test',
       prompts: [],
-      conditions: {
+      transitions: {
         all: true as const,
         pass: { type: 'CONTINUE' as const },
         fail: { type: 'RETRY' as const, max: 2, then: { type: 'GOTO' as const, step: createStepNumber(5)! } }
@@ -94,7 +94,7 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       number: createStepNumber(1)!,
       description: 'Test',
       prompts: [],
-      conditions: {
+      transitions: {
         all: true as const,
         pass: { type: 'CONTINUE' as const },
         fail: { type: 'RETRY' as const, max: 1, then: { type: 'CONTINUE' as const } }
@@ -110,7 +110,7 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       number: createStepNumber(1)!,
       description: 'Test',
       prompts: [],
-      conditions: {
+      transitions: {
         all: true as const,
         pass: { type: 'CONTINUE' as const },
         fail: { type: 'RETRY' as const, max: 3, then: { type: 'STOP' as const, message: 'Build failed' } }
@@ -126,7 +126,7 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       number: createStepNumber(1)!,
       description: 'Test',
       prompts: [],
-      conditions: {
+      transitions: {
         all: true as const,
         pass: { type: 'CONTINUE' as const },
         fail: { type: 'RETRY' as const, max: 2, then: { type: 'DONE' as const } }
@@ -142,7 +142,7 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       number: createStepNumber(1)!,
       description: 'Test',
       prompts: [],
-      conditions: {
+      transitions: {
         all: true as const,
         pass: { type: 'CONTINUE' as const },
         fail: { type: 'RETRY' as const, max: 3, then: { type: 'STOP' as const } }

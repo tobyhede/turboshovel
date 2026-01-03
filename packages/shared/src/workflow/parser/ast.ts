@@ -1,5 +1,5 @@
 import { type Node, type Parent } from 'unist';
-import { type StepNumber, type Conditions } from '../types.js';
+import { type StepNumber, type Transitions } from '../types.js';
 
 export interface WorkflowStepNode extends Parent {
   type: 'workflowStep';
@@ -7,7 +7,7 @@ export interface WorkflowStepNode extends Parent {
   description: string;
   command?: string;
   prompts: string[];
-  conditions?: Conditions;
+  transitions?: Transitions;
   substeps?: WorkflowSubstepNode[];
   nestedWorkflow?: string;
 }

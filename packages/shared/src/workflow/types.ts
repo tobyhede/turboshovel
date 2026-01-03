@@ -71,25 +71,25 @@ export type Action =
   | { readonly type: 'RETRY'; readonly max: number; readonly then: NonRetryAction };
 
 /**
- * Aggregation conditions for substeps
+ * Outcome-to-action mappings for step completion
  *
  * Valid combinations only:
  * - all: true  = PASS ALL + FAIL ANY (pessimistic, default)
  * - all: false = PASS ANY + FAIL ALL (optimistic)
  */
-interface PassAllConditions {
+interface PassAllTransitions {
   readonly all: true;
   readonly pass: Action; // triggers when ALL complete
   readonly fail: Action; // triggers when ANY blocked
 }
 
-interface PassAnyConditions {
+interface PassAnyTransitions {
   readonly all: false;
   readonly pass: Action; // triggers when ANY complete
   readonly fail: Action; // triggers when ALL blocked
 }
 
-export type Conditions = PassAllConditions | PassAnyConditions;
+export type Transitions = PassAllTransitions | PassAnyTransitions;
 
 /**
  * Agent binding status
@@ -154,7 +154,7 @@ export interface Step {
   readonly description: string;
   readonly command?: Command;
   readonly prompts: readonly Prompt[];
-  readonly conditions?: Conditions;
+  readonly transitions?: Transitions;
   readonly substeps?: readonly Substep[];
   readonly nestedWorkflow?: string; // Reference to nested workflow file
 }

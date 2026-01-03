@@ -115,8 +115,8 @@ function isValidResult(r: string): r is 'pass' | 'fail' {
 }
 
 function getStepRetryMax(step: Step): number {
-  if (step.conditions?.fail?.type === 'RETRY') {
-    return step.conditions.fail.max;
+  if (step.transitions?.fail?.type === 'RETRY') {
+    return step.transitions.fail.max;
   }
   return 0; // No retry configured
 }

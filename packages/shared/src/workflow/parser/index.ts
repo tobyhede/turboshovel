@@ -8,7 +8,7 @@ export {
   extractStepHeader,
   parseAction,
   parseConditional,
-  convertConditionals,
+  convertToTransitions,
   extractSubstepHeader,
   extractWorkflowList
 } from './helpers.js';

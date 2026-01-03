@@ -14,14 +14,14 @@ export function evaluateFailCondition(
   step: Step,
   currentRetryCount: number
 ): ConditionResult {
-  if (!step.conditions) {
+  if (!step.transitions) {
     return {
       action: 'blocked',
       message: 'No FAIL condition defined for step'
     };
   }
 
-  const failAction = step.conditions.fail;
+  const failAction = step.transitions.fail;
 
   switch (failAction.type) {
     case 'RETRY': {
@@ -65,11 +65,11 @@ export function evaluateFailCondition(
  * Evaluate the PASS condition for a step.
  */
 export function evaluatePassCondition(step: Step): ConditionResult {
-  if (!step.conditions) {
+  if (!step.transitions) {
     return { action: 'continue' };
   }
 
-  const passAction = step.conditions.pass;
+  const passAction = step.transitions.pass;
 
   switch (passAction.type) {
     case 'DONE':
@@ -101,20 +101,20 @@ export function evaluatePassCondition(step: Step): ConditionResult {
  */
 export function evaluateSubstepAggregation(
   substepStates: readonly SubstepState[],
-  conditions: { all: boolean; pass: Action; fail: Action }
+  transitions: { all: boolean; pass: Action; fail: Action }
 ): ConditionResult | null {
   const allDone = substepStates.every(s => s.status === 'done');
   if (!allDone) return null;
 
   const passCount = substepStates.filter(s => s.result === 'pass').length;
 
-  if (conditions.all) {
+  if (transitions.all) {
     const anyFailed = substepStates.some(s => s.result === 'fail');
-    if (anyFailed) return evaluateAction(conditions.fail);
-    return evaluateAction(conditions.pass);
+    if (anyFailed) return evaluateAction(transitions.fail);
+    return evaluateAction(transitions.pass);
   } else {
-    if (passCount > 0) return evaluateAction(conditions.pass);
-    return evaluateAction(conditions.fail);
+    if (passCount > 0) return evaluateAction(transitions.pass);
+    return evaluateAction(transitions.fail);
   }
 }
 

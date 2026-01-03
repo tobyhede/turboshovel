@@ -1,4 +1,4 @@
-import { type Step, type Action, type Conditions, type Substep } from '../types.js';
+import { type Step, type Action, type Transitions, type Substep } from '../types.js';
 
 /**
  * Render an Action to its DSL string representation
@@ -21,12 +21,12 @@ export function renderAction(action: Action): string {
 }
 
 /**
- * Render Conditions to Markdown list items
+ * Render Transitions to Markdown list items
  */
-export function renderConditions(conditions: Conditions): string {
+export function renderTransitions(transitions: Transitions): string {
   const lines: string[] = [];
-  lines.push(`- PASS: ${renderAction(conditions.pass)}`);
-  lines.push(`- FAIL: ${renderAction(conditions.fail)}`);
+  lines.push(`- PASS: ${renderAction(transitions.pass)}`);
+  lines.push(`- FAIL: ${renderAction(transitions.fail)}`);
   return lines.join('\n');
 }
 
@@ -63,9 +63,9 @@ export function renderStep(step: Step): string {
     lines.push('');
   }
 
-  // Conditions
-  if (step.conditions) {
-    lines.push(renderConditions(step.conditions));
+  // Transitions
+  if (step.transitions) {
+    lines.push(renderTransitions(step.transitions));
     lines.push('');
   }
 

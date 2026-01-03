@@ -10,7 +10,7 @@ export class WorkflowSyntaxError extends Error {
 }
 
 /**
- * Aggregation modifier for conditions
+ * Aggregation modifier for transitions
  */
 export type AggregationModifier = 'ALL' | 'ANY' | null;
 

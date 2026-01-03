@@ -1,63 +1,63 @@
-import { evaluateConditions } from '../../src/workflow/evaluation.js';
-import type { Conditions, TaskState } from '@turboshovel/shared';
+import { evaluateTransitions } from '../../src/workflow/evaluation.js';
+import type { Transitions, StepState } from '@turboshovel/shared';
 
-describe('evaluateConditions', () => {
+describe('evaluateTransitions', () => {
   const passAction = { type: 'CONTINUE' as const };
   const failAction = { type: 'STOP' as const };
 
   describe('all: true (PASS ALL + FAIL ANY)', () => {
-    const conditions: Conditions = { all: true, pass: passAction, fail: failAction };
+    const transitions: Transitions = { all: true, pass: passAction, fail: failAction };
 
     it('returns pass when all complete', () => {
-      const tasks = [
+      const steps = [
         { id: '1', status: 'complete' },
         { id: '2', status: 'complete' }
-      ] as TaskState[];
-      expect(evaluateConditions(tasks, conditions)).toEqual(passAction);
+      ] as StepState[];
+      expect(evaluateTransitions(steps, transitions)).toEqual(passAction);
     });
 
     it('returns fail when any blocked', () => {
-      const tasks = [
+      const steps = [
         { id: '1', status: 'complete' },
         { id: '2', status: 'blocked' }
-      ] as TaskState[];
-      expect(evaluateConditions(tasks, conditions)).toEqual(failAction);
+      ] as StepState[];
+      expect(evaluateTransitions(steps, transitions)).toEqual(failAction);
     });
   });
 
   describe('all: false (PASS ANY + FAIL ALL)', () => {
-    const conditions: Conditions = { all: false, pass: passAction, fail: failAction };
+    const transitions: Transitions = { all: false, pass: passAction, fail: failAction };
 
     it('returns pass when any complete', () => {
-      const tasks = [
+      const steps = [
         { id: '1', status: 'complete' },
         { id: '2', status: 'blocked' }
-      ] as TaskState[];
-      expect(evaluateConditions(tasks, conditions)).toEqual(passAction);
+      ] as StepState[];
+      expect(evaluateTransitions(steps, transitions)).toEqual(passAction);
     });
 
     it('returns fail when all blocked', () => {
-      const tasks = [
+      const steps = [
         { id: '1', status: 'blocked' },
         { id: '2', status: 'blocked' }
-      ] as TaskState[];
-      expect(evaluateConditions(tasks, conditions)).toEqual(failAction);
+      ] as StepState[];
+      expect(evaluateTransitions(steps, transitions)).toEqual(failAction);
     });
   });
 
   describe('single task (unified behavior)', () => {
     it('works identically for both modes with single task', () => {
-      const pessimistic: Conditions = { all: true, pass: passAction, fail: failAction };
-      const optimistic: Conditions = { all: false, pass: passAction, fail: failAction };
+      const pessimistic: Transitions = { all: true, pass: passAction, fail: failAction };
+      const optimistic: Transitions = { all: false, pass: passAction, fail: failAction };
 
-      const complete = [{ id: '1', status: 'complete' }] as TaskState[];
-      const blocked = [{ id: '1', status: 'blocked' }] as TaskState[];
+      const complete = [{ id: '1', status: 'complete' }] as StepState[];
+      const blocked = [{ id: '1', status: 'blocked' }] as StepState[];
 
       // Both modes should produce same result for single task
-      expect(evaluateConditions(complete, pessimistic)).toEqual(passAction);
-      expect(evaluateConditions(complete, optimistic)).toEqual(passAction);
-      expect(evaluateConditions(blocked, pessimistic)).toEqual(failAction);
-      expect(evaluateConditions(blocked, optimistic)).toEqual(failAction);
+      expect(evaluateTransitions(complete, pessimistic)).toEqual(passAction);
+      expect(evaluateTransitions(complete, optimistic)).toEqual(passAction);
+      expect(evaluateTransitions(blocked, pessimistic)).toEqual(failAction);
+      expect(evaluateTransitions(blocked, optimistic)).toEqual(failAction);
     });
   });
 });

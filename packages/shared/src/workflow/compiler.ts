@@ -57,14 +57,14 @@ export function compileWorkflowToMachine(steps: Step[]) {
     const stepId = `step_${step.number}`;
     states[stepId] = {
       on: {
-        PASS: step.conditions
-          ? actionToTransition(step.conditions.pass, step.number, steps.length)
-          : { 
+        PASS: step.transitions
+          ? actionToTransition(step.transitions.pass, step.number, steps.length)
+          : {
               target: step.number < steps.length ? `step_${step.number + 1}` : 'complete',
               actions: assign({ retryCount: 0 })
             },
-        FAIL: step.conditions
-          ? actionToTransition(step.conditions.fail, step.number, steps.length)
+        FAIL: step.transitions
+          ? actionToTransition(step.transitions.fail, step.number, steps.length)
           : { target: 'blocked' },
         RETRY: {
           actions: assign({

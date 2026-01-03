@@ -1,6 +1,6 @@
 // src/workflow/parser/helpers.ts
 
-import { createStepNumber, type Action, type NonRetryAction, type Conditions, type StepNumber } from '../types.js';
+import { createStepNumber, type Action, type NonRetryAction, type Transitions, type StepNumber } from '../types.js';
 import type { ParsedConditional, AggregationModifier } from './types.js';
 import { WorkflowSyntaxError } from './types.js';
 
@@ -275,10 +275,10 @@ function resolveAggregationMode(
 }
 
 /**
- * Convert pending conditionals to Conditions object
+ * Convert pending conditionals to Transitions object
  * Defaults to all: true (PASS ALL + FAIL ANY, pessimistic)
  */
-export function convertConditionals(conditionals: ParsedConditional[]): Conditions | null {
+export function convertToTransitions(conditionals: ParsedConditional[]): Transitions | null {
   if (conditionals.length === 0) {
     return null;
   }

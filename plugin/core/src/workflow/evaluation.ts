@@ -1,16 +1,16 @@
-import type { Action, Conditions, StepState } from '@turboshovel/shared';
+import type { Action, Transitions, StepState } from '@turboshovel/shared';
 
 /**
  * Evaluate aggregated conditions based on step states
  */
-export function evaluateConditions(steps: readonly StepState[], conditions: Conditions): Action {
+export function evaluateTransitions(steps: readonly StepState[], transitions: Transitions): Action {
   const anyBlocked = steps.some((t) => t.status === 'blocked');
   const anyComplete = steps.some((t) => t.status === 'complete');
 
-  switch (conditions.all) {
+  switch (transitions.all) {
     case true:
-      return anyBlocked ? conditions.fail : conditions.pass;
+      return anyBlocked ? transitions.fail : transitions.pass;
     case false:
-      return anyComplete ? conditions.pass : conditions.fail;
+      return anyComplete ? transitions.pass : transitions.fail;
   }
 }

@@ -15,7 +15,7 @@ import {
   extractStepHeader,
   extractSubstepHeader,
   parseConditional,
-  convertConditionals,
+  convertToTransitions,
   extractWorkflowList
 } from './helpers.js';
 import { WorkflowSyntaxError, type ParsedConditional } from './types.js';
@@ -277,14 +277,14 @@ function finalizeStep(
     step.prompts.push({ text: implicitText.trim() });
   }
 
-  const conditions = convertConditionals(pendingConditionals);
+  const transitions = convertToTransitions(pendingConditionals);
 
   return {
     number: step.number,
     description: step.description,
     command: step.command,
     prompts: step.prompts,
-    conditions: conditions ?? undefined,
+    transitions: transitions ?? undefined,
     substeps: step.substeps.length > 0 ? step.substeps : undefined
   };
 }
@@ -306,9 +306,9 @@ function validateWorkflow(steps: Step[]): void {
   }
 
   for (const step of steps) {
-    if (step.conditions) {
-      validateAction(step.conditions.pass, step.number, steps.length);
-      validateAction(step.conditions.fail, step.number, steps.length);
+    if (step.transitions) {
+      validateAction(step.transitions.pass, step.number, steps.length);
+      validateAction(step.transitions.fail, step.number, steps.length);
     }
   }
 }
