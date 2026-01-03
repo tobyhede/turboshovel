@@ -1,7 +1,7 @@
 import {
   handleSubagentStart
 } from '../../../src/workflow/hooks/subagent-start.js';
-import { WorkflowStateManager, createStepNumber, Step, StepNumber } from '@turboshovel/shared';
+import { WorkflowStateManager, createStepNumber, type Step, type StepNumber } from '@turboshovel/shared';
 import type { HookInput } from '@turboshovel/shared';
 import * as fs from 'fs/promises';
 import * as path from 'path';

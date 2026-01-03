@@ -1,7 +1,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
-import { WorkflowStateManager, createStepNumber, Step, StepNumber } from '@turboshovel/shared';
+import { WorkflowStateManager, createStepNumber, type Step, type StepNumber } from '@turboshovel/shared';
 
 describe('substep workflow integration', () => {
   let testDir: string;

@@ -4,7 +4,6 @@ import {
   extractStepHeader,
   parseAction,
   parseConditional,
-  convertConditionals,
   extractSubstepHeader
 } from '@turboshovel/shared';
 

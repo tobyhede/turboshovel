@@ -1,5 +1,5 @@
 import { setup, assign } from 'xstate';
-import { Step, StepNumber, Action, NonRetryAction } from './types.js';
+import { type Step, type StepNumber, type Action, type NonRetryAction } from './types.js';
 
 export interface WorkflowContext {
   retryCount: number;

@@ -10,7 +10,7 @@ import type {
   Paragraph,
   PhrasingContent
 } from 'mdast';
-import type { Step, Action, StepNumber, Substep, Workflow } from '../types.js';
+import type { Step, Action, StepNumber, Substep } from '../types.js';
 import {
   extractStepHeader,
   extractSubstepHeader,
@@ -246,7 +246,7 @@ export function parseWorkflow(markdown: string): Step[] {
       const listItemNode = node as ListItem;
       const firstParagraph = listItemNode.children.find((c) => c.type === 'paragraph');
       if (firstParagraph) {
-        const text = extractText(firstParagraph as Paragraph);
+        const text = extractText(firstParagraph);
         const conditional = parseConditional(text);
         if (conditional) {
           pendingConditionals.push(conditional);

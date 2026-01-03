@@ -2,7 +2,7 @@
 import { join } from 'path';
 import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
-import { WorkflowStateManager, createStepNumber, type StepId, Step, StepNumber } from '@turboshovel/shared';
+import { WorkflowStateManager, createStepNumber, type StepId, type Step, type StepNumber } from '@turboshovel/shared';
 
 describe('WorkflowStateManager', () => {
   let testDir: string;

@@ -1,4 +1,4 @@
-import { Step, Action, Conditions, Substep } from '../types.js';
+import { type Step, type Action, type Conditions, type Substep } from '../types.js';
 
 /**
  * Render an Action to its DSL string representation

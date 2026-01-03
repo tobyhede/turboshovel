@@ -2,8 +2,6 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import {
   createTestWorkspace,
   runCli,
-  readSession,
-  getActiveState,
   type TestWorkspace,
 } from '../helpers/test-utils.js';
 import { writeFile, mkdir } from 'fs/promises';

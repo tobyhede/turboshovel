@@ -13,12 +13,10 @@ import {
   parseStepIdFromString,
   createStepNumber,
   evaluateFailCondition,
-  evaluatePassCondition,
   isNodeError,
   getErrorMessage,
   renderStep,
   executeCommand,
-  type StepNumber,
   type Step,
   type PendingStep
 } from '@turboshovel/shared';
@@ -557,7 +555,7 @@ program
       // Main step pass - send PASS event to actor
       actor.send({ type: 'PASS' });
 
-      const updatedState = await manager.updateFromActor(state.id, actor, steps);
+      await manager.updateFromActor(state.id, actor, steps);
       const snapshot = actor.getPersistedSnapshot() as any;
 
       // Handle workflow completion
@@ -957,7 +955,9 @@ async function findWorkflowFile(cwd: string, filename: string): Promise<string |
   try {
     await fs.access(directPath);
     return directPath;
-  } catch {}
+  } catch {
+    // File does not exist
+  }
   return null;
 }
 

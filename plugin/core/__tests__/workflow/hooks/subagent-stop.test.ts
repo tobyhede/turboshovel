@@ -3,7 +3,7 @@ import { jest } from '@jest/globals';
 import {
   handleSubagentStop
 } from '../../../src/workflow/hooks/subagent-stop.js';
-import { WorkflowStateManager, type HookInput, createStepNumber, Step, StepNumber } from '@turboshovel/shared';
+import { WorkflowStateManager, type HookInput, createStepNumber, type Step, type StepNumber } from '@turboshovel/shared';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';

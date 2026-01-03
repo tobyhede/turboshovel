@@ -2,12 +2,13 @@ import { jest } from '@jest/globals';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
-import { WorkflowStateManager, type HookInput, createStepNumber, Step, StepNumber } from '@turboshovel/shared';
+import { WorkflowStateManager, type HookInput, createStepNumber, type Step, type StepNumber } from '@turboshovel/shared';
+import type { trackStepDispatch } from '../../../src/workflow/hooks/step-tracker';
 
 describe('trackStepDispatch with StepId', () => {
   let testDir: string;
   let manager: WorkflowStateManager;
-  let trackStepDispatch: typeof import('../../../src/workflow/hooks/step-tracker').trackStepDispatch;
+  let trackStepDispatchFn: typeof trackStepDispatch;
   const mockSteps: Step[] = [{
     number: 1 as StepNumber,
     description: 'Initial step',
@@ -17,7 +18,7 @@ describe('trackStepDispatch with StepId', () => {
   beforeEach(async () => {
     jest.resetModules();
     const module = await import('../../../src/workflow/hooks/step-tracker');
-    trackStepDispatch = module.trackStepDispatch;
+    trackStepDispatchFn = module.trackStepDispatch;
 
     testDir = join(tmpdir(), `step-tracker-test-${String(Date.now())}`);
     await fs.mkdir(testDir, { recursive: true });
@@ -43,7 +44,7 @@ describe('trackStepDispatch with StepId', () => {
       }
     };
 
-    const result = await trackStepDispatch(input);
+    const result = await trackStepDispatchFn(input);
 
     expect(result.stepId).toEqual({ step: createStepNumber(3)!, substep: '1' });
 
@@ -64,7 +65,7 @@ describe('trackStepDispatch with StepId', () => {
       }
     };
 
-    const result = await trackStepDispatch(input);
+    const result = await trackStepDispatchFn(input);
 
     expect(result.violation).toContain('must start with StepId');
   });
@@ -77,7 +78,7 @@ describe('trackStepDispatch with StepId', () => {
       tool_input: { description: 'Any description' }
     };
 
-    const result = await trackStepDispatch(input);
+    const result = await trackStepDispatchFn(input);
 
     expect(result.stepId).toBeUndefined();
     expect(result.violation).toBeUndefined();
@@ -95,7 +96,7 @@ describe('trackStepDispatch with StepId', () => {
       tool_input: { description: 'No prefix needed when stashed' }
     };
 
-    const result = await trackStepDispatch(input);
+    const result = await trackStepDispatchFn(input);
 
     expect(result.violation).toBeUndefined();
   });

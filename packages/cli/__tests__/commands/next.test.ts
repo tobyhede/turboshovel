@@ -321,7 +321,7 @@ describe('next command', () => {
 
       // Verify child is now active
       const session2 = await readSession(workspace);
-      const childId = session2.active;
+      const _childId = session2.active;
 
       // Mark child workflow step as passed
       runCli('next --pass', workspace); // Step 1: CONTINUE -> Step 2

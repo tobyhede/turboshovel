@@ -73,7 +73,7 @@ describe('start --prompted', () => {
       // Start parent workflow in prompted mode
       runCli('start --prompted workflows/simple.workflow.md', workspace);
       const session1 = await readSession(workspace);
-      const parentId = session1.active;
+      const _parentId = session1.active;
 
       // Queue step with child workflow
       runCli(['start', '--step', '1', 'workflows/with-commands.workflow.md'], workspace);

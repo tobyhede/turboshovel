@@ -2,7 +2,7 @@
 import { join } from 'path';
 import { tmpdir } from 'os';
 import * as fs from 'fs/promises';
-import { WorkflowStateManager, Step, StepNumber } from '@turboshovel/shared';
+import { WorkflowStateManager, type Step, type StepNumber } from '@turboshovel/shared';
 import { getWorkflowContext } from '../../src/workflow/context.js';
 
 describe('Workflow Context Injection', () => {

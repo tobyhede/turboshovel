@@ -3,7 +3,7 @@ import { mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { WorkflowStateManager } from '../../src/workflow/state.js';
-import { Step, StepNumber } from '../../src/workflow/types.js';
+import { type Step, type StepNumber } from '../../src/workflow/types.js';
 
 describe('WorkflowStateManager', () => {
   let testDir: string;
