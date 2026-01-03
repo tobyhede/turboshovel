@@ -57,8 +57,7 @@ describe('fail command', () => {
     });
 
     it('should set variables.blocked=true when STOP action triggered', async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
-
+      // workflow already started by beforeEach
       runCli('fail', workspace);
 
       // After blocking, the workflow is saved but no longer active
