@@ -15,7 +15,6 @@ import {
   evaluateFailCondition,
   isNodeError,
   getErrorMessage,
-  renderStep,
   executeCommand,
   printMetadata,
   printActionBlock,
@@ -29,12 +28,10 @@ import {
   printNoActiveWorkflow,
   printNoWorkflows,
   printWorkflowListEntry,
-  formatPosition,
   type Step,
   type PendingStep,
   type WorkflowMetadata,
   type ActionBlockData,
-  type StepPosition,
   type WorkflowState,
 } from '@turboshovel/shared';
 import { resolveWorkflowFile } from './helpers/resolve-workflow.js';
@@ -212,10 +209,10 @@ function deriveAction(
   if (isComplete) return 'COMPLETE';
   if (isBlocked) return 'STOP';
   if (newStep === prevStep && newRetryCount > prevRetryCount) {
-    return `RETRY (${newRetryCount}/${retryMax})`;
+    return `RETRY (${String(newRetryCount)}/${String(retryMax)})`;
   }
   if (newStep !== prevStep + 1 && newStep !== prevStep) {
-    return `GOTO ${newStep}`;
+    return `GOTO ${String(newStep)}`;
   }
   return 'CONTINUE';
 }
