@@ -54,6 +54,12 @@ export function parseStepIdFromString(input: string, options?: ParseStepIdOption
   const step = createStepNumber(stepNum);
   if (!step) return null; // Invalid step number (0, negative, or too large)
 
+  // Validate substep is >= 1 (1-indexed, reject 0)
+  if (match[2]) {
+    const substepNum = parseInt(match[2], 10);
+    if (substepNum < 1) return null;
+  }
+
   return {
     step,
     substep: match[2] // Already a numeric string
