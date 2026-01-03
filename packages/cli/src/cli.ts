@@ -65,61 +65,90 @@ async function runExecutionLoop(
 
   while (true) {
     const currentStep = steps[state.step - 1];
+    const totalSteps = steps.length;
 
-    // Render step (shows prompt and command)
-    console.log('\n' + renderStep(currentStep));
+    // Print step block
+    printStepBlock({ current: state.step, total: totalSteps }, currentStep);
 
     // If prompted mode OR no command, wait for manual tsv pass/fail
     if (prompted || !currentStep.command) {
       return 'waiting';
     }
 
-    // Execute command
-    console.log(`\n--- Executing ---`);
+    // Execute command (output via stdio:inherit)
+    printCommandExec(currentStep.command.code);
     const execResult = await executeCommand(currentStep.command.code, cwd);
-    console.log(`--- Exit: ${execResult.exitCode} (${execResult.success ? 'PASS' : 'FAIL'}) ---`);
 
-    // Store the result for later inspection
+    // Store result
     await manager.setLastResult(workflowId, execResult.success ? 'pass' : 'fail');
 
-    // Create actor and send event based on exit code
+    // Capture prev state BEFORE mutation
+    const prevStep = state.step;
+    const prevRetryCount = state.retryCount;
+
+    // Send event to actor
     const actor = await manager.createActor(workflowId, steps);
     if (!actor) return 'blocked';
 
     actor.send({ type: execResult.success ? 'PASS' : 'FAIL' });
-    state = await manager.updateFromActor(workflowId, actor, steps);
+    const updatedState = await manager.updateFromActor(workflowId, actor, steps);
 
     const snapshot = actor.getPersistedSnapshot() as any;
+    const isComplete = snapshot.status === 'done' && snapshot.value === 'complete';
+    const isBlocked = snapshot.status === 'done' && snapshot.value === 'blocked';
 
-    // Check for workflow end states
-    if (snapshot.status === 'done') {
-      if (snapshot.value === 'complete') {
-        await manager.update(workflowId, { variables: { ...state.variables, completed: true } });
-        console.log(`\nWorkflow complete: ${state.workflow}`);
-        if (state.parentWorkflowId) {
-          await manager.setActive(state.parentWorkflowId);
-          console.log(`Returning to parent workflow: ${state.parentWorkflowId}`);
-        } else {
-          await manager.setActive(null);
-        }
-        return 'done';
-      } else if (snapshot.value === 'blocked') {
-        await manager.update(workflowId, { variables: { ...state.variables, blocked: true } });
-        console.error(`\nWorkflow blocked: ${state.workflow}`);
-        if (state.parentWorkflowId) {
-          await manager.setActive(state.parentWorkflowId);
-        } else {
-          await manager.setActive(null);
-        }
-        return 'blocked';
+    // Derive action string
+    const retryMax = getStepRetryMax(currentStep);
+    const action = deriveAction(
+      prevStep,
+      updatedState.step,
+      prevRetryCount,
+      updatedState.retryCount,
+      retryMax,
+      isComplete,
+      isBlocked
+    );
+
+    // Update lastAction in state
+    const actionType = action.startsWith('GOTO') ? 'GOTO' :
+                       action.startsWith('RETRY') ? 'RETRY' :
+                       action as 'CONTINUE' | 'COMPLETE' | 'STOP';
+    await manager.update(workflowId, { lastAction: actionType });
+
+    // Print separator and action block
+    printSeparator();
+    printActionBlock({
+      action,
+      prev: { current: prevStep, total: totalSteps },
+      outcome: execResult.success ? 'PASS' : 'FAIL',
+    });
+
+    // Handle workflow end states
+    if (isComplete) {
+      await manager.update(workflowId, { variables: { ...updatedState.variables, completed: true } });
+      printWorkflowComplete();
+      if (state.parentWorkflowId) {
+        await manager.setActive(state.parentWorkflowId);
+      } else {
+        await manager.setActive(null);
       }
+      return 'done';
     }
 
-    // Reload state for next iteration (step may have changed)
+    if (isBlocked) {
+      await manager.update(workflowId, { variables: { ...updatedState.variables, blocked: true } });
+      printWorkflowBlocked(prevStep);
+      if (state.parentWorkflowId) {
+        await manager.setActive(state.parentWorkflowId);
+      } else {
+        await manager.setActive(null);
+      }
+      return 'blocked';
+    }
+
+    // Reload state for next iteration
     state = await manager.load(workflowId);
     if (!state) return 'blocked';
-
-    // Loop continues to next step...
   }
 }
 
