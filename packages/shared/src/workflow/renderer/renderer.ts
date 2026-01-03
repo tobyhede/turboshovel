@@ -1,4 +1,5 @@
 import { type Step, type Action, type Transitions, type Substep } from '../types.js';
+import { stepIdToString } from '../step-id.js';
 
 /**
  * Render an Action to its DSL string representation
@@ -16,7 +17,7 @@ export function renderAction(action: Action): string {
     case 'STOP':
       return action.message ? `STOP "${action.message}"` : 'STOP';
     case 'GOTO':
-      return `GOTO ${action.step}`;
+      return `GOTO ${stepIdToString(action.target)}`;
   }
 }
 
