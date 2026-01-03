@@ -9,8 +9,7 @@ export interface WorkflowContext {
 export type WorkflowEvent =
   | { type: 'PASS' }
   | { type: 'FAIL' }
-  | { type: 'RETRY' }
-  | { type: 'NEXT' };
+  | { type: 'RETRY' };
 
 function actionToTransition(
   action: Action,
@@ -72,10 +71,6 @@ export function compileWorkflowToMachine(steps: Step[]) {
             retryCount: ({ context }) => context.retryCount + 1
           }),
           target: stepId
-        },
-        NEXT: {
-          target: step.number < steps.length ? `step_${step.number + 1}` : 'complete',
-          actions: assign({ retryCount: 0 })
         }
       }
     };
