@@ -17,6 +17,7 @@ import {
   isNodeError,
   getErrorMessage,
   renderStep,
+  executeCommand,
   type StepNumber,
   type Step,
   type PendingStep
@@ -28,6 +29,81 @@ const program = new Command();
 program.name('turboshovel').description('Workflow orchestration CLI').version('1.0.0');
 
 const DEFAULT_RESULT_SEQUENCE: string[] = ['pass'];
+
+/**
+ * Execute command steps in a loop until:
+ * - Workflow completes or blocks
+ * - A prompt-only step is reached (no command)
+ * - In prompted mode (no auto-execution)
+ *
+ * @returns 'done' | 'blocked' | 'waiting' (waiting = prompt-only step reached)
+ */
+async function runExecutionLoop(
+  manager: WorkflowStateManager,
+  workflowId: string,
+  steps: Step[],
+  cwd: string,
+  prompted: boolean
+): Promise<'done' | 'blocked' | 'waiting'> {
+  let state = await manager.load(workflowId);
+  if (!state) return 'blocked';
+
+  while (true) {
+    const currentStep = steps[state.step - 1];
+
+    // Render step (shows prompt and command)
+    console.log('\n' + renderStep(currentStep));
+
+    // If prompted mode OR no command, wait for manual tsv pass/fail
+    if (prompted || !currentStep.command) {
+      return 'waiting';
+    }
+
+    // Execute command
+    console.log(`\n--- Executing ---`);
+    const execResult = await executeCommand(currentStep.command.code, cwd);
+    console.log(`--- Exit: ${execResult.exitCode} (${execResult.success ? 'PASS' : 'FAIL'}) ---`);
+
+    // Create actor and send event based on exit code
+    const actor = await manager.createActor(workflowId, steps);
+    if (!actor) return 'blocked';
+
+    actor.send({ type: execResult.success ? 'PASS' : 'FAIL' });
+    state = await manager.updateFromActor(workflowId, actor, steps);
+
+    const snapshot = actor.getPersistedSnapshot() as any;
+
+    // Check for workflow end states
+    if (snapshot.status === 'done') {
+      if (snapshot.value === 'complete') {
+        await manager.update(workflowId, { variables: { ...state.variables, completed: true } });
+        console.log(`\nWorkflow complete: ${state.workflow}`);
+        if (state.parentWorkflowId) {
+          await manager.setActive(state.parentWorkflowId);
+          console.log(`Returning to parent workflow: ${state.parentWorkflowId}`);
+        } else {
+          await manager.setActive(null);
+        }
+        return 'done';
+      } else if (snapshot.value === 'blocked') {
+        await manager.update(workflowId, { variables: { ...state.variables, blocked: true } });
+        console.error(`\nWorkflow blocked: ${state.workflow}`);
+        if (state.parentWorkflowId) {
+          await manager.setActive(state.parentWorkflowId);
+        } else {
+          await manager.setActive(null);
+        }
+        return 'blocked';
+      }
+    }
+
+    // Reload state for next iteration (step may have changed)
+    state = await manager.load(workflowId);
+    if (!state) return 'blocked';
+
+    // Loop continues to next step...
+  }
+}
 
 function getCwd(): string {
   return process.cwd();
