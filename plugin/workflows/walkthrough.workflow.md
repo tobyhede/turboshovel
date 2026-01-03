@@ -38,7 +38,7 @@ Execute parallel agent task.
 Run the walkthrough:gate-check gate to verify gate execution within workflows.
 
 ```bash
-node ${CLAUDE_PLUGIN_ROOT}/core/dist/cli/workflow-cli.js gate walkthrough:gate-check
+tsv gate walkthrough:gate-check
 ```
 
 - PASS: CONTINUE

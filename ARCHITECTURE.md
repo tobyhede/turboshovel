@@ -114,8 +114,6 @@ plugin/
         ├── types.ts            # TypeScript interfaces
         ├── errors.ts           # Custom error types
         ├── utils.ts            # Utility functions
-        ├── cli/                # CLI subcommands
-        │   └── workflow-cli.ts # Workflow CLI entry point
         ├── gates/              # Built-in TypeScript gates
         │   ├── index.ts        # Gate registry
         │   └── plugin-path.ts
