@@ -6,3 +6,4 @@ export * from './condition-handler.js';
 export * from './parser/index.js';
 export * from './compiler.js';
 export * from './renderer/renderer.js';
+export * from './executor.js';
