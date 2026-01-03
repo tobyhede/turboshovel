@@ -893,17 +893,23 @@ program
     try {
       const cwd = getCwd();
       const manager = new WorkflowStateManager(cwd);
+      const state = await manager.getActive();
 
-      const stashedId = await manager.stash();
-
-      if (!stashedId) {
-        console.log('No active workflow to stash');
+      if (!state) {
+        printNoActiveWorkflow();
         return;
       }
 
-      console.log(`Workflow stashed: ${stashedId}`);
-      console.log('Enforcement paused. Run freely.');
-      console.log('Use "tsv pop" to resume.');
+      const totalSteps = await getStepCount(cwd, state.workflow);
+
+      // Print metadata
+      printMetadata(buildMetadata(state));
+
+      // Stash
+      await manager.stash();
+
+      // Print step position and message
+      printWorkflowStashed({ current: state.step, total: totalSteps });
     } catch (error) {
       console.error(`Error: ${getErrorMessage(error)}`);
       process.exit(1);
