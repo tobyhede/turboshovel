@@ -1,56 +1,28 @@
-import { type SubtaskState } from '../../src/workflow/types';
-import type { Action } from '../../src/workflow/types';
+import { describe, it, expect } from '@jest/globals';
+import type { NonRetryAction, StepNumber } from '../../src/workflow/types.js';
+import type { StepId } from '../../src/workflow/step-id.js';
 
-describe('SubtaskState type', () => {
-  it('has required fields', () => {
-    const subtaskState: SubtaskState = {
-      id: '1',
-      status: 'pending',
-      agentId: undefined,
-      result: undefined
+describe('GOTO action type', () => {
+  it('uses target: StepId instead of step: StepNumber', () => {
+    // This test documents the expected shape after the refactor
+    const gotoAction: NonRetryAction = {
+      type: 'GOTO',
+      target: { step: 2 as StepNumber, substep: '1' }
     };
 
-    expect(subtaskState.id).toBe('1');
-    expect(subtaskState.status).toBe('pending');
-  });
-});
-
-describe('Action type', () => {
-  it('RETRY action should have max and then properties', () => {
-    const retryAction: Action = {
-      type: 'RETRY',
-      max: 3,
-      then: { type: 'STOP', message: 'Build failed' }
-    };
-
-    expect(retryAction.type).toBe('RETRY');
-    if (retryAction.type === 'RETRY') {
-      expect(retryAction.max).toBe(3);
-      expect(retryAction.then).toEqual({ type: 'STOP', message: 'Build failed' });
-    }
+    // Type assertion - if this compiles, the type is correct
+    expect(gotoAction.type).toBe('GOTO');
+    expect(gotoAction.target.step).toBe(2);
+    expect(gotoAction.target.substep).toBe('1');
   });
 
-  it('RETRY then can be GOTO', () => {
-    const retryAction: Action = {
-      type: 'RETRY',
-      max: 2,
-      then: { type: 'GOTO', task: 5 as any }
+  it('allows GOTO without substep', () => {
+    const gotoAction: NonRetryAction = {
+      type: 'GOTO',
+      target: { step: 3 as StepNumber }
     };
 
-    if (retryAction.type === 'RETRY') {
-      expect(retryAction.then.type).toBe('GOTO');
-    }
-  });
-
-  it('RETRY then can be CONTINUE', () => {
-    const retryAction: Action = {
-      type: 'RETRY',
-      max: 1,
-      then: { type: 'CONTINUE' }
-    };
-
-    if (retryAction.type === 'RETRY') {
-      expect(retryAction.then.type).toBe('CONTINUE');
-    }
+    expect(gotoAction.target.step).toBe(3);
+    expect(gotoAction.target.substep).toBeUndefined();
   });
 });

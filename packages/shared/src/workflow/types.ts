@@ -59,7 +59,7 @@ export interface PendingStep {
 export type NonRetryAction =
   | { readonly type: 'CONTINUE' }
   | { readonly type: 'STOP'; readonly message?: string }
-  | { readonly type: 'GOTO'; readonly step: StepNumber }
+  | { readonly type: 'GOTO'; readonly target: StepId }
   | { readonly type: 'DONE' };
 
 /**
