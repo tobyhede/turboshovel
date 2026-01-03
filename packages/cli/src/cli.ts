@@ -819,12 +819,19 @@ program
       const manager = new WorkflowStateManager(cwd);
       const state = await manager.getActive();
       if (!state) {
-        console.log('No active workflow');
+        printNoActiveWorkflow();
         return;
       }
+
+      // Print metadata
+      printMetadata(buildMetadata(state));
+
+      // Delete and clear
       await manager.delete(state.id);
       await manager.setActive(null);
-      console.log(`Stopped workflow: ${state.workflow}`);
+
+      // Print terminal message
+      printWorkflowStopped();
     } catch (error) {
       console.error(`Error: ${getErrorMessage(error)}`);
       process.exit(1);
@@ -889,13 +896,40 @@ program
       const state = await manager.pop();
 
       if (!state) {
-        console.log('No stashed workflow to restore');
+        console.log('No stashed workflow to restore.');
         return;
       }
 
-      console.log(`Workflow restored: ${state.workflow}`);
-      console.log(`Resuming at Step ${state.step}: ${state.stepName}`);
-      console.log('Enforcement active.');
+      const workflowPath = await findWorkflowFile(cwd, state.workflow);
+      if (!workflowPath) {
+        console.error(`Error: Workflow file ${state.workflow} not found`);
+        process.exit(1);
+      }
+      const content = await fs.readFile(workflowPath, 'utf8');
+      const steps = parseWorkflow(content);
+      const currentStep = steps[state.step - 1];
+      const totalSteps = steps.length;
+
+      // Print metadata
+      printMetadata(buildMetadata(state));
+
+      // Print action block if lastAction exists
+      if (state.lastAction) {
+        const actionBlockData: ActionBlockData = {
+          action: state.lastAction === 'GOTO' ? `GOTO ${state.step}` :
+                  state.lastAction === 'RETRY' ? `RETRY (${state.retryCount}/${getStepRetryMax(currentStep)})` :
+                  state.lastAction,
+        };
+        if (state.lastResult) {
+          actionBlockData.outcome = state.lastResult === 'pass' ? 'PASS' : 'FAIL';
+        }
+        printActionBlock(actionBlockData);
+      }
+
+      // Print step block
+      if (currentStep) {
+        printStepBlock({ current: state.step, total: totalSteps }, currentStep);
+      }
     } catch (error) {
       console.error(`Error: ${getErrorMessage(error)}`);
       process.exit(1);
