@@ -50,6 +50,14 @@ export function renderStep(step: Step): string {
   lines.push(`## ${step.number}. ${step.description}`);
   lines.push('');
 
+  // Workflows (step-level)
+  if (step.workflows?.length) {
+    for (const wf of step.workflows) {
+      lines.push(` - ${wf}`);
+    }
+    lines.push('');
+  }
+
   // Command
   if (step.command) {
     lines.push('```bash');
