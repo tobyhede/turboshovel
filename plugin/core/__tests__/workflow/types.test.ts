@@ -207,3 +207,26 @@ describe('decrementStepNumber', () => {
     expect(result).toBe(2);
   });
 });
+
+describe('Step interface', () => {
+  it('supports isDynamic property for dynamic steps', () => {
+    const dynamicStep: Step = {
+      isDynamic: true,
+      description: 'Process item',
+      prompts: []
+    };
+    expect(dynamicStep.isDynamic).toBe(true);
+    expect(dynamicStep.number).toBeUndefined();
+  });
+
+  it('supports static steps with number', () => {
+    const staticStep: Step = {
+      number: 1 as StepNumber,
+      isDynamic: false,
+      description: 'Setup',
+      prompts: []
+    };
+    expect(staticStep.isDynamic).toBe(false);
+    expect(staticStep.number).toBe(1);
+  });
+});

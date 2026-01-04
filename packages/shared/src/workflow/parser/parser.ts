@@ -84,7 +84,8 @@ interface SubstepBuilder {
 }
 
 interface StepBuilder {
-  number: StepNumber;
+  number?: StepNumber;           // Optional - undefined for dynamic steps
+  isDynamic: boolean;            // Required - true for {N} steps, false for static
   description: string;
   command?: { code: string };
   prompts: { text: string }[];

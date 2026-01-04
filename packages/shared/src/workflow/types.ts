@@ -150,7 +150,8 @@ export interface Substep {
  * A single step in a workflow
  */
 export interface Step {
-  readonly number: StepNumber;
+  readonly number?: StepNumber;           // undefined for {N} dynamic steps
+  readonly isDynamic: boolean;            // true for {N} steps, false for static
   readonly description: string;
   readonly command?: Command;
   readonly prompts: readonly Prompt[];
