@@ -8,13 +8,16 @@ where static_steps is:
 
 where static_step is:
   "##" integer title
-    { body [ substep ... ] | workflows }
+    { body | substeps | workflows }
     [ transition ... ]
 
 where dynamic_step is:
   "##" "{N}" title
-    { body [ substep ... ] | workflows }
+    { body | substeps | workflows }
     [ transition ... ]
+
+where substeps is:
+  substep [ substep ... ]
 
 where substep is:
   "###" substep_id title
@@ -44,4 +47,4 @@ where result is:
   action | RETRY [ count ] [ action ]
 
 where action is:
-  CONTINUE | DONE | STOP [ "message" ] | GOTO id
+  CONTINUE | DONE | STOP [ "message" ] | GOTO id | NEXT

@@ -20,13 +20,16 @@ where static_steps is:
 
 where static_step is:
   "##" integer title
-    { body [ substep ... ] | workflows }
+    { body | substeps | workflows }
     [ transition ... ]
 
 where dynamic_step is:
   "##" "{N}" title
-    { body [ substep ... ] | workflows }
+    { body | substeps | workflows }
     [ transition ... ]
+
+where substeps is:
+  substep [ substep ... ]
 
 where substep is:
   "###" substep_id title
@@ -56,7 +59,7 @@ where result is:
   action | RETRY [ count ] [ action ]
 
 where action is:
-  CONTINUE | DONE | STOP [ "message" ] | GOTO id
+  CONTINUE | DONE | STOP [ "message" ] | GOTO id | NEXT
 ```
 
 ---
@@ -171,12 +174,20 @@ Actions determine what happens next.
 | `STOP ["msg"]` | Halt execution immediately. Optional failure message. |
 | `DONE` | Complete the workflow successfully immediately. |
 | `GOTO {id}` | Jump to a specific step ID. |
+| `NEXT` | Create the next dynamic step instance (N+1) and start execution. Only valid within `## {N}.` context. |
 | `RETRY [n] [act]` | Retry the current step `n` times (default 1). If exhausted, perform `act` (default STOP). |
 
 **GOTO Rules:**
 - Target ID must exist.
 - Cannot GOTO into a dynamic step instance (use the parent ID).
 - GOTO clears current retry counters.
+- `GOTO {N}.M` navigates within the current instance to substep M.
+- Use `NEXT` to advance to the next instance (not `GOTO {N}`).
+
+**NEXT Rules:**
+- Only valid within dynamic step context (`## {N}.`).
+- Creates instance N+1 and begins execution at the first substep.
+- Use for explicit iteration control in dynamic workflows.
 
 ---
 
