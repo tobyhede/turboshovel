@@ -158,4 +158,75 @@ FAIL ANY: STOP
       expect(() => parseWorkflow(markdown)).toThrow('Duplicate substep');
     });
   });
+
+  describe('parseWorkflow with dynamic steps', () => {
+    it('parses single dynamic step template', () => {
+      const markdown = `
+## {N}. Process batch item
+
+Execute the item processing workflow.
+
+- PASS: CONTINUE
+- FAIL: STOP
+`;
+      const steps = parseWorkflow(markdown);
+
+      expect(steps).toHaveLength(1);
+      expect(steps[0].isDynamic).toBe(true);
+      expect(steps[0].number).toBeUndefined();
+      expect(steps[0].description).toBe('Process batch item');
+    });
+
+    it('parses dynamic step with static substeps', () => {
+      const markdown = `
+## {N}. Execute batch task
+
+### {N}.1 Implement changes
+### {N}.2 Run lint
+### {N}.3 Run tests
+
+- PASS: CONTINUE
+- FAIL: STOP
+`;
+      const steps = parseWorkflow(markdown);
+
+      expect(steps[0].isDynamic).toBe(true);
+      expect(steps[0].substeps).toHaveLength(3);
+      expect(steps[0].substeps?.[0].id).toBe('1');
+      expect(steps[0].substeps?.[1].id).toBe('2');
+      expect(steps[0].substeps?.[2].id).toBe('3');
+    });
+
+    it('parses dynamic step with dynamic substeps', () => {
+      const markdown = `
+## {N}. Review batch item
+
+### {N}.{n} Code review (code-review-agent)
+
+- PASS ALL: CONTINUE
+- FAIL ANY: STOP
+`;
+      const steps = parseWorkflow(markdown);
+
+      expect(steps[0].isDynamic).toBe(true);
+      expect(steps[0].substeps).toHaveLength(1);
+      expect(steps[0].substeps?.[0].id).toBe('{n}');
+      expect(steps[0].substeps?.[0].isDynamic).toBe(true);
+    });
+
+    it('parses dynamic step with workflow reference', () => {
+      const markdown = `
+## {N}. Process item
+
+ - item-task.workflow.md
+
+- PASS: CONTINUE
+- FAIL: RETRY 3 STOP
+`;
+      const steps = parseWorkflow(markdown);
+
+      expect(steps[0].isDynamic).toBe(true);
+      expect(steps[0].workflows).toEqual(['item-task.workflow.md']);
+    });
+  });
 });

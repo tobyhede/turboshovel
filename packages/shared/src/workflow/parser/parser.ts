@@ -168,24 +168,40 @@ export function parseWorkflow(markdown: string): Step[] {
       const parsed = extractSubstepHeader(headingText);
 
       if (parsed) {
-        if (parsed.stepRef !== currentStep.number) {
-          throw new WorkflowSyntaxError(
-            `Substep ${headingText} does not belong to step ${String(currentStep.number)}`
-          );
+        // Validate substep parent matches current step
+        if (currentStep.isDynamic) {
+          if (parsed.stepRef !== '{N}') {
+            throw new WorkflowSyntaxError(
+              `Substep ${headingText} uses numeric prefix but parent step is dynamic ({N})`
+            );
+          }
+        } else {
+          if (parsed.stepRef === '{N}') {
+            throw new WorkflowSyntaxError(
+              `Substep ${headingText} uses {N} prefix but parent step ${String(currentStep.number)} is static`
+            );
+          }
+          if (parsed.stepRef !== currentStep.number) {
+            throw new WorkflowSyntaxError(
+              `Substep ${headingText} does not belong to step ${String(currentStep.number)}`
+            );
+          }
         }
 
         const duplicateId = currentStep.substeps.find((s) => s.id === parsed.id);
         if (duplicateId) {
+          const stepLabel = currentStep.isDynamic ? '{N}' : String(currentStep.number);
           throw new WorkflowSyntaxError(
-            `Duplicate substep ID '${parsed.id}' in step ${String(currentStep.number)}`
+            `Duplicate substep ID '${parsed.id}' in step ${stepLabel}`
           );
         }
 
         const hasStatic = currentStep.substeps.some((s) => !s.isDynamic);
         const hasDynamic = currentStep.substeps.some((s) => s.isDynamic);
         if ((hasStatic && parsed.isDynamic) || (hasDynamic && !parsed.isDynamic)) {
+          const stepLabel = currentStep.isDynamic ? '{N}' : String(currentStep.number);
           throw new WorkflowSyntaxError(
-            `Cannot mix static and dynamic substeps in step ${String(currentStep.number)}`
+            `Cannot mix static and dynamic substeps in step ${stepLabel}`
           );
         }
 
