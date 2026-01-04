@@ -6,7 +6,7 @@ import { stepIdToString } from '../step-id.js';
  */
 export function renderAction(action: Action): string {
   if (action.type === 'RETRY') {
-    return `RETRY ${action.max} ${renderAction(action.then)}`;
+    return `RETRY ${String(action.max)} ${renderAction(action.then)}`;
   }
 
   switch (action.type) {
@@ -33,11 +33,14 @@ export function renderTransitions(transitions: Transitions): string {
 
 /**
  * Render a Substep to Markdown
+ * @param substep - The substep to render
+ * @param parentStepNumber - The parent step number (required for proper N.M format)
  */
-export function renderSubstep(substep: Substep): string {
+export function renderSubstep(substep: Substep, parentStepNumber: number): string {
   const agentSuffix = substep.agentType ? ` (${substep.agentType})` : '';
   const workflowSuffix = substep.workflows?.length ? ` [@${substep.workflows.join(', ')}]` : '';
-  return `### ${substep.id}. ${substep.description}${agentSuffix}${workflowSuffix}`;
+  // Format: ### N.M description - required for round-trip parsing
+  return `### ${String(parentStepNumber)}.${substep.id} ${substep.description}${agentSuffix}${workflowSuffix}`;
 }
 
 /**
@@ -47,7 +50,7 @@ export function renderStep(step: Step): string {
   const lines: string[] = [];
 
   // Header
-  lines.push(`## ${step.number}. ${step.description}`);
+  lines.push(`## ${String(step.number)}. ${step.description}`);
   lines.push('');
 
   // Workflows (step-level)
@@ -81,13 +84,15 @@ export function renderStep(step: Step): string {
   // Substeps
   if (step.substeps) {
     for (const substep of step.substeps) {
-      lines.push(renderSubstep(substep));
+      lines.push(renderSubstep(substep, step.number));
       lines.push('');
     }
   }
 
-  // Nested Workflow
+  // Nested Workflow (deprecated but kept for backwards compatibility)
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   if (step.nestedWorkflow) {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     lines.push(`@${step.nestedWorkflow}`);
     lines.push('');
   }
