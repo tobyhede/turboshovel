@@ -1,4 +1,4 @@
-import type { Step, StepNumber, SubstepState, Action, NonRetryAction, StepId } from './types.js';
+import type { Step, SubstepState, Action, NonRetryAction, StepId } from './types.js';
 
 export interface ConditionResult {
   action: 'retry' | 'blocked' | 'goto' | 'continue' | 'done';

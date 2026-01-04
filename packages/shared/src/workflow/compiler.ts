@@ -14,19 +14,21 @@ export type WorkflowEvent =
   | { type: 'RETRY' }
   | { type: 'GOTO'; target: StepId };
 
+// XState requires any for transition builder (snapshot types not fully typed)
 function actionToTransition(
   action: Action,
   currentStep: StepNumber,
   maxSteps: number
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
   if (action.type === 'RETRY') {
     return [
       {
         guard: ({ context }: { context: WorkflowContext }) => context.retryCount < action.max,
         actions: assign({
-          retryCount: ({ context }) => context.retryCount + 1
+          retryCount: ({ context }) => (context.retryCount as number) + 1
         }),
-        target: `step_${currentStep}`
+        target: `step_${String(currentStep)}`
       },
       nonRetryActionToTransition(action.then, currentStep, maxSteps)
     ];
@@ -35,16 +37,20 @@ function actionToTransition(
   return nonRetryActionToTransition(action, currentStep, maxSteps);
 }
 
+// XState requires any for transition builder (snapshot types not fully typed)
 function nonRetryActionToTransition(
   action: NonRetryAction,
   currentStep: StepNumber,
   maxSteps: number
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
   switch (action.type) {
     case 'CONTINUE':
-      if (currentStep >= maxSteps) return { target: 'complete' };
+      if (currentStep >= maxSteps) {
+        return { target: 'complete' };
+      }
       return {
-        target: `step_${currentStep + 1}`,
+        target: `step_${String(currentStep + 1)}`,
         actions: assign({ retryCount: 0, substep: undefined })
       };
     case 'DONE':
@@ -53,7 +59,7 @@ function nonRetryActionToTransition(
       return { target: 'blocked' };
     case 'GOTO':
       return {
-        target: `step_${action.target.step}`,
+        target: `step_${String(action.target.step)}`,
         actions: assign({
           retryCount: 0,
           substep: action.target.substep
@@ -62,7 +68,11 @@ function nonRetryActionToTransition(
   }
 }
 
+// XState snapshot type is not fully typed
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types
 export function compileWorkflowToMachine(steps: Step[]) {
+  // XState snapshot type is not fully typed
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const states: Record<string, any> = {};
 
   // Generate GOTO transitions for all possible target steps
@@ -71,7 +81,7 @@ export function compileWorkflowToMachine(steps: Step[]) {
       if (event.type !== 'GOTO') return false;
       return event.target.step === targetStep.number;
     },
-    target: `step_${targetStep.number}`,
+    target: `step_${String(targetStep.number)}`,
     actions: assign({
       retryCount: 0,
       substep: ({ event }: { event: WorkflowEvent }) =>
@@ -80,21 +90,24 @@ export function compileWorkflowToMachine(steps: Step[]) {
   }));
 
   steps.forEach((step) => {
-    const stepId = `step_${step.number}`;
+    const stepId = `step_${String(step.number)}`;
+    // XState state object type is not fully typed
     states[stepId] = {
       on: {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         PASS: step.transitions
           ? actionToTransition(step.transitions.pass, step.number, steps.length)
           : {
-              target: step.number < steps.length ? `step_${step.number + 1}` : 'complete',
+              target: step.number < steps.length ? `step_${String(step.number + 1)}` : 'complete',
               actions: assign({ retryCount: 0, substep: undefined })
             },
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         FAIL: step.transitions
           ? actionToTransition(step.transitions.fail, step.number, steps.length)
           : { target: 'blocked' },
         RETRY: {
           actions: assign({
-            retryCount: ({ context }) => context.retryCount + 1
+            retryCount: ({ context }) => (context.retryCount as number) + 1
           }),
           target: stepId
         },

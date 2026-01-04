@@ -107,7 +107,7 @@ export function parseWorkflow(markdown: string): Step[] {
   let implicitText = '';
 
   // Helper to finalize pending substep
-  const finalizePendingSubstep = () => {
+  const finalizePendingSubstep = (): void => {
     if (currentStep?.pendingSubstep) {
       const workflows = extractWorkflowList(currentStep.pendingSubstep.content);
       const substep: Substep = {
@@ -264,6 +264,8 @@ export function parseWorkflow(markdown: string): Step[] {
 
   finalizePendingSubstep();
 
+  // currentStep may have been set during H2 heading processing
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (currentStep) {
     steps.push(finalizeStep(currentStep, pendingConditionals, implicitText));
   }

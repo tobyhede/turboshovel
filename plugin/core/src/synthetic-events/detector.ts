@@ -66,7 +66,7 @@ export function detectSyntheticEvents(input: HookInput): SyntheticEvent[] {
     events.push({
       originalEvent: 'PostToolUse',
       syntheticEvent: 'SubagentStart',
-      stepId: stepIdMatch?.[1] || input.step_id || input.task_id,
+      stepId: stepIdMatch?.[1] ?? input.step_id ?? input.task_id,
       toolUseId,
       subagentType
     });

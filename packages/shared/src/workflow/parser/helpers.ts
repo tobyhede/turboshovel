@@ -140,7 +140,9 @@ function parseRetryWithArgs(rest: string): Action | null {
   const numberMatch = /^(\d+)(?:\s+(.*))?$/.exec(remaining);
   if (numberMatch) {
     max = parseInt(numberMatch[1], 10);
-    remaining = numberMatch[2]?.trim() ?? '';
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    remaining = numberMatch[2] ?? '';
+    remaining = remaining.trim();
   }
 
   // If nothing remaining, default to STOP

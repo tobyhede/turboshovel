@@ -54,7 +54,7 @@ export async function handleSubagentStop(input: HookInput): Promise<SubagentStop
     const manager = new WorkflowStateManager(input.cwd);
     const state = await manager.getActive();
 
-    if (state?.agentBindings?.[agentId]) {
+    if (state?.agentBindings[agentId]) {
       const binding = state.agentBindings[agentId];
       if (binding.stepId.substep) {
         await manager.completeSubstep(
@@ -99,7 +99,7 @@ function formatCompletionContext(
     lines.push(`Agent ${agentId} complete.`);
   }
 
-  if (cliOutput?.trim()) {
+  if (cliOutput.trim()) {
     lines.push(cliOutput);
   }
 

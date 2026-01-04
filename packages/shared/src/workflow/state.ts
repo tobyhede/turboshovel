@@ -105,7 +105,9 @@ export class WorkflowStateManager {
     if (!state) return null;
 
     const machine = compileWorkflowToMachine(steps);
+    // XState snapshot type requires any cast for createActor
     const actor = createActor(machine, {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
       snapshot: state.snapshot as any
     });
     actor.start();
@@ -154,18 +156,29 @@ export class WorkflowStateManager {
    * Update workflow state from an XState actor snapshot
    */
   async updateFromActor(id: string, actor: AnyActorRef, steps: Step[]): Promise<WorkflowState> {
+    // XState snapshot type is not fully typed - use any for snapshot access
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
     const snapshot = actor.getPersistedSnapshot() as any;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const stateValue = snapshot.value as string;
     const stepNumStr = stateValue.startsWith('step_') ? stateValue.slice(5) : '1';
     const stepNum = parseInt(stepNumStr, 10);
-    const step = steps.find(s => s.number === stepNum) || steps[0];
+    const step = steps.find(s => s.number === stepNum) ?? steps[0];
+
+    // Extract typed values from XState context
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const substep = snapshot.context.substep as string | undefined;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const retryCount = snapshot.context.retryCount as number;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const variables = snapshot.context.variables as Record<string, boolean | number | string>;
 
     return await this.update(id, {
-      step: createStepNumber(stepNum) || steps[0].number,
-      substep: snapshot.context.substep,
+      step: createStepNumber(stepNum) ?? steps[0].number,
+      substep,
       stepName: step.description,
-      retryCount: snapshot.context.retryCount,
-      variables: snapshot.context.variables,
+      retryCount,
+      variables,
       snapshot
     });
   }
@@ -269,6 +282,7 @@ export class WorkflowStateManager {
     if (!state) throw new Error(`Workflow ${id} not found`);
 
     const existing = state.agentBindings[agentId];
+    // Object record lookup can return undefined
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!existing) throw new Error(`No binding for agent ${agentId}`);
 

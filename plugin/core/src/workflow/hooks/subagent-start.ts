@@ -44,7 +44,7 @@ export async function handleSubagentStart(input: HookInput): Promise<SubagentSta
       stdio: 'pipe'
     });
 
-    if (pending?.stepId.substep) {
+    if (pending.stepId.substep) {
       await manager.bindSubstepAgent(state.id, pending.stepId.substep, agentId);
     }
 
