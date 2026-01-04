@@ -19,7 +19,8 @@
       "mcp__serena__find_file",
       "Skill(cipherpowers:brainstorm)",
       "Skill(cipherpowers:plan)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "mcp__serena__activate_project"
     ],
     "deny": [],
     "ask": []

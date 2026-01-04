@@ -196,6 +196,10 @@ function parseRetryWithArgs(rest: string): Action | null {
 function parseNonRetryAction(input: string): NonRetryAction | null {
   const trimmed = input.trim();
 
+  if (trimmed.startsWith('RETRY')) {
+    throw new WorkflowSyntaxError('Recursion error: RETRY actions cannot contain another RETRY (Rule 5)');
+  }
+
   if (trimmed === 'CONTINUE') {
     return { type: 'CONTINUE' };
   }
@@ -209,10 +213,10 @@ function parseNonRetryAction(input: string): NonRetryAction | null {
   }
 
   if (trimmed.startsWith('STOP ')) {
-    const rest = trimmed.slice(5).trim();
+    let rest = trimmed.slice(5).trim();
     // Handle quoted message
     if (rest.startsWith('"') && rest.endsWith('"')) {
-      return { type: 'STOP', message: rest.slice(1, -1) };
+      rest = rest.slice(1, -1);
     }
     return { type: 'STOP', message: rest };
   }

@@ -161,6 +161,7 @@ describe('Step with substeps', () => {
   it('accepts step with substeps array', () => {
     const step: Step = {
       number: createStepNumber(1)!,
+      isDynamic: false,
       description: 'Dispatch reviewers',
       prompts: [],
       substeps: [

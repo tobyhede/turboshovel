@@ -75,6 +75,23 @@ describe('parseWorkflow with substep workflows', () => {
   });
 });
 
+describe('Implicit prompts with lists', () => {
+  it('preserves bulleted instructions in prompts', () => {
+    const markdown = `## 1. Execute
+The following instructions are important:
+- instruction 1
+- instruction 2
+
+- PASS: CONTINUE
+- FAIL: STOP
+`;
+    const steps = parseWorkflow(markdown);
+    expect(steps[0].prompts[0].text).toContain('The following instructions are important:');
+    expect(steps[0].prompts[0].text).toContain('- instruction 1');
+    expect(steps[0].prompts[0].text).toContain('- instruction 2');
+  });
+});
+
 describe('GOTO substep validation', () => {
   it('accepts GOTO 2.1 when step 2 has static substep 1', () => {
     const markdown = `

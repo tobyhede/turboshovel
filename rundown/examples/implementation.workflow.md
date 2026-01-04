@@ -1,25 +1,18 @@
 # Implementation Workflow
 
-Execute implementation plan tasks with quality gates and troubleshooting.
+Execute your assigned batch of tasks from the implementation plan.
+
+**Batch:** You have been assigned N tasks. Execute each one, then signal batch complete.
 
 ## 1. Implement task
 
 Execute the current task exactly as specified in the plan.
 
-Follow the plan exactly. Allowed without approval:
-- Syntax corrections (wrong function name, typos)
-- Error handling implementation details
-- Variable naming choices
-- Code organization within file
-
-Requires STATUS: BLOCKED:
-- Different algorithm or approach
-- Different library/framework
-- Different data structure/API design
-- Skipping/adding planned functionality
+**tsv pass:** Syntax corrections, error handling details, naming, organization
+**tsv fail:** Different algorithm, library, data structure, or scope
 
 - PASS: CONTINUE
-- FAIL: STOP "Implementation failed"
+- FAIL: STOP "BLOCKED"
 
 ## 2. Run checks
 
@@ -27,7 +20,7 @@ Requires STATUS: BLOCKED:
 tsv test npm run lint && tsv test npm run build
 ```
 
-- PASS: CONTINUE
+- PASS: GOTO 3
 - FAIL: GOTO 4
 
 ## 3. Run tests
@@ -36,43 +29,33 @@ tsv test npm run lint && tsv test npm run build
 tsv test npm test
 ```
 
-- PASS: CONTINUE
+- PASS: GOTO 5
 - FAIL: GOTO 4
 
 ## 4. Troubleshoot
 
-Evaluate the failure:
-
 **Can you fix this without changing the plan's approach?**
 
-Fixable (signal PASS):
-- Syntax corrections, typos, import paths
-- Error handling implementation details
-- Variable naming, code organization
+**tsv pass:** Syntax, typos, imports, error handling, naming
+**tsv fail:** Algorithm, library, data structure, API changes
 
-Not fixable (signal FAIL):
-- Requires different algorithm or approach
-- Requires different library/framework
-- Requires different data structure/API
-
-When in doubt, signal FAIL.
+When in doubt, tsv fail.
 
 - PASS: GOTO 2
-- FAIL: STOP "STATUS: BLOCKED - requires plan revision"
+- FAIL: STOP "BLOCKED"
 
-## 5. Complete task
+## 5. Task complete
 
 Task passed all checks.
 
-Report completion:
 ```
 STATUS: OK
-TASK: [Current task identifier]
-SUMMARY: [What was implemented]
+TASK: [task identifier]
+SUMMARY: [what was implemented]
 ```
 
-Signal PASS if more tasks remain (continues to next task).
-Signal FAIL if all tasks complete (finishes workflow).
+**tsv pass:** More tasks in batch
+**tsv fail:** Batch complete
 
 - PASS: GOTO 1
 - FAIL: DONE

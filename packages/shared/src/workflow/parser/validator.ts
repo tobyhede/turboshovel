@@ -1,0 +1,161 @@
+// src/workflow/parser/validator.ts
+
+import { WorkflowSyntaxError } from './types.js';
+import { StepSchema, ActionSchema } from '../../schemas.js';
+import type { Step, Action } from '../types.js';
+
+/**
+ * Validates a parsed workflow against Rundown specification rules.
+ */
+export function validateWorkflow(steps: Step[]): void {
+  if (steps.length === 0) {
+    throw new WorkflowSyntaxError(
+      "Workflow must contain at least one step (heading starting with '##')"
+    );
+  }
+
+  // Schema validation for each step
+  for (const step of steps) {
+    const result = StepSchema.safeParse(step);
+    if (!result.success) {
+      const stepLabel = step.isDynamic ? '{N}' : String(step.number);
+      throw new WorkflowSyntaxError(
+        `Step ${stepLabel} failed schema validation: ${result.error.issues.map(i => i.message).join(', ')}`
+      );
+    }
+  }
+
+  // Conformance Rule 2: Step Pattern
+  // Workflow contains EITHER static steps OR exactly one dynamic template
+  const staticSteps = steps.filter(s => !s.isDynamic);
+  const dynamicSteps = steps.filter(s => s.isDynamic);
+
+  if (staticSteps.length > 0 && dynamicSteps.length > 0) {
+    throw new WorkflowSyntaxError(
+      'Invalid step pattern: workflow must contain static steps OR exactly one dynamic step template, not both.'
+    );
+  }
+
+  if (dynamicSteps.length > 1) {
+    throw new WorkflowSyntaxError(
+      'Invalid step pattern: workflow can have exactly one dynamic step template (## {N}.), not multiple.'
+    );
+  }
+
+  // Conformance Rule 3: Sequencing (only for static workflows)
+  if (staticSteps.length > 0) {
+    for (let i = 0; i < steps.length; i++) {
+      const expected = i + 1;
+      if (steps[i].number !== expected) {
+        throw new WorkflowSyntaxError(
+          `Steps must be numbered sequentially. Expected step ${String(expected)}, found step ${String(steps[i].number)}.`
+        );
+      }
+    }
+  }
+
+  for (const step of steps) {
+    const stepLabel = step.isDynamic ? '{N}' : String(step.number);
+
+    // Conformance Rule 4: Exclusivity
+    // Validate: cannot have both workflows and substeps
+    if (step.workflows?.length && step.substeps?.length) {
+      throw new WorkflowSyntaxError(
+        `Step ${stepLabel}: Cannot have both workflows and substeps`
+      );
+    }
+
+    // Validate: cannot have both body content and workflows
+    const hasBody = step.command || step.prompts.length > 0;
+    if (hasBody && step.workflows?.length) {
+      throw new WorkflowSyntaxError(
+        `Step ${stepLabel}: Cannot have both body (command/prompts) and workflow list`
+      );
+    }
+
+    if (step.transitions) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const stepLabel = step.isDynamic ? '{N}' : String(step.number!);
+      validateAction(step.transitions.pass, stepLabel, steps.length, steps);
+      validateAction(step.transitions.fail, stepLabel, steps.length, steps);
+    }
+  }
+}
+
+/**
+ * Validates a single action (e.g., GOTO target, loop prevention, RETRY constraints).
+ * @param action The action to validate
+ * @param stepLabel The step label (number for static steps, "{N}" for dynamic steps)
+ * @param totalSteps Total number of steps in the workflow
+ * @param steps The full steps array for reference
+ */
+export function validateAction(
+  action: Action,
+  stepLabel: string | number,
+  totalSteps: number,
+  steps: Step[]
+): void {
+  // Schema validation
+  const result = ActionSchema.safeParse(action);
+  if (!result.success) {
+    throw new WorkflowSyntaxError(
+      `Step ${String(stepLabel)}: Action validation failed: ${result.error.issues.map(i => i.message).join(', ')}`
+    );
+  }
+
+  if (action.type === 'GOTO') {
+    const targetStep = action.target.step as number;
+    const targetSubstep = action.target.substep;
+
+    // Validate step exists
+    if (targetStep < 1 || targetStep > totalSteps) {
+      throw new WorkflowSyntaxError(
+        `Step ${String(stepLabel)}: GOTO target step ${String(targetStep)} does not exist (workflow has ${String(totalSteps)} steps).`
+      );
+    }
+
+    // Validate substep (if specified)
+    if (targetSubstep) {
+      const step = steps[targetStep - 1];
+
+      // Step must have substeps
+      if (!step.substeps || step.substeps.length === 0) {
+        throw new WorkflowSyntaxError(
+          `Step ${String(stepLabel)}: GOTO ${String(targetStep)}.${targetSubstep} invalid - step ${String(targetStep)} has no substeps.`
+        );
+      }
+
+      // Reject GOTO into dynamic substeps (Conformance Rule 5/GOTO Rules)
+      const hasDynamic = step.substeps.some(s => s.isDynamic);
+      if (hasDynamic) {
+        throw new WorkflowSyntaxError(
+          `Step ${String(stepLabel)}: Cannot GOTO substep of dynamic step. Use GOTO ${String(targetStep)} instead.`
+        );
+      }
+
+      // Substep must exist
+      const substepExists = step.substeps.some(s => s.id === targetSubstep);
+      if (!substepExists) {
+        throw new WorkflowSyntaxError(
+          `Step ${String(stepLabel)}: GOTO ${String(targetStep)}.${targetSubstep} invalid - substep does not exist.`
+        );
+      }
+    }
+
+    // Step-level self-reference check: only for static steps (not dynamic)
+    if (typeof stepLabel === 'string' && stepLabel !== '{N}') {
+      const stepNum = parseInt(stepLabel, 10);
+      if (targetStep === stepNum && !targetSubstep) {
+        throw new WorkflowSyntaxError(
+          `Step ${stepLabel}: GOTO self creates infinite loop (use RETRY instead)`
+        );
+      }
+    }
+  }
+
+  // Recurse into RETRY exhaustion action
+  if (action.type === 'RETRY') {
+    // Conformance Rule 5: Recursion (Already enforced by ActionSchema union not including RETRY in 'then')
+    validateAction(action.then, stepLabel, totalSteps, steps);
+  }
+}

@@ -10,7 +10,7 @@ import type {
   Paragraph,
   PhrasingContent
 } from 'mdast';
-import type { Step, Action, StepNumber, Substep } from '../types.js';
+import type { Step, StepNumber, Substep } from '../types.js';
 import {
   extractStepHeader,
   extractSubstepHeader,
@@ -19,6 +19,7 @@ import {
   extractWorkflowList
 } from './helpers.js';
 import { WorkflowSyntaxError, type ParsedConditional } from './types.js';
+import { validateWorkflow } from './validator.js';
 
 /**
  * Type guard to narrow Node to Heading
@@ -124,7 +125,7 @@ export function parseWorkflow(markdown: string): Step[] {
   };
 
   // Walk AST nodes
-  visit(tree, (node: Node) => {
+  visit(tree, (node: Node, _index, parent: any) => {
     // Handle H1 headings - reject if they look like step headers
     if (isHeading(node) && node.depth === 1) {
       const headingText = extractText(node);
@@ -136,7 +137,7 @@ export function parseWorkflow(markdown: string): Step[] {
       }
     }
 
-    // Reject H4+ headings
+    // Reject H4+ headings (Conformance Rule 1)
     if (isHeading(node) && node.depth >= 4) {
       throw new WorkflowSyntaxError(
         `H4+ headings are not allowed in workflows. Found heading at depth ${node.depth}. Use ## for steps and ### for substeps only.`
@@ -229,16 +230,17 @@ export function parseWorkflow(markdown: string): Step[] {
 
       if (lang === 'bash') {
         if (currentStep.command) {
+          const stepLabel = currentStep.isDynamic ? '{N}' : String(currentStep.number);
           throw new WorkflowSyntaxError(
-            `Multiple code blocks per step not allowed in Step ${String(currentStep.number)}.`
+            `Multiple code blocks per step not allowed in Step ${stepLabel}.`
           );
         }
         currentStep.command = { code: codeNode.value };
       }
     }
 
-    // Handle paragraphs
-    if (node.type === 'paragraph' && currentStep) {
+    // Handle paragraphs - SKIP if inside a list item to avoid double-processing
+    if (node.type === 'paragraph' && currentStep && parent?.type !== 'listItem') {
       const paragraphNode = node as Paragraph;
 
       if (hasPromptMarker(paragraphNode)) {
@@ -271,7 +273,7 @@ export function parseWorkflow(markdown: string): Step[] {
     // Handle list items
     if (node.type === 'listItem' && currentStep) {
       const listItemNode = node as ListItem;
-      const firstParagraph = listItemNode.children.find((c) => c.type === 'paragraph');
+      const firstParagraph = listItemNode.children.find((c) => c.type === 'paragraph') as Paragraph | undefined;
       if (firstParagraph) {
         const text = extractText(firstParagraph);
         const conditional = parseConditional(text);
@@ -281,7 +283,14 @@ export function parseWorkflow(markdown: string): Step[] {
           currentStep.pendingSubstep.content += ' - ' + text + '\n';
         } else {
           // Accumulate list items to step content (for step-level workflow extraction)
-          currentStep.content += ' - ' + text + '\n';
+          const itemText = ' - ' + text + '\n';
+          currentStep.content += itemText;
+
+          // AND to implicitText (so they appear in the prompt)
+          // BUT only if it doesn't look like a workflow reference
+          if (!/^\S+\.workflow\.md$/.test(text.trim())) {
+            implicitText += itemText;
+          }
         }
       }
     }
@@ -295,6 +304,7 @@ export function parseWorkflow(markdown: string): Step[] {
     steps.push(finalizeStep(currentStep, pendingConditionals, implicitText));
   }
 
+  // Use the spec-aligned validator
   validateWorkflow(steps);
 
   return steps;
@@ -322,128 +332,4 @@ function finalizeStep(
     substeps: step.substeps.length > 0 ? step.substeps : undefined,
     workflows: workflows.length > 0 ? workflows : undefined
   };
-}
-
-function validateWorkflow(steps: Step[]): void {
-  if (steps.length === 0) {
-    throw new WorkflowSyntaxError(
-      "Workflow must contain at least one step (heading starting with '##')"
-    );
-  }
-
-  // Conformance Rule 2: Step Pattern
-  // Workflow contains EITHER static steps OR exactly one dynamic template
-  const staticSteps = steps.filter(s => !s.isDynamic);
-  const dynamicSteps = steps.filter(s => s.isDynamic);
-
-  if (staticSteps.length > 0 && dynamicSteps.length > 0) {
-    throw new WorkflowSyntaxError(
-      'Invalid step pattern: workflow must contain static steps OR exactly one dynamic step template, not both.'
-    );
-  }
-
-  if (dynamicSteps.length > 1) {
-    throw new WorkflowSyntaxError(
-      'Invalid step pattern: workflow can have exactly one dynamic step template (## {N}.), not multiple.'
-    );
-  }
-
-  // Validate static step sequencing (only for static workflows - skip for dynamic)
-  if (staticSteps.length > 0) {
-    for (let i = 0; i < steps.length; i++) {
-      const expected = i + 1;
-      if (steps[i].number !== expected) {
-        throw new WorkflowSyntaxError(
-          `Steps must be numbered sequentially. Expected step ${String(expected)}, found step ${String(steps[i].number)}.`
-        );
-      }
-    }
-  }
-
-  for (const step of steps) {
-    // CRITICAL: Use stepLabel for ALL error messages to handle dynamic steps
-    const stepLabel = step.isDynamic ? '{N}' : String(step.number);
-
-    // Validate: cannot have both workflows and substeps (existing validation)
-    if (step.workflows?.length && step.substeps?.length) {
-      throw new WorkflowSyntaxError(
-        `Step ${stepLabel}: Cannot have both workflows and substeps`
-      );
-    }
-
-    // Validate: cannot have both body content and workflows
-    const hasBody = step.command || step.prompts.length > 0;
-    if (hasBody && step.workflows?.length) {
-      throw new WorkflowSyntaxError(
-        `Step ${stepLabel}: Cannot have both body (command/prompts) and workflow list`
-      );
-    }
-
-    if (step.transitions) {
-      // Pass stepLabel to validateAction for proper error messages
-      // Keep current signature but pass 0 for dynamic steps (GOTO validation is skipped for dynamic workflows anyway)
-      const stepNum = step.isDynamic ? 0 : step.number!;
-      validateAction(step.transitions.pass, stepNum, steps.length, steps);
-      validateAction(step.transitions.fail, stepNum, steps.length, steps);
-    }
-  }
-}
-
-function validateAction(
-  action: Action,
-  stepNum: number,
-  totalSteps: number,
-  steps: Step[]
-): void {
-  if (action.type === 'GOTO') {
-    const targetStep = action.target.step as number;
-    const targetSubstep = action.target.substep;
-
-    // Validate step exists
-    if (targetStep < 1 || targetStep > totalSteps) {
-      throw new WorkflowSyntaxError(
-        `Step ${String(stepNum)}: GOTO target step ${String(targetStep)} does not exist (workflow has ${String(totalSteps)} steps).`
-      );
-    }
-
-    // Validate substep (if specified)
-    if (targetSubstep) {
-      const step = steps[targetStep - 1];
-
-      // Step must have substeps
-      if (!step.substeps || step.substeps.length === 0) {
-        throw new WorkflowSyntaxError(
-          `Step ${String(stepNum)}: GOTO ${String(targetStep)}.${targetSubstep} invalid - step ${String(targetStep)} has no substeps.`
-        );
-      }
-
-      // Reject GOTO into dynamic substeps
-      const hasDynamic = step.substeps.some(s => s.isDynamic);
-      if (hasDynamic) {
-        throw new WorkflowSyntaxError(
-          `Step ${String(stepNum)}: Cannot GOTO substep of dynamic step. Use GOTO ${String(targetStep)} instead.`
-        );
-      }
-
-      // Substep must exist
-      const substepExists = step.substeps.some(s => s.id === targetSubstep);
-      if (!substepExists) {
-        throw new WorkflowSyntaxError(
-          `Step ${String(stepNum)}: GOTO ${String(targetStep)}.${targetSubstep} invalid - substep does not exist.`
-        );
-      }
-    }
-
-    // Step-level self-reference check only
-    if (targetStep === stepNum && !targetSubstep) {
-      throw new WorkflowSyntaxError(
-        `Step ${String(stepNum)}: GOTO self creates infinite loop (use RETRY instead)`
-      );
-    }
-  }
-
-  // Recurse into RETRY exhaustion action
-  if (action.type === 'RETRY') {
-    validateAction(action.then, stepNum, totalSteps, steps);
-  }
 }

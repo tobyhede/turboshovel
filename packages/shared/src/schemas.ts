@@ -101,7 +101,7 @@ export type ValidatedSessionState = z.infer<typeof SessionStateSchema>;
  * Zod schema for StepNumber branded type
  * Validates and transforms plain number to branded StepNumber
  */
-const StepNumberSchema = z
+export const StepNumberSchema = z
   .number()
   .int('Step number must be an integer')
   .positive('Step number must be positive')
@@ -112,12 +112,85 @@ const StepNumberSchema = z
  * Zod schema for StepId branded type
  * Validates object structure and transforms to branded StepId
  */
-const StepIdSchema = z
+export const StepIdSchema = z
   .object({
     step: StepNumberSchema,
     substep: z.string().optional(),
   })
   .transform((obj): StepId => obj as StepId);
+
+/**
+ * Zod schema for Action
+ */
+export const ActionSchema: z.ZodType<any> = z.lazy(() =>
+  z.union([
+    z.object({ type: z.literal('CONTINUE') }),
+    z.object({ type: z.literal('DONE') }),
+    z.object({ type: z.literal('STOP'), message: z.string().optional() }),
+    z.object({ type: z.literal('GOTO'), target: StepIdSchema }),
+    z.object({
+      type: z.literal('RETRY'),
+      max: z.number().int().positive(),
+      then: z.union([
+        z.object({ type: z.literal('CONTINUE') }),
+        z.object({ type: z.literal('DONE') }),
+        z.object({ type: z.literal('STOP'), message: z.string().optional() }),
+        z.object({ type: z.literal('GOTO'), target: StepIdSchema }),
+      ]),
+    }),
+  ])
+);
+
+/**
+ * Zod schema for Transitions
+ */
+export const TransitionsSchema = z.union([
+  z.object({
+    all: z.literal(true),
+    pass: ActionSchema,
+    fail: ActionSchema,
+  }),
+  z.object({
+    all: z.literal(false),
+    pass: ActionSchema,
+    fail: ActionSchema,
+  }),
+]);
+
+/**
+ * Zod schema for Substep
+ */
+export const SubstepSchema = z.object({
+  id: z.string(),
+  description: z.string(),
+  agentType: z.string().optional(),
+  isDynamic: z.boolean(),
+  workflows: z.array(z.string()).optional(),
+});
+
+/**
+ * Zod schema for Step
+ */
+export const StepSchema = z.object({
+  number: StepNumberSchema.optional(),
+  isDynamic: z.boolean(),
+  description: z.string(),
+  command: z.object({ code: z.string() }).optional(),
+  prompts: z.array(z.object({ text: z.string() })),
+  transitions: TransitionsSchema.optional(),
+  substeps: z.array(SubstepSchema).optional(),
+  workflows: z.array(z.string()).optional(),
+  nestedWorkflow: z.string().optional(), // @deprecated
+});
+
+/**
+ * Zod schema for Workflow
+ */
+export const WorkflowSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+  steps: z.array(StepSchema),
+});
 
 /**
  * Schema for pending step.

@@ -145,6 +145,10 @@ export async function runExecutionLoop(
 
 /**
  * Check if value is a valid result ('pass' | 'fail')
+ *
+ * When no explicit result sequence is provided to test commands,
+ * the default sequence ['pass'] is used. This means steps pass on the first attempt.
+ * Users can override this with --result flags to customize the sequence.
  */
 export function isValidResult(r: string): r is 'pass' | 'fail' {
   return r === 'pass' || r === 'fail';
