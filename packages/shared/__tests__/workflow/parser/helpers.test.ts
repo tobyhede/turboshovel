@@ -1,6 +1,31 @@
 import { describe, it, expect } from '@jest/globals';
 import { parseAction, extractWorkflowList } from '../../../src/workflow/parser/helpers.js';
 
+describe('parseAction NEXT', () => {
+  it('parses NEXT as action', () => {
+    const result = parseAction('NEXT');
+    expect(result).toEqual({ type: 'NEXT' });
+  });
+
+  it('parses RETRY NEXT as RETRY 1 NEXT', () => {
+    const result = parseAction('RETRY NEXT');
+    expect(result).toEqual({
+      type: 'RETRY',
+      max: 1,
+      then: { type: 'NEXT' }
+    });
+  });
+
+  it('parses RETRY 3 NEXT', () => {
+    const result = parseAction('RETRY 3 NEXT');
+    expect(result).toEqual({
+      type: 'RETRY',
+      max: 3,
+      then: { type: 'NEXT' }
+    });
+  });
+});
+
 describe('parseAction RETRY with exhaustion', () => {
   it('parses RETRY (bare) as RETRY 1 STOP', () => {
     const result = parseAction('RETRY');

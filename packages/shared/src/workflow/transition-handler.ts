@@ -1,7 +1,7 @@
 import type { Step, SubstepState, Action, NonRetryAction, StepId } from './types.js';
 
 export interface ConditionResult {
-  action: 'retry' | 'blocked' | 'goto' | 'continue' | 'done';
+  action: 'retry' | 'blocked' | 'goto' | 'continue' | 'done' | 'next';
   newRetryCount?: number;
   gotoTarget?: StepId;
   message?: string;
@@ -51,8 +51,10 @@ export function evaluateFailCondition(
 
     case 'CONTINUE':
     case 'DONE':
-    case 'NEXT':
       return { action: 'continue' };
+
+    case 'NEXT':
+      return { action: 'next' };
 
     default:
       return {
@@ -90,8 +92,10 @@ export function evaluatePassCondition(step: Step): ConditionResult {
 
     case 'CONTINUE':
     case 'RETRY':
-    case 'NEXT':
       return { action: 'continue' };
+
+    case 'NEXT':
+      return { action: 'next' };
 
     default:
       return { action: 'continue' };
@@ -131,7 +135,7 @@ function evaluateNonRetryAction(action: NonRetryAction): ConditionResult {
     case 'DONE':
       return { action: 'done' };
     case 'NEXT':
-      return { action: 'continue' };
+      return { action: 'next' };
   }
 }
 

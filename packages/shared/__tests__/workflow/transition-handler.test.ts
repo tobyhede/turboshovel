@@ -1,6 +1,59 @@
 import { createStepNumber } from '../../src/workflow/types.js';
-import { evaluateFailCondition, evaluateSubstepAggregation } from '../../src/workflow/transition-handler.js';
+import { evaluateFailCondition, evaluatePassCondition, evaluateSubstepAggregation } from '../../src/workflow/transition-handler.js';
 import type { SubstepState } from '../../src/workflow/types.js';
+
+describe('NEXT action handling', () => {
+  it('evaluatePassCondition returns next for NEXT action', () => {
+    const step = {
+      number: createStepNumber(1)!,
+      description: 'Test',
+      prompts: [],
+      isDynamic: true,
+      transitions: {
+        all: true as const,
+        pass: { type: 'NEXT' as const },
+        fail: { type: 'STOP' as const }
+      }
+    };
+
+    const result = evaluatePassCondition(step);
+    expect(result).toEqual({ action: 'next' });
+  });
+
+  it('evaluateFailCondition returns next for NEXT action', () => {
+    const step = {
+      number: createStepNumber(1)!,
+      description: 'Test',
+      prompts: [],
+      isDynamic: true,
+      transitions: {
+        all: true as const,
+        pass: { type: 'CONTINUE' as const },
+        fail: { type: 'NEXT' as const }
+      }
+    };
+
+    const result = evaluateFailCondition(step, 0);
+    expect(result).toEqual({ action: 'next' });
+  });
+
+  it('returns next when retries exhausted with NEXT action', () => {
+    const step = {
+      number: createStepNumber(1)!,
+      description: 'Test',
+      prompts: [],
+      isDynamic: true,
+      transitions: {
+        all: true as const,
+        pass: { type: 'CONTINUE' as const },
+        fail: { type: 'RETRY' as const, max: 2, then: { type: 'NEXT' as const } }
+      }
+    };
+
+    const result = evaluateFailCondition(step, 2);
+    expect(result).toEqual({ action: 'next' });
+  });
+});
 
 describe('evaluateSubstepAggregation', () => {
   // PASS ALL mode (all: true)

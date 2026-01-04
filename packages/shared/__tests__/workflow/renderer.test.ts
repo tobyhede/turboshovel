@@ -37,6 +37,14 @@ describe('renderAction', () => {
   it('renders RETRY with nested action', () => {
     expect(renderAction({ type: 'RETRY', max: 2, then: { type: 'STOP' } })).toBe('RETRY 2 STOP');
   });
+
+  it('renders NEXT', () => {
+    expect(renderAction({ type: 'NEXT' })).toBe('NEXT');
+  });
+
+  it('renders RETRY with NEXT', () => {
+    expect(renderAction({ type: 'RETRY', max: 3, then: { type: 'NEXT' } })).toBe('RETRY 3 NEXT');
+  });
 });
 
 describe('renderTransitions', () => {
