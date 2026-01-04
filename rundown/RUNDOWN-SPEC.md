@@ -1,6 +1,6 @@
 # Turboshovel Workflow Specification
 
-Version: 1.1.0
+Version: 1.2.0
 Status: Draft
 
 This document is the authoritative specification for Turboshovel workflow markdown files (`.workflow.md`).
@@ -210,7 +210,17 @@ A step may contain:
 
 ## Substeps
 
-Substeps enable parallel execution within a single step. They are defined using H3 headers.
+Substeps decompose a step into smaller units. They are defined using H3 headers.
+
+**Key concepts:**
+
+| Concept | Description |
+|---------|-------------|
+| **Structure** | Substeps are structural - they organize work within a step |
+| **Transitions** | Substeps use the same actions as steps (CONTINUE, GOTO, STOP, etc.) |
+| **Modifiers** | ALL/ANY aggregate substep outcomes before applying the action |
+| **Agents** | Agent dispatch is a runtime decision, not defined by substeps |
+| **Subworkflows** | Child workflows execute inline by the current agent |
 
 ### Static Substeps
 
@@ -300,6 +310,24 @@ When dynamic substeps reference multiple workflows, they cycle in order:
 3. Workflows cycle in order when substep count exceeds workflow count
 4. Child workflows inherit parent context
 
+### Agent Dispatch Model
+
+**Key principle:** Agent dispatch is an implementation detail, not defined by workflow syntax.
+
+| Context | Behavior |
+|---------|----------|
+| **Main agent** | MAY dispatch subagents for substeps/subworkflows (runtime decision) |
+| **Subagent** | Executes subworkflows inline (no further dispatch) |
+| **Agent selection** | Determined by skills, not workflow syntax |
+
+The `(agent-type)` annotation in substep headers is a **hint** for agent selection, not a directive:
+
+```markdown
+### 1.1 Review code (code-review-agent)
+```
+
+A skill (e.g., `executing-plans`) interprets this hint and decides whether to dispatch a subagent.
+
 ---
 
 ## Transitions
@@ -331,10 +359,20 @@ FAIL [modifier]: ACTION
 
 ### Modifiers (for substeps)
 
+Modifiers aggregate substep outcomes. They do NOT change the available actions.
+
 | Modifier | Meaning |
 |----------|---------|
 | `ALL` | All substeps must produce this outcome |
 | `ANY` | At least one substep must produce this outcome |
+
+**Important:** The action after the modifier uses the same options as any step:
+
+```markdown
+- PASS ALL: GOTO 5      # Valid - jump to step 5 if all pass
+- FAIL ANY: RETRY 3     # Valid - retry if any fails
+- PASS ALL: CONTINUE    # Valid - continue to next step
+```
 
 ### Valid Combinations
 
@@ -424,8 +462,22 @@ Where:
 ### GOTO Rules
 
 1. Target step MUST exist (1 to total steps)
-2. GOTO to self is invalid (use RETRY instead)
-3. GOTO resets retry counter
+2. Target substep MUST exist if specified (step must have substeps)
+3. Cannot GOTO into dynamic substeps - use step-level GOTO instead
+4. GOTO to same step without substep is invalid (use RETRY)
+5. GOTO resets retry counter and sets substep in XState context
+6. Substeps are 1-indexed (substep 0 is invalid)
+
+**Syntax:**
+- `GOTO N` - Jump to step N (clears any substep)
+- `GOTO N.M` - Jump to step N, substep M
+
+**Examples:**
+```
+- PASS: GOTO 3       # Jump to step 3
+- PASS: GOTO 2.1     # Jump to step 2, substep 1
+- FAIL: GOTO 1.2     # On fail, jump to step 1, substep 2
+```
 
 ---
 
@@ -843,10 +895,13 @@ Features under consideration for future versions:
 4. **Parallel step groups** - Multiple steps in parallel (not just substeps)
 5. **Timeout handling** - Per-step and per-workflow timeouts
 6. **Event hooks** - Custom hooks at step boundaries
+7. **Dynamic steps** - `## {n} Step Title` with nested substeps `### {n}.1`
+8. **Step-level subworkflows** - Reference subworkflows from any step, not just substeps
 
 ---
 
 ## Changelog
 
+- **1.2.0** (2026-01-03): Clarified substep transitions (same actions as steps), added Agent Dispatch Model section, documented GOTO scope limitation, added future considerations for GOTO N.M and dynamic steps
 - **1.1.0** (2026-01-03): Added execution modes (auto/prompted), CLI commands section, step structure clarification, Design Decisions section (heading level restrictions), renamed Conditions to Transitions (ubiquitous language alignment)
 - **1.0.0** (2026-01-01): Initial specification (Updated to Step/Substep terminology)
