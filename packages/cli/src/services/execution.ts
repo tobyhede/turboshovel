@@ -12,6 +12,7 @@ import {
   type WorkflowMetadata,
   type WorkflowState,
   executeCommand,
+  createStepNumber,
 } from '@turboshovel/shared';
 
 /**
@@ -76,7 +77,7 @@ export async function runExecutionLoop(
     if (!actor) return 'blocked';
 
     actor.send({ type: execResult.success ? 'PASS' : 'FAIL' });
-    const updatedState = await manager.updateFromActor(workflowId, actor, steps);
+    let updatedState = await manager.updateFromActor(workflowId, actor, steps);
 
     // XState snapshot type is not fully typed
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
@@ -85,6 +86,24 @@ export async function runExecutionLoop(
     const isComplete = isWorkflowComplete(snapshot);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const isBlocked = isWorkflowBlocked(snapshot);
+
+    // Handle NEXT action: increment instance number for dynamic steps
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const nextInstance = snapshot.context.nextInstance as boolean | undefined;
+    if (nextInstance && !isComplete && !isBlocked) {
+      // Increment instance number (stay in step_1 for dynamic workflows)
+      const currentInstanceNum = updatedState.step;
+      const nextStepNumberValue = currentInstanceNum + 1;
+      const nextStepNumber = createStepNumber(nextStepNumberValue);
+      if (nextStepNumber) {
+        updatedState = await manager.update(workflowId, {
+          step: nextStepNumber,
+          substep: '1'
+        });
+        console.log(`Instance ${currentInstanceNum} complete. Starting instance ${nextStepNumberValue}...`);
+      }
+      // Continue loop to process next instance
+    }
 
     // Derive action string
     const retryMax = getStepRetryMax(currentStep);

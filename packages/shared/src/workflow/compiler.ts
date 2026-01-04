@@ -5,6 +5,7 @@ import type { StepId } from './step-id.js';
 export interface WorkflowContext {
   retryCount: number;
   substep?: string;
+  nextInstance?: boolean;
   variables: Record<string, boolean | number | string>;
 }
 
@@ -57,12 +58,38 @@ function nonRetryActionToTransition(
       return { target: 'complete' };
     case 'STOP':
       return { target: 'blocked' };
-    case 'GOTO':
+    case 'GOTO': {
+      const targetStep = action.target.step;
+
+      // Handle dynamic {N}.M references (substep navigation within current instance)
+      if (targetStep === '{N}') {
+        // {N}.M - stay in step_1, navigate to substep M
+        return {
+          target: 'step_1',
+          actions: assign({
+            retryCount: 0,
+            substep: action.target.substep
+          })
+        };
+      }
+
+      // Static numeric target
       return {
-        target: `step_${String(action.target.step)}`,
+        target: `step_${String(targetStep)}`,
         actions: assign({
           retryCount: 0,
           substep: action.target.substep
+        })
+      };
+    }
+    case 'NEXT':
+      // NEXT creates next instance - stay in step_1 but signal instance increment
+      return {
+        target: 'step_1',
+        actions: assign({
+          retryCount: 0,
+          substep: '1',
+          nextInstance: true  // Signal to executor: increment instance number
         })
       };
   }
@@ -75,23 +102,25 @@ export function compileWorkflowToMachine(steps: Step[]) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const states: Record<string, any> = {};
 
-  // Generate GOTO transitions for all possible target steps
-  const gotoTransitions = steps.map((targetStep) => ({
-    guard: ({ event }: { event: WorkflowEvent }) => {
-      if (event.type !== 'GOTO') return false;
-      return event.target.step === targetStep.number;
-    },
-    target: `step_${String(targetStep.number)}`,
-    actions: assign({
-      retryCount: 0,
-      substep: ({ event }: { event: WorkflowEvent }) =>
-        event.type === 'GOTO' ? event.target.substep : undefined
-    })
-  }));
+  // Generate GOTO transitions for all possible target steps (static steps only)
+  const gotoTransitions = steps
+    .filter(step => step.number !== undefined) // Only static steps have numbers
+    .map((targetStep) => ({
+      guard: ({ event }: { event: WorkflowEvent }) => {
+        if (event.type !== 'GOTO') return false;
+        return event.target.step === targetStep.number;
+      },
+      target: `step_${String(targetStep.number)}`,
+      actions: assign({
+        retryCount: 0,
+        substep: ({ event }: { event: WorkflowEvent }) =>
+          event.type === 'GOTO' ? event.target.substep : undefined
+      })
+    }));
 
   steps.forEach((step, index) => {
     // Use index + 1 as step number for state ID (works for both static and dynamic)
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+     
     const stepNum = step.number ?? ((index + 1) as StepNumber);
     const stepId = `step_${String(stepNum)}`;
     // XState state object type is not fully typed
