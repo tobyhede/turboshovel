@@ -58,13 +58,14 @@ export function registerFailCommand(program: Command): void {
           }
 
           // Evaluate fail condition for the agent's step (preserves RETRY/GOTO behavior)
-          const agentStep = steps[binding.stepId.step - 1];
+          const stepNum = binding.stepId.step as number;
+          const agentStep = steps[stepNum - 1];
           const failResult = evaluateFailCondition(agentStep, state.retryCount);
 
           if (failResult.action === 'retry') {
             actor.send({ type: 'FAIL' });
             await manager.updateFromActor(state.id, actor, steps);
-            console.log(`Agent ${options.agent} retrying step ${String(binding.stepId.step)}`);
+            console.log(`Agent ${options.agent} retrying step ${String(stepNum)}`);
             // Continue with execution loop for retry
             const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted);
             if (loopResult === 'blocked') process.exit(1);

@@ -92,6 +92,26 @@ The following instructions are important:
   });
 });
 
+describe('Mixed implicit and explicit prompts', () => {
+  it('preserves both explicit and implicit prompts', () => {
+    const markdown = `## 1. Execute
+**Prompt:** Explicit instruction.
+- Implicit instruction 1
+- Implicit instruction 2
+
+- PASS: CONTINUE
+- FAIL: STOP
+`;
+    const steps = parseWorkflow(markdown);
+    // Based on current implementation, this might fail!
+    // We want to ensure BOTH are present.
+    const combinedPrompt = steps[0].prompts.map(p => p.text).join('\n');
+    expect(combinedPrompt).toContain('Explicit instruction.');
+    expect(combinedPrompt).toContain('- Implicit instruction 1');
+    expect(combinedPrompt).toContain('- Implicit instruction 2');
+  });
+});
+
 describe('GOTO substep validation', () => {
   it('accepts GOTO 2.1 when step 2 has static substep 1', () => {
     const markdown = `

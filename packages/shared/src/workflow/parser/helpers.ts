@@ -277,11 +277,19 @@ export function parseConditional(text: string): ParsedConditional | null {
   const trimmed = text.trim();
 
   if (trimmed.startsWith('PASS')) {
-    return parseConditionalPrefix(trimmed.slice(4), 'pass');
+    const result = parseConditionalPrefix(trimmed.slice(4), 'pass');
+    if (!result) {
+      throw new WorkflowSyntaxError(`Invalid PASS transition: ${trimmed}`);
+    }
+    return result;
   }
 
   if (trimmed.startsWith('FAIL')) {
-    return parseConditionalPrefix(trimmed.slice(4), 'fail');
+    const result = parseConditionalPrefix(trimmed.slice(4), 'fail');
+    if (!result) {
+      throw new WorkflowSyntaxError(`Invalid FAIL transition: ${trimmed}`);
+    }
+    return result;
   }
 
   return null;

@@ -32,6 +32,14 @@ describe('stepIdToString', () => {
   it('formats step with substep', () => {
     expect(stepIdToString({ step: 2 as any, substep: '1' })).toBe('2.1');
   });
+
+  it('formats dynamic step with substep', () => {
+    expect(stepIdToString({ step: '{N}', substep: '1' })).toBe('{N}.1');
+  });
+
+  it('formats dynamic step with dynamic substep', () => {
+    expect(stepIdToString({ step: '{N}', substep: '{n}' })).toBe('{N}.{n}');
+  });
 });
 
 describe('stepIdEquals', () => {
@@ -62,6 +70,27 @@ describe('stepIdEquals', () => {
       { step: 2 as any }
     )).toBe(false);
   });
+
+  it('returns true for equal dynamic references', () => {
+    expect(stepIdEquals(
+      { step: '{N}', substep: '1' },
+      { step: '{N}', substep: '1' }
+    )).toBe(true);
+  });
+
+  it('returns false for different dynamic substeps', () => {
+    expect(stepIdEquals(
+      { step: '{N}', substep: '1' },
+      { step: '{N}', substep: '2' }
+    )).toBe(false);
+  });
+
+  it('returns false for dynamic vs numeric step', () => {
+    expect(stepIdEquals(
+      { step: '{N}', substep: '1' },
+      { step: 1 as any, substep: '1' }
+    )).toBe(false);
+  });
 });
 
 describe('dynamic substep references', () => {
@@ -77,6 +106,11 @@ describe('dynamic substep references', () => {
 
   it('rejects {N} alone (use NEXT action instead)', () => {
     const result = parseStepIdFromString('{N}');
+    expect(result).toBeNull();
+  });
+
+  it('rejects {N}.0 (substeps are 1-indexed)', () => {
+    const result = parseStepIdFromString('{N}.0');
     expect(result).toBeNull();
   });
 });

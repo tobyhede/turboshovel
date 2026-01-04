@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import type { NonRetryAction, StepNumber, Action, SubtaskState, Substep, Command, Prompt, Transitions } from '../../src/workflow/types.js';
+import type { NonRetryAction, StepNumber, Action, SubtaskState, Substep } from '../../src/workflow/types.js';
 
 describe('SubtaskState type', () => {
   it('has required fields', () => {

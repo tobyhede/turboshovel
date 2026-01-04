@@ -122,6 +122,8 @@ export const StepIdSchema = z
 
 /**
  * Zod schema for Action
+ * Validates workflow transition actions (CONTINUE, DONE, STOP, GOTO, NEXT, RETRY)
+ * Note: Uses z.ZodType without explicit Action param due to branded type transforms
  */
 export const ActionSchema: z.ZodType = z.lazy(() =>
   z.union([

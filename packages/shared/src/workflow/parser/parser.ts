@@ -118,9 +118,9 @@ export function parseWorkflow(markdown: string): Step[] {
       const workflows = extractWorkflowList(ps.content);
       const transitions = convertToTransitions(ps.pendingConditionals);
 
-      // Extract implicit prompt from remaining content (if no explicit prompts and no command)
-      let prompts = ps.prompts;
-      if (!ps.command && ps.prompts.length === 0 && ps.content.trim()) {
+      // Extract implicit prompt from remaining content
+      const prompts = [...ps.prompts];
+      if (ps.content.trim()) {
         // Filter out workflow list lines from content before using as prompt
         const contentWithoutWorkflows = ps.content
           .split('\n')
@@ -128,7 +128,7 @@ export function parseWorkflow(markdown: string): Step[] {
           .join('\n')
           .trim();
         if (contentWithoutWorkflows) {
-          prompts = [{ text: contentWithoutWorkflows }];
+          prompts.push({ text: contentWithoutWorkflows });
         }
       }
 
@@ -148,7 +148,7 @@ export function parseWorkflow(markdown: string): Step[] {
   };
 
   // Walk AST nodes
-  visit(tree, (node: Node, _index, parent: any) => {
+  visit(tree, (node: Node, _index, parent: Node | undefined) => {
     // Handle H1 headings - reject if they look like step headers
     if (isHeading(node) && node.depth === 1) {
       const headingText = extractText(node);
@@ -163,7 +163,7 @@ export function parseWorkflow(markdown: string): Step[] {
     // Reject H4+ headings (Conformance Rule 1)
     if (isHeading(node) && node.depth >= 4) {
       throw new WorkflowSyntaxError(
-        `H4+ headings are not allowed in workflows. Found heading at depth ${node.depth}. Use ## for steps and ### for substeps only.`
+        `H4+ headings are not allowed in workflows. Found heading at depth ${String(node.depth)}. Use ## for steps and ### for substeps only.`
       );
     }
 
@@ -283,7 +283,7 @@ export function parseWorkflow(markdown: string): Step[] {
     }
 
     // Handle paragraphs - SKIP if inside a list item to avoid double-processing
-    if (node.type === 'paragraph' && currentStep && parent?.type !== 'listItem') {
+    if (node.type === 'paragraph' && currentStep && parent && parent.type !== 'listItem') {
       const paragraphNode = node as Paragraph;
 
       if (hasPromptMarker(paragraphNode)) {
@@ -331,7 +331,7 @@ export function parseWorkflow(markdown: string): Step[] {
     // Handle list items
     if (node.type === 'listItem' && currentStep) {
       const listItemNode = node as ListItem;
-      const firstParagraph = listItemNode.children.find((c) => c.type === 'paragraph') as Paragraph | undefined;
+      const firstParagraph = listItemNode.children.find((c) => c.type === 'paragraph');
       if (firstParagraph) {
         const text = extractText(firstParagraph);
         const conditional = parseConditional(text);
@@ -378,21 +378,34 @@ function finalizeStep(
   pendingConditionals: ParsedConditional[],
   implicitText: string
 ): Step {
-  if (!step.command && step.prompts.length === 0 && implicitText.trim()) {
-    step.prompts.push({ text: implicitText.trim() });
+  const prompts = [...step.prompts];
+  if (implicitText.trim()) {
+    prompts.push({ text: implicitText.trim() });
   }
 
   const transitions = convertToTransitions(pendingConditionals);
   const workflows = extractWorkflowList(step.content);
 
-  return {
-    number: step.number,
-    isDynamic: step.isDynamic,
-    description: step.description,
-    command: step.command,
-    prompts: step.prompts,
-    transitions: transitions ?? undefined,
-    substeps: step.substeps.length > 0 ? step.substeps : undefined,
-    workflows: workflows.length > 0 ? workflows : undefined
-  };
-}
+    return {
+
+      number: step.number,
+
+      isDynamic: step.isDynamic,
+
+      description: step.description,
+
+      command: step.command,
+
+      prompts: prompts,
+
+      transitions: transitions ?? undefined,
+
+      substeps: step.substeps.length > 0 ? step.substeps : undefined,
+
+      workflows: workflows.length > 0 ? workflows : undefined
+
+    };
+
+  }
+
+  

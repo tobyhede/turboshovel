@@ -47,10 +47,16 @@ export async function runExecutionLoop(
   let state = await manager.load(workflowId);
   if (!state) return 'blocked';
 
+  // Detect if this is a dynamic workflow (single step with isDynamic: true)
+  // In dynamic workflows, steps array has only the template step, but state.step is the instance number
+  const isDynamicWorkflow = steps.length === 1 && steps[0].isDynamic;
+
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
-    const currentStep = steps[state.step - 1];
-    const totalSteps = steps.length;
+    // For dynamic workflows, always use the template step (index 0)
+    // For static workflows, use the step number as index
+    const currentStep = isDynamicWorkflow ? steps[0] : steps[state.step - 1];
+    const totalSteps = isDynamicWorkflow ? state.step : steps.length;
 
     // Print step block
     printStepBlock({ current: state.step, total: totalSteps, substep: state.substep }, currentStep);
@@ -100,7 +106,7 @@ export async function runExecutionLoop(
           step: nextStepNumber,
           substep: '1'
         });
-        console.log(`Instance ${currentInstanceNum} complete. Starting instance ${nextStepNumberValue}...`);
+        console.log(`Instance ${String(currentInstanceNum)} complete. Starting instance ${String(nextStepNumberValue)}...`);
       }
       // Continue loop to process next instance
     }
