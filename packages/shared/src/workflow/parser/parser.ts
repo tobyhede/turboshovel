@@ -82,6 +82,9 @@ interface SubstepBuilder {
   agentType?: string;
   isDynamic: boolean;
   content: string;
+  command?: { code: string };              // NEW
+  prompts: { text: string }[];             // NEW
+  pendingConditionals: ParsedConditional[];  // NEW - substep-scoped
 }
 
 interface StepBuilder {
@@ -219,7 +222,10 @@ export function parseWorkflow(markdown: string): Step[] {
           description: parsed.description,
           agentType: parsed.agentType,
           isDynamic: parsed.isDynamic,
-          content: ''
+          content: '',
+          command: undefined,         // NEW
+          prompts: [],                // NEW
+          pendingConditionals: []     // NEW
         };
       }
     }
