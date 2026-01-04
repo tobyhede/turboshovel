@@ -120,6 +120,7 @@ export function parseWorkflow(markdown: string): Step[] {
         description: currentStep.pendingSubstep.description,
         agentType: currentStep.pendingSubstep.agentType,
         isDynamic: currentStep.pendingSubstep.isDynamic,
+        command: currentStep.pendingSubstep.command,
         prompts: [],  // ADD THIS - empty for now
         workflows: workflows.length > 0 ? workflows : undefined
       };
@@ -236,13 +237,24 @@ export function parseWorkflow(markdown: string): Step[] {
       const lang = codeNode.lang?.split(/\s+/)[0];
 
       if (lang === 'bash') {
-        if (currentStep.command) {
-          const stepLabel = currentStep.isDynamic ? '{N}' : String(currentStep.number);
-          throw new WorkflowSyntaxError(
-            `Multiple code blocks per step not allowed in Step ${stepLabel}.`
-          );
+        // Route to substep if one is pending
+        if (currentStep.pendingSubstep) {
+          if (currentStep.pendingSubstep.command) {
+            throw new WorkflowSyntaxError(
+              `Multiple code blocks per substep not allowed in substep ${currentStep.pendingSubstep.id}`
+            );
+          }
+          currentStep.pendingSubstep.command = { code: codeNode.value };
+        } else {
+          // Existing step-level logic
+          if (currentStep.command) {
+            const stepLabel = currentStep.isDynamic ? '{N}' : String(currentStep.number);
+            throw new WorkflowSyntaxError(
+              `Multiple code blocks per step not allowed in Step ${stepLabel}.`
+            );
+          }
+          currentStep.command = { code: codeNode.value };
         }
-        currentStep.command = { code: codeNode.value };
       }
     }
 

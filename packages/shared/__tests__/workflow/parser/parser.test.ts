@@ -152,3 +152,41 @@ Do work.
     expect(() => parseWorkflow(markdown)).toThrow(/cannot GOTO substep.*dynamic|use GOTO 2 instead/i);
   });
 });
+
+describe('substep with command', () => {
+  it('parses bash code block in substep', () => {
+    const markdown = `## 1. Execute
+
+### 1.1 Run checks
+
+\`\`\`bash
+npm run lint
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+`;
+    const steps = parseWorkflow(markdown);
+    expect(steps[0].substeps).toHaveLength(1);
+    expect(steps[0].substeps![0].command?.code).toBe('npm run lint');
+  });
+
+  it('rejects multiple code blocks in substep', () => {
+    const markdown = `## 1. Execute
+
+### 1.1 Run checks
+
+\`\`\`bash
+npm run lint
+\`\`\`
+
+\`\`\`bash
+npm test
+\`\`\`
+
+- PASS: CONTINUE
+- FAIL: STOP
+`;
+    expect(() => parseWorkflow(markdown)).toThrow(/multiple code blocks/i);
+  });
+});
