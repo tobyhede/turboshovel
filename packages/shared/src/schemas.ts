@@ -111,10 +111,11 @@ export const StepNumberSchema = z
 /**
  * Zod schema for StepId branded type
  * Validates object structure and transforms to branded StepId
+ * Supports both numeric steps and dynamic '{N}' references
  */
 export const StepIdSchema = z
   .object({
-    step: StepNumberSchema,
+    step: z.union([StepNumberSchema, z.literal('{N}')]),
     substep: z.string().optional(),
   })
   .transform((obj): StepId => obj as StepId);
@@ -122,7 +123,7 @@ export const StepIdSchema = z
 /**
  * Zod schema for Action
  */
-export const ActionSchema: z.ZodType<any> = z.lazy(() =>
+export const ActionSchema: z.ZodType = z.lazy(() =>
   z.union([
     z.object({ type: z.literal('CONTINUE') }),
     z.object({ type: z.literal('DONE') }),
