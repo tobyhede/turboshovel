@@ -174,6 +174,12 @@ describe('workflow compiler', () => {
     });
 
     it('GOTO {N}.M sets substep without nextInstance', () => {
+      // NOTE: This is a smoke test to verify the machine compiles without error
+      // when substeps contain GOTO {N}.M transitions. The actual substep transition
+      // logic is handled by the step-tracker at runtime, not the XState machine.
+      // The compiler only uses step-level transitions; substep transitions are
+      // evaluated by the step-tracker hook which then sends appropriate events
+      // to the state machine.
       const steps: Step[] = [
         {
           isDynamic: true,
@@ -205,11 +211,7 @@ describe('workflow compiler', () => {
       const actor = createActor(machine);
       actor.start();
 
-      // Start at step_1 substep 1
       expect(actor.getSnapshot().value).toBe('step_1');
-
-      // Manually set to substep 2 context then trigger FAIL
-      // Since we can't directly set context, we test the machine definition
       expect(machine).toBeDefined();
       expect(machine.config.states?.step_1).toBeDefined();
 
