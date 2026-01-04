@@ -63,3 +63,20 @@ describe('stepIdEquals', () => {
     )).toBe(false);
   });
 });
+
+describe('dynamic substep references', () => {
+  it('parses {N}.1 as dynamic step with static substep', () => {
+    const result = parseStepIdFromString('{N}.1');
+    expect(result).toEqual({ step: '{N}', substep: '1' });
+  });
+
+  it('parses {N}.{n} as fully dynamic reference', () => {
+    const result = parseStepIdFromString('{N}.{n}');
+    expect(result).toEqual({ step: '{N}', substep: '{n}' });
+  });
+
+  it('rejects {N} alone (use NEXT action instead)', () => {
+    const result = parseStepIdFromString('{N}');
+    expect(result).toBeNull();
+  });
+});

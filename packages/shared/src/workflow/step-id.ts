@@ -2,11 +2,12 @@ import { createStepNumber, type StepNumber } from './types.js';
 
 /**
  * Step identifier with optional substep
- * Format: "3" or "3.1" (step with optional numeric substep)
+ * Format: "3", "3.1", or "{N}.1" (dynamic substep navigation)
+ * Note: "{N}" alone is NOT supported - use NEXT action instead
  */
 export interface StepId {
-  readonly step: StepNumber;
-  readonly substep?: string; // Numeric string: "1", "2", etc.
+  readonly step: StepNumber | '{N}';  // Numeric or dynamic reference
+  readonly substep?: string;          // Numeric string "1", "2", or "{n}"
 }
 
 export interface ParseStepIdOptions {
@@ -24,6 +25,7 @@ export interface ParseStepIdOptions {
  *   Expects the entire string to be the step ID with no trailing text
  *   "3" -> { step: 3 }
  *   "3.1" -> { step: 3, substep: '1' }
+ *   "{N}.1" -> { step: '{N}', substep: '1' } (dynamic substep)
  *   "3 - description" -> null (fails because of space)
  *
  * With requireSeparator (Step description parsing):
@@ -41,8 +43,34 @@ export function parseStepIdFromString(input: string, options?: ParseStepIdOption
 
   const requireSeparator = options?.requireSeparator ?? false;
 
-  // Build regex based on options
-  // Substep is now numeric (e.g., 3.1, 3.2)
+  // Check for dynamic substep reference: {N}.M (NOT {N} alone - use NEXT)
+  if (input.startsWith('{N}.')) {
+    // Check for {N}.M pattern (M is numeric or {n})
+    const dynamicMatch = /^\{N\}\.(\d+|\{n\})$/.exec(input);
+    if (dynamicMatch) {
+      // Validate substep is >= 1 for numeric
+      if (dynamicMatch[1] !== '{n}') {
+        const substepNum = parseInt(dynamicMatch[1], 10);
+        if (substepNum < 1) return null;
+      }
+      return { step: '{N}', substep: dynamicMatch[1] };
+    }
+    // With separator: {N}.1 Description
+    if (requireSeparator) {
+      const sepMatch = /^\{N\}\.(\d+|\{n\})[\s\-:]/.exec(input);
+      if (sepMatch) {
+        return { step: '{N}', substep: sepMatch[1] };
+      }
+    }
+    return null;
+  }
+
+  // Reject {N} alone - use NEXT action instead
+  if (input === '{N}' || input.startsWith('{N}')) {
+    return null;
+  }
+
+  // Numeric step: existing logic
   const pattern = requireSeparator
     ? /^(\d+)(?:\.(\d+))?[\s\-:]/ // Must have separator
     : /^(\d+)(?:\.(\d+))?$/; // Must match entire string
@@ -67,10 +95,11 @@ export function parseStepIdFromString(input: string, options?: ParseStepIdOption
 }
 
 /**
- * Serialize StepId to string (e.g., { step: 3, substep: '1' } -> "3.1")
+ * Serialize StepId to string (e.g., { step: 3, substep: '1' } -> "3.1" or { step: '{N}', substep: '1' } -> "{N}.1")
  */
 export function stepIdToString(stepId: StepId): string {
-  return stepId.substep ? `${String(stepId.step)}.${stepId.substep}` : String(stepId.step);
+  const stepStr = stepId.step === '{N}' ? '{N}' : String(stepId.step);
+  return stepId.substep ? `${stepStr}.${stepId.substep}` : stepStr;
 }
 
 /**
