@@ -324,27 +324,50 @@ function validateWorkflow(steps: Step[]): void {
     );
   }
 
-  for (let i = 0; i < steps.length; i++) {
-    const expected = i + 1;
-    // Skip validation for dynamic steps (number is undefined)
-    if (!steps[i].isDynamic && steps[i].number !== expected) {
-      throw new WorkflowSyntaxError(
-        `Steps must be numbered sequentially. Expected step ${String(expected)}, found step ${String(steps[i].number)}.`
-      );
+  // Conformance Rule 2: Step Pattern
+  // Workflow contains EITHER static steps OR exactly one dynamic template
+  const staticSteps = steps.filter(s => !s.isDynamic);
+  const dynamicSteps = steps.filter(s => s.isDynamic);
+
+  if (staticSteps.length > 0 && dynamicSteps.length > 0) {
+    throw new WorkflowSyntaxError(
+      'Invalid step pattern: workflow must contain static steps OR exactly one dynamic step template, not both.'
+    );
+  }
+
+  if (dynamicSteps.length > 1) {
+    throw new WorkflowSyntaxError(
+      'Invalid step pattern: workflow can have exactly one dynamic step template (## {N}.), not multiple.'
+    );
+  }
+
+  // Validate static step sequencing (only for static workflows - skip for dynamic)
+  if (staticSteps.length > 0) {
+    for (let i = 0; i < steps.length; i++) {
+      const expected = i + 1;
+      if (steps[i].number !== expected) {
+        throw new WorkflowSyntaxError(
+          `Steps must be numbered sequentially. Expected step ${String(expected)}, found step ${String(steps[i].number)}.`
+        );
+      }
     }
   }
 
   for (const step of steps) {
-    // Validate: cannot have both workflows and substeps
+    // CRITICAL: Use stepLabel for ALL error messages to handle dynamic steps
+    const stepLabel = step.isDynamic ? '{N}' : String(step.number);
+
+    // Validate: cannot have both workflows and substeps (existing validation)
     if (step.workflows?.length && step.substeps?.length) {
-      const stepLabel = step.isDynamic ? '{N}' : String(step.number);
       throw new WorkflowSyntaxError(
         `Step ${stepLabel}: Cannot have both workflows and substeps`
       );
     }
 
     if (step.transitions) {
-      const stepNum = step.number ?? 0; // Use 0 as placeholder for dynamic steps in error messages
+      // Pass stepLabel to validateAction for proper error messages
+      // Keep current signature but pass 0 for dynamic steps (GOTO validation is skipped for dynamic workflows anyway)
+      const stepNum = step.isDynamic ? 0 : step.number!;
       validateAction(step.transitions.pass, stepNum, steps.length, steps);
       validateAction(step.transitions.fail, stepNum, steps.length, steps);
     }

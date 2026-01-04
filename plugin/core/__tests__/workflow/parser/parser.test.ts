@@ -229,4 +229,56 @@ Execute the item processing workflow.
       expect(steps[0].workflows).toEqual(['item-task.workflow.md']);
     });
   });
+
+  describe('parseWorkflow validation - step pattern', () => {
+    it('rejects mixed static and dynamic steps', () => {
+      const markdown = `
+## 1. Setup
+
+First step
+
+## {N}. Process
+
+Dynamic step
+`;
+      expect(() => parseWorkflow(markdown)).toThrow(WorkflowSyntaxError);
+      expect(() => parseWorkflow(markdown)).toThrow('static steps OR exactly one dynamic');
+    });
+
+    it('rejects multiple dynamic step templates', () => {
+      const markdown = `
+## {N}. First template
+
+## {N}. Second template
+`;
+      expect(() => parseWorkflow(markdown)).toThrow(WorkflowSyntaxError);
+      expect(() => parseWorkflow(markdown)).toThrow('exactly one dynamic');
+    });
+
+    it('allows multiple static steps', () => {
+      const markdown = `
+## 1. First
+
+Step one
+
+## 2. Second
+
+Step two
+`;
+      const steps = parseWorkflow(markdown);
+      expect(steps).toHaveLength(2);
+      expect(steps.every(s => !s.isDynamic)).toBe(true);
+    });
+
+    it('allows exactly one dynamic step template', () => {
+      const markdown = `
+## {N}. Process item
+
+Process the item
+`;
+      const steps = parseWorkflow(markdown);
+      expect(steps).toHaveLength(1);
+      expect(steps[0].isDynamic).toBe(true);
+    });
+  });
 });
