@@ -348,4 +348,27 @@ Some prompt text here.
       expect(() => parseWorkflow(markdown)).toThrow('Cannot have both workflows and substeps');
     });
   });
+
+  describe('parseWorkflow validation - heading hierarchy', () => {
+    it('rejects H4 headings', () => {
+      const markdown = `
+## 1. Step one
+
+#### Invalid H4 heading
+
+Some content
+`;
+      expect(() => parseWorkflow(markdown)).toThrow(WorkflowSyntaxError);
+      expect(() => parseWorkflow(markdown)).toThrow('H4');
+    });
+
+    it('rejects H5 headings', () => {
+      const markdown = `
+## 1. Step one
+
+##### Invalid H5 heading
+`;
+      expect(() => parseWorkflow(markdown)).toThrow(WorkflowSyntaxError);
+    });
+  });
 });

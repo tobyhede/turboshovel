@@ -136,6 +136,13 @@ export function parseWorkflow(markdown: string): Step[] {
       }
     }
 
+    // Reject H4+ headings
+    if (isHeading(node) && node.depth >= 4) {
+      throw new WorkflowSyntaxError(
+        `H4+ headings are not allowed in workflows. Found heading at depth ${node.depth}. Use ## for steps and ### for substeps only.`
+      );
+    }
+
     // Handle H2 headings - these are step headers
     if (isHeading(node) && node.depth === 2) {
       finalizePendingSubstep();
