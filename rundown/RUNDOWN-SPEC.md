@@ -278,9 +278,33 @@ The `{n}` is replaced with incrementing numbers (1, 2, 3...) as substeps are cre
 
 ## Subworkflows
 
-Substeps can reference child workflow files for composition.
+Workflows can reference child workflow files for composition at both step and substep levels.
 
-### Subworkflow List Syntax
+### Step-Level Subworkflows
+
+Steps can reference child workflows directly:
+
+```markdown
+## 1. Execute
+
+ - task-details.workflow.md
+
+Execute the task.
+
+- PASS: CONTINUE
+- FAIL: STOP
+```
+
+**Format:** Bullet list immediately after the step header with `.workflow.md` files.
+
+**Rules:**
+- Workflow list appears immediately after step header
+- Steps cannot have both `workflows` and `substeps` (mutually exclusive)
+- Multiple workflows cycle through on step repeat
+
+### Substep-Level Subworkflows
+
+Substeps can reference child workflow files for composition.
 
 ```markdown
 ### 1.{n}
@@ -309,6 +333,7 @@ When dynamic substeps reference multiple workflows, they cycle in order:
 2. Number of substeps MUST be >= number of listed workflows
 3. Workflows cycle in order when substep count exceeds workflow count
 4. Child workflows inherit parent context
+5. Steps cannot have both workflows and substeps
 
 ### Agent Dispatch Model
 
