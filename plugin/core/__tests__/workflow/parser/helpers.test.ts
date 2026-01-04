@@ -32,27 +32,27 @@ describe('stripSeparator', () => {
 describe('extractStepHeader', () => {
   test('parses "1. First step"', () => {
     const result = extractStepHeader('1. First step');
-    expect(result).toEqual({ number: 1, description: 'First step' });
+    expect(result).toEqual({ number: 1, isDynamic: false, description: 'First step' });
   });
 
   test('parses "1: First step"', () => {
     const result = extractStepHeader('1: First step');
-    expect(result).toEqual({ number: 1, description: 'First step' });
+    expect(result).toEqual({ number: 1, isDynamic: false, description: 'First step' });
   });
 
   test('parses "1) First step"', () => {
     const result = extractStepHeader('1) First step');
-    expect(result).toEqual({ number: 1, description: 'First step' });
+    expect(result).toEqual({ number: 1, isDynamic: false, description: 'First step' });
   });
 
   test('parses "1 - First step"', () => {
     const result = extractStepHeader('1 - First step');
-    expect(result).toEqual({ number: 1, description: 'First step' });
+    expect(result).toEqual({ number: 1, isDynamic: false, description: 'First step' });
   });
 
   test('parses "1 First step" (space only)', () => {
     const result = extractStepHeader('1 First step');
-    expect(result).toEqual({ number: 1, description: 'First step' });
+    expect(result).toEqual({ number: 1, isDynamic: false, description: 'First step' });
   });
 
   test('rejects Step keyword', () => {
@@ -68,6 +68,51 @@ describe('extractStepHeader', () => {
   test('rejects non-numeric start', () => {
     const result = extractStepHeader('First step');
     expect(result).toBeNull();
+  });
+});
+
+describe('extractStepHeader with dynamic steps', () => {
+  it('parses "{N}. Process item"', () => {
+    const result = extractStepHeader('{N}. Process item');
+    expect(result).toEqual({
+      isDynamic: true,
+      description: 'Process item'
+    });
+  });
+
+  it('parses "{N}: Execute batch"', () => {
+    const result = extractStepHeader('{N}: Execute batch');
+    expect(result).toEqual({
+      isDynamic: true,
+      description: 'Execute batch'
+    });
+  });
+
+  it('parses "{N} - Run task"', () => {
+    const result = extractStepHeader('{N} - Run task');
+    expect(result).toEqual({
+      isDynamic: true,
+      description: 'Run task'
+    });
+  });
+
+  it('rejects "{n}" (lowercase)', () => {
+    const result = extractStepHeader('{n}. lowercase');
+    expect(result).toBeNull();
+  });
+
+  it('rejects "{N}" without description', () => {
+    const result = extractStepHeader('{N}');
+    expect(result).toBeNull();
+  });
+
+  it('static steps still work and include isDynamic: false', () => {
+    const result = extractStepHeader('1. First step');
+    expect(result).toEqual({
+      number: 1,
+      isDynamic: false,
+      description: 'First step'
+    });
   });
 });
 

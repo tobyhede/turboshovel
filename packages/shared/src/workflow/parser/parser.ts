@@ -151,6 +151,7 @@ export function parseWorkflow(markdown: string): Step[] {
       if (parsed) {
         currentStep = {
           number: parsed.number,
+          isDynamic: parsed.isDynamic,
           description: parsed.description,
           prompts: [],
           substeps: [],
@@ -290,6 +291,7 @@ function finalizeStep(
 
   return {
     number: step.number,
+    isDynamic: step.isDynamic,
     description: step.description,
     command: step.command,
     prompts: step.prompts,
@@ -308,7 +310,8 @@ function validateWorkflow(steps: Step[]): void {
 
   for (let i = 0; i < steps.length; i++) {
     const expected = i + 1;
-    if (steps[i].number !== expected) {
+    // Skip validation for dynamic steps (number is undefined)
+    if (!steps[i].isDynamic && steps[i].number !== expected) {
       throw new WorkflowSyntaxError(
         `Steps must be numbered sequentially. Expected step ${String(expected)}, found step ${String(steps[i].number)}.`
       );
@@ -318,14 +321,16 @@ function validateWorkflow(steps: Step[]): void {
   for (const step of steps) {
     // Validate: cannot have both workflows and substeps
     if (step.workflows?.length && step.substeps?.length) {
+      const stepLabel = step.isDynamic ? '{N}' : String(step.number);
       throw new WorkflowSyntaxError(
-        `Step ${String(step.number)}: Cannot have both workflows and substeps`
+        `Step ${stepLabel}: Cannot have both workflows and substeps`
       );
     }
 
     if (step.transitions) {
-      validateAction(step.transitions.pass, step.number, steps.length, steps);
-      validateAction(step.transitions.fail, step.number, steps.length, steps);
+      const stepNum = step.number ?? 0; // Use 0 as placeholder for dynamic steps in error messages
+      validateAction(step.transitions.pass, stepNum, steps.length, steps);
+      validateAction(step.transitions.fail, stepNum, steps.length, steps);
     }
   }
 }

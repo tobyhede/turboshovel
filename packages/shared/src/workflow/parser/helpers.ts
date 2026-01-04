@@ -20,16 +20,34 @@ export function stripSeparator(text: string): string {
   return text.replace(/^[.:—→\-)\s]+/, '').trim();
 }
 
+export interface ParsedStepHeader {
+  number?: StepNumber;
+  isDynamic: boolean;
+  description: string;
+}
+
 /**
  * Extract step number and description from header text
  * Returns null if not a valid step header
+ *
+ * Supports:
+ *   "1. Description" -> { number: 1, isDynamic: false, description }
+ *   "{N}. Description" -> { isDynamic: true, description }
  */
-export function extractStepHeader(
-  text: string
-): { number: StepNumber; description: string } | null {
+export function extractStepHeader(text: string): ParsedStepHeader | null {
   const trimmed = text.trim();
 
-  // Find where the number ends
+  // Check for dynamic step: "{N}. Description"
+  if (trimmed.startsWith('{N}')) {
+    const rest = trimmed.slice(3); // Skip "{N}"
+    const description = stripSeparator(rest);
+    if (!description) {
+      return null;
+    }
+    return { isDynamic: true, description };
+  }
+
+  // Static step: "N. Description"
   let numEnd = 0;
   while (numEnd < trimmed.length && /\d/.test(trimmed[numEnd])) {
     numEnd++;
@@ -39,21 +57,18 @@ export function extractStepHeader(
     return null; // No number at start
   }
 
-  // Parse the number
   const number = parseInt(trimmed.slice(0, numEnd), 10);
   const stepNumber = createStepNumber(number);
   if (!stepNumber) {
     return null; // Invalid step number (zero or negative)
   }
 
-  // Strip separator and extract description
   const description = stripSeparator(trimmed.slice(numEnd));
-
   if (!description) {
     return null;
   }
 
-  return { number: stepNumber, description };
+  return { number: stepNumber, isDynamic: false, description };
 }
 
 /**

@@ -89,21 +89,24 @@ export function compileWorkflowToMachine(steps: Step[]) {
     })
   }));
 
-  steps.forEach((step) => {
-    const stepId = `step_${String(step.number)}`;
+  steps.forEach((step, index) => {
+    // Use index + 1 as step number for state ID (works for both static and dynamic)
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    const stepNum = step.number ?? ((index + 1) as StepNumber);
+    const stepId = `step_${String(stepNum)}`;
     // XState state object type is not fully typed
     states[stepId] = {
       on: {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         PASS: step.transitions
-          ? actionToTransition(step.transitions.pass, step.number, steps.length)
+          ? actionToTransition(step.transitions.pass, stepNum, steps.length)
           : {
-              target: step.number < steps.length ? `step_${String(step.number + 1)}` : 'complete',
+              target: stepNum < steps.length ? `step_${String(stepNum + 1)}` : 'complete',
               actions: assign({ retryCount: 0, substep: undefined })
             },
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         FAIL: step.transitions
-          ? actionToTransition(step.transitions.fail, step.number, steps.length)
+          ? actionToTransition(step.transitions.fail, stepNum, steps.length)
           : { target: 'blocked' },
         RETRY: {
           actions: assign({

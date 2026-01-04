@@ -82,7 +82,7 @@ export function renderStep(step: Step): string {
   }
 
   // Substeps
-  if (step.substeps) {
+  if (step.substeps && step.number) {
     for (const substep of step.substeps) {
       lines.push(renderSubstep(substep, step.number));
       lines.push('');

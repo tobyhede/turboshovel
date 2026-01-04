@@ -2,14 +2,15 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { createActor, type AnyActorRef } from 'xstate';
-import { 
-  createStepNumber, 
-  type WorkflowState, 
-  type AgentBinding, 
-  type PendingStep, 
-  type Substep, 
+import {
+  createStepNumber,
+  type WorkflowState,
+  type AgentBinding,
+  type PendingStep,
+  type Substep,
   type SubstepState,
-  type Step
+  type Step,
+  type StepNumber
 } from './types.js';
 import type { StepId } from './step-id.js';
 import { WorkflowStateSchema } from '../schemas.js';
@@ -61,7 +62,8 @@ export class WorkflowStateManager {
     const now = new Date().toISOString();
 
     const initialStep = steps[0];
-    const stepNum = initialStep.number;
+    // Use step number if available, otherwise use 1 (for dynamic steps)
+    const stepNum = initialStep.number ?? (1 as StepNumber);
 
     const state: WorkflowState = {
       id,
