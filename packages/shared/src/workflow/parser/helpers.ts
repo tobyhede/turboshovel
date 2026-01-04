@@ -124,12 +124,20 @@ export function parseAction(text: string): Action | null {
     return { type: 'DONE' };
   }
 
+  if (trimmed === 'NEXT') {
+    return { type: 'NEXT' };
+  }
+
   if (trimmed === 'STOP') {
     return { type: 'STOP' };
   }
 
   if (trimmed.startsWith('STOP ')) {
-    const message = trimmed.slice(5).trim();
+    let message = trimmed.slice(5).trim();
+    // Handle quoted message
+    if (message.startsWith('"') && message.endsWith('"')) {
+      message = message.slice(1, -1);
+    }
     return { type: 'STOP', message };
   }
 
@@ -191,7 +199,7 @@ function parseRetryWithArgs(rest: string): Action | null {
 }
 
 /**
- * Parse a non-RETRY action (CONTINUE, STOP, GOTO, DONE)
+ * Parse a non-RETRY action (CONTINUE, STOP, GOTO, DONE, NEXT)
  */
 function parseNonRetryAction(input: string): NonRetryAction | null {
   const trimmed = input.trim();
@@ -206,6 +214,10 @@ function parseNonRetryAction(input: string): NonRetryAction | null {
 
   if (trimmed === 'DONE') {
     return { type: 'DONE' };
+  }
+
+  if (trimmed === 'NEXT') {
+    return { type: 'NEXT' };
   }
 
   if (trimmed === 'STOP') {

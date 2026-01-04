@@ -14,6 +14,8 @@ export function renderAction(action: Action): string {
       return 'CONTINUE';
     case 'DONE':
       return 'DONE';
+    case 'NEXT':
+      return 'NEXT';
     case 'STOP':
       return action.message ? `STOP "${action.message}"` : 'STOP';
     case 'GOTO':

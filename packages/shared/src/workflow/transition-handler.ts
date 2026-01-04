@@ -128,6 +128,8 @@ function evaluateNonRetryAction(action: NonRetryAction): ConditionResult {
       return { action: 'goto', gotoTarget: action.target };
     case 'DONE':
       return { action: 'done' };
+    case 'NEXT':
+      return { action: 'continue' };
   }
 }
 
