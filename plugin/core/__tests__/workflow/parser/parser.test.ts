@@ -127,7 +127,11 @@ FAIL ANY: STOP
         id: '1',
         description: 'First reviewer',
         agentType: 'code-review-agent',
-        isDynamic: false
+        isDynamic: false,
+        prompts: [],
+        command: undefined,
+        transitions: undefined,
+        workflows: undefined
       });
       expect(steps[0].substeps?.[1].id).toBe('2');
     });
@@ -419,6 +423,30 @@ Some content
       expect(steps[0].isDynamic).toBe(true);
       expect(steps[0].substeps).toHaveLength(1);
       expect(steps[0].substeps?.[0].workflows).toEqual(['item-task.workflow.md']);
+    });
+  });
+
+  describe('NEXT action validation', () => {
+    it('allows NEXT in dynamic step context', () => {
+      const markdown = `
+## {N}. Process item
+
+### {N}.1 Work
+- PASS: NEXT
+- FAIL: STOP
+`;
+      const steps = parseWorkflow(markdown);
+      expect(steps[0].isDynamic).toBe(true);
+    });
+
+    it('rejects NEXT in static step context', () => {
+      const markdown = `
+## 1. Static step
+- PASS: NEXT
+- FAIL: STOP
+`;
+      expect(() => parseWorkflow(markdown)).toThrow(WorkflowSyntaxError);
+      expect(() => parseWorkflow(markdown)).toThrow(/NEXT.*dynamic/i);
     });
   });
 });

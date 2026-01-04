@@ -76,8 +76,19 @@ export function validateWorkflow(steps: Step[]): void {
     if (step.transitions) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const stepLabel = step.isDynamic ? '{N}' : String(step.number!);
-      validateAction(step.transitions.pass, stepLabel, steps.length, steps);
-      validateAction(step.transitions.fail, stepLabel, steps.length, steps);
+      validateAction(step.transitions.pass, stepLabel, steps.length, steps, step);
+      validateAction(step.transitions.fail, stepLabel, steps.length, steps, step);
+    }
+
+    // Validate substep transitions
+    if (step.substeps) {
+      for (const substep of step.substeps) {
+        if (substep.transitions) {
+          const substepLabel = `${stepLabel}.${substep.id}`;
+          validateAction(substep.transitions.pass, substepLabel, steps.length, steps, step);
+          validateAction(substep.transitions.fail, substepLabel, steps.length, steps, step);
+        }
+      }
     }
   }
 }
@@ -88,12 +99,14 @@ export function validateWorkflow(steps: Step[]): void {
  * @param stepLabel The step label (number for static steps, "{N}" for dynamic steps)
  * @param totalSteps Total number of steps in the workflow
  * @param steps The full steps array for reference
+ * @param currentStep The step object containing this action (for context-dependent validation)
  */
 export function validateAction(
   action: Action,
   stepLabel: string | number,
   totalSteps: number,
-  steps: Step[]
+  steps: Step[],
+  currentStep?: Step
 ): void {
   // Schema validation
   const result = ActionSchema.safeParse(action);
@@ -101,6 +114,22 @@ export function validateAction(
     throw new WorkflowSyntaxError(
       `Step ${String(stepLabel)}: Action validation failed: ${result.error.issues.map(i => i.message).join(', ')}`
     );
+  }
+
+  if (action.type === 'NEXT') {
+    // Check if we're in a dynamic step context
+    if (!currentStep) {
+      throw new WorkflowSyntaxError(
+        `NEXT action is only valid within dynamic step context (## {N}.). ` +
+        `Found in static context at ${String(stepLabel)}.`
+      );
+    }
+    if (!currentStep.isDynamic) {
+      throw new WorkflowSyntaxError(
+        `NEXT action is only valid within dynamic step context (## {N}.). ` +
+        `Found in static step ${String(stepLabel)}.`
+      );
+    }
   }
 
   if (action.type === 'GOTO') {
@@ -156,6 +185,6 @@ export function validateAction(
   // Recurse into RETRY exhaustion action
   if (action.type === 'RETRY') {
     // Conformance Rule 5: Recursion (Already enforced by ActionSchema union not including RETRY in 'then')
-    validateAction(action.then, stepLabel, totalSteps, steps);
+    validateAction(action.then, stepLabel, totalSteps, steps, currentStep);
   }
 }
