@@ -1,6 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
 import type { NonRetryAction, StepNumber, Action, SubtaskState } from '../../src/workflow/types.js';
-import type { StepId } from '../../src/workflow/step-id.js';
 
 describe('SubtaskState type', () => {
   it('has required fields', () => {
@@ -25,6 +24,7 @@ describe('Action type', () => {
     };
 
     expect(retryAction.type).toBe('RETRY');
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (retryAction.type === 'RETRY') {
       expect(retryAction.max).toBe(3);
       expect(retryAction.then).toEqual({ type: 'STOP', message: 'Build failed' });
@@ -38,6 +38,7 @@ describe('Action type', () => {
       then: { type: 'GOTO', target: { step: 5 as StepNumber, substep: undefined } }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (retryAction.type === 'RETRY') {
       expect(retryAction.then.type).toBe('GOTO');
     }
@@ -50,6 +51,7 @@ describe('Action type', () => {
       then: { type: 'CONTINUE' }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (retryAction.type === 'RETRY') {
       expect(retryAction.then.type).toBe('CONTINUE');
     }

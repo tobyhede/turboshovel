@@ -4,7 +4,6 @@ import {
   runCli,
   getActiveState,
   getAllStates,
-  readSession,
   type TestWorkspace,
 } from '../helpers/test-utils.js';
 

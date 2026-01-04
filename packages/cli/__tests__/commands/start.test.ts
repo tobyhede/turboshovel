@@ -169,8 +169,9 @@ describe('start command', () => {
       runCli('start --agent test-agent', workspace);
 
       const state = await getActiveState(workspace);
-      const binding = (state?.agentBindings as Record<string, unknown>)?.['test-agent'] as Record<string, unknown>;
-      expect(binding?.status).toBe('running');
+      const bindings = state?.agentBindings;
+      const binding = (bindings as Record<string, unknown>)['test-agent'];
+      expect((binding as Record<string, unknown>).status).toBe('running');
     });
 
     it('outputs binding info', async () => {
@@ -221,19 +222,23 @@ describe('start command', () => {
       const allStates = await Promise.all(
         stateFiles.map(file => readWorkflowState(workspace, file.replace('.json', '')))
       );
-      const parentState = allStates.find(state =>
-        Object.values(state?.agentBindings as Record<string, unknown> || {})
+      const parentState = allStates.find(state => {
+        const bindings = state?.agentBindings;
+        // bindings is either defined or undefined, not null
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        return Object.values((bindings as Record<string, unknown>) || {})
           .some((binding: unknown) =>
             typeof binding === 'object' &&
             binding !== null &&
             'childWorkflowId' in binding &&
             (binding as Record<string, unknown>).childWorkflowId === session.active
-          )
-      );
+          );
+      });
 
       expect(parentState).toBeTruthy();
-      const agentBinding = (parentState?.agentBindings as Record<string, unknown>)?.['test-agent-123'];
-      expect((agentBinding as Record<string, unknown>)?.childWorkflowId).toBe(session.active);
+      const agentBindings = (parentState!.agentBindings) as Record<string, unknown>;
+      const agentBinding = agentBindings['test-agent-123'];
+      expect((agentBinding as Record<string, unknown>).childWorkflowId).toBe(session.active);
     });
   });
 });

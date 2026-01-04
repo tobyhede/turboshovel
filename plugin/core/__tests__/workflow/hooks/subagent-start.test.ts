@@ -74,7 +74,7 @@ describe('handleSubagentStart calls CLI', () => {
       };
 
       const result = await handleSubagentStart(input);
-      expect(result.context || result.violation || !result.violation).toBeDefined();
+      expect(result.context ?? result.violation ?? !result.violation).toBeDefined();
     } finally {
       await fs.rm(testDir, { recursive: true, force: true });
     }
