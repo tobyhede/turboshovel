@@ -83,6 +83,8 @@ async function getSubstepWorkflow(cwd: string, stepId: StepId): Promise<string |
   const steps = parseWorkflow(content);
 
   const step = steps[stepId.step - 1];
+  // substeps is either defined or undefined (not null), stepId.substep is a string if set
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!step?.substeps || !stepId.substep) return undefined;
 
   const substepIndex = parseInt(stepId.substep, 10);
@@ -91,12 +93,14 @@ async function getSubstepWorkflow(cwd: string, stepId: StepId): Promise<string |
   const staticSubstep = step.substeps.find(
     s => !s.isDynamic && s.id === stepId.substep
   );
-  if (staticSubstep?.workflows?.length) {
+  // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
+  if (staticSubstep && staticSubstep.workflows?.length) {
     return staticSubstep.workflows[0];
   }
 
   const dynamicSubstep = step.substeps.find(s => s.isDynamic);
-  if (!dynamicSubstep?.workflows?.length) return undefined;
+  // eslint-disable-next-line @typescript-eslint/prefer-optional-chain
+  if (!dynamicSubstep || !dynamicSubstep.workflows?.length) return undefined;
 
   const workflowIndex = (substepIndex - 1) % dynamicSubstep.workflows.length;
   return dynamicSubstep.workflows[workflowIndex];
