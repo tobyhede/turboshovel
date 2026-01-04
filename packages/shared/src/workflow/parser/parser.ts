@@ -386,26 +386,14 @@ function finalizeStep(
   const transitions = convertToTransitions(pendingConditionals);
   const workflows = extractWorkflowList(step.content);
 
-    return {
-
-      number: step.number,
-
-      isDynamic: step.isDynamic,
-
-      description: step.description,
-
-      command: step.command,
-
-      prompts: prompts,
-
-      transitions: transitions ?? undefined,
-
-      substeps: step.substeps.length > 0 ? step.substeps : undefined,
-
-      workflows: workflows.length > 0 ? workflows : undefined
-
-    };
-
-  }
-
-  
+  return {
+    number: step.number,
+    isDynamic: step.isDynamic,
+    description: step.description,
+    command: step.command,
+    prompts: prompts,
+    transitions: transitions ?? undefined,
+    substeps: step.substeps.length > 0 ? step.substeps : undefined,
+    workflows: workflows.length > 0 ? workflows : undefined
+  };
+}
