@@ -114,14 +114,32 @@ export function parseWorkflow(markdown: string): Step[] {
   // Helper to finalize pending substep
   const finalizePendingSubstep = (): void => {
     if (currentStep?.pendingSubstep) {
-      const workflows = extractWorkflowList(currentStep.pendingSubstep.content);
+      const ps = currentStep.pendingSubstep;
+      const workflows = extractWorkflowList(ps.content);
+      const transitions = convertToTransitions(ps.pendingConditionals);
+
+      // Extract implicit prompt from remaining content (if no explicit prompts and no command)
+      let prompts = ps.prompts;
+      if (!ps.command && ps.prompts.length === 0 && ps.content.trim()) {
+        // Filter out workflow list lines from content before using as prompt
+        const contentWithoutWorkflows = ps.content
+          .split('\n')
+          .filter(line => !line.trim().startsWith('-') || !line.includes('.workflow.md'))
+          .join('\n')
+          .trim();
+        if (contentWithoutWorkflows) {
+          prompts = [{ text: contentWithoutWorkflows }];
+        }
+      }
+
       const substep: Substep = {
-        id: currentStep.pendingSubstep.id,
-        description: currentStep.pendingSubstep.description,
-        agentType: currentStep.pendingSubstep.agentType,
-        isDynamic: currentStep.pendingSubstep.isDynamic,
-        command: currentStep.pendingSubstep.command,
-        prompts: [],  // ADD THIS - empty for now
+        id: ps.id,
+        description: ps.description,
+        agentType: ps.agentType,
+        isDynamic: ps.isDynamic,
+        command: ps.command,
+        prompts: prompts,
+        transitions: transitions ?? undefined,
         workflows: workflows.length > 0 ? workflows : undefined
       };
       currentStep.substeps.push(substep);
@@ -265,7 +283,12 @@ export function parseWorkflow(markdown: string): Step[] {
       if (hasPromptMarker(paragraphNode)) {
         const promptText = extractPromptText(paragraphNode);
         if (promptText) {
-          currentStep.prompts.push({ text: promptText });
+          // Route to substep if one is pending
+          if (currentStep.pendingSubstep) {
+            currentStep.pendingSubstep.prompts.push({ text: promptText });
+          } else {
+            currentStep.prompts.push({ text: promptText });
+          }
         }
         return;
       }
@@ -277,10 +300,21 @@ export function parseWorkflow(markdown: string): Step[] {
       for (const line of lines) {
         const conditional = parseConditional(line);
         if (conditional) {
-          pendingConditionals.push(conditional);
+          // Route conditionals to substep ONLY if there are already other substeps in this step
+          // This way, the last substep of multiple ones gets transitions, but single substeps don't
+          if (currentStep.pendingSubstep && currentStep.substeps.length > 0) {
+            currentStep.pendingSubstep.pendingConditionals.push(conditional);
+          } else {
+            pendingConditionals.push(conditional);
+          }
           hasConditional = true;
         } else if (line.trim()) {
-          implicitText += line.trim() + '\n';
+          // Route implicit text to substep content
+          if (currentStep.pendingSubstep) {
+            currentStep.pendingSubstep.content += line.trim() + '\n';
+          } else {
+            implicitText += line.trim() + '\n';
+          }
         }
       }
 
@@ -297,7 +331,13 @@ export function parseWorkflow(markdown: string): Step[] {
         const text = extractText(firstParagraph);
         const conditional = parseConditional(text);
         if (conditional) {
-          pendingConditionals.push(conditional);
+          // Route conditionals to substep ONLY if there are already other substeps in this step
+          // This way, the last substep of multiple ones gets transitions, but single substeps don't
+          if (currentStep.pendingSubstep && currentStep.substeps.length > 0) {
+            currentStep.pendingSubstep.pendingConditionals.push(conditional);
+          } else {
+            pendingConditionals.push(conditional);
+          }
         } else if (currentStep.pendingSubstep) {
           currentStep.pendingSubstep.content += ' - ' + text + '\n';
         } else {
