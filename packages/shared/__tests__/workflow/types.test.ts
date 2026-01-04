@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import type { NonRetryAction, StepNumber, Action, SubtaskState } from '../../src/workflow/types.js';
+import type { NonRetryAction, StepNumber, Action, SubtaskState, Substep, Command, Prompt, Transitions } from '../../src/workflow/types.js';
 
 describe('SubtaskState type', () => {
   it('has required fields', () => {
@@ -80,5 +80,43 @@ describe('GOTO action type', () => {
 
     expect(gotoAction.target.step).toBe(3);
     expect(gotoAction.target.substep).toBeUndefined();
+  });
+});
+
+describe('Substep interface', () => {
+  it('supports command field', () => {
+    const substep: Substep = {
+      id: '1',
+      description: 'Test substep',
+      isDynamic: false,
+      command: { code: 'npm test' },
+      prompts: []
+    };
+    expect(substep.command?.code).toBe('npm test');
+  });
+
+  it('supports prompts array', () => {
+    const substep: Substep = {
+      id: '1',
+      description: 'Test substep',
+      isDynamic: false,
+      prompts: [{ text: 'Do the thing' }]
+    };
+    expect(substep.prompts).toHaveLength(1);
+  });
+
+  it('supports transitions field', () => {
+    const substep: Substep = {
+      id: '1',
+      description: 'Test substep',
+      isDynamic: false,
+      prompts: [],
+      transitions: {
+        all: true,
+        pass: { type: 'CONTINUE' },
+        fail: { type: 'STOP', message: 'BLOCKED' }
+      }
+    };
+    expect(substep.transitions?.pass.type).toBe('CONTINUE');
   });
 });

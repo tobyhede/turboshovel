@@ -117,6 +117,7 @@ export function parseWorkflow(markdown: string): Step[] {
         description: currentStep.pendingSubstep.description,
         agentType: currentStep.pendingSubstep.agentType,
         isDynamic: currentStep.pendingSubstep.isDynamic,
+        prompts: [],  // ADD THIS - empty for now
         workflows: workflows.length > 0 ? workflows : undefined
       };
       currentStep.substeps.push(substep);

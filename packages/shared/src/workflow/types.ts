@@ -143,6 +143,9 @@ export interface Substep {
   readonly description: string;
   readonly agentType?: string; // e.g., "code-review-agent" from "(code-review-agent)"
   readonly isDynamic: boolean; // true for ### N.{n}, false for ### N.1
+  readonly command?: Command;              // NEW: bash code block
+  readonly prompts: readonly Prompt[];     // NEW: explicit/implicit prompts
+  readonly transitions?: Transitions;      // NEW: PASS/FAIL conditionals
   readonly workflows?: readonly string[];  // Child workflow files
 }
 
