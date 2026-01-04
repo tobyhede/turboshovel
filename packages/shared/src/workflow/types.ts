@@ -156,6 +156,8 @@ export interface Step {
   readonly prompts: readonly Prompt[];
   readonly transitions?: Transitions;
   readonly substeps?: readonly Substep[];
+  readonly workflows?: readonly string[];  // Child workflow files
+  /** @deprecated Use workflows instead */
   readonly nestedWorkflow?: string; // Reference to nested workflow file
 }
 
