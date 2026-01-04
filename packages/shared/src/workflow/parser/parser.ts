@@ -193,6 +193,12 @@ export function parseWorkflow(markdown: string): Step[] {
 
     // Handle H3 headings - these are substep headers
     if (isHeading(node) && node.depth === 3 && currentStep) {
+      // Before finalizing, give step-level pendingConditionals to outgoing substep
+      // (they were accumulated after that substep's header and belong to it)
+      if (currentStep.pendingSubstep) {
+        currentStep.pendingSubstep.pendingConditionals.push(...pendingConditionals);
+        pendingConditionals = [];
+      }
       finalizePendingSubstep();
 
       const headingText = extractText(node);
@@ -300,9 +306,8 @@ export function parseWorkflow(markdown: string): Step[] {
       for (const line of lines) {
         const conditional = parseConditional(line);
         if (conditional) {
-          // Route conditionals to substep ONLY if there are already other substeps in this step
-          // This way, the last substep of multiple ones gets transitions, but single substeps don't
-          if (currentStep.pendingSubstep && currentStep.substeps.length > 0) {
+          // Route conditionals to pending substep if one exists, otherwise step-level
+          if (currentStep.pendingSubstep) {
             currentStep.pendingSubstep.pendingConditionals.push(conditional);
           } else {
             pendingConditionals.push(conditional);
@@ -331,9 +336,8 @@ export function parseWorkflow(markdown: string): Step[] {
         const text = extractText(firstParagraph);
         const conditional = parseConditional(text);
         if (conditional) {
-          // Route conditionals to substep ONLY if there are already other substeps in this step
-          // This way, the last substep of multiple ones gets transitions, but single substeps don't
-          if (currentStep.pendingSubstep && currentStep.substeps.length > 0) {
+          // Route conditionals to pending substep if one exists, otherwise step-level
+          if (currentStep.pendingSubstep) {
             currentStep.pendingSubstep.pendingConditionals.push(conditional);
           } else {
             pendingConditionals.push(conditional);

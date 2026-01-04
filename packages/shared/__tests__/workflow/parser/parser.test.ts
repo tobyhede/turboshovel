@@ -153,6 +153,125 @@ Do work.
   });
 });
 
+describe('substep with prompts', () => {
+  it('parses explicit prompt in substep', () => {
+    const markdown = `## 1. Execute
+
+### 1.1 Implement task
+
+**Prompt:** Do the implementation work.
+
+- PASS: CONTINUE
+- FAIL: STOP
+`;
+    const steps = parseWorkflow(markdown);
+    expect(steps[0].substeps![0].prompts).toHaveLength(1);
+    expect(steps[0].substeps![0].prompts[0].text).toBe('Do the implementation work.');
+  });
+
+  it('parses implicit prompt in substep', () => {
+    const markdown = `## 1. Execute
+
+### 1.1 Implement task
+
+This is the implicit prompt text.
+
+- PASS: CONTINUE
+- FAIL: STOP
+`;
+    const steps = parseWorkflow(markdown);
+    expect(steps[0].substeps![0].prompts).toHaveLength(1);
+    expect(steps[0].substeps![0].prompts[0].text).toBe('This is the implicit prompt text.');
+  });
+});
+
+describe('substep with transitions', () => {
+  it('parses transitions in substep', () => {
+    const markdown = `## 1. Execute
+
+### 1.1 First step
+
+Do work.
+
+- PASS: CONTINUE
+- FAIL: STOP "BLOCKED"
+
+### 1.2 Second step
+
+More work.
+
+- PASS: DONE
+- FAIL: GOTO 1.1
+`;
+    const steps = parseWorkflow(markdown);
+    expect(steps[0].substeps![0].transitions?.pass).toEqual({ type: 'CONTINUE' });
+    expect(steps[0].substeps![0].transitions?.fail).toEqual({ type: 'STOP', message: 'BLOCKED' });
+    expect(steps[0].substeps![1].transitions?.pass).toEqual({ type: 'DONE' });
+    expect(steps[0].substeps![1].transitions?.fail).toEqual({ type: 'GOTO', target: { step: 1, substep: '1' } });
+  });
+
+  it('single substep gets transitions not step', () => {
+    const markdown = `## 1. Execute
+
+### 1.1 First step
+
+Do work.
+
+- PASS: CONTINUE
+- FAIL: STOP
+`;
+    const steps = parseWorkflow(markdown);
+    // Single substep now gets transitions directly
+    expect(steps[0].substeps![0].transitions?.pass).toEqual({ type: 'CONTINUE' });
+    expect(steps[0].substeps![0].transitions?.fail).toEqual({ type: 'STOP' });
+    // Step may have undefined transitions (substep handles them)
+  });
+});
+
+describe('substep GOTO validation', () => {
+  it('accepts GOTO to sibling substep', () => {
+    const markdown = `## 1. Execute
+
+### 1.1 First step
+
+- PASS: CONTINUE
+- FAIL: GOTO 1.2
+
+### 1.2 Second step
+
+- PASS: CONTINUE
+- FAIL: STOP
+
+- PASS: CONTINUE
+- FAIL: STOP
+`;
+    const steps = parseWorkflow(markdown);
+    expect(steps[0].substeps![0].transitions?.fail).toEqual({
+      type: 'GOTO',
+      target: { step: 1, substep: '2' }
+    });
+  });
+
+  it('rejects GOTO to non-existent substep from substep', () => {
+    const markdown = `## 1. Execute
+
+### 1.1 First step
+
+- PASS: CONTINUE
+- FAIL: GOTO 1.99
+
+### 1.2 Second step
+
+- PASS: CONTINUE
+- FAIL: STOP
+
+- PASS: CONTINUE
+- FAIL: STOP
+`;
+    expect(() => parseWorkflow(markdown)).toThrow(/substep.*does not exist|invalid/i);
+  });
+});
+
 describe('substep with command', () => {
   it('parses bash code block in substep', () => {
     const markdown = `## 1. Execute
