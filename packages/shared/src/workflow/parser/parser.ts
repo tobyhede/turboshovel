@@ -168,7 +168,7 @@ export function parseWorkflow(markdown: string): Step[] {
       const parsed = extractSubstepHeader(headingText);
 
       if (parsed) {
-        if (parsed.stepNumber !== currentStep.number) {
+        if (parsed.stepRef !== currentStep.number) {
           throw new WorkflowSyntaxError(
             `Substep ${headingText} does not belong to step ${String(currentStep.number)}`
           );

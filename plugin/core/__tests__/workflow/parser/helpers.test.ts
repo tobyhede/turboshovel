@@ -189,7 +189,7 @@ describe('extractSubstepHeader', () => {
   it('parses static substep: 1.1 First reviewer', () => {
     const result = extractSubstepHeader('1.1 First reviewer');
     expect(result).toEqual({
-      stepNumber: 1,
+      stepRef: 1,
       id: '1',
       description: 'First reviewer',
       agentType: undefined,
@@ -200,7 +200,7 @@ describe('extractSubstepHeader', () => {
   it('parses substep with agent type: 2.2 Second (code-agent)', () => {
     const result = extractSubstepHeader('2.2 Second reviewer (code-agent)');
     expect(result).toEqual({
-      stepNumber: 2,
+      stepRef: 2,
       id: '2',
       description: 'Second reviewer',
       agentType: 'code-agent',
@@ -211,11 +211,57 @@ describe('extractSubstepHeader', () => {
   it('parses dynamic substep: 3.{n} Execute step', () => {
     const result = extractSubstepHeader('3.{n} Execute step');
     expect(result).toEqual({
-      stepNumber: 3,
+      stepRef: 3,
       id: '{n}',
       description: 'Execute step',
       agentType: undefined,
       isDynamic: true
+    });
+  });
+});
+
+describe('extractSubstepHeader with dynamic parent', () => {
+  it('parses "{N}.1 Implement changes"', () => {
+    const result = extractSubstepHeader('{N}.1 Implement changes');
+    expect(result).toEqual({
+      stepRef: '{N}',
+      id: '1',
+      description: 'Implement changes',
+      agentType: undefined,
+      isDynamic: false
+    });
+  });
+
+  it('parses "{N}.2 Run tests (test-agent)"', () => {
+    const result = extractSubstepHeader('{N}.2 Run tests (test-agent)');
+    expect(result).toEqual({
+      stepRef: '{N}',
+      id: '2',
+      description: 'Run tests',
+      agentType: 'test-agent',
+      isDynamic: false
+    });
+  });
+
+  it('parses "{N}.{n} Process item"', () => {
+    const result = extractSubstepHeader('{N}.{n} Process item');
+    expect(result).toEqual({
+      stepRef: '{N}',
+      id: '{n}',
+      description: 'Process item',
+      agentType: undefined,
+      isDynamic: true
+    });
+  });
+
+  it('static parent substeps still work', () => {
+    const result = extractSubstepHeader('1.1 First reviewer');
+    expect(result).toEqual({
+      stepRef: 1,
+      id: '1',
+      description: 'First reviewer',
+      agentType: undefined,
+      isDynamic: false
     });
   });
 });

@@ -6,7 +6,7 @@ import { WorkflowSyntaxError } from './types.js';
 import { parseStepIdFromString } from '../step-id.js';
 
 export interface ParsedSubstepHeader {
-  stepNumber: number;
+  stepRef: number | '{N}';
   id: string; // "1", "2", or "{n}" for dynamic
   description: string;
   agentType?: string;
@@ -74,26 +74,36 @@ export function extractStepHeader(text: string): ParsedStepHeader | null {
 /**
  * Extract substep header from H3 text
  * Patterns:
- *   "1.1 First reviewer (code-agent)" -> { stepNumber: 1, id: "1", ... }
- *   "3.{n} Execute step" -> { stepNumber: 3, id: "{n}", isDynamic: true }
+ *   "1.1 First reviewer (code-agent)" -> { stepRef: 1, id: "1", ... }
+ *   "3.{n} Execute step" -> { stepRef: 3, id: "{n}", isDynamic: true }
+ *   "{N}.1 Implement" -> { stepRef: '{N}', id: "1", ... }
+ *   "{N}.{n} Process" -> { stepRef: '{N}', id: "{n}", isDynamic: true }
  */
 export function extractSubstepHeader(text: string): ParsedSubstepHeader | null {
   const trimmed = text.trim();
 
-  // Match: "N.M description" or "N.{n} description" with optional (agent-type)
-  const match = /^(\d+)\.(\{n\}|\d+)\s+(.+?)(?:\s+\(([^)]+)\))?$/.exec(trimmed);
+  // Match: "N.M description" or "{N}.M description" with optional (agent-type)
+  // Where N is number or {N}, M is number or {n}
+  const match = /^(\{N\}|\d+)\.(\{n\}|\d+)\s+(.+?)(?:\s+\(([^)]+)\))?$/.exec(trimmed);
   if (!match) return null;
 
-  const [, stepStr, substepId, desc, agent] = match;
-  const stepNumber = parseInt(stepStr, 10);
-  if (stepNumber <= 0) return null;
+  const [, stepPart, substepId, desc, agent] = match;
+
+  // Parse step reference
+  let stepRef: number | '{N}';
+  if (stepPart === '{N}') {
+    stepRef = '{N}';
+  } else {
+    const stepNumber = parseInt(stepPart, 10);
+    if (stepNumber <= 0) return null;
+    stepRef = stepNumber;
+  }
 
   const isDynamic = substepId === '{n}';
-  const id = substepId; // Keep as-is: "{n}" or numeric string
 
   return {
-    stepNumber,
-    id,
+    stepRef,
+    id: substepId,
     description: desc.trim(),
     agentType: agent ? agent.trim() : undefined,
     isDynamic
