@@ -1,5 +1,5 @@
 // __tests__/workflow/parser/parser.test.ts
-import { parseWorkflow, WorkflowSyntaxError } from '@turboshovel/shared';
+import { parseWorkflow, WorkflowSyntaxError, renderStep } from '@turboshovel/shared';
 
 describe('parseWorkflow', () => {
   describe('basic parsing', () => {
@@ -369,6 +369,56 @@ Some content
 ##### Invalid H5 heading
 `;
       expect(() => parseWorkflow(markdown)).toThrow(WorkflowSyntaxError);
+    });
+
+    it('rejects H6 headings', () => {
+      const markdown = `
+## 1. Step one
+
+###### Invalid H6 heading
+`;
+      expect(() => parseWorkflow(markdown)).toThrow(WorkflowSyntaxError);
+    });
+  });
+
+  describe('dynamic steps round-trip', () => {
+    it('parses and renders dynamic step correctly', () => {
+      const markdown = `## {N}. Process batch item
+
+### {N}.1 Implement changes (code-exec-agent)
+### {N}.2 Run verification
+
+- PASS ALL: CONTINUE
+- FAIL ANY: RETRY 2 STOP`;
+
+      const steps = parseWorkflow(markdown);
+      expect(steps).toHaveLength(1);
+
+      const step = steps[0];
+      expect(step.isDynamic).toBe(true);
+      expect(step.substeps).toHaveLength(2);
+
+      // Render back and verify key elements
+      const rendered = renderStep(step);
+      expect(rendered).toContain('## {N}. Process batch item');
+      expect(rendered).toContain('### {N}.1 Implement changes (code-exec-agent)');
+      expect(rendered).toContain('### {N}.2 Run verification');
+    });
+
+    it('parses dynamic step with workflow list only in substep', () => {
+      const markdown = `## {N}. Process item
+
+### {N}.1 Execute task
+
+ - item-task.workflow.md
+
+- PASS ALL: CONTINUE
+- FAIL ANY: STOP
+`;
+      const steps = parseWorkflow(markdown);
+      expect(steps[0].isDynamic).toBe(true);
+      expect(steps[0].substeps).toHaveLength(1);
+      expect(steps[0].substeps?.[0].workflows).toEqual(['item-task.workflow.md']);
     });
   });
 });
