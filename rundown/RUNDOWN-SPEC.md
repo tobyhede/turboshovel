@@ -7,60 +7,27 @@ Rundown is a format for defining executable workflows using Markdown.
 
 ---
 
+## Table of Contents
+
+- [1. Syntax Synopsis](#1-syntax-synopsis)
+- [2. Document Structure](#2-document-structure)
+  - [Header](#header)
+  - [Steps](#steps)
+  - [Nesting (Substeps)](#nesting-substeps)
+  - [Identifiers](#identifiers)
+- [3. Step Content](#3-step-content)
+  - [Option A: Step Body](#option-a-step-body)
+  - [Option B: Workflow List](#option-b-workflow-list)
+- [4. Transitions](#4-transitions)
+- [5. Actions](#5-actions)
+- [6. Conformance](#6-conformance)
+- [7. Examples](#7-examples)
+
+---
+
 ## 1. Syntax Synopsis
 
-```
-# title
-[ description ]
-
-{ static_steps | dynamic_step }
-
-where static_steps is:
-  static_step [ static_step ... ]
-
-where static_step is:
-  "##" integer title
-    { body | substeps | workflows }
-    [ transition ... ]
-
-where dynamic_step is:
-  "##" "{N}" title
-    { body | substeps | workflows }
-    [ transition ... ]
-
-where substeps is:
-  substep [ substep ... ]
-
-where substep is:
-  "###" substep_id title
-    { body | workflows }
-    [ transition ... ]
-
-where substep_id is:
-  parent_ref "." { integer | "{n}" }
-
-where parent_ref is:
-  integer    -- for static parent
-  | "{N}"    -- for dynamic parent
-
-where body is:
-  [ prompt_text ]
-  [ ```bash
-    command
-    ``` ]
-
-where workflows is:
-  - workflow_path [ ... ]
-
-where transition is:
-  - { PASS | FAIL } [ { ALL | ANY } ]: result
-
-where result is:
-  action | RETRY [ count ] [ action ]
-
-where action is:
-  CONTINUE | DONE | STOP [ "message" ] | GOTO id | NEXT
-```
+See [rundown-format.md](./rundown-format.md) for the complete BNF-style grammar.
 
 ---
 
@@ -191,35 +158,7 @@ Actions determine what happens next.
 
 ---
 
-## 6. Variables
-
-Rundown supports simple variable substitution in prompts and commands.
-
-| Variable | Scope | Description |
-|----------|-------|-------------|
-| `{N}`, `{n}` | Dynamic Step | The current index of a dynamic step instance. |
-| `{count}`| Workflow | Total number of items (if applicable). |
-| `{date}` | Global | Current date (YYYY-MM-DD). |
-
----
-
-## 7. Execution
-
-Rundown specifications are execution-agnostic, but define two standard modes of interaction via CLI.
-
-### Auto Mode
-Commands are executed automatically.
-- `bash` blocks run immediately.
-- Output is piped to stdout.
-
-### Prompted Mode
-Commands are displayed for user confirmation/execution.
-- `bash` blocks are printed but not run.
-- The system waits for an explicit signal (`pass` / `fail`) from the operator.
-
----
-
-## 8. Conformance
+## 6. Conformance
 
 Parsers and executors must adhere to strict validation:
 
@@ -233,7 +172,7 @@ Parsers and executors must adhere to strict validation:
 
 ---
 
-## 9. Examples
+## 7 . Examples
 
 Executable examples and conformance test cases are maintained in the `packages/shared/fixtures/workflow/conformance/` directory.
 
