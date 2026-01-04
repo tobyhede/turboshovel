@@ -87,7 +87,7 @@ echo "reached"
 `;
 
       const steps = parseWorkflow(markdown);
-      expect(steps[0].transitions?.pass).toEqual({ type: 'GOTO', step: 3 });
+      expect(steps[0].transitions?.pass).toEqual({ type: 'GOTO', target: { step: 3, substep: undefined } });
     });
   });
 

@@ -89,7 +89,7 @@ describe('parseAction', () => {
 
   test('parses GOTO N', () => {
     const result = parseAction('GOTO 3');
-    expect(result).toEqual({ type: 'GOTO', step: 3 });
+    expect(result).toEqual({ type: 'GOTO', target: { step: 3, substep: undefined } });
   });
 
   test('parses DONE', () => {

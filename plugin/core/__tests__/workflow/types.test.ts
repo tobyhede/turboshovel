@@ -63,9 +63,9 @@ describe('Action discriminated union', () => {
   });
 
   test('GOTO action with step number', () => {
-    const action: Action = { type: 'GOTO', step: 3 as StepNumber };
+    const action: Action = { type: 'GOTO', target: { step: 3 as StepNumber } };
     expect(action.type).toBe('GOTO');
-    expect(action.step).toBe(3);
+    expect(action.target.step).toBe(3);
   });
 });
 
