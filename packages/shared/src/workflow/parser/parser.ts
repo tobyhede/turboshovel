@@ -90,6 +90,7 @@ interface StepBuilder {
   prompts: { text: string }[];
   substeps: Substep[];
   pendingSubstep?: SubstepBuilder;
+  content: string;  // Accumulated step body content for workflow extraction
 }
 
 /**
@@ -151,7 +152,8 @@ export function parseWorkflow(markdown: string): Step[] {
           number: parsed.number,
           description: parsed.description,
           prompts: [],
-          substeps: []
+          substeps: [],
+          content: ''
         };
       }
     }
@@ -252,6 +254,9 @@ export function parseWorkflow(markdown: string): Step[] {
           pendingConditionals.push(conditional);
         } else if (currentStep.pendingSubstep) {
           currentStep.pendingSubstep.content += ' - ' + text + '\n';
+        } else {
+          // Accumulate list items to step content (for step-level workflow extraction)
+          currentStep.content += ' - ' + text + '\n';
         }
       }
     }
@@ -278,6 +283,7 @@ function finalizeStep(
   }
 
   const transitions = convertToTransitions(pendingConditionals);
+  const workflows = extractWorkflowList(step.content);
 
   return {
     number: step.number,
@@ -285,7 +291,8 @@ function finalizeStep(
     command: step.command,
     prompts: step.prompts,
     transitions: transitions ?? undefined,
-    substeps: step.substeps.length > 0 ? step.substeps : undefined
+    substeps: step.substeps.length > 0 ? step.substeps : undefined,
+    workflows: workflows.length > 0 ? workflows : undefined
   };
 }
 
@@ -306,6 +313,13 @@ function validateWorkflow(steps: Step[]): void {
   }
 
   for (const step of steps) {
+    // Validate: cannot have both workflows and substeps
+    if (step.workflows?.length && step.substeps?.length) {
+      throw new WorkflowSyntaxError(
+        `Step ${String(step.number)}: Cannot have both workflows and substeps`
+      );
+    }
+
     if (step.transitions) {
       validateAction(step.transitions.pass, step.number, steps.length, steps);
       validateAction(step.transitions.fail, step.number, steps.length, steps);
