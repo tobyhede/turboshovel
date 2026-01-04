@@ -779,7 +779,9 @@ program
       actor.send({ type: 'GOTO', target });
 
       // Update state from XState (single source of truth)
-      const updatedState = await manager.updateFromActor(state.id, actor, steps);
+      // Note: We call updateFromActor to persist the new state, but don't use the return value
+      // since we show "from" position in the action block
+      await manager.updateFromActor(state.id, actor, steps);
 
       // Update lastAction and CLEAR lastResult (prevent stale PASS/FAIL leaking)
       await manager.update(state.id, {
