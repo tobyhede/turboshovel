@@ -77,7 +77,8 @@ describe('renderStep', () => {
     const step: Step = {
       number: createStepNumber(1)!,
       description: 'First step',
-      prompts: []
+      prompts: [],
+      isDynamic: false
     };
     const result = renderStep(step);
     expect(result).toContain('## 1. First step');
@@ -88,6 +89,7 @@ describe('renderStep', () => {
       number: createStepNumber(3)!,
       description: 'Dispatch reviewers',
       prompts: [],
+      isDynamic: false,
       substeps: [
         { id: '1', description: 'First reviewer', isDynamic: false },
         { id: '2', description: 'Second reviewer', agentType: 'code-agent', isDynamic: false }
@@ -103,12 +105,79 @@ describe('renderStep', () => {
       number: createStepNumber(1)!,
       description: 'Run tests',
       prompts: [],
+      isDynamic: false,
       command: { code: 'npm test' }
     };
     const result = renderStep(step);
     expect(result).toContain('```bash');
     expect(result).toContain('npm test');
     expect(result).toContain('```');
+  });
+});
+
+describe('renderStep with dynamic steps', () => {
+  it('renders dynamic step header with {N}.', () => {
+    const step: Step = {
+      isDynamic: true,
+      description: 'Process batch item',
+      prompts: []
+    };
+
+    const rendered = renderStep(step);
+    expect(rendered).toContain('## {N}. Process batch item');
+  });
+
+  it('renders dynamic step with substeps', () => {
+    const step: Step = {
+      isDynamic: true,
+      description: 'Execute task',
+      prompts: [],
+      substeps: [
+        { id: '1', description: 'Implement', isDynamic: false },
+        { id: '2', description: 'Test', isDynamic: false }
+      ]
+    };
+
+    const rendered = renderStep(step);
+    expect(rendered).toContain('## {N}. Execute task');
+    expect(rendered).toContain('### {N}.1 Implement');
+    expect(rendered).toContain('### {N}.2 Test');
+  });
+
+  it('renders static step unchanged', () => {
+    const step: Step = {
+      number: createStepNumber(1)!,
+      isDynamic: false,
+      description: 'Setup',
+      prompts: []
+    };
+
+    const rendered = renderStep(step);
+    expect(rendered).toContain('## 1. Setup');
+  });
+});
+
+describe('renderSubstep with dynamic parent', () => {
+  it('uses {N} prefix for dynamic parent', () => {
+    const substep: Substep = {
+      id: '1',
+      description: 'First task',
+      isDynamic: false
+    };
+
+    const rendered = renderSubstep(substep, undefined);
+    expect(rendered).toBe('### {N}.1 First task');
+  });
+
+  it('uses numeric prefix for static parent', () => {
+    const substep: Substep = {
+      id: '1',
+      description: 'First task',
+      isDynamic: false
+    };
+
+    const rendered = renderSubstep(substep, 2);
+    expect(rendered).toBe('### 2.1 First task');
   });
 });
 

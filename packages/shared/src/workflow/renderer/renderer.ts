@@ -34,13 +34,13 @@ export function renderTransitions(transitions: Transitions): string {
 /**
  * Render a Substep to Markdown
  * @param substep - The substep to render
- * @param parentStepNumber - The parent step number (required for proper N.M format)
+ * @param parentStepNumber - The parent step number (undefined for dynamic parent)
  */
-export function renderSubstep(substep: Substep, parentStepNumber: number): string {
+export function renderSubstep(substep: Substep, parentStepNumber: number | undefined): string {
+  const prefix = parentStepNumber !== undefined ? String(parentStepNumber) : '{N}';
   const agentSuffix = substep.agentType ? ` (${substep.agentType})` : '';
   const workflowSuffix = substep.workflows?.length ? ` [@${substep.workflows.join(', ')}]` : '';
-  // Format: ### N.M description - required for round-trip parsing
-  return `### ${String(parentStepNumber)}.${substep.id} ${substep.description}${agentSuffix}${workflowSuffix}`;
+  return `### ${prefix}.${substep.id} ${substep.description}${agentSuffix}${workflowSuffix}`;
 }
 
 /**
@@ -49,8 +49,9 @@ export function renderSubstep(substep: Substep, parentStepNumber: number): strin
 export function renderStep(step: Step): string {
   const lines: string[] = [];
 
-  // Header
-  lines.push(`## ${String(step.number)}. ${step.description}`);
+  // Header - use {N} for dynamic, number for static
+  const stepId = step.isDynamic ? '{N}' : String(step.number);
+  lines.push(`## ${stepId}. ${step.description}`);
   lines.push('');
 
   // Workflows (step-level)
@@ -81,10 +82,11 @@ export function renderStep(step: Step): string {
     lines.push('');
   }
 
-  // Substeps
-  if (step.substeps && step.number) {
+  // Substeps - pass undefined for dynamic parent
+  if (step.substeps) {
+    const parentNum = step.isDynamic ? undefined : step.number;
     for (const substep of step.substeps) {
-      lines.push(renderSubstep(substep, step.number));
+      lines.push(renderSubstep(substep, parentNum));
       lines.push('');
     }
   }
