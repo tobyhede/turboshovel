@@ -51,6 +51,7 @@ export function evaluateFailCondition(
 
     case 'CONTINUE':
     case 'DONE':
+    case 'NEXT':
       return { action: 'continue' };
 
     default:
@@ -89,6 +90,7 @@ export function evaluatePassCondition(step: Step): ConditionResult {
 
     case 'CONTINUE':
     case 'RETRY':
+    case 'NEXT':
       return { action: 'continue' };
 
     default:

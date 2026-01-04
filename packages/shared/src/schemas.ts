@@ -128,6 +128,7 @@ export const ActionSchema: z.ZodType<any> = z.lazy(() =>
     z.object({ type: z.literal('DONE') }),
     z.object({ type: z.literal('STOP'), message: z.string().optional() }),
     z.object({ type: z.literal('GOTO'), target: StepIdSchema }),
+    z.object({ type: z.literal('NEXT') }),
     z.object({
       type: z.literal('RETRY'),
       max: z.number().int().positive(),
@@ -136,6 +137,7 @@ export const ActionSchema: z.ZodType<any> = z.lazy(() =>
         z.object({ type: z.literal('DONE') }),
         z.object({ type: z.literal('STOP'), message: z.string().optional() }),
         z.object({ type: z.literal('GOTO'), target: StepIdSchema }),
+        z.object({ type: z.literal('NEXT') }),
       ]),
     }),
   ])
