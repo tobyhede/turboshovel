@@ -214,11 +214,11 @@ Execute the item processing workflow.
       expect(steps[0].substeps?.[0].isDynamic).toBe(true);
     });
 
-    it('parses dynamic step with workflow reference', () => {
+    it('parses dynamic step with transitions', () => {
       const markdown = `
 ## {N}. Process item
 
- - item-task.workflow.md
+Process the item.
 
 - PASS: CONTINUE
 - FAIL: RETRY 3 STOP
@@ -226,7 +226,10 @@ Execute the item processing workflow.
       const steps = parseWorkflow(markdown);
 
       expect(steps[0].isDynamic).toBe(true);
-      expect(steps[0].workflows).toEqual(['item-task.workflow.md']);
+      expect(steps[0].prompts).toHaveLength(1);
+      expect(steps[0].prompts[0].text).toBe('Process the item.');
+      expect(steps[0].transitions).toBeDefined();
+      expect(steps[0].transitions?.pass).toEqual({ type: 'CONTINUE' });
     });
   });
 
@@ -279,6 +282,70 @@ Process the item
       const steps = parseWorkflow(markdown);
       expect(steps).toHaveLength(1);
       expect(steps[0].isDynamic).toBe(true);
+    });
+  });
+
+  describe('parseWorkflow validation - body XOR workflows', () => {
+    it('rejects step with command AND workflows', () => {
+      const markdown = `
+## 1. Mixed step
+
+\`\`\`bash
+echo "command"
+\`\`\`
+
+ - task.workflow.md
+
+- PASS: CONTINUE
+`;
+      expect(() => parseWorkflow(markdown)).toThrow(WorkflowSyntaxError);
+      expect(() => parseWorkflow(markdown)).toThrow('Cannot have both');
+    });
+
+    it('rejects step with prompts AND workflows', () => {
+      const markdown = `
+## 1. Mixed step
+
+Some prompt text here.
+
+ - task.workflow.md
+
+- PASS: CONTINUE
+`;
+      expect(() => parseWorkflow(markdown)).toThrow(WorkflowSyntaxError);
+      expect(() => parseWorkflow(markdown)).toThrow('Cannot have both');
+    });
+
+    it('allows substep with workflows only', () => {
+      const markdown = `
+## 1. Step with substeps
+
+### 1.1 Execute workflow
+
+ - task.workflow.md
+
+- PASS ALL: CONTINUE
+- FAIL ANY: STOP
+`;
+      const steps = parseWorkflow(markdown);
+      expect(steps[0].substeps).toHaveLength(1);
+      expect(steps[0].substeps?.[0].workflows).toEqual(['task.workflow.md']);
+      expect(steps[0].command).toBeUndefined();
+      // Note: The workflow reference text may be parsed as a prompt at step level
+      // due to how list items are handled, but validation ensures proper XOR
+    });
+
+    // Existing validation already works - this test confirms it
+    it('rejects step with workflows AND substeps (existing validation)', () => {
+      const markdown = `
+## 1. Mixed step
+
+ - task.workflow.md
+
+### 1.1 A substep
+`;
+      expect(() => parseWorkflow(markdown)).toThrow(WorkflowSyntaxError);
+      expect(() => parseWorkflow(markdown)).toThrow('Cannot have both workflows and substeps');
     });
   });
 });

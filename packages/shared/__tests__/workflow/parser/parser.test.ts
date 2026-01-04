@@ -2,18 +2,19 @@ import { describe, it, expect } from '@jest/globals';
 import { parseWorkflow } from '../../../src/workflow/parser/parser.js';
 
 describe('Step-level workflows', () => {
-  it('parses workflow list on step', () => {
+  it('parses workflow list in substep', () => {
     const markdown = `## 1. Execute
 
- - task-details.workflow.md
+### 1.1 Execute workflow
 
-Execute the task.
+ - task-details.workflow.md
 
 - PASS: CONTINUE
 - FAIL: STOP
 `;
     const steps = parseWorkflow(markdown);
-    expect(steps[0].workflows).toEqual(['task-details.workflow.md']);
+    expect(steps[0].substeps).toHaveLength(1);
+    expect(steps[0].substeps![0].workflows).toEqual(['task-details.workflow.md']);
   });
 
   it('rejects step with both workflows and substeps', () => {
@@ -31,19 +32,20 @@ Do work.
     expect(() => parseWorkflow(markdown)).toThrow(/cannot have both/i);
   });
 
-  it('parses multiple workflows on a step', () => {
+  it('parses multiple workflows on substep', () => {
     const markdown = `## 1. Execute
+
+### 1.1 Workflows
 
  - workflow-a.workflow.md
  - workflow-b.workflow.md
-
-Execute workflows in sequence.
 
 - PASS: CONTINUE
 - FAIL: STOP
 `;
     const steps = parseWorkflow(markdown);
-    expect(steps[0].workflows).toEqual([
+    expect(steps[0].substeps).toHaveLength(1);
+    expect(steps[0].substeps![0].workflows).toEqual([
       'workflow-a.workflow.md',
       'workflow-b.workflow.md'
     ]);

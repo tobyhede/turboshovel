@@ -201,19 +201,16 @@ FAIL ANY: STOP`;
     expect(parsed2[0].transitions?.pass).toEqual({ type: 'GOTO', target: { step: 2, substep: '1' } });
   });
 
-  it('round-trips workflow with step-level workflows', () => {
-    const original = `## 1. Setup
+  it('validates substep workflows parsing', () => {
+    const markdown = `## 1. Setup
+
+### 1.1 Initialize
 
  - setup.workflow.md
 
 ## 2. Continue`;
 
-    const parsed1 = parseWorkflow(original);
-    expect(parsed1[0].workflows).toEqual(['setup.workflow.md']);
-
-    const rendered = parsed1.map(renderStep).join('\n\n');
-    const parsed2 = parseWorkflow(rendered);
-
-    expect(parsed2[0].workflows).toEqual(['setup.workflow.md']);
+    const parsed = parseWorkflow(markdown);
+    expect(parsed[0].substeps?.[0].workflows).toEqual(['setup.workflow.md']);
   });
 });

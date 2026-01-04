@@ -364,6 +364,14 @@ function validateWorkflow(steps: Step[]): void {
       );
     }
 
+    // Validate: cannot have both body content and workflows
+    const hasBody = step.command || step.prompts.length > 0;
+    if (hasBody && step.workflows?.length) {
+      throw new WorkflowSyntaxError(
+        `Step ${stepLabel}: Cannot have both body (command/prompts) and workflow list`
+      );
+    }
+
     if (step.transitions) {
       // Pass stepLabel to validateAction for proper error messages
       // Keep current signature but pass 0 for dynamic steps (GOTO validation is skipped for dynamic workflows anyway)
