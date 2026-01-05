@@ -478,94 +478,37 @@ tail -f $TMPDIR/turboshovel/hooks-$(date +%Y-%m-%d).log
 - Gates executed
 - Actions taken
 
-## N-Verification
-
-Dispatch N independent agents to review, collate by consensus, cross-check exclusive findings.
-
-### Usage
-
-```bash
-/turboshovel:verify                    # Default: 2 agents
-/turboshovel:verify --count 3          # Use 3 agents
-/turboshovel:verify --agents "Explore,Plan"  # Specify agents
-```
-
-### Phases
-
-1. **Dispatch** - N agents review independently in parallel
-2. **Collate** - Compare findings:
-   - Common (N/N): All agree → implement immediately
-   - Exclusive (<N/N): Some found → pending cross-check
-3. **Cross-check** - Validate all exclusive findings
-4. **Present** - Summary with confidence levels
-
-### Output
-
-Files saved to `.work/`:
-- `{date}-verify-{index}-{time}.md` - Individual reviews
-- `{date}-verify-collated-{time}.md` - Collation report
-- `{date}-verify-crosscheck-{time}.md` - Cross-check results
-
 ## Documentation
 
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and data flow
-- **[CONVENTIONS.md](CONVENTIONS.md)** - Context file naming conventions
-- **[SETUP.md](SETUP.md)** - Detailed configuration guide
-- **[TYPESCRIPT.md](TYPESCRIPT.md)** - Creating TypeScript gates
-- **[INTEGRATION_TESTS.md](INTEGRATION_TESTS.md)** - Testing procedures
+- **[Workflow Guide](docs/WORKFLOWS.md)** - Complete guide to the Workflow System, syntax, and CLI.
+- **[Verifying by Consensus](docs/VERIFICATION.md)** - Guide to the N-Verification skill and process.
+- **[Architecture](ARCHITECTURE.md)** - System design and data flow.
+- **[Setup Guide](SETUP.md)** - Detailed configuration guide.
 
 ## Workflow System
 
-Turboshovel includes an executable workflow system that makes skills enforceable. Workflows provide structured, repeatable processes with state tracking, conditional logic, and task management.
+Turboshovel includes an executable workflow system (`@turboshovel/cli`) that makes skills enforceable.
+See **[docs/WORKFLOWS.md](docs/WORKFLOWS.md)** for the full guide.
 
-### Why Workflows?
-
-Traditional skills and agents are guidance-only. Workflows enforce process:
-
-- **State Persistence**: Survives context clears and session restarts
-- **Conditional Logic**: PASS/FAIL branches, GOTO for loops, agent-controlled decisions
-- **Step Tracking**: Monitor progress across multiple substeps
-- **Retry Management**: Automatic retry counts and limits
-- **Variable Storage**: Pass data between workflow tasks
-
-### Usage
-
-The workflow CLI is available via npm:
+### Quick Usage
 
 ```bash
 npm install -g @turboshovel/cli
-
-# Start a workflow
 tsv start my-workflow.md
 ```
 
-**For complete documentation on Workflow syntax, orchestration, and CLI commands, see [packages/cli/README.md](packages/cli/README.md).**
+## Verifying by Consensus
 
-## Development
+Dispatch N independent agents to review code and collate findings.
+See **[docs/VERIFICATION.md](docs/VERIFICATION.md)** for details.
 
-For contributors working on turboshovel itself:
+### Usage
 
 ```bash
-# Clone the repository
-git clone https://github.com/tobyhede/turboshovel.git
-cd turboshovel
-
-# Build the plugin core
-cd plugin/core
-npm install
-npm run build
-
-# Run tests
-npm test
-
-# Link CLI for local development
-cd ../../packages/cli
-npm install
-npm run build
-npm link
+/turboshovel:verify
 ```
 
-After linking, the `tsv` and `turboshovel` commands are available globally.
+## Development
 
 ## Examples
 
