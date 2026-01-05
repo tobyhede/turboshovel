@@ -178,13 +178,27 @@ export function validateAction(
       }
     }
 
-    // Step-level self-reference check: only for static steps (not dynamic)
-    if (typeof stepLabel === 'string' && stepLabel !== '{N}') {
-      const stepNum = parseInt(stepLabel, 10);
-      if (targetStepNum === stepNum && !targetSubstep) {
-        throw new WorkflowSyntaxError(
-          `Step ${stepLabel}: GOTO self creates infinite loop (use RETRY instead)`
-        );
+    // Self-reference check: prevent infinite loops at step and substep level
+    if (typeof stepLabel === 'string' && !stepLabel.startsWith('{')) {
+      // Parse stepLabel which can be '1' (step) or '1.1' (substep)
+      const parts = stepLabel.split('.');
+      const currentStepNum = parseInt(parts[0], 10);
+      const currentSubstep = parts[1]; // undefined for step-level
+
+      // Check if GOTO targets the same location
+      if (targetStepNum === currentStepNum) {
+        if (!targetSubstep && !currentSubstep) {
+          // Step-level self-reference: GOTO 1 from step 1
+          throw new WorkflowSyntaxError(
+            `Step ${stepLabel}: GOTO self creates infinite loop (use RETRY instead)`
+          );
+        }
+        if (targetSubstep && currentSubstep && targetSubstep === currentSubstep) {
+          // Substep-level self-reference: GOTO 1.1 from substep 1.1
+          throw new WorkflowSyntaxError(
+            `Substep ${stepLabel}: GOTO self creates infinite loop (use RETRY instead)`
+          );
+        }
       }
     }
   }
