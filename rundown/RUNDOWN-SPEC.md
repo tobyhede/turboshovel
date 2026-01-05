@@ -129,6 +129,11 @@ Used when a step has multiple child units (substeps or workflows).
 - `PASS` implies `PASS ALL`
 - `FAIL` implies `FAIL ANY`
 
+**Default Transitions:**
+When a step or substep does not define explicit transitions:
+- `PASS`: CONTINUE (proceed to next step/substep, or complete workflow if last)
+- `FAIL`: STOP (halt execution)
+
 ---
 
 ## 5. Actions
@@ -183,7 +188,10 @@ Parsers and executors must adhere to strict validation:
    - One or more sequential static steps (`## 1.`, `## 2.`, ...), OR
    - Exactly one dynamic step template (`## {N}.`)
 3. **Sequencing**: Static steps must be strictly sequential (1, 2, 3...).
-4. **Exclusivity**: A step cannot have both a body (command/prompts/substeps) AND a workflow list.
+4. **Exclusivity**:
+    - A step has either a body OR substeps OR a workflow list.
+    - A substep has either a body OR a workflow list.
+    - A substep cannot contain substeps.
 5. **Recursion**: `RETRY` actions cannot contain another `RETRY`.
 
 ---
