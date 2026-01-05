@@ -156,6 +156,20 @@ Actions determine what happens next.
 - Creates instance N+1 and begins execution at the first substep.
 - Use for explicit iteration control in dynamic workflows.
 
+**CONTINUE in Dynamic Context:**
+- From dynamic substep (`### N.{n}`): Returns outcome to parent step for aggregation.
+- Dynamic substeps have no fixed sibling — use `NEXT` for explicit iteration.
+- This differs from static substeps where `CONTINUE` navigates to the next sibling.
+
+**Workflow Outcomes:**
+- **PASS**: Workflow completed successfully (via `CONTINUE` to end or `DONE` action).
+- **FAIL**: Workflow did not complete (via `STOP` action, retry exhaustion, or unhandled failure).
+- Parent workflows and aggregation use only these two outcomes.
+
+**Outcome Aliases:**
+- `YES` is an alias for `PASS` (for natural-language prompts).
+- `NO` is an alias for `FAIL` (for natural-language prompts).
+
 ---
 
 ## 6. Conformance
