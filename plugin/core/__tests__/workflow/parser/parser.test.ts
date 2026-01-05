@@ -303,7 +303,7 @@ echo "command"
 - PASS: CONTINUE
 `;
       expect(() => parseWorkflow(markdown)).toThrow(WorkflowSyntaxError);
-      expect(() => parseWorkflow(markdown)).toThrow('Cannot have both');
+      expect(() => parseWorkflow(markdown)).toThrow('Violates Exclusivity Rule');
     });
 
     it('rejects step with prompts AND workflows', () => {
@@ -317,7 +317,7 @@ Some prompt text here.
 - PASS: CONTINUE
 `;
       expect(() => parseWorkflow(markdown)).toThrow(WorkflowSyntaxError);
-      expect(() => parseWorkflow(markdown)).toThrow('Cannot have both');
+      expect(() => parseWorkflow(markdown)).toThrow('Violates Exclusivity Rule');
     });
 
     it('allows substep with workflows only', () => {
@@ -349,7 +349,7 @@ Some prompt text here.
 ### 1.1 A substep
 `;
       expect(() => parseWorkflow(markdown)).toThrow(WorkflowSyntaxError);
-      expect(() => parseWorkflow(markdown)).toThrow('Cannot have both workflows and substeps');
+      expect(() => parseWorkflow(markdown)).toThrow('Violates Exclusivity Rule');
     });
   });
 
