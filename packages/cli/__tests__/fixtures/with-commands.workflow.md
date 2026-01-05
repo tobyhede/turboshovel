@@ -3,7 +3,7 @@
 Run a simple bash command.
 
 ```bash
-exit 0
+tsv test --result pass
 ```
 
 - PASS: CONTINUE
@@ -11,7 +11,9 @@ exit 0
 
 ## 2. Second step
 
-Workflow complete.
+```bash
+tsv test --result pass
+```
 
 - PASS: DONE
 - FAIL: STOP

@@ -1,9 +1,9 @@
 ## 1. Execute failing command
 
-Run a command that fails.
+Run a command that fails then succeeds.
 
 ```bash
-exit 1
+tsv test --result fail --result fail --result pass
 ```
 
 - PASS: CONTINUE
@@ -11,7 +11,9 @@ exit 1
 
 ## 2. Complete step
 
-Done.
+```bash
+tsv test --result pass
+```
 
 - PASS: DONE
 - FAIL: STOP
