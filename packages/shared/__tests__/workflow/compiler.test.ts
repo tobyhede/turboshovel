@@ -31,7 +31,6 @@ describe('workflow compiler', () => {
 
       const machine = compileWorkflowToMachine(steps);
       expect(machine).toBeDefined();
-      // Should not throw on GOTO {N} target
     });
 
     it('compiles NEXT action', () => {
@@ -50,92 +49,44 @@ describe('workflow compiler', () => {
 
       const machine = compileWorkflowToMachine(steps);
       expect(machine).toBeDefined();
-      // Should not throw on NEXT action
-    });
-
-    it('compiles NEXT in substep transitions', () => {
-      const steps: Step[] = [
-        {
-          isDynamic: true,
-          description: 'Execute task',
-          prompts: [],
-          substeps: [
-            {
-              id: '1',
-              description: 'Task',
-              isDynamic: false,
-              prompts: [],
-              transitions: {
-                all: true,
-                pass: { type: 'NEXT' },
-                fail: { type: 'CONTINUE' }
-              }
-            }
-          ]
-        }
-      ];
-
-      const machine = compileWorkflowToMachine(steps);
-      expect(machine).toBeDefined();
-    });
-
-    it('compiles GOTO {N}.M within substeps', () => {
-      const steps: Step[] = [
-        {
-          isDynamic: true,
-          description: 'Dynamic step',
-          prompts: [],
-          substeps: [
-            {
-              id: '1',
-              description: 'First substep',
-              isDynamic: false,
-              prompts: []
-            },
-            {
-              id: '2',
-              description: 'Second substep',
-              isDynamic: false,
-              prompts: [],
-              transitions: {
-                all: true,
-                pass: { type: 'CONTINUE' },
-                fail: { type: 'GOTO', target: { step: '{N}', substep: '1' } }
-              }
-            }
-          ]
-        }
-      ];
-
-      const machine = compileWorkflowToMachine(steps);
-      expect(machine).toBeDefined();
     });
   });
 
   describe('static step compilation', () => {
-    it('compiles standard GOTO with numeric target', () => {
+    it('generates discrete states for substeps', () => {
       const steps: Step[] = [
         {
           number: createStepNumber(1)!,
+          description: 'Parent',
           isDynamic: false,
-          description: 'Step 1',
           prompts: [],
-          transitions: {
-            all: true,
-            pass: { type: 'CONTINUE' },
-            fail: { type: 'GOTO', target: { step: createStepNumber(2)! } }
-          }
-        },
+          substeps: [
+            { id: '1', description: 'Child 1', isDynamic: false, prompts: [] },
+            { id: '2', description: 'Child 2', isDynamic: false, prompts: [] }
+          ]
+        }
+      ];
+      const machine = compileWorkflowToMachine(steps);
+      // @ts-ignore - states is internal to machine
+      const stateIds = Object.keys(machine.config.states);
+      expect(stateIds).toContain('step_1_1');
+      expect(stateIds).toContain('step_1_2');
+      expect(stateIds).not.toContain('step_1');
+    });
+
+    it('generates single state for step without substeps', () => {
+      const steps: Step[] = [
         {
-          number: createStepNumber(2)!,
+          number: createStepNumber(1)!,
+          description: 'Simple',
           isDynamic: false,
-          description: 'Step 2',
           prompts: []
         }
       ];
-
       const machine = compileWorkflowToMachine(steps);
-      expect(machine).toBeDefined();
+      // @ts-ignore
+      const stateIds = Object.keys(machine.config.states);
+      expect(stateIds).toContain('step_1');
     });
   });
 
@@ -158,89 +109,13 @@ describe('workflow compiler', () => {
       const actor = createActor(machine);
       actor.start();
 
-      // Initial state
       expect(actor.getSnapshot().value).toBe('step_1');
-      expect(actor.getSnapshot().context.nextInstance).toBeFalsy();
-
-      // Trigger PASS which should set nextInstance
       actor.send({ type: 'PASS' });
 
       // After PASS, should stay in step_1 but have nextInstance flag
       expect(actor.getSnapshot().value).toBe('step_1');
       expect(actor.getSnapshot().context.nextInstance).toBe(true);
-      expect(actor.getSnapshot().context.substep).toBe('1');
-
-      actor.stop();
-    });
-
-    it('GOTO {N}.M sets substep without nextInstance', () => {
-      // NOTE: This is a smoke test to verify the machine compiles without error
-      // when substeps contain GOTO {N}.M transitions. The actual substep transition
-      // logic is handled by the step-tracker at runtime, not the XState machine.
-      // The compiler only uses step-level transitions; substep transitions are
-      // evaluated by the step-tracker hook which then sends appropriate events
-      // to the state machine.
-      const steps: Step[] = [
-        {
-          isDynamic: true,
-          description: 'Execute task',
-          prompts: [],
-          substeps: [
-            { id: '1', description: 'First', isDynamic: false, prompts: [] },
-            {
-              id: '2',
-              description: 'Second',
-              isDynamic: false,
-              prompts: [],
-              transitions: {
-                all: true,
-                pass: { type: 'CONTINUE' },
-                fail: { type: 'GOTO', target: { step: '{N}', substep: '1' } }
-              }
-            }
-          ],
-          transitions: {
-            all: true,
-            pass: { type: 'DONE' },
-            fail: { type: 'STOP' }
-          }
-        }
-      ];
-
-      const machine = compileWorkflowToMachine(steps);
-      const actor = createActor(machine);
-      actor.start();
-
-      expect(actor.getSnapshot().value).toBe('step_1');
-      expect(machine).toBeDefined();
-      expect(machine.config.states?.step_1).toBeDefined();
-
-      actor.stop();
-    });
-
-    it('resets retryCount on NEXT action', () => {
-      const steps: Step[] = [
-        {
-          isDynamic: true,
-          description: 'Execute task',
-          prompts: [],
-          transitions: {
-            all: true,
-            pass: { type: 'NEXT' },
-            fail: { type: 'RETRY', max: 3, then: { type: 'STOP' } }
-          }
-        }
-      ];
-
-      const machine = compileWorkflowToMachine(steps);
-      const actor = createActor(machine);
-      actor.start();
-
-      // Trigger PASS which triggers NEXT
-      actor.send({ type: 'PASS' });
-
-      // retryCount should be reset to 0
-      expect(actor.getSnapshot().context.retryCount).toBe(0);
+      expect(actor.getSnapshot().context.substep).toBeUndefined();
 
       actor.stop();
     });

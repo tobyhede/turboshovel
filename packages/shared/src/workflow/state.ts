@@ -163,13 +163,21 @@ export class WorkflowStateManager {
     const snapshot = actor.getPersistedSnapshot() as any;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const stateValue = snapshot.value as string;
-    const stepNumStr = stateValue.startsWith('step_') ? stateValue.slice(5) : '1';
-    const stepNum = parseInt(stepNumStr, 10);
+
+    // Parse state ID: step_N or step_N_M
+    const match = /^step_(\d+)(?:_(\S+))?$/.exec(stateValue);
+    const stepNum = match ? parseInt(match[1], 10) : 1;
+    
+    // Extract substep: prefer context, fall back to ID parsing
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    let substep = snapshot.context.substep as string | undefined;
+    if (!substep && match?.[2]) {
+      substep = match[2];
+    }
+
     const step = steps.find(s => s.number === stepNum) ?? steps[0];
 
     // Extract typed values from XState context
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const substep = snapshot.context.substep as string | undefined;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const retryCount = snapshot.context.retryCount as number;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access

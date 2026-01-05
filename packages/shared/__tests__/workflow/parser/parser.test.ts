@@ -29,7 +29,7 @@ Do work.
 - PASS: CONTINUE
 - FAIL: STOP
 `;
-    expect(() => parseWorkflow(markdown)).toThrow(/cannot have both/i);
+    expect(() => parseWorkflow(markdown)).toThrow(/Violates Exclusivity Rule/i);
   });
 
   it('parses multiple workflows on substep', () => {
@@ -169,7 +169,7 @@ Do work.
 - PASS ALL: CONTINUE
 - FAIL ANY: STOP
 `;
-    expect(() => parseWorkflow(markdown)).toThrow(/cannot GOTO substep.*dynamic|use GOTO 2 instead/i);
+    expect(() => parseWorkflow(markdown)).toThrow(/substep does not exist/i);
   });
 });
 

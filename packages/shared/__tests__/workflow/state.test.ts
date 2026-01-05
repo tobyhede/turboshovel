@@ -150,6 +150,42 @@ describe('WorkflowStateManager', () => {
     });
   });
 
+  describe('updateFromActor flattened states', () => {
+    it('extracts substep ID from flattened machine state (step_N_M)', async () => {
+      const state = await manager.create('test.md', mockSteps);
+      const actor = {
+        getPersistedSnapshot: () => ({
+          value: 'step_1_2',
+          context: { variables: {}, retryCount: 0, substep: '2' }
+        })
+      };
+      
+      const updated = await manager.updateFromActor(state.id, actor as any, mockSteps);
+      expect(updated.step).toBe(1);
+      expect(updated.substep).toBe('2');
+    });
+
+    it('extracts step number from simple machine state (step_N)', async () => {
+      const state = await manager.create('test.md', mockSteps);
+      const actor = {
+        getPersistedSnapshot: () => ({
+          value: 'step_3',
+          context: { variables: {}, retryCount: 0 }
+        })
+      };
+      
+      const steps = [
+        ...mockSteps,
+        { number: 2 as StepNumber, description: 'S2', prompts: [] },
+        { number: 3 as StepNumber, description: 'S3', prompts: [] }
+      ];
+
+      const updated = await manager.updateFromActor(state.id, actor as any, steps);
+      expect(updated.step).toBe(3);
+      expect(updated.substep).toBeUndefined();
+    });
+  });
+
   describe('create with prompted flag', () => {
     it('defaults to auto mode (prompted undefined)', async () => {
       const state = await manager.create('test.md', mockSteps);
