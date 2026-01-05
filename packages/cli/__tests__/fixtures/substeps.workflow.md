@@ -6,9 +6,19 @@ Has substeps.
 
 First substep.
 
+```bash
+tsv test --result pass
+```
+
+- PASS: CONTINUE
+
 ### 1.2. Substep B
 
 Second substep.
+
+```bash
+tsv test --result fail --result pass
+```
 
 - PASS: CONTINUE
 - FAIL: RETRY 2
@@ -16,6 +26,10 @@ Second substep.
 ## 2. Complete
 
 Done.
+
+```bash
+tsv test --result pass
+```
 
 - PASS: DONE
 - FAIL: STOP

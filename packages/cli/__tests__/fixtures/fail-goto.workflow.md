@@ -2,6 +2,10 @@
 
 May fail and jump to recovery.
 
+```bash
+tsv test --result fail
+```
+
 - PASS: CONTINUE
 - FAIL: GOTO 3
 
@@ -9,12 +13,20 @@ May fail and jump to recovery.
 
 Skipped on failure.
 
+```bash
+tsv test --result pass
+```
+
 - PASS: CONTINUE
 - FAIL: STOP
 
 ## 3. Recovery step
 
 Jumped here on failure.
+
+```bash
+tsv test --result pass
+```
 
 - PASS: DONE
 - FAIL: STOP
