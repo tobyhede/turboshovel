@@ -5,6 +5,16 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
 
+// Recursively check if value contains -0 anywhere (JSON doesn't preserve -0)
+function containsNegativeZero(value: unknown): boolean {
+  if (Object.is(value, -0)) return true;
+  if (Array.isArray(value)) return value.some(containsNegativeZero);
+  if (value !== null && typeof value === 'object') {
+    return Object.values(value).some(containsNegativeZero);
+  }
+  return false;
+}
+
 describe('Session Property Tests', () => {
   // Shared variable for per-iteration testDir
   let testDir: string;
@@ -30,7 +40,7 @@ describe('Session Property Tests', () => {
       fc
         .string({ minLength: 1, maxLength: 20 })
         .filter((s) => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(s) && s !== '__proto__'),
-      fc.jsonValue().filter((v) => !Object.is(v, -0)) // Exclude -0 since JSON doesn't preserve it
+      fc.jsonValue().filter((v) => !containsNegativeZero(v)) // Exclude -0 anywhere since JSON doesn't preserve it
     )
   });
 
