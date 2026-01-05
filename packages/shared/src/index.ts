@@ -2,7 +2,21 @@
 
 // Core types and schemas
 export * from './types.js';
-export { HookInputSchema, type ParseResult, parseHookInput, SessionStateSchema, type ValidatedSessionState, WorkflowStateSchema, type ValidatedWorkflowState } from './schemas.js';
+export {
+  HookInputSchema,
+  type ParseResult,
+  parseHookInput,
+  SessionStateSchema,
+  type ValidatedSessionState,
+  WorkflowStateSchema,
+  type ValidatedWorkflowState,
+  // Schema-first exports
+  StepNumberSchema,
+  StepIdSchema,
+  ActionSchema,
+  NonRetryActionSchema,
+  TransitionsSchema,
+} from './schemas.js';
 
 // Workflow types
 export type { PendingStep } from './workflow/types.js';
