@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { parseAction, extractWorkflowList } from '../../../src/workflow/parser/helpers.js';
+import { parseAction, extractWorkflowList } from '../src/index.js';
 
 describe('parseAction NEXT', () => {
   it('parses NEXT as action', () => {

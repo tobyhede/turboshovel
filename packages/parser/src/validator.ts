@@ -1,8 +1,6 @@
-// src/workflow/parser/validator.ts
-
 import { WorkflowSyntaxError } from './types.js';
-import { StepSchema, ActionSchema } from '../../schemas.js';
-import type { Step, Action } from '../types.js';
+import { StepSchema, ActionSchema } from './schemas.js';
+import type { Step, Action } from './ast.js';
 
 /**
  * Validates a parsed workflow against Rundown specification rules.
@@ -26,7 +24,6 @@ export function validateWorkflow(steps: Step[]): void {
   }
 
   // Conformance Rule 2: Step Pattern
-  // Workflow contains EITHER static steps OR exactly one dynamic template
   const staticSteps = steps.filter(s => !s.isDynamic);
   const dynamicSteps = steps.filter(s => s.isDynamic);
 
@@ -42,7 +39,7 @@ export function validateWorkflow(steps: Step[]): void {
     );
   }
 
-  // Conformance Rule 3: Sequencing (only for static workflows)
+  // Conformance Rule 3: Sequencing
   if (staticSteps.length > 0) {
     for (let i = 0; i < steps.length; i++) {
       const expected = i + 1;
@@ -70,16 +67,13 @@ export function validateWorkflow(steps: Step[]): void {
       );
     }
 
-    // Step-level transitions
     if (step.transitions) {
       validateAction(step.transitions.pass, stepNum, undefined, steps, step);
       validateAction(step.transitions.fail, stepNum, undefined, steps, step);
     }
 
-    // Substep validation
     if (step.substeps) {
       for (const substep of step.substeps) {
-        // Conformance Rule 4: Exclusivity (Substep level)
         const sHasBody = (substep.command !== undefined) || (substep.prompts && substep.prompts.length > 0);
         const sHasWorkflows = (substep.workflows !== undefined && substep.workflows.length > 0);
         
@@ -89,7 +83,6 @@ export function validateWorkflow(steps: Step[]): void {
           );
         }
 
-        // Substep-level transitions
         if (substep.transitions) {
           validateAction(substep.transitions.pass, stepNum, substep.id, steps, step);
           validateAction(substep.transitions.fail, stepNum, substep.id, steps, step);
@@ -100,13 +93,7 @@ export function validateWorkflow(steps: Step[]): void {
 }
 
 /**
- * Validates a single action (e.g., GOTO target, loop prevention, RETRY constraints).
- * 
- * @param action The action to validate
- * @param currentStepNum The step number (0 for dynamic {N} steps)
- * @param currentSubstepId The substep ID (e.g., "1", "{n}") or undefined for step-level
- * @param steps The full steps array for reference
- * @param currentStepObj The step object containing this action
+ * Validates a single action
  */
 export function validateAction(
   action: Action,
@@ -115,7 +102,6 @@ export function validateAction(
   steps: Step[],
   currentStepObj: Step
 ): void {
-  // Schema validation
   const result = ActionSchema.safeParse(action);
   if (!result.success) {
     const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
@@ -139,7 +125,6 @@ export function validateAction(
     const targetStep = action.target.step;
     const targetSubstep = action.target.substep;
 
-    // Spec: GOTO {N} or GOTO {n} alone is invalid (must use NEXT)
     if (targetStep === '{N}' && !targetSubstep) {
       const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
       throw new WorkflowSyntaxError(
@@ -147,14 +132,12 @@ export function validateAction(
       );
     }
 
-    // Skip validation for internal dynamic substep navigation
     if (targetStep === '{N}') {
       return; 
     }
 
     const targetStepNum = targetStep as number;
 
-    // Validate step exists
     if (targetStepNum < 1 || targetStepNum > steps.length) {
       const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
       throw new WorkflowSyntaxError(
@@ -163,8 +146,6 @@ export function validateAction(
     }
 
     const targetStepObj = steps[targetStepNum - 1];
-
-    // Spec: Cannot GOTO from outside into a dynamic step or dynamic substep
     const isTargetDynamic = targetStepObj.isDynamic;
     const isInsideDynamicStep = isDynamicContext && targetStepNum === currentStepNum;
 
@@ -175,9 +156,7 @@ export function validateAction(
       );
     }
 
-    // Validate substep (if specified)
     if (targetSubstep) {
-      // Step must have substeps
       if (!targetStepObj.substeps || targetStepObj.substeps.length === 0) {
         const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
         throw new WorkflowSyntaxError(
@@ -185,7 +164,6 @@ export function validateAction(
         );
       }
 
-      // Spec: GOTO {n} alone is invalid
       if (targetSubstep === '{n}') {
         const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
         throw new WorkflowSyntaxError(
@@ -193,10 +171,8 @@ export function validateAction(
         );
       }
 
-      // Substep must exist
       const substepExists = targetStepObj.substeps.some(s => s.id === targetSubstep);
       if (!substepExists) {
-        // If target step is dynamic, provide more specific error
         if (targetStepObj.isDynamic) {
            const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
            throw new WorkflowSyntaxError(
@@ -211,7 +187,6 @@ export function validateAction(
       }
     }
 
-    // Self-reference check: prevent infinite loops
     if (targetStepNum === currentStepNum && targetSubstep === currentSubstepId) {
       const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
       throw new WorkflowSyntaxError(
@@ -220,7 +195,6 @@ export function validateAction(
     }
   }
 
-  // Recurse into RETRY exhaustion action
   if (action.type === 'RETRY') {
     validateAction(action.then, currentStepNum, currentSubstepId, steps, currentStepObj);
   }

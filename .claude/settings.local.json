@@ -20,7 +20,8 @@
       "Skill(cipherpowers:brainstorm)",
       "Skill(cipherpowers:plan)",
       "Bash(mkdir:*)",
-      "mcp__serena__activate_project"
+      "mcp__serena__activate_project",
+      "Bash(npm run cli:*)"
     ],
     "deny": [],
     "ask": []

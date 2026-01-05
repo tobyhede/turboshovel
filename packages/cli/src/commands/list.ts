@@ -41,7 +41,7 @@ export function registerListCommand(program: Command): void {
           const totalSteps = await getStepCount(cwd, state.workflow);
           const stepStr = `${String(state.step)}/${String(totalSteps)}`;
 
-          printWorkflowListEntry(state.id, status, stepStr, state.workflow);
+          printWorkflowListEntry(state.id, status, stepStr, state.workflow, state.title);
         }
       });
     });

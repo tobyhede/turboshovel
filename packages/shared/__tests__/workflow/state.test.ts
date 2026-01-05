@@ -3,7 +3,7 @@ import { mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { WorkflowStateManager } from '../../src/workflow/state.js';
-import { type Step, type StepNumber } from '../../src/workflow/types.js';
+import { type Step, type StepNumber, type Workflow } from '../../src/workflow/types.js';
 
 describe('WorkflowStateManager', () => {
   let testDir: string;
@@ -11,8 +11,14 @@ describe('WorkflowStateManager', () => {
   const mockSteps: Step[] = [{
     number: 1 as StepNumber,
     description: 'Initial step',
+    isDynamic: false,
     prompts: []
   }];
+  const mockWorkflow: Workflow = {
+    title: 'Test Workflow',
+    description: 'A test',
+    steps: mockSteps
+  };
 
   beforeEach(async () => {
     testDir = await mkdtemp(join(tmpdir(), 'ws-test-'));
@@ -25,7 +31,7 @@ describe('WorkflowStateManager', () => {
 
   describe('getChildWorkflowResult', () => {
     it('should return pass when child has completed=true', async () => {
-      const child = await manager.create('child.workflow.md', mockSteps);
+      const child = await manager.create('child.workflow.md', mockWorkflow);
       await manager.update(child.id, { variables: { completed: true } });
 
       const result = await manager.getChildWorkflowResult(child.id);
@@ -33,7 +39,7 @@ describe('WorkflowStateManager', () => {
     });
 
     it('should return fail when child has blocked=true', async () => {
-      const child = await manager.create('child.workflow.md', mockSteps);
+      const child = await manager.create('child.workflow.md', mockWorkflow);
       await manager.update(child.id, { variables: { blocked: true } });
 
       const result = await manager.getChildWorkflowResult(child.id);
@@ -41,7 +47,7 @@ describe('WorkflowStateManager', () => {
     });
 
     it('should return null when child is still active', async () => {
-      const child = await manager.create('child.workflow.md', mockSteps);
+      const child = await manager.create('child.workflow.md', mockWorkflow);
       await manager.setActive(child.id);
 
       const result = await manager.getChildWorkflowResult(child.id);
@@ -54,7 +60,7 @@ describe('WorkflowStateManager', () => {
     });
 
     it('should return null when child is stashed', async () => {
-      const child = await manager.create('child.workflow.md', mockSteps);
+      const child = await manager.create('child.workflow.md', mockWorkflow);
       await manager.setActive(child.id);
       await manager.stash();
 
@@ -66,11 +72,11 @@ describe('WorkflowStateManager', () => {
   describe('WorkflowStateManager substep initialization', () => {
     it('initializes substepStates when step has static substeps', async () => {
       const substeps = [
-        { id: '1', description: 'First reviewer', isDynamic: false },
-        { id: '2', description: 'Second reviewer', isDynamic: false }
+        { id: '1', description: 'First reviewer', isDynamic: false, prompts: [] },
+        { id: '2', description: 'Second reviewer', isDynamic: false, prompts: [] }
       ];
 
-      const state = await manager.create('test.workflow.md', mockSteps);
+      const state = await manager.create('test.workflow.md', mockWorkflow);
       await manager.initializeSubsteps(state.id, substeps);
 
       const updated = await manager.load(state.id);
@@ -85,10 +91,10 @@ describe('WorkflowStateManager', () => {
 
     it('does not initialize for dynamic substeps', async () => {
       const substeps = [
-        { id: '{n}', description: 'Dynamic step', isDynamic: true }
+        { id: '{n}', description: 'Dynamic step', isDynamic: true, prompts: [] }
       ];
 
-      const state = await manager.create('test.workflow.md', mockSteps);
+      const state = await manager.create('test.workflow.md', mockWorkflow);
       await manager.initializeSubsteps(state.id, substeps);
 
       const updated = await manager.load(state.id);
@@ -98,7 +104,7 @@ describe('WorkflowStateManager', () => {
 
   describe('WorkflowStateManager dynamic substeps', () => {
     it('adds dynamic substep with incrementing ID', async () => {
-      const state = await manager.create('test.workflow.md', mockSteps);
+      const state = await manager.create('test.workflow.md', mockWorkflow);
       await manager.update(state.id, { substepStates: [] });
 
       const id1 = await manager.addDynamicSubstep(state.id);
@@ -116,7 +122,7 @@ describe('WorkflowStateManager', () => {
 
   describe('WorkflowStateManager substep lifecycle', () => {
     it('binds agent to substep', async () => {
-      const state = await manager.create('test.workflow.md', mockSteps);
+      const state = await manager.create('test.workflow.md', mockWorkflow);
       await manager.update(state.id, {
         substepStates: [{ id: '1', status: 'pending' }]
       });
@@ -133,7 +139,7 @@ describe('WorkflowStateManager', () => {
     });
 
     it('completes substep with result', async () => {
-      const state = await manager.create('test.workflow.md', mockSteps);
+      const state = await manager.create('test.workflow.md', mockWorkflow);
       await manager.update(state.id, {
         substepStates: [{ id: '1', status: 'running', agentId: 'agent-123' }]
       });
@@ -152,7 +158,7 @@ describe('WorkflowStateManager', () => {
 
   describe('updateFromActor flattened states', () => {
     it('extracts substep ID from flattened machine state (step_N_M)', async () => {
-      const state = await manager.create('test.md', mockSteps);
+      const state = await manager.create('test.md', mockWorkflow);
       const actor = {
         getPersistedSnapshot: () => ({
           value: 'step_1_2',
@@ -166,7 +172,7 @@ describe('WorkflowStateManager', () => {
     });
 
     it('extracts step number from simple machine state (step_N)', async () => {
-      const state = await manager.create('test.md', mockSteps);
+      const state = await manager.create('test.md', mockWorkflow);
       const actor = {
         getPersistedSnapshot: () => ({
           value: 'step_3',
@@ -176,8 +182,8 @@ describe('WorkflowStateManager', () => {
       
       const steps = [
         ...mockSteps,
-        { number: 2 as StepNumber, description: 'S2', prompts: [] },
-        { number: 3 as StepNumber, description: 'S3', prompts: [] }
+        { number: 2 as StepNumber, description: 'S2', isDynamic: false, prompts: [] },
+        { number: 3 as StepNumber, description: 'S3', isDynamic: false, prompts: [] }
       ];
 
       const updated = await manager.updateFromActor(state.id, actor as any, steps);
@@ -188,12 +194,12 @@ describe('WorkflowStateManager', () => {
 
   describe('create with prompted flag', () => {
     it('defaults to auto mode (prompted undefined)', async () => {
-      const state = await manager.create('test.md', mockSteps);
+      const state = await manager.create('test.md', mockWorkflow);
       expect(state.prompted).toBeUndefined();
     });
 
     it('accepts prompted option', async () => {
-      const state = await manager.create('test.md', mockSteps, { prompted: true });
+      const state = await manager.create('test.md', mockWorkflow, { prompted: true });
       expect(state.prompted).toBe(true);
     });
   });

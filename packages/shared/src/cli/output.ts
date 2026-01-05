@@ -122,7 +122,9 @@ export function printWorkflowListEntry(
   id: string,
   status: string,
   step: string,
-  file: string
+  file: string,
+  title?: string
 ): void {
-  console.log(`${id}  ${status}  ${step}  ${file}`);
+  const titleStr = title ? `  [${title}]` : '';
+  console.log(`${id}  ${status}  ${step}  ${file}${titleStr}`);
 }

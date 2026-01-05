@@ -1,0 +1,117 @@
+import { z } from 'zod';
+
+/**
+ * Maximum valid step number (prevent overflow, keep IDs reasonable)
+ */
+export const MAX_STEP_NUMBER = 999999;
+
+/**
+ * Zod schema for StepNumber branded type
+ */
+export const StepNumberSchema = z
+  .number()
+  .int('Step number must be an integer')
+  .positive('Step number must be positive')
+  .max(MAX_STEP_NUMBER, 'Step number exceeds maximum')
+  .brand<'StepNumber'>();
+
+/**
+ * StepNumber type derived from schema
+ */
+export type StepNumber = z.output<typeof StepNumberSchema>;
+
+/**
+ * Zod schema for StepId
+ */
+export const StepIdSchema = z.object({
+  step: z.union([StepNumberSchema, z.literal('{N}')]),
+  substep: z.string().optional(),
+});
+
+/**
+ * StepId type derived from schema
+ */
+export type StepId = Readonly<z.output<typeof StepIdSchema>>;
+
+/**
+ * Non-recursive action types
+ */
+export const NonRetryActionSchema = z.union([
+  z.object({ type: z.literal('CONTINUE') }),
+  z.object({ type: z.literal('DONE') }),
+  z.object({ type: z.literal('STOP'), message: z.string().optional() }),
+  z.object({ type: z.literal('GOTO'), target: StepIdSchema }),
+  z.object({ type: z.literal('NEXT') }),
+]);
+
+export type NonRetryAction = Readonly<z.output<typeof NonRetryActionSchema>>;
+
+/**
+ * Zod schema for Action
+ */
+export const ActionSchema = z.union([
+  NonRetryActionSchema,
+  z.object({
+    type: z.literal('RETRY'),
+    max: z.number().int().positive(),
+    then: NonRetryActionSchema,
+  }),
+]);
+
+export type Action = Readonly<z.output<typeof ActionSchema>>;
+
+/**
+ * Zod schema for Transitions
+ */
+export const TransitionsSchema = z.union([
+  z.object({
+    all: z.literal(true),
+    pass: ActionSchema,
+    fail: ActionSchema,
+  }),
+  z.object({
+    all: z.literal(false),
+    pass: ActionSchema,
+    fail: ActionSchema,
+  }),
+]);
+
+export type Transitions = Readonly<z.output<typeof TransitionsSchema>>;
+
+/**
+ * Zod schema for Substep
+ */
+export const SubstepSchema = z.object({
+  id: z.string(),
+  description: z.string(),
+  agentType: z.string().optional(),
+  isDynamic: z.boolean(),
+  workflows: z.array(z.string()).optional(),
+  command: z.object({ code: z.string() }).optional(),
+  prompts: z.array(z.object({ text: z.string() })),
+  transitions: TransitionsSchema.optional(),
+});
+
+/**
+ * Zod schema for Step
+ */
+export const StepSchema = z.object({
+  number: StepNumberSchema.optional(),
+  isDynamic: z.boolean(),
+  description: z.string(),
+  command: z.object({ code: z.string() }).optional(),
+  prompts: z.array(z.object({ text: z.string() })),
+  transitions: TransitionsSchema.optional(),
+  substeps: z.array(SubstepSchema).optional(),
+  workflows: z.array(z.string()).optional(),
+  nestedWorkflow: z.string().optional(), // @deprecated
+});
+
+/**
+ * Zod schema for Workflow
+ */
+export const WorkflowSchema = z.object({
+  title: z.string().optional(),
+  description: z.string().optional(),
+  steps: z.array(StepSchema),
+});

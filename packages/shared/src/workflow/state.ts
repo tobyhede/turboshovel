@@ -10,7 +10,8 @@ import {
   type Substep,
   type SubstepState,
   type Step,
-  type StepNumber
+  type StepNumber,
+  type Workflow
 } from './types.js';
 import type { StepId } from './step-id.js';
 import { WorkflowStateSchema } from '../schemas.js';
@@ -35,7 +36,7 @@ interface CreateOptions {
   readonly agentId?: string;
   readonly parentWorkflowId?: string;
   readonly parentStepId?: StepId;
-  readonly prompted?: boolean;  // Add this line
+  readonly prompted?: boolean;
 }
 
 export class WorkflowStateManager {
@@ -57,17 +58,18 @@ export class WorkflowStateManager {
     return path.join(this.stateDir, `${id}.json`);
   }
 
-  async create(workflow: string, steps: Step[], options?: CreateOptions): Promise<WorkflowState> {
+  async create(workflowFile: string, workflow: Workflow, options?: CreateOptions): Promise<WorkflowState> {
     const id = generateId();
     const now = new Date().toISOString();
 
-    const initialStep = steps[0];
-    // Use step number if available, otherwise use 1 (for dynamic steps)
+    const initialStep = workflow.steps[0];
     const stepNum = initialStep.number ?? (1 as StepNumber);
 
     const state: WorkflowState = {
       id,
-      workflow,
+      workflow: workflowFile,
+      title: workflow.title,
+      description: workflow.description,
       step: stepNum,
       stepName: initialStep.description,
       retryCount: 0,
@@ -80,7 +82,7 @@ export class WorkflowStateManager {
       parentStepId: options?.parentStepId,
       startedAt: now,
       updatedAt: now,
-      prompted: options?.prompted  // Add this line (undefined = auto)
+      prompted: options?.prompted
     };
 
     await this.save(state);
@@ -107,7 +109,6 @@ export class WorkflowStateManager {
     if (!state) return null;
 
     const machine = compileWorkflowToMachine(steps);
-    // XState snapshot type requires any cast for createActor
     const actor = createActor(machine, {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
       snapshot: state.snapshot as any
@@ -158,17 +159,14 @@ export class WorkflowStateManager {
    * Update workflow state from an XState actor snapshot
    */
   async updateFromActor(id: string, actor: AnyActorRef, steps: Step[]): Promise<WorkflowState> {
-    // XState snapshot type is not fully typed - use any for snapshot access
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any
     const snapshot = actor.getPersistedSnapshot() as any;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const stateValue = snapshot.value as string;
 
-    // Parse state ID: step_N or step_N_M
     const match = /^step_(\d+)(?:_(\S+))?$/.exec(stateValue);
     const stepNum = match ? parseInt(match[1], 10) : 1;
     
-    // Extract substep: prefer context, fall back to ID parsing
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     let substep = snapshot.context.substep as string | undefined;
     if (!substep && match?.[2]) {
@@ -177,7 +175,6 @@ export class WorkflowStateManager {
 
     const step = steps.find(s => s.number === stepNum) ?? steps[0];
 
-    // Extract typed values from XState context
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const retryCount = snapshot.context.retryCount as number;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -197,7 +194,7 @@ export class WorkflowStateManager {
     try {
       await fs.unlink(this.statePath(id));
     } catch {
-      /* File may not exist, intentionally ignored */
+      /* intentionally ignored */
     }
   }
 
@@ -217,7 +214,7 @@ export class WorkflowStateManager {
       const content = await fs.readFile(this.sessionPath, 'utf8');
       session = JSON.parse(content) as SessionData;
     } catch {
-      /* Session file may not exist yet, use default */
+      /* use default */
     }
 
     session.activeWorkflow = id;
@@ -292,8 +289,6 @@ export class WorkflowStateManager {
     if (!state) throw new Error(`Workflow ${id} not found`);
 
     const existing = state.agentBindings[agentId];
-    // Object record lookup can return undefined
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!existing) throw new Error(`No binding for agent ${agentId}`);
 
     await this.update(id, {

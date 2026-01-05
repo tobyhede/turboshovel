@@ -1,6 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { validateWorkflow } from '../../../src/workflow/parser/validator.js';
-import { createStepNumber, type Step } from '../../../src/workflow/types.js';
+import { validateWorkflow, createStepNumber, type Step } from '../src/index.js';
 
 describe('validator strict rules', () => {
   const mockStep = (overrides: Partial<Step>): Step => ({
@@ -31,7 +30,7 @@ describe('validator strict rules', () => {
       const steps = [mockStep({
         number: createStepNumber(1)!,
         substeps: [{
-          id: '1', description: 'S1', isDynamic: false,
+          id: '1', description: 'S1', isDynamic: false, prompts: [],
           transitions: { all: true, pass: { type: 'GOTO', target: { step: 1 as any, substep: '1' } }, fail: { type: 'STOP' } }
         }]
       })];
@@ -39,15 +38,6 @@ describe('validator strict rules', () => {
     });
 
     it('rejects GOTO into dynamic step from outside', () => {
-      // Use two static steps, and in a separate test use a single dynamic step template.
-      // Rule 2: Cannot mix. 
-      // To test "from outside into dynamic", we'd need a dynamic context? 
-      // But Rule 2 says you can't have both. 
-      // So GOTO into dynamic is ONLY possible if you are already in that dynamic step (navigating substeps).
-      // Any other GOTO to a dynamic step is by definition "from outside" and must be rejected.
-      // BUT if we can't mix them, how can we have a GOTO target that is dynamic?
-      // Only if the TARGET is the template itself.
-      
       const steps = [
         mockStep({
           number: createStepNumber(1)!,
@@ -56,7 +46,7 @@ describe('validator strict rules', () => {
         mockStep({
           number: createStepNumber(2)!,
           description: 'Dynamic',
-          isDynamic: true // This will trigger Rule 2 first
+          isDynamic: true
         })
       ];
       expect(() => validateWorkflow(steps)).toThrow(/Invalid step pattern/);
@@ -78,7 +68,7 @@ describe('validator strict rules', () => {
       const steps = [mockStep({
         number: createStepNumber(1)!,
         prompts: [{ text: 'P' }],
-        substeps: [{ id: '1', description: 'S', isDynamic: false }]
+        substeps: [{ id: '1', description: 'S', isDynamic: false, prompts: [] }]
       })];
       expect(() => validateWorkflow(steps)).toThrow(/Violates Exclusivity Rule/);
     });

@@ -1,4 +1,4 @@
-import { type Step, type Action, type Transitions, type Substep } from '../types.js';
+import { type Step, type Action, type Transitions, type Substep, type Workflow } from '../types.js';
 import { stepIdToString } from '../step-id.js';
 
 /**
@@ -98,6 +98,30 @@ export function renderStep(step: Step): string {
   if (step.nestedWorkflow) {
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     lines.push(`@${step.nestedWorkflow}`);
+    lines.push('');
+  }
+
+  return lines.join('\n').trim();
+}
+
+/**
+ * Render a full Workflow object to Markdown
+ */
+export function renderWorkflow(workflow: Workflow): string {
+  const lines: string[] = [];
+
+  if (workflow.title) {
+    lines.push(`# ${workflow.title}`);
+    lines.push('');
+  }
+
+  if (workflow.description) {
+    lines.push(workflow.description);
+    lines.push('');
+  }
+
+  for (const step of workflow.steps) {
+    lines.push(renderStep(step));
     lines.push('');
   }
 

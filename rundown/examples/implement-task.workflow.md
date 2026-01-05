@@ -6,8 +6,8 @@ Execute a single task from the implementation plan.
 
 Execute the task exactly as specified in the plan.
 
-**tsv pass:** Implementation complete, approach unchanged
-**tsv fail:** Cannot implement without deviating from plan
+**tsv pass:** Syntax corrections, error handling details, naming, organization
+**tsv fail:** Different algorithm, library, data structure, or scope
 
 - PASS: CONTINUE
 - FAIL: STOP "BLOCKED"
@@ -18,7 +18,7 @@ Execute the task exactly as specified in the plan.
 tsv test npm run lint && tsv test npm run build
 ```
 
-- PASS: GOTO 3
+- PASS: CONTINUE
 - FAIL: GOTO 4
 
 ## 3. Tests
@@ -27,20 +27,24 @@ tsv test npm run lint && tsv test npm run build
 tsv test npm test
 ```
 
-- PASS: GOTO 5
+- PASS: CONTINUE
 - FAIL: GOTO 4
 
 ## 4. Troubleshoot
 
 Can you fix this without changing the plan's approach?
 
-**tsv pass:** Syntax, typos, imports, naming
-**tsv fail:** Algorithm, library, API changes
+**tsv yes:** Syntax, typos, imports, error handling, naming
+**tsv no:** Algorithm, library, data structure, API changes
+
+When in doubt, tsv no.
 
 - PASS: GOTO 2
 - FAIL: STOP "BLOCKED"
 
 ## 5. Complete
+
+Task passed all checks.
 
 ```
 STATUS: OK

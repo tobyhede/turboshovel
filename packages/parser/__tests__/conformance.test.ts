@@ -2,11 +2,11 @@ import { describe, it, expect } from '@jest/globals';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { parseWorkflow } from '../../../src/workflow/parser/parser.js';
+import { parseWorkflow } from '../src/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const FIXTURES_DIR = path.join(__dirname, '../../../fixtures/workflow/conformance');
+const FIXTURES_DIR = path.join(__dirname, '../fixtures/conformance');
 
 describe('Rundown Conformance (Fixture Driven)', () => {
   describe('Valid Workflows', () => {
@@ -25,7 +25,6 @@ describe('Rundown Conformance (Fixture Driven)', () => {
 
     it.each(files)('should reject invalid workflow: %s', (file) => {
       const content = fs.readFileSync(path.join(invalidDir, file), 'utf8');
-      // We expect these to throw WorkflowSyntaxError
       expect(() => parseWorkflow(content)).toThrow();
     });
   });

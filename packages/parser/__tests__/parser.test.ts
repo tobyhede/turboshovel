@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { parseWorkflow } from '../../../src/workflow/parser/parser.js';
+import { parseWorkflow } from '../src/index.js';
 
 describe('Step-level workflows', () => {
   it('parses workflow list in substep', () => {
@@ -75,91 +75,48 @@ describe('parseWorkflow with substep workflows', () => {
   });
 });
 
-  describe('code block flexibility', () => {
-
-    it('supports sh and shell aliases for commands', () => {
-
-      const markdown = `## 1. Sh
-
+describe('code block flexibility', () => {
+  it('supports sh and shell aliases for commands', () => {
+    const markdown = `## 1. Sh
 \`\`\`sh
-
 ls
-
 \`\`\`
-
-
 
 ## 2. Shell
-
 \`\`\`shell
-
 pwd
-
 \`\`\`
-
 `;
-
-      const steps = parseWorkflow(markdown);
-
-      expect(steps[0].command?.code).toBe('ls');
-
-      expect(steps[1].command?.code).toBe('pwd');
-
-    });
-
-
-
-    it('supports prompt tag for non-executable prompts', () => {
-
-      const markdown = `## 1. Instruction
-
-\`\`\`prompt
-
-Please look at this example.
-
-\`\`\`
-
-`;
-
-      const steps = parseWorkflow(markdown);
-
-      expect(steps[0].command).toBeUndefined();
-
-      expect(steps[0].prompts[0].text).toBe('Please look at this example.');
-
-    });
-
-
-
-    it('treats other tags as passive prose', () => {
-
-      const markdown = `## 1. Example
-
-\`\`\`json
-
-{"key": "value"}
-
-\`\`\`
-
-`;
-
-      const steps = parseWorkflow(markdown);
-
-      expect(steps[0].command).toBeUndefined();
-
-      expect(steps[0].prompts[0].text).toContain('```json');
-
-      expect(steps[0].prompts[0].text).toContain('{"key": "value"}');
-
-    });
-
+    const steps = parseWorkflow(markdown);
+    expect(steps[0].command?.code).toBe('ls');
+    expect(steps[1].command?.code).toBe('pwd');
   });
 
+  it('supports prompt tag for non-executable prompts', () => {
+    const markdown = `## 1. Instruction
+\`\`\`prompt
+Please look at this example.
+\`\`\`
+`;
+    const steps = parseWorkflow(markdown);
+    expect(steps[0].command).toBeUndefined();
+    expect(steps[0].prompts[0].text).toBe('Please look at this example.');
+  });
 
+  it('treats other tags as passive prose', () => {
+    const markdown = `## 1. Example
+\`\`\`json
+{"key": "value"}
+\`\`\`
+`;
+    const steps = parseWorkflow(markdown);
+    expect(steps[0].command).toBeUndefined();
+    expect(steps[0].prompts[0].text).toContain('```json');
+    expect(steps[0].prompts[0].text).toContain('{"key": "value"}');
+  });
+});
 
-  describe('Implicit prompts with lists', () => {
-
-
+describe('Implicit prompts with lists', () => {
   it('preserves bulleted instructions in prompts', () => {
     const markdown = `## 1. Execute
 The following instructions are important:
@@ -187,8 +144,6 @@ describe('Mixed implicit and explicit prompts', () => {
 - FAIL: STOP
 `;
     const steps = parseWorkflow(markdown);
-    // Based on current implementation, this might fail!
-    // We want to ensure BOTH are present.
     const combinedPrompt = steps[0].prompts.map(p => p.text).join('\n');
     expect(combinedPrompt).toContain('Explicit instruction.');
     expect(combinedPrompt).toContain('- Implicit instruction 1');
@@ -325,10 +280,8 @@ Do work.
 - FAIL: STOP
 `;
     const steps = parseWorkflow(markdown);
-    // Single substep now gets transitions directly
     expect(steps[0].substeps![0].transitions?.pass).toEqual({ type: 'CONTINUE' });
     expect(steps[0].substeps![0].transitions?.fail).toEqual({ type: 'STOP' });
-    // Step may have undefined transitions (substep handles them)
   });
 });
 

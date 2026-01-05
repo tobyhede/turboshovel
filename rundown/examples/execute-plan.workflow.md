@@ -10,27 +10,17 @@ Read the implementation plan and review critically.
 **tsv fail:** Plan has gaps, questions, or blocking concerns
 
 - PASS: CONTINUE
-- FAIL: STOP "BLOCKED: Plan review"
+- FAIL: STOP
 
 ## 2. Execute batch
 
-Dispatch subagent(s) to implement current batch of tasks.
+### 2.{n}
+ - implement-task.workflow.md
 
-**Batch size:** {batch_size} tasks (default: 3)
+- PASS ALL: CONTINUE
+- FAIL ANY: STOP "BLOCKED: Task failed"
 
-For each task in batch, dispatch subagent with:
-- Task specification from plan
-- implement-task.workflow.md
-
-**tsv pass:** All tasks returned STATUS: OK
-**tsv fail:** Any task returned STATUS: BLOCKED
-
-- PASS: CONTINUE
-- FAIL: STOP "BLOCKED: Batch execution"
-
-## 3. Validate batch
-
-Run project verification commands.
+## 3. Validate
 
 ```bash
 tsv test npm run lint && tsv test npm run build && tsv test npm test
@@ -39,22 +29,22 @@ tsv test npm run lint && tsv test npm run build && tsv test npm test
 - PASS: CONTINUE
 - FAIL: GOTO 4
 
-## 4. Review issues
+## 4. Troubleshoot
 
 Can you fix the validation issues without changing plan approach?
 
-**tsv pass:** Syntax, typos, imports, test fixes
-**tsv fail:** Algorithm, library, API changes needed
+**tsv yes:** Syntax, typos, imports, test fixes
+**tsv no:** Algorithm, library, API changes needed
 
 - PASS: GOTO 3
 - FAIL: STOP "BLOCKED: Validation failed"
 
 ## 5. Batch complete
 
-Batch {N} completed successfully.
+Batch complete.
 
-**tsv pass:** More tasks remaining in plan
-**tsv fail:** All tasks complete
+**tsv yes:** More batches remaining
+**tsv no:** All batches complete
 
 - PASS: GOTO 2
 - FAIL: DONE

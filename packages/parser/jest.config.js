@@ -6,19 +6,18 @@ export default {
   moduleFileExtensions: ['ts', 'js', 'json'],
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1',
-    '^@turboshovel/parser$': '<rootDir>/../parser/src/index.ts',
+    '^(\.{1,2}/.*)\.js$': '$1',
   },
   transform: {
-    '^.+\\.tsx?$': [
+    '^.+\.tsx?$': [
       'ts-jest',
       {
         useESM: true,
         tsconfig: {
           module: 'NodeNext',
           moduleResolution: 'NodeNext',
-          target: 'ES2020',
-          lib: ['ES2020'],
+          target: 'ES2022',
+          lib: ['ES2022'],
           strict: true,
           esModuleInterop: true,
           allowSyntheticDefaultImports: true,

@@ -1,5 +1,3 @@
-// src/workflow/parser/parser.ts
-
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
 import type { Node } from 'unist';
@@ -10,7 +8,18 @@ import type {
   Paragraph,
   PhrasingContent
 } from 'mdast';
-import type { Step, StepNumber, Substep } from '../types.js';
+import {
+  type Step,
+  type Substep,
+  type Workflow,
+  type Command,
+  type Prompt
+} from './ast.js';
+import {
+  type StepNumber,
+  type ParsedConditional,
+  WorkflowSyntaxError
+} from './types.js';
 import {
   extractStepHeader,
   extractSubstepHeader,
@@ -18,7 +27,6 @@ import {
   convertToTransitions,
   extractWorkflowList
 } from './helpers.js';
-import { WorkflowSyntaxError, type ParsedConditional } from './types.js';
 import { validateWorkflow } from './validator.js';
 
 /**
@@ -33,10 +41,10 @@ function isHeading(node: Node): node is Heading {
  */
 function extractText(node: PhrasingContent | Heading | Paragraph | ListItem): string {
   if (node.type === 'text') {
-    return (node).value;
+    return (node as any).value;
   }
   if ('children' in node && Array.isArray(node.children)) {
-    return node.children.map((child) => extractText(child as PhrasingContent)).join('');
+    return node.children.map((child) => extractText(child as any)).join('');
   }
   return '';
 }
@@ -82,46 +90,53 @@ interface SubstepBuilder {
   agentType?: string;
   isDynamic: boolean;
   content: string;
-  command?: { code: string };              // NEW
-  prompts: { text: string }[];             // NEW
-  pendingConditionals: ParsedConditional[];  // NEW - substep-scoped
+  command?: Command;
+  prompts: Prompt[];
+  pendingConditionals: ParsedConditional[];
 }
 
 interface StepBuilder {
-  number?: StepNumber;           // Optional - undefined for dynamic steps
-  isDynamic: boolean;            // Required - true for {N} steps, false for static
+  number?: StepNumber;
+  isDynamic: boolean;
   description: string;
-  command?: { code: string };
-  prompts: { text: string }[];
+  command?: Command;
+  prompts: Prompt[];
   substeps: Substep[];
   pendingSubstep?: SubstepBuilder;
-  content: string;  // Accumulated step body content for workflow extraction
+  content: string;
 }
 
 /**
- * Parse workflow markdown into Step array
+ * Parse workflow markdown into Step array (compatibility wrapper)
  */
 export function parseWorkflow(markdown: string): Step[] {
-  // Parse markdown to AST
+  const doc = parseWorkflowDocument(markdown);
+  return [...doc.steps];
+}
+
+/**
+ * Parse entire workflow document including metadata
+ */
+export function parseWorkflowDocument(markdown: string): Workflow {
   const tree = fromMarkdown(markdown);
 
-  // State for walking
   const steps: Step[] = [];
+  let title: string | undefined;
+  let preamble: string = '';
+  
   let currentStep: StepBuilder | null = null;
   let pendingConditionals: ParsedConditional[] = [];
   let implicitText = '';
+  let inPreamble = true;
 
-  // Helper to finalize pending substep
   const finalizePendingSubstep = (): void => {
     if (currentStep?.pendingSubstep) {
       const ps = currentStep.pendingSubstep;
       const workflows = extractWorkflowList(ps.content);
       const transitions = convertToTransitions(ps.pendingConditionals);
 
-      // Extract implicit prompt from remaining content
       const prompts = [...ps.prompts];
       if (ps.content.trim()) {
-        // Filter out workflow list lines from content before using as prompt
         const contentWithoutWorkflows = ps.content
           .split('\n')
           .filter(line => !line.trim().startsWith('-') || !line.includes('.workflow.md'))
@@ -147,9 +162,7 @@ export function parseWorkflow(markdown: string): Step[] {
     }
   };
 
-  // Walk AST nodes
   visit(tree, (node: Node, _index, parent: Node | undefined) => {
-    // Handle H1 headings - reject if they look like step headers
     if (isHeading(node) && node.depth === 1) {
       const headingText = extractText(node);
       const looksLikeStep = /^\d+[.:\-)\s]/.test(headingText);
@@ -158,17 +171,17 @@ export function parseWorkflow(markdown: string): Step[] {
           `H1 headers (# ...) cannot be used as step headers. Use H2 (## ${headingText}) instead.`
         );
       }
+      if (!title) title = headingText;
     }
 
-    // Reject H4+ headings (Conformance Rule 1)
     if (isHeading(node) && node.depth >= 4) {
       throw new WorkflowSyntaxError(
         `H4+ headings are not allowed in workflows. Found heading at depth ${String(node.depth)}. Use ## for steps and ### for substeps only.`
       );
     }
 
-    // Handle H2 headings - these are step headers
     if (isHeading(node) && node.depth === 2) {
+      inPreamble = false;
       finalizePendingSubstep();
 
       if (currentStep) {
@@ -191,10 +204,8 @@ export function parseWorkflow(markdown: string): Step[] {
       }
     }
 
-    // Handle H3 headings - these are substep headers
     if (isHeading(node) && node.depth === 3 && currentStep) {
-      // Before finalizing, give step-level pendingConditionals to outgoing substep
-      // (they were accumulated after that substep's header and belong to it)
+      inPreamble = false;
       if (currentStep.pendingSubstep) {
         currentStep.pendingSubstep.pendingConditionals.push(...pendingConditionals);
         pendingConditionals = [];
@@ -205,7 +216,6 @@ export function parseWorkflow(markdown: string): Step[] {
       const parsed = extractSubstepHeader(headingText);
 
       if (parsed) {
-        // Validate substep parent matches current step
         if (currentStep.isDynamic) {
           if (parsed.stepRef !== '{N}') {
             throw new WorkflowSyntaxError(
@@ -248,20 +258,18 @@ export function parseWorkflow(markdown: string): Step[] {
           agentType: parsed.agentType,
           isDynamic: parsed.isDynamic,
           content: '',
-          command: undefined,         // NEW
-          prompts: [],                // NEW
-          pendingConditionals: []     // NEW
+          command: undefined,
+          prompts: [],
+          pendingConditionals: []
         };
       }
     }
 
-    // Handle code blocks
     if (node.type === 'code' && currentStep) {
       const codeNode = node as Code;
       const lang = codeNode.lang?.split(/\s+/)[0].toLowerCase();
 
       if (lang === 'bash' || lang === 'sh' || lang === 'shell') {
-        // Route to substep if one is pending
         if (currentStep.pendingSubstep) {
           if (currentStep.pendingSubstep.command) {
             throw new WorkflowSyntaxError(
@@ -270,7 +278,6 @@ export function parseWorkflow(markdown: string): Step[] {
           }
           currentStep.pendingSubstep.command = { code: codeNode.value.trim() };
         } else {
-          // Existing step-level logic
           if (currentStep.command) {
             const stepLabel = currentStep.isDynamic ? '{N}' : String(currentStep.number);
             throw new WorkflowSyntaxError(
@@ -280,15 +287,13 @@ export function parseWorkflow(markdown: string): Step[] {
           currentStep.command = { code: codeNode.value.trim() };
         }
       } else if (lang === 'prompt') {
-        // Extract as explicit prompt (instructional)
         if (currentStep.pendingSubstep) {
           currentStep.pendingSubstep.prompts.push({ text: codeNode.value.trim() });
         } else {
           currentStep.prompts.push({ text: codeNode.value.trim() });
         }
       } else {
-        // Passive block (json, yaml, etc.) - treat as Prose (implicit text)
-        const passiveText = `\n\`\`\`${codeNode.lang ?? ''}\n${codeNode.value}\n\`\`\`\n`;
+        const passiveText = '\n' + '```' + (codeNode.lang ?? '') + '\n' + codeNode.value + '\n' + '```' + '\n';
         if (currentStep.pendingSubstep) {
           currentStep.pendingSubstep.content += passiveText;
         } else {
@@ -297,61 +302,62 @@ export function parseWorkflow(markdown: string): Step[] {
       }
     }
 
-    // Handle paragraphs - SKIP if inside a list item to avoid double-processing
-    if (node.type === 'paragraph' && currentStep && parent && parent.type !== 'listItem') {
+    if (node.type === 'paragraph' && parent && parent.type !== 'listItem') {
       const paragraphNode = node as Paragraph;
-
-      if (hasPromptMarker(paragraphNode)) {
-        const promptText = extractPromptText(paragraphNode);
-        if (promptText) {
-          // Route to substep if one is pending
-          if (currentStep.pendingSubstep) {
-            currentStep.pendingSubstep.prompts.push({ text: promptText });
-          } else {
-            currentStep.prompts.push({ text: promptText });
-          }
-        }
-        return;
-      }
-
       const text = extractText(paragraphNode);
-      const lines = text.split('\n');
-      let hasConditional = false;
 
-      for (const line of lines) {
-        const conditional = parseConditional(line);
-        if (conditional) {
-          // Route conditionals to pending substep if one exists, otherwise step-level
-          if (currentStep.pendingSubstep) {
-            currentStep.pendingSubstep.pendingConditionals.push(conditional);
-          } else {
-            pendingConditionals.push(conditional);
-          }
-          hasConditional = true;
-        } else if (line.trim()) {
-          // Route implicit text to substep content
-          if (currentStep.pendingSubstep) {
-            currentStep.pendingSubstep.content += line.trim() + '\n';
-          } else {
-            implicitText += line.trim() + '\n';
-          }
-        }
+      if (inPreamble) {
+        preamble += text + '\n';
+        return;
       }
 
-      if (hasConditional) {
-        return;
+      if (currentStep) {
+        if (hasPromptMarker(paragraphNode)) {
+          const promptText = extractPromptText(paragraphNode);
+          if (promptText) {
+            if (currentStep.pendingSubstep) {
+              currentStep.pendingSubstep.prompts.push({ text: promptText });
+            } else {
+              currentStep.prompts.push({ text: promptText });
+            }
+          }
+          return;
+        }
+
+        const lines = text.split('\n');
+        let hasConditional = false;
+
+        for (const line of lines) {
+          const conditional = parseConditional(line);
+          if (conditional) {
+            if (currentStep.pendingSubstep) {
+              currentStep.pendingSubstep.pendingConditionals.push(conditional);
+            } else {
+              pendingConditionals.push(conditional);
+            }
+            hasConditional = true;
+          } else if (line.trim()) {
+            if (currentStep.pendingSubstep) {
+              currentStep.pendingSubstep.content += line.trim() + '\n';
+            } else {
+              implicitText += line.trim() + '\n';
+            }
+          }
+        }
+
+        if (hasConditional) {
+          return;
+        }
       }
     }
 
-    // Handle list items
     if (node.type === 'listItem' && currentStep) {
       const listItemNode = node as ListItem;
       const firstParagraph = listItemNode.children.find((c) => c.type === 'paragraph');
       if (firstParagraph) {
-        const text = extractText(firstParagraph);
+        const text = extractText(firstParagraph as Paragraph);
         const conditional = parseConditional(text);
         if (conditional) {
-          // Route conditionals to pending substep if one exists, otherwise step-level
           if (currentStep.pendingSubstep) {
             currentStep.pendingSubstep.pendingConditionals.push(conditional);
           } else {
@@ -360,12 +366,8 @@ export function parseWorkflow(markdown: string): Step[] {
         } else if (currentStep.pendingSubstep) {
           currentStep.pendingSubstep.content += ' - ' + text + '\n';
         } else {
-          // Accumulate list items to step content (for step-level workflow extraction)
           const itemText = ' - ' + text + '\n';
           currentStep.content += itemText;
-
-          // AND to implicitText (so they appear in the prompt)
-          // BUT only if it doesn't look like a workflow reference
           if (!/^\S+\.workflow\.md$/.test(text.trim())) {
             implicitText += itemText;
           }
@@ -376,16 +378,17 @@ export function parseWorkflow(markdown: string): Step[] {
 
   finalizePendingSubstep();
 
-  // currentStep may have been set during H2 heading processing
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (currentStep) {
     steps.push(finalizeStep(currentStep, pendingConditionals, implicitText));
   }
 
-  // Use the spec-aligned validator
   validateWorkflow(steps);
 
-  return steps;
+  return {
+    title,
+    description: preamble.trim() || undefined,
+    steps
+  };
 }
 
 function finalizeStep(

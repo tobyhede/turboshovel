@@ -6,6 +6,7 @@ import * as path from 'path';
 import {
   WorkflowStateManager,
   parseWorkflow,
+  parseWorkflowDocument,
   WorkflowSyntaxError,
   stepIdToString,
   parseStepIdFromString,
@@ -86,9 +87,9 @@ export function registerStartCommand(program: Command): void {
             }
 
             const content = await fs.readFile(workflowPath, 'utf8');
-            const steps = parseWorkflow(content);
+            const workflow = parseWorkflowDocument(content);
 
-            if (steps.length === 0) {
+            if (workflow.steps.length === 0) {
               console.error('Error: Child workflow has no steps');
               process.exit(1);
             }
@@ -97,7 +98,7 @@ export function registerStartCommand(program: Command): void {
             const parentState = await manager.load(state.id);
             const parentPrompted = parentState?.prompted ?? false;
 
-            const childState = await manager.create(pending.workflow, steps, {
+            const childState = await manager.create(pending.workflow, workflow, {
               agentId: options.agent,
               parentWorkflowId: state.id,
               parentStepId: pending.stepId,
@@ -118,7 +119,7 @@ export function registerStartCommand(program: Command): void {
             await manager.update(childState.id, { lastAction: 'START' });
 
             // Run execution loop (chains command steps automatically)
-            const result = await runExecutionLoop(manager, childState.id, steps, cwd, parentPrompted);
+            const result = await runExecutionLoop(manager, childState.id, [...workflow.steps], cwd, parentPrompted);
 
             if (result === 'blocked') {
               process.exit(1);
@@ -131,19 +132,19 @@ export function registerStartCommand(program: Command): void {
         if (file && !options.step && !options.agent) {
           const filePath = path.isAbsolute(file) ? file : path.join(cwd, file);
           const content = await fs.readFile(filePath, 'utf8');
-          const steps = parseWorkflow(content);
+          const workflow = parseWorkflowDocument(content);
 
-          if (steps.length === 0) {
+          if (workflow.steps.length === 0) {
             console.error('Error: Workflow has no steps');
             process.exit(1);
           }
 
           const workflowPath = path.isAbsolute(file) ? path.relative(cwd, file) : file;
-          const state = await manager.create(workflowPath, steps, { prompted: options.prompted });
+          const state = await manager.create(workflowPath, workflow, { prompted: options.prompted });
           await manager.setActive(state.id);
 
-          if (steps[0].substeps && steps[0].substeps.length > 0) {
-            await manager.initializeSubsteps(state.id, steps[0].substeps);
+          if (workflow.steps[0].substeps && workflow.steps[0].substeps.length > 0) {
+            await manager.initializeSubsteps(state.id, workflow.steps[0].substeps);
           }
 
           // Print metadata and action
@@ -154,7 +155,7 @@ export function registerStartCommand(program: Command): void {
           await manager.update(state.id, { lastAction: 'START' });
 
           // Run execution loop (chains command steps automatically)
-          const result = await runExecutionLoop(manager, state.id, steps, cwd, !!options.prompted);
+          const result = await runExecutionLoop(manager, state.id, [...workflow.steps], cwd, !!options.prompted);
 
           if (result === 'blocked') {
             process.exit(1);

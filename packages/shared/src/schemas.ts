@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MAX_STEP_NUMBER } from './workflow/types.js';
+export * from '@turboshovel/parser';
 
 /**
  * Zod schema for tool_input in Step tool calls
@@ -97,134 +97,10 @@ export const SessionStateSchema = z.object({
 
 export type ValidatedSessionState = z.infer<typeof SessionStateSchema>;
 
-/**
- * Zod schema for StepNumber branded type
- * Uses Zod's native .brand() - schema is source of truth
- */
-export const StepNumberSchema = z
-  .number()
-  .int('Step number must be an integer')
-  .positive('Step number must be positive')
-  .max(MAX_STEP_NUMBER, 'Step number exceeds maximum')
-  .brand<'StepNumber'>();
-
-/**
- * StepNumber type derived from schema
- * This is the canonical definition - types.ts re-exports this
- */
-export type StepNumber = z.output<typeof StepNumberSchema>;
-
-/**
- * Zod schema for StepId
- * Validates object structure with branded StepNumber or dynamic '{N}'
- */
-export const StepIdSchema = z.object({
-  step: z.union([StepNumberSchema, z.literal('{N}')]),
-  substep: z.string().optional(),
-});
-
-/**
- * StepId type derived from schema
- * Represents a step position: numeric (3, 3.1) or dynamic ({N}.1)
- * Wrapped in Readonly to preserve immutability contract
- */
-export type StepId = Readonly<z.output<typeof StepIdSchema>>;
-
-/**
- * Non-recursive action types (everything except RETRY)
- */
-export const NonRetryActionSchema = z.union([
-  z.object({ type: z.literal('CONTINUE') }),
-  z.object({ type: z.literal('DONE') }),
-  z.object({ type: z.literal('STOP'), message: z.string().optional() }),
-  z.object({ type: z.literal('GOTO'), target: StepIdSchema }),
-  z.object({ type: z.literal('NEXT') }),
-]);
-
-/**
- * NonRetryAction type derived from schema
- * Wrapped in Readonly to preserve immutability contract
- */
-export type NonRetryAction = Readonly<z.output<typeof NonRetryActionSchema>>;
-
-/**
- * Zod schema for Action
- * Validates workflow transition actions (CONTINUE, DONE, STOP, GOTO, NEXT, RETRY)
- */
-export const ActionSchema = z.union([
-  NonRetryActionSchema,
-  z.object({
-    type: z.literal('RETRY'),
-    max: z.number().int().positive(),
-    then: NonRetryActionSchema,
-  }),
-]);
-
-/**
- * Action type derived from schema
- * Discriminated union for workflow actions
- * Wrapped in Readonly to preserve immutability contract
- */
-export type Action = Readonly<z.output<typeof ActionSchema>>;
-
-/**
- * Zod schema for Transitions
- * Validates outcome-to-action mappings for step completion
- */
-export const TransitionsSchema = z.union([
-  z.object({
-    all: z.literal(true),
-    pass: ActionSchema,
-    fail: ActionSchema,
-  }),
-  z.object({
-    all: z.literal(false),
-    pass: ActionSchema,
-    fail: ActionSchema,
-  }),
-]);
-
-/**
- * Transitions type derived from schema
- * Discriminated by 'all' field: true = pass all, false = pass any
- * Wrapped in Readonly to preserve immutability contract
- */
-export type Transitions = Readonly<z.output<typeof TransitionsSchema>>;
-
-/**
- * Zod schema for Substep
- */
-export const SubstepSchema = z.object({
-  id: z.string(),
-  description: z.string(),
-  agentType: z.string().optional(),
-  isDynamic: z.boolean(),
-  workflows: z.array(z.string()).optional(),
-});
-
-/**
- * Zod schema for Step
- */
-export const StepSchema = z.object({
-  number: StepNumberSchema.optional(),
-  isDynamic: z.boolean(),
-  description: z.string(),
-  command: z.object({ code: z.string() }).optional(),
-  prompts: z.array(z.object({ text: z.string() })),
-  transitions: TransitionsSchema.optional(),
-  substeps: z.array(SubstepSchema).optional(),
-  workflows: z.array(z.string()).optional(),
-  nestedWorkflow: z.string().optional(), // @deprecated
-});
-
-/**
- * Zod schema for Workflow
- */
-export const WorkflowSchema = z.object({
-  name: z.string(),
-  description: z.string().optional(),
-  steps: z.array(StepSchema),
-});
+import { 
+  StepIdSchema,
+  StepNumberSchema
+} from '@turboshovel/parser';
 
 /**
  * Schema for pending step.
@@ -251,6 +127,8 @@ const SubstepStateSchema = z.object({
 export const WorkflowStateSchema = z.object({
   id: z.string(),
   workflow: z.string(),
+  title: z.string().optional(),
+  description: z.string().optional(),
   step: StepNumberSchema,
   substep: z.string().optional(),
   stepName: z.string(),

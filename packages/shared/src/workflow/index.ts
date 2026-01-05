@@ -1,9 +1,6 @@
-// Workflow module exports
 export * from './types.js';
 export * from './step-id.js';
-export * from './state.js';
-export * from './transition-handler.js';
-export * from './parser/index.js';
-export * from './compiler.js';
-export * from './renderer/renderer.js';
-export * from './executor.js';
+export { WorkflowStateManager } from './state.js';
+export { compileWorkflowToMachine } from './compiler.js';
+export { executeCommand } from './executor.js';
+export { renderWorkflow } from './renderer/renderer.js';

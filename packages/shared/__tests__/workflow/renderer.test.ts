@@ -6,7 +6,7 @@ import {
   renderSubstep,
   renderStep
 } from '../../src/workflow/renderer/renderer.js';
-import { parseWorkflow } from '../../src/workflow/parser/parser.js';
+import { parseWorkflow } from '../../src/workflow/index.js';
 import { createStepNumber, type Step, type Substep, type StepNumber } from '../../src/workflow/types.js';
 
 describe('renderAction', () => {
