@@ -146,10 +146,12 @@ Actions determine what happens next.
 
 **GOTO Rules:**
 - Target ID must exist.
-- Cannot GOTO into a dynamic step instance (use the parent ID).
-- GOTO clears current retry counters.
-- `GOTO {N}.M` navigates within the current instance to substep M.
-- Use `NEXT` to advance to the next instance (not `GOTO {N}`).
+- `GOTO {N}` alone is invalid — use `NEXT` to advance to the next dynamic instance.
+- `GOTO {N}.M` navigates within the current dynamic instance to substep M.
+- `GOTO {n}` alone is invalid (same rule applies to dynamic substeps).
+- Cannot GOTO from outside into a dynamic step or dynamic substep.
+- GOTO resets the retry counter to 0 for the target location.
+- Self-referencing GOTO (same step/substep) is rejected at compile time to prevent infinite loops.
 
 **NEXT Rules:**
 - Only valid within dynamic step context (`## {N}.`).
