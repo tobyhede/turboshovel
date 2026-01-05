@@ -1,0 +1,21 @@
+# Retry Counter Reset on GOTO
+
+Tests spec rule: "GOTO resets the retry counter to 0 for the target location"
+
+## 1. First attempt
+
+```bash
+tsv test --result fail --result fail
+```
+
+- PASS: CONTINUE
+- FAIL: RETRY 1 GOTO 2
+
+## 2. Second attempt (counter should be 0 again)
+
+```bash
+tsv test --result fail --result pass
+```
+
+- PASS: DONE
+- FAIL: RETRY 1 STOP
