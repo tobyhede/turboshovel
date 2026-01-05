@@ -25,7 +25,7 @@ describe('WorkflowStateManager', () => {
 
   describe('create', () => {
     test('creates new workflow state with generated ID', async () => {
-      const state = await manager.create('execute.workflow.md', mockSteps);
+      const state = await manager.create('execute.workflow.md', { steps: mockSteps });
 
       expect(state.id).toMatch(/^wf-\d{4}-\d{2}-\d{2}-/);
       expect(state.workflow).toBe('execute.workflow.md');
@@ -37,7 +37,7 @@ describe('WorkflowStateManager', () => {
     });
 
     test('persists state to file', async () => {
-      const state = await manager.create('test.workflow.md', mockSteps);
+      const state = await manager.create('test.workflow.md', { steps: mockSteps });
 
       const statePath = join(testDir, '.claude/turboshovel/workflows', `${state.id}.json`);
       const fileContent = await fs.readFile(statePath, 'utf8');
@@ -49,19 +49,19 @@ describe('WorkflowStateManager', () => {
 
   describe('create orchestration fields', () => {
     it('initializes pendingSteps as empty array', async () => {
-      const state = await manager.create('test.workflow.md', mockSteps);
+      const state = await manager.create('test.workflow.md', { steps: mockSteps });
       expect(state.pendingSteps).toEqual([]);
     });
 
     it('initializes agentBindings as empty object', async () => {
-      const state = await manager.create('test.workflow.md', mockSteps);
+      const state = await manager.create('test.workflow.md', { steps: mockSteps });
       expect(state.agentBindings).toEqual({});
     });
   });
 
   describe('load', () => {
     test('loads existing workflow state by ID', async () => {
-      const created = await manager.create('test.workflow.md', mockSteps);
+      const created = await manager.create('test.workflow.md', { steps: mockSteps });
       const loaded = await manager.load(created.id);
 
       expect(loaded).not.toBeNull();
@@ -72,8 +72,8 @@ describe('WorkflowStateManager', () => {
 
   describe('getActive', () => {
     test('returns active workflow from session', async () => {
-      const created = await manager.create('test.workflow.md', mockSteps);
-      await manager.setActive(created.id);
+      const created = await manager.create('test.workflow.md', { steps: mockSteps });
+      await manager.pushWorkflow(created.id);
 
       const active = await manager.getActive();
       expect(active?.id).toBe(created.id);
@@ -82,7 +82,7 @@ describe('WorkflowStateManager', () => {
 
   describe('update', () => {
     test('updates workflow state fields', async () => {
-      const created = await manager.create('test.workflow.md', mockSteps);
+      const created = await manager.create('test.workflow.md', { steps: mockSteps });
 
       const updated = await manager.update(created.id, {
         step: createStepNumber(2)!,
@@ -98,7 +98,7 @@ describe('WorkflowStateManager', () => {
 
   describe('pushPendingStep', () => {
     it('should push step with workflow to pending queue', async () => {
-      const state = await manager.create('test.workflow.md', mockSteps);
+      const state = await manager.create('test.workflow.md', { steps: mockSteps });
 
       await manager.pushPendingStep(state.id, {
         stepId: { step: createStepNumber(1)!, substep: '1' },
@@ -114,7 +114,7 @@ describe('WorkflowStateManager', () => {
 
   describe('bindAgent', () => {
     it('creates agent binding with running status', async () => {
-      const state = await manager.create('test.workflow.md', mockSteps);
+      const state = await manager.create('test.workflow.md', { steps: mockSteps });
       const stepId: StepId = { step: createStepNumber(3)!, substep: '1' };
 
       await manager.bindAgent(state.id, 'agent-xyz', stepId);
@@ -129,8 +129,8 @@ describe('WorkflowStateManager', () => {
 
   describe('stash', () => {
     it('moves active workflow to stashed and clears active', async () => {
-      const state = await manager.create('test.workflow.md', mockSteps);
-      await manager.setActive(state.id);
+      const state = await manager.create('test.workflow.md', { steps: mockSteps });
+      await manager.pushWorkflow(state.id);
 
       const stashedId = await manager.stash();
 
@@ -143,8 +143,8 @@ describe('WorkflowStateManager', () => {
 
   describe('pop', () => {
     it('restores stashed workflow to active', async () => {
-      const state = await manager.create('test.workflow.md', mockSteps);
-      await manager.setActive(state.id);
+      const state = await manager.create('test.workflow.md', { steps: mockSteps });
+      await manager.pushWorkflow(state.id);
       await manager.stash();
 
       const restored = await manager.pop();

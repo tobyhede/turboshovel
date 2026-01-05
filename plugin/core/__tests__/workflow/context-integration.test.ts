@@ -29,8 +29,8 @@ describe('Workflow Context Injection', () => {
 
   test('returns context for active workflow', async () => {
     const manager = new WorkflowStateManager(testDir);
-    const state = await manager.create('test.workflow.md', mockSteps);
-    await manager.setActive(state.id);
+    const state = await manager.create('test.workflow.md', { steps: mockSteps });
+    await manager.pushWorkflow(state.id);
 
     const context = await getWorkflowContext(testDir);
 

@@ -32,8 +32,8 @@ describe('Dispatcher Workflow Integration', () => {
   test('includes workflow context in dispatch output', async () => {
     // Create active workflow
     const manager = new WorkflowStateManager(testDir);
-    const state = await manager.create('test.workflow.md', mockSteps);
-    await manager.setActive(state.id);
+    const state = await manager.create('test.workflow.md', { steps: mockSteps });
+    await manager.pushWorkflow(state.id);
 
     const input: HookInput = {
       hook_event_name: 'UserPromptSubmit',

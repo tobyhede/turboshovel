@@ -24,8 +24,8 @@ describe('substep workflow integration', () => {
 
   it('executes full substep lifecycle: start → dispatch → bind → complete → aggregate', async () => {
     const stepNum = createStepNumber(1);
-    const state = await manager.create('review.workflow.md', mockSteps);
-    await manager.setActive(state.id);
+    const state = await manager.create('review.workflow.md', { steps: mockSteps });
+    await manager.pushWorkflow(state.id);
     await manager.initializeSubsteps(state.id, [
       { id: '1', description: 'First reviewer', isDynamic: false },
       { id: '2', description: 'Second reviewer', isDynamic: false }
@@ -59,8 +59,8 @@ describe('substep workflow integration', () => {
   });
 
   it('handles FAIL ANY aggregation correctly', async () => {
-    const state = await manager.create('test.workflow.md', mockSteps);
-    await manager.setActive(state.id);
+    const state = await manager.create('test.workflow.md', { steps: mockSteps });
+    await manager.pushWorkflow(state.id);
     await manager.initializeSubsteps(state.id, [
       { id: '1', description: 'First', isDynamic: false },
       { id: '2', description: 'Second', isDynamic: false }

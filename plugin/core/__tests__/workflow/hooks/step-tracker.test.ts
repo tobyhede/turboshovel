@@ -31,8 +31,8 @@ describe('trackStepDispatch with StepId', () => {
   });
 
   it('parses StepId from description and pushes to queue', async () => {
-    const state = await manager.create('test.workflow.md', mockSteps);
-    await manager.setActive(state.id);
+    const state = await manager.create('test.workflow.md', { steps: mockSteps });
+    await manager.pushWorkflow(state.id);
 
     const input: HookInput = {
       hook_event_name: 'PostToolUse',
@@ -53,8 +53,8 @@ describe('trackStepDispatch with StepId', () => {
   });
 
   it('returns violation for missing StepId prefix in enforcement mode', async () => {
-    const state = await manager.create('test.workflow.md', mockSteps);
-    await manager.setActive(state.id);
+    const state = await manager.create('test.workflow.md', { steps: mockSteps });
+    await manager.pushWorkflow(state.id);
 
     const input: HookInput = {
       hook_event_name: 'PostToolUse',
@@ -85,8 +85,8 @@ describe('trackStepDispatch with StepId', () => {
   });
 
   it('passes through when workflow is stashed', async () => {
-    const state = await manager.create('test.workflow.md', mockSteps);
-    await manager.setActive(state.id);
+    const state = await manager.create('test.workflow.md', { steps: mockSteps });
+    await manager.pushWorkflow(state.id);
     await manager.stash();
 
     const input: HookInput = {

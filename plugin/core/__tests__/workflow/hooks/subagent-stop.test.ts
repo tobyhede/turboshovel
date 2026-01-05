@@ -35,8 +35,8 @@ describe('handleSubagentStop with agent binding', () => {
   });
 
   it('calls CLI with --pass flag on success', async () => {
-    const state = await manager.create('test.workflow.md', mockSteps);
-    await manager.setActive(state.id);
+    const state = await manager.create('test.workflow.md', { steps: mockSteps });
+    await manager.pushWorkflow(state.id);
     await manager.bindAgent(state.id, 'agent-xyz', { step: createStepNumber(1)! });
 
     const input: HookInput = {
@@ -56,8 +56,8 @@ describe('handleSubagentStop with agent binding', () => {
   });
 
   it('calls CLI with --fail flag on failure', async () => {
-    const state = await manager.create('test.workflow.md', mockSteps);
-    await manager.setActive(state.id);
+    const state = await manager.create('test.workflow.md', { steps: mockSteps });
+    await manager.pushWorkflow(state.id);
     await manager.bindAgent(state.id, 'agent-abc', { step: createStepNumber(1)! });
 
     const input: HookInput = {
@@ -85,8 +85,8 @@ describe('handleSubagentStop with agent binding', () => {
     const module = await import('../../../src/workflow/hooks/subagent-stop.js');
     module.setExecSync(errorMock);
 
-    const state = await manager.create('test.workflow.md', mockSteps);
-    await manager.setActive(state.id);
+    const state = await manager.create('test.workflow.md', { steps: mockSteps });
+    await manager.pushWorkflow(state.id);
 
     const input: HookInput = {
       hook_event_name: 'SubagentStop',
@@ -100,8 +100,8 @@ describe('handleSubagentStop with agent binding', () => {
   });
 
   it('defaults to pass flag when no STATUS in output', async () => {
-    const state = await manager.create('test.workflow.md', mockSteps);
-    await manager.setActive(state.id);
+    const state = await manager.create('test.workflow.md', { steps: mockSteps });
+    await manager.pushWorkflow(state.id);
     await manager.bindAgent(state.id, 'agent-xyz', { step: createStepNumber(1)! });
 
     const input: HookInput = {
@@ -120,14 +120,14 @@ describe('handleSubagentStop with agent binding', () => {
   });
 
   it('completes substep when agent stops', async () => {
-    const state = await manager.create('test.workflow.md', mockSteps);
+    const state = await manager.create('test.workflow.md', { steps: mockSteps });
     await manager.update(state.id, {
       substepStates: [{ id: '1', status: 'running', agentId: 'agent-123' }],
       agentBindings: {
         'agent-123': { stepId: { step: createStepNumber(1)!, substep: '1' }, status: 'running' }
       }
     });
-    await manager.setActive(state.id);
+    await manager.pushWorkflow(state.id);
 
     const input: HookInput = {
       hook_event_name: 'SubagentStop',
