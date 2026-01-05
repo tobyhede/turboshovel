@@ -45,6 +45,10 @@ export async function runExecutionLoop(
   prompted: boolean,
   agentId?: string
 ): Promise<'done' | 'blocked' | 'waiting'> {
+  // Note: state is loaded here and reloaded at end of each loop iteration.
+  // Some immutable properties (parentWorkflowId, agentId) are accessed from
+  // the initial load for completion handling. This is safe because these
+  // properties are set at workflow creation and never modified.
   let state = await manager.load(workflowId);
   if (!state) return 'blocked';
 

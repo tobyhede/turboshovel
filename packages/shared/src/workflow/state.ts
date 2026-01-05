@@ -220,6 +220,11 @@ export class WorkflowStateManager {
     return topId ? await this.load(topId) : null;
   }
 
+  /**
+   * @deprecated Use pushWorkflow() and popWorkflow() instead.
+   * This method only sets activeWorkflow for backwards compatibility.
+   * New code should use the stack-based methods for proper per-agent isolation.
+   */
   async setActive(id: string | null): Promise<void> {
     await fs.mkdir(path.dirname(this.sessionPath), { recursive: true });
 
