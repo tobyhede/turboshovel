@@ -276,6 +276,7 @@ function parseConditionalPrefix(rest: string, type: 'pass' | 'fail'): ParsedCond
 export function parseConditional(text: string): ParsedConditional | null {
   const trimmed = text.trim();
 
+  // PASS and YES (alias)
   if (trimmed.startsWith('PASS')) {
     const result = parseConditionalPrefix(trimmed.slice(4), 'pass');
     if (!result) {
@@ -284,10 +285,27 @@ export function parseConditional(text: string): ParsedConditional | null {
     return result;
   }
 
+  if (trimmed.startsWith('YES')) {
+    const result = parseConditionalPrefix(trimmed.slice(3), 'pass');
+    if (!result) {
+      throw new WorkflowSyntaxError(`Invalid YES transition: ${trimmed}`);
+    }
+    return result;
+  }
+
+  // FAIL and NO (alias)
   if (trimmed.startsWith('FAIL')) {
     const result = parseConditionalPrefix(trimmed.slice(4), 'fail');
     if (!result) {
       throw new WorkflowSyntaxError(`Invalid FAIL transition: ${trimmed}`);
+    }
+    return result;
+  }
+
+  if (trimmed.startsWith('NO')) {
+    const result = parseConditionalPrefix(trimmed.slice(2), 'fail');
+    if (!result) {
+      throw new WorkflowSyntaxError(`Invalid NO transition: ${trimmed}`);
     }
     return result;
   }
