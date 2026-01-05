@@ -55,11 +55,15 @@ export function runCli(args: string | string[], workspace: TestWorkspace): CliRe
   const cliPath = join(__dirname, '..', '..', 'dist', 'cli.js');
   const argArray = Array.isArray(args) ? args : args.split(' ').filter(Boolean);
 
+  // Add node_modules/.bin to PATH for tsv test commands in fixtures
+  const binPath = join(__dirname, '..', '..', '..', '..', 'node_modules', '.bin');
+
   const result = spawnSync('node', [cliPath, ...argArray], {
     cwd: workspace.cwd,
     encoding: 'utf-8',
     env: {
       ...process.env,
+      PATH: `${binPath}:${process.env.PATH}`,
       NO_COLOR: '1',
       TURBOSHOVEL_LOG: '0', // Disable logging during tests
     },

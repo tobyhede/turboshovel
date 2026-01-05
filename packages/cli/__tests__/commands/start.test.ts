@@ -22,7 +22,7 @@ describe('start command', () => {
 
   describe('file mode', () => {
     it('creates workflow state from valid workflow file', async () => {
-      const result = runCli('start workflows/simple.workflow.md', workspace);
+      const result = runCli('start --prompted workflows/simple.workflow.md', workspace);
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Action:   START');
@@ -30,14 +30,14 @@ describe('start command', () => {
     });
 
     it('sets workflow as active', async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
 
       const session = await readSession(workspace);
       expect(session.active).toBeTruthy();
     });
 
     it('stores relative path in state', async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
 
       const state = await getActiveState(workspace);
       expect(state).not.toBeNull();
@@ -45,7 +45,7 @@ describe('start command', () => {
     });
 
     it('initializes step=1 and retryCount=0', async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
 
       const state = await getActiveState(workspace);
       expect(state?.step).toBe(1);
@@ -53,7 +53,7 @@ describe('start command', () => {
     });
 
     it('outputs first step description', async () => {
-      const result = runCli('start workflows/simple.workflow.md', workspace);
+      const result = runCli('start --prompted workflows/simple.workflow.md', workspace);
 
       expect(result.stdout).toContain('## 1.');
       expect(result.stdout).toContain('First step');
@@ -74,17 +74,36 @@ describe('start command', () => {
     });
 
     it('creates state file on disk', async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
 
       const stateFiles = await listWorkflowStates(workspace);
       expect(stateFiles.length).toBe(1);
     });
   });
 
+  describe('auto-execution mode', () => {
+    it('executes commands and advances through workflow', async () => {
+      const result = runCli('start workflows/simple.workflow.md', workspace);
+
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain('$ tsv test --result pass');
+      expect(result.stdout).toContain('[PASS]');
+      expect(result.stdout).toContain('Workflow complete');
+    });
+
+    it('completes workflow when all commands pass', async () => {
+      runCli('start workflows/simple.workflow.md', workspace);
+
+      // Workflow completed, so activeWorkflow is null
+      const session = await readSession(workspace);
+      expect(session.active).toBeNull();
+    });
+  });
+
   describe('step queueing mode (--step)', () => {
     beforeEach(async () => {
-      // Start a workflow first
-      runCli('start workflows/simple.workflow.md', workspace);
+      // Start a workflow first (prompted mode to keep it active)
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
     });
 
     it('pushes step to pendingSteps queue', async () => {
@@ -146,8 +165,8 @@ describe('start command', () => {
 
   describe('agent binding mode (--agent)', () => {
     beforeEach(async () => {
-      // Start workflow and queue a step
-      runCli('start workflows/simple.workflow.md', workspace);
+      // Start workflow (prompted mode to keep it active) and queue a step
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
       runCli('start --step 1', workspace);
     });
 

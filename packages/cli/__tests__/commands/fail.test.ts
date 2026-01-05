@@ -20,7 +20,7 @@ describe('fail command', () => {
 
   describe('FAIL: RETRY N', () => {
     beforeEach(async () => {
-      runCli('start workflows/retry.workflow.md', workspace);
+      runCli('start --prompted workflows/retry.workflow.md', workspace);
     });
 
     it('increments retryCount if under max', async () => {
@@ -40,7 +40,7 @@ describe('fail command', () => {
 
   describe('FAIL: STOP', () => {
     beforeEach(async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
     });
 
     it('blocks workflow', async () => {
@@ -69,7 +69,7 @@ describe('fail command', () => {
 
   describe('FAIL: GOTO N', () => {
     beforeEach(async () => {
-      runCli('start workflows/fail-goto.workflow.md', workspace);
+      runCli('start --prompted workflows/fail-goto.workflow.md', workspace);
     });
 
     it('jumps to specified step on failure', async () => {

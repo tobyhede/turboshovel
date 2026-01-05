@@ -19,7 +19,7 @@ describe('goto command', () => {
 
   describe('step jump (goto N)', () => {
     beforeEach(async () => {
-      runCli('start workflows/goto.workflow.md', workspace);
+      runCli('start --prompted workflows/goto.workflow.md', workspace);
     });
 
     it('jumps to specified step number', async () => {
@@ -32,7 +32,7 @@ describe('goto command', () => {
 
     it('resets retryCount on jump', async () => {
       runCli('stop', workspace);
-      runCli('start workflows/retry.workflow.md', workspace);
+      runCli('start --prompted workflows/retry.workflow.md', workspace);
 
       // Increment retry by failing on a FAIL: RETRY condition
       runCli('fail', workspace);
@@ -52,7 +52,7 @@ describe('goto command', () => {
 
   describe('error handling', () => {
     beforeEach(async () => {
-      runCli('start workflows/goto.workflow.md', workspace);
+      runCli('start --prompted workflows/goto.workflow.md', workspace);
     });
 
     it('rejects invalid step numbers', async () => {

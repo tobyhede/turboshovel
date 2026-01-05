@@ -18,7 +18,7 @@ describe('output format integration tests', () => {
 
   describe('start command output', () => {
     it('prints metadata and action block', async () => {
-      const result = runCli('start workflows/simple.workflow.md', workspace);
+      const result = runCli('start --prompted workflows/simple.workflow.md', workspace);
 
       expect(result.exitCode).toBe(0);
       // Metadata section
@@ -30,13 +30,13 @@ describe('output format integration tests', () => {
     });
 
     it('includes workflow ID in metadata', async () => {
-      const result = runCli('start workflows/simple.workflow.md', workspace);
+      const result = runCli('start --prompted workflows/simple.workflow.md', workspace);
 
       expect(result.stdout).toMatch(/wf-\d{4}-\d{2}-\d{2}/);
     });
 
     it('shows first step details in action block', async () => {
-      const result = runCli('start workflows/simple.workflow.md', workspace);
+      const result = runCli('start --prompted workflows/simple.workflow.md', workspace);
 
       expect(result.stdout).toContain('Step:');
       expect(result.stdout).toContain('1/2');
@@ -46,7 +46,7 @@ describe('output format integration tests', () => {
 
   describe('pass command output', () => {
     beforeEach(async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
     });
 
     it('prints separator before action block', async () => {
@@ -77,7 +77,7 @@ describe('output format integration tests', () => {
 
   describe('fail command output', () => {
     it('prints retry action message for FAIL: RETRY', async () => {
-      runCli('start workflows/retry.workflow.md', workspace);
+      runCli('start --prompted workflows/retry.workflow.md', workspace);
 
       const result = runCli('fail', workspace);
 
@@ -89,7 +89,7 @@ describe('output format integration tests', () => {
     });
 
     it('prints blocked message for FAIL: STOP', async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
 
       const result = runCli('fail', workspace);
 
@@ -100,7 +100,7 @@ describe('output format integration tests', () => {
     });
 
     it('shows retry count in output', async () => {
-      runCli('start workflows/retry.workflow.md', workspace);
+      runCli('start --prompted workflows/retry.workflow.md', workspace);
 
       const result = runCli('fail', workspace);
 
@@ -111,7 +111,7 @@ describe('output format integration tests', () => {
 
   describe('goto command output', () => {
     beforeEach(async () => {
-      runCli('start workflows/goto.workflow.md', workspace);
+      runCli('start --prompted workflows/goto.workflow.md', workspace);
     });
 
     it('prints action without outcome', async () => {
@@ -142,7 +142,7 @@ describe('output format integration tests', () => {
 
   describe('status command output', () => {
     beforeEach(async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
     });
 
     it('prints metadata and step block', async () => {
@@ -182,7 +182,7 @@ describe('output format integration tests', () => {
 
   describe('stop command output', () => {
     beforeEach(async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
     });
 
     it('prints metadata and stopped message', async () => {
@@ -209,7 +209,7 @@ describe('output format integration tests', () => {
 
   describe('complete command output', () => {
     beforeEach(async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
       runCli('pass', workspace); // Move to step 2 which has PASS: DONE
     });
 
@@ -238,7 +238,7 @@ describe('output format integration tests', () => {
 
   describe('stash command output', () => {
     beforeEach(async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
     });
 
     it('prints metadata, step, and stashed message', async () => {
@@ -269,7 +269,7 @@ describe('output format integration tests', () => {
 
   describe('pop command output', () => {
     beforeEach(async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
       runCli('pass', workspace); // Move to step 2
       runCli('stash', workspace);
     });
@@ -304,7 +304,7 @@ describe('output format integration tests', () => {
 
   describe('list command output', () => {
     it('prints workflow entries', async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
 
       const result = runCli('list', workspace);
 
@@ -314,7 +314,7 @@ describe('output format integration tests', () => {
     });
 
     it('marks active workflow', async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
 
       const result = runCli('list', workspace);
 
@@ -322,7 +322,7 @@ describe('output format integration tests', () => {
     });
 
     it('shows step number for each workflow', async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
 
       const result = runCli('list', workspace);
 
@@ -330,10 +330,10 @@ describe('output format integration tests', () => {
     });
 
     it('shows all workflows in state directory', async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
       // Start another workflow to have multiple entries
       runCli('stop', workspace);
-      runCli('start workflows/retry.workflow.md', workspace);
+      runCli('start --prompted workflows/retry.workflow.md', workspace);
 
       const result = runCli('list', workspace);
 
@@ -349,11 +349,11 @@ describe('output format integration tests', () => {
 
   describe('output formatting consistency across commands', () => {
     beforeEach(async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
     });
 
     it('all commands exit cleanly with proper status codes', async () => {
-      const startResult = runCli('start workflows/simple.workflow.md', workspace);
+      const startResult = runCli('start --prompted workflows/simple.workflow.md', workspace);
       const statusResult = runCli('status', workspace);
       const listResult = runCli('list', workspace);
 

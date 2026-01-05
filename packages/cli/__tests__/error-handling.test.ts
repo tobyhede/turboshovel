@@ -55,7 +55,7 @@ This doesn't have proper ## headers
   describe('invalid state', () => {
     it('handles corrupted state file', async () => {
       // Start a workflow
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
 
       // Corrupt the state file
       const stateDir = workspace.statePath();
@@ -83,7 +83,7 @@ This doesn't have proper ## headers
     });
 
     it('shows specific error for invalid step format', async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
 
       const result = runCli('start --step invalid-format', workspace);
 

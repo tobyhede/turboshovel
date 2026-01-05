@@ -19,7 +19,7 @@ describe('status command', () => {
   });
 
   it('displays current step info', async () => {
-    runCli('start workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
 
     const result = runCli('status', workspace);
 
@@ -29,7 +29,7 @@ describe('status command', () => {
   });
 
   it('shows workflow file path', async () => {
-    runCli('start workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
 
     const result = runCli('status', workspace);
 
@@ -38,7 +38,7 @@ describe('status command', () => {
   });
 
   it('shows retryCount', async () => {
-    runCli('start workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
 
     const result = runCli('status', workspace);
 
@@ -48,7 +48,7 @@ describe('status command', () => {
   });
 
   it('shows workflow ID', async () => {
-    runCli('start workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
 
     const result = runCli('status', workspace);
 
@@ -63,7 +63,7 @@ describe('status command', () => {
   });
 
   it('shows pending steps count', async () => {
-    runCli('start workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
     runCli('start --step 2', workspace);
 
     const result = runCli('status', workspace);
@@ -72,7 +72,7 @@ describe('status command', () => {
   });
 
   it('shows agent bindings', async () => {
-    runCli('start workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
     runCli('start --step 1', workspace);
     runCli('start --agent test-agent', workspace);
 
@@ -95,7 +95,7 @@ describe('list command', () => {
   });
 
   it('lists all workflow states', async () => {
-    runCli('start workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
 
     const result = runCli('list', workspace);
 
@@ -104,7 +104,7 @@ describe('list command', () => {
   });
 
   it('marks active workflow', async () => {
-    runCli('start workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
 
     const result = runCli('list', workspace);
 
@@ -112,7 +112,7 @@ describe('list command', () => {
   });
 
   it('shows current step for each', async () => {
-    runCli('start workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
 
     const result = runCli('list', workspace);
 
@@ -138,7 +138,7 @@ describe('stop command', () => {
   });
 
   it('deletes active workflow state', async () => {
-    runCli('start workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
 
     runCli('stop', workspace);
 
@@ -147,7 +147,7 @@ describe('stop command', () => {
   });
 
   it('clears active workflow', async () => {
-    runCli('start workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
 
     runCli('stop', workspace);
 
@@ -156,7 +156,7 @@ describe('stop command', () => {
   });
 
   it('outputs confirmation', async () => {
-    runCli('start workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
 
     const result = runCli('stop', workspace);
 
@@ -182,7 +182,7 @@ describe('complete command', () => {
   });
 
   it('marks workflow as complete', async () => {
-    runCli('start workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
 
     const result = runCli('complete', workspace);
 
@@ -190,7 +190,7 @@ describe('complete command', () => {
   });
 
   it('clears active workflow', async () => {
-    runCli('start workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
 
     runCli('complete', workspace);
 
@@ -199,7 +199,7 @@ describe('complete command', () => {
   });
 
   it('handles --status blocked', async () => {
-    runCli('start workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
 
     const result = runCli('complete --status blocked', workspace);
 

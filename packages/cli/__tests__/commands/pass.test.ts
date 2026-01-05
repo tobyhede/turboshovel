@@ -22,7 +22,7 @@ describe('pass command', () => {
 
   describe('PASS: CONTINUE', () => {
     beforeEach(async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
     });
 
     it('advances to next step', async () => {
@@ -36,7 +36,7 @@ describe('pass command', () => {
 
   describe('PASS: DONE', () => {
     beforeEach(async () => {
-      runCli('start workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
       runCli('pass', workspace); // Advance to step 2 which has PASS: DONE
     });
 
@@ -64,7 +64,7 @@ describe('pass command', () => {
 
   describe('PASS: GOTO N', () => {
     beforeEach(async () => {
-      runCli('start workflows/goto.workflow.md', workspace);
+      runCli('start --prompted workflows/goto.workflow.md', workspace);
     });
 
     it('jumps to specified step', async () => {
@@ -85,8 +85,8 @@ describe('pass command', () => {
 
   describe('child workflow completion restores parent', () => {
     it('should restore parent workflow as active when child completes via pass', async () => {
-      // Start parent workflow
-      runCli('start workflows/simple.workflow.md', workspace);
+      // Start parent workflow (prompted mode to keep it active)
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
       const session1 = await readSession(workspace);
       const parentId = session1.active;
 
@@ -110,8 +110,8 @@ describe('pass command', () => {
 
   describe('blocks agent completion while child workflow active', () => {
     it('should error when trying to complete agent with active child workflow', async () => {
-      // Start parent workflow
-      runCli('start workflows/simple.workflow.md', workspace);
+      // Start parent workflow (prompted mode to keep it active)
+      runCli('start --prompted workflows/simple.workflow.md', workspace);
       const session1 = await readSession(workspace);
       const parentId = session1.active;
 
