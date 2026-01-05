@@ -620,18 +620,27 @@ tsv stop
 
 ### Orchestration (Subagent Dispatch)
 
-Queue steps for subagent binding:
+**1. Task Binding (Agent-managed)**
+Queue a step for an agent to execute autonomously:
 ```bash
 tsv start --step 3.1      # Queue step 3.1
 tsv start --agent xyz123  # Bind agent xyz123 to pending step
 ```
 
-Mark step completion:
+**2. Subworkflow Dispatch (Enforced)**
+Queue a step with a mandatory subworkflow:
+```bash
+tsv start --step 3.1 subtask.workflow.md  # Queue step with workflow
+tsv start --agent xyz123                  # Bind agent (auto-starts subworkflow)
+```
+
+**Completion & Status:**
 ```bash
 tsv pass --agent xyz123  # Mark agent as passed
 tsv fail --agent xyz123  # Mark agent as failed
 ```
 
+**Pause Enforcement:**
 Pause enforcement for ad-hoc work:
 ```bash
 tsv stash   # Pause enforcement
