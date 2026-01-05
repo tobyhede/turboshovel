@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
 import {
   createTestWorkspace,
   runCli,
@@ -83,55 +85,122 @@ describe('pass command', () => {
     });
   });
 
-  describe('child workflow completion restores parent', () => {
-    it('should restore parent workflow as active when child completes via pass', async () => {
+  describe('nested workflow completion restores parent', () => {
+    it('should restore parent workflow as active when nested child completes', async () => {
+      // Create parent/child workflows for nesting test
+      const parentWorkflow = `## 1. Parent step
+Do parent work.
+- PASS: DONE
+`;
+      const childWorkflow = `## 1. Child step
+Do child work.
+- PASS: DONE
+`;
+      await mkdir(join(workspace.cwd, 'workflows'), { recursive: true });
+      await writeFile(join(workspace.cwd, 'workflows', 'parent-nest.md'), parentWorkflow);
+      await writeFile(join(workspace.cwd, 'workflows', 'child-nest.md'), childWorkflow);
+
       // Start parent workflow (prompted mode to keep it active)
-      runCli('start --prompted workflows/simple.workflow.md', workspace);
+      runCli('start --prompted workflows/parent-nest.md', workspace);
       const session1 = await readSession(workspace);
       const parentId = session1.active;
 
-      // Queue step and bind agent with child workflow
-      runCli(['start', '--step', '1.1', 'workflows/simple.workflow.md'], workspace);
-      runCli(['start', '--agent', 'test-agent', 'workflows/simple.workflow.md'], workspace);
-
-      // Verify child is now active
+      // Start child workflow in same stack (nested)
+      runCli('start --prompted workflows/child-nest.md', workspace);
       const session2 = await readSession(workspace);
-      const _childId = session2.active;
+      expect(session2.active).not.toBe(parentId); // Child is now active
+      expect(session2.defaultStack).toContain(parentId); // Parent still in stack
 
-      // Mark child workflow step as passed
-      runCli('pass', workspace); // Step 1: CONTINUE -> Step 2
-      runCli('pass', workspace); // Step 2: DONE -> complete
+      // Complete child workflow
+      runCli('pass', workspace); // Child step 1: DONE -> complete
 
-      // Parent should now be active
+      // Parent should now be active (child popped from stack)
       const session3 = await readSession(workspace);
       expect(session3.active).toBe(parentId);
     });
   });
 
-  describe('blocks agent completion while child workflow active', () => {
-    it('should error when trying to complete agent with active child workflow', async () => {
+  describe('agent workflow completion', () => {
+    it('should complete agent workflow independently of parent', async () => {
       // Start parent workflow (prompted mode to keep it active)
       runCli('start --prompted workflows/simple.workflow.md', workspace);
       const session1 = await readSession(workspace);
       const parentId = session1.active;
 
-      // Queue step and bind agent with child workflow
-      runCli(['start', '--step', '1.1', 'workflows/simple.workflow.md'], workspace);
-      runCli(['start', '--agent', 'test-agent', 'workflows/simple.workflow.md'], workspace);
+      // Start agent workflow independently (not via binding)
+      runCli('start --prompted workflows/simple.workflow.md --agent test-agent', workspace);
 
-      // Child workflow is now active - DO NOT complete it
-      // Manually set parent as active to test the blocking behavior
-      await writeSession(workspace, { active: parentId });
-
-      // Verify parent is active
+      // Agent has its own workflow
       const session2 = await readSession(workspace);
-      expect(session2.active).toBe(parentId);
+      expect(session2.stacks['test-agent']).toBeDefined();
+      expect(session2.stacks['test-agent'].length).toBe(1);
 
-      // Try to complete agent in parent while child is still running (should fail)
-      const result = runCli(['pass', '--agent', 'test-agent'], workspace);
+      // Parent still in default stack
+      expect(session2.defaultStack).toContain(parentId);
 
-      expect(result.exitCode).not.toBe(0);
-      expect(result.stderr).toContain('Child workflow still active');
+      // Complete agent's workflow
+      runCli(['pass', '--agent', 'test-agent'], workspace); // Step 1: CONTINUE -> Step 2
+      runCli(['pass', '--agent', 'test-agent'], workspace); // Step 2: DONE -> complete
+
+      // Agent stack should be empty now
+      const session3 = await readSession(workspace);
+      expect(session3.stacks['test-agent'] ?? []).toHaveLength(0);
+
+      // Parent should still be active in default stack
+      expect(session3.defaultStack).toContain(parentId);
+    });
+  });
+
+  describe('workflow completion with stack', () => {
+    it('pops to parent workflow on completion', async () => {
+      // Create parent/child workflows
+      const parentWorkflow = `## 1. Step one
+
+Do something.
+
+- PASS: DONE
+`;
+      const childWorkflow = `## 1. Step one
+
+Do work.
+
+- PASS: DONE
+`;
+      await mkdir(join(workspace.cwd, 'workflows'), { recursive: true });
+      await writeFile(join(workspace.cwd, 'workflows', 'parent.md'), parentWorkflow);
+      await writeFile(join(workspace.cwd, 'workflows', 'child.md'), childWorkflow);
+
+      // Start parent (prompted to prevent auto-completion)
+      runCli('start --prompted workflows/parent.md', workspace);
+
+      // Start child in same stack (prompted to prevent auto-completion)
+      runCli('start --prompted workflows/child.md', workspace);
+
+      // Complete child
+      let result = runCli('pass', workspace);
+      expect(result.stdout).toContain('complete');
+
+      // Should now be on parent
+      result = runCli('status', workspace);
+      expect(result.stdout).toContain('parent.md');
+    });
+
+    it('agent workflow pops to null when no parent', async () => {
+      // Create a single-step workflow for quick completion
+      const singleStep = `## 1. Do it
+- PASS: DONE
+`;
+      await mkdir(join(workspace.cwd, 'workflows'), { recursive: true });
+      await writeFile(join(workspace.cwd, 'workflows', 'single.md'), singleStep);
+
+      runCli('start --prompted workflows/single.md --agent agent-001', workspace);
+
+      // Complete workflow
+      runCli('pass --agent agent-001', workspace);
+
+      // Agent stack should be empty
+      const result = runCli('status --agent agent-001', workspace);
+      expect(result.stdout).toContain('No active workflow');
     });
   });
 });

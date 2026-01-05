@@ -163,6 +163,26 @@ describe('start command', () => {
     });
   });
 
+  describe('agent-scoped workflow start', () => {
+    it('starts workflow in agent-specific stack', async () => {
+      // Start parent in default stack (prompted to keep active)
+      let result = runCli('start --prompted workflows/simple.workflow.md', workspace);
+      expect(result.exitCode).toBe(0);
+
+      // Start child in agent-001 stack (prompted to keep active)
+      result = runCli('start --prompted workflows/retry.workflow.md --agent agent-001', workspace);
+      expect(result.exitCode).toBe(0);
+
+      // Default status should still show parent (simple.workflow.md)
+      result = runCli('status', workspace);
+      expect(result.stdout).toContain('simple.workflow.md');
+
+      // Agent status should show child (retry.workflow.md)
+      result = runCli('status --agent agent-001', workspace);
+      expect(result.stdout).toContain('retry.workflow.md');
+    });
+  });
+
   describe('agent binding mode (--agent)', () => {
     beforeEach(async () => {
       // Start workflow (prompted mode to keep it active) and queue a step
@@ -234,9 +254,11 @@ describe('start command', () => {
       const stateFiles = await listWorkflowStates(workspace);
       expect(stateFiles.length).toBe(2); // parent + child
 
-      // Get session to find parent workflow ID (child is now active)
+      // Get session - child is in agent's stack (new architecture)
       const session = await readSession(workspace);
-      expect(session.active).toBeTruthy(); // Child is now active
+      const agentStack = session.stacks['test-agent-123'] ?? [];
+      expect(agentStack.length).toBe(1); // Child is in agent's stack
+      const childId = agentStack[0];
 
       const allStates = await Promise.all(
         stateFiles.map(file => readWorkflowState(workspace, file.replace('.json', '')))
@@ -250,14 +272,14 @@ describe('start command', () => {
             typeof binding === 'object' &&
             binding !== null &&
             'childWorkflowId' in binding &&
-            (binding as Record<string, unknown>).childWorkflowId === session.active
+            (binding as Record<string, unknown>).childWorkflowId === childId
           );
       });
 
       expect(parentState).toBeTruthy();
       const agentBindings = (parentState!.agentBindings) as Record<string, unknown>;
       const agentBinding = agentBindings['test-agent-123'];
-      expect((agentBinding as Record<string, unknown>).childWorkflowId).toBe(session.active);
+      expect((agentBinding as Record<string, unknown>).childWorkflowId).toBe(childId);
     });
   });
 });

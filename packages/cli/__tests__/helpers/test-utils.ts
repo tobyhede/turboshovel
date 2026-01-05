@@ -82,22 +82,47 @@ export function runCli(args: string | string[], workspace: TestWorkspace): CliRe
  * Maps internal session fields to test-friendly names:
  * - `activeWorkflow` (from WorkflowStateManager) → `active`
  * - `stashedWorkflowId` (from WorkflowStateManager) → `stashed`
+ * - `stacks` (for multi-agent workflows) → `stacks`
+ * - `defaultStack` (default stack for workflows) → `defaultStack`
  */
 export async function readSession(workspace: TestWorkspace): Promise<{
   active: string | null;
   stashed: string | null;
+  stacks: Record<string, string[]>;
+  defaultStack: string[];
 }> {
   try {
     const content = await readFile(workspace.sessionPath(), 'utf-8');
     const session = JSON.parse(content) as Record<string, unknown>;
-    // Support both old (active_workflow) and new (activeWorkflow) field names
+
+    // Support both old and new formats
     const activeWorkflow = session.activeWorkflow ?? session.active_workflow;
+    const stacks = (session.stacks as Record<string, string[]>) ?? {};
+    const defaultStack = (session.defaultStack as string[]) ?? [];
+
+    // Detect format: if stacks or defaultStack exist, we're in new format
+    const isNewFormat = Object.keys(stacks).length > 0 || (defaultStack as unknown[]).length > 0;
+
+    // Priority for determining active:
+    // 1. If old format (no stacks/defaultStack): use activeWorkflow (old field)
+    // 2. If new format: use defaultStack, ignore activeWorkflow field
+    let active: string | null = null;
+    if (!isNewFormat && typeof activeWorkflow === 'string') {
+      // Old format: use activeWorkflow field
+      active = activeWorkflow;
+    } else if (defaultStack.length > 0) {
+      // New format or has defaultStack: use top of stack
+      active = defaultStack[defaultStack.length - 1] ?? null;
+    }
+
     return {
-      active: typeof activeWorkflow === 'string' ? activeWorkflow : null,
+      active,
       stashed: typeof session.stashedWorkflowId === 'string' ? session.stashedWorkflowId : null,
+      stacks,
+      defaultStack,
     };
   } catch {
-    return { active: null, stashed: null };
+    return { active: null, stashed: null, stacks: {}, defaultStack: [] };
   }
 }
 
@@ -106,15 +131,31 @@ export async function readSession(workspace: TestWorkspace): Promise<{
  */
 export async function writeSession(
   workspace: TestWorkspace,
-  session: { active?: string | null; stashed?: string | null }
+  session: {
+    active?: string | null;
+    stashed?: string | null;
+    stacks?: Record<string, string[]>;
+    defaultStack?: string[];
+  }
 ): Promise<void> {
   const sessionData: Record<string, unknown> = {};
+
+  // Support new stack format
+  if (session.stacks !== undefined) {
+    sessionData.stacks = session.stacks;
+  }
+  if (session.defaultStack !== undefined) {
+    sessionData.defaultStack = session.defaultStack;
+  }
+
+  // Keep old format for backwards compat
   if (session.active !== undefined) {
     sessionData.activeWorkflow = session.active;
   }
   if (session.stashed !== undefined) {
     sessionData.stashedWorkflowId = session.stashed;
   }
+
   await writeFile(workspace.sessionPath(), JSON.stringify(sessionData, null, 2));
 }
 
@@ -154,6 +195,21 @@ export async function getActiveState(
   const session = await readSession(workspace);
   if (!session.active) return null;
   return readWorkflowState(workspace, session.active);
+}
+
+/**
+ * Get agent stack active state.
+ * Returns the workflow state for the top of the given agent's stack.
+ */
+export async function getAgentActiveState(
+  workspace: TestWorkspace,
+  agentId: string
+): Promise<Record<string, unknown> | null> {
+  const session = await readSession(workspace);
+  const stack = session.stacks[agentId] ?? [];
+  const topId = stack[stack.length - 1];
+  if (!topId) return null;
+  return readWorkflowState(workspace, topId);
 }
 
 /**

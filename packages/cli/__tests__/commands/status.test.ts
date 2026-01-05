@@ -83,6 +83,39 @@ describe('status command', () => {
   });
 });
 
+describe('agent-scoped status', () => {
+  let workspace: TestWorkspace;
+
+  beforeEach(async () => {
+    workspace = await createTestWorkspace();
+  });
+
+  afterEach(async () => {
+    await workspace.cleanup();
+  });
+
+  it('shows agent-specific workflow when --agent provided', async () => {
+    // Start workflows in different stacks (prompted to keep active)
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
+    runCli('start --prompted workflows/retry.workflow.md --agent agent-001', workspace);
+
+    // Default status shows default stack
+    let result = runCli('status', workspace);
+    expect(result.stdout).toContain('simple.workflow.md');
+
+    // Agent status shows agent stack
+    result = runCli('status --agent agent-001', workspace);
+    expect(result.stdout).toContain('retry.workflow.md');
+  });
+
+  it('shows no active workflow for empty agent stack', async () => {
+    runCli('start --prompted workflows/simple.workflow.md', workspace);
+
+    const result = runCli('status --agent nonexistent', workspace);
+    expect(result.stdout).toContain('No active workflow');
+  });
+});
+
 describe('list command', () => {
   let workspace: TestWorkspace;
 
