@@ -1,7 +1,7 @@
 // src/workflow/types.ts
 
 import type { StepId } from './step-id.js';
-import type { StepNumber } from '../schemas.js';
+import type { StepNumber, Action, NonRetryAction } from '../schemas.js';
 
 /**
  * Re-export StepNumber type from schemas (source of truth)
@@ -55,22 +55,9 @@ export interface PendingStep {
 }
 
 /**
- * Non-recursive action types (everything except RETRY)
+ * Action types re-exported from schemas (canonical definitions)
  */
-export type NonRetryAction =
-  | { readonly type: 'CONTINUE' }
-  | { readonly type: 'STOP'; readonly message?: string }
-  | { readonly type: 'GOTO'; readonly target: StepId }
-  | { readonly type: 'NEXT' }
-  | { readonly type: 'DONE' };
-
-/**
- * Discriminated union for workflow actions
- * Prevents invalid states at compile time
- */
-export type Action =
-  | NonRetryAction
-  | { readonly type: 'RETRY'; readonly max: number; readonly then: NonRetryAction };
+export type { Action, NonRetryAction } from '../schemas.js';
 
 /**
  * Outcome-to-action mappings for step completion
@@ -171,8 +158,8 @@ export interface Step {
  * Parsed workflow definition
  */
 export interface Workflow {
-  readonly name: string;
-  readonly description?: string;
+  readonly title?: string;       // From H1 (# Title)
+  readonly description?: string; // From preamble prose
   readonly steps: readonly Step[];
 }
 
