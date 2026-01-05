@@ -203,4 +203,87 @@ describe('WorkflowStateManager', () => {
       expect(state.prompted).toBe(true);
     });
   });
+
+  describe('Per-agent workflow stacks', () => {
+    it('pushWorkflow adds to default stack when no agentId', async () => {
+      const state = await manager.create('test.md', mockWorkflow);
+      await manager.pushWorkflow(state.id);
+
+      const active = await manager.getActive();
+      expect(active?.id).toBe(state.id);
+    });
+
+    it('pushWorkflow adds to agent-specific stack', async () => {
+      const state = await manager.create('test.md', mockWorkflow);
+      await manager.pushWorkflow(state.id, 'agent-001');
+
+      const active = await manager.getActive('agent-001');
+      expect(active?.id).toBe(state.id);
+
+      // Default stack should be empty
+      const defaultActive = await manager.getActive();
+      expect(defaultActive).toBeNull();
+    });
+
+    it('popWorkflow removes from stack and returns new top', async () => {
+      const parent = await manager.create('parent.md', mockWorkflow);
+      const child = await manager.create('child.md', mockWorkflow);
+
+      await manager.pushWorkflow(parent.id);
+      await manager.pushWorkflow(child.id);
+
+      const newTopId = await manager.popWorkflow();
+      expect(newTopId).toBe(parent.id);
+
+      const active = await manager.getActive();
+      expect(active?.id).toBe(parent.id);
+    });
+
+    it('supports arbitrary nesting depth', async () => {
+      const wf1 = await manager.create('level1.md', mockWorkflow);
+      const wf2 = await manager.create('level2.md', mockWorkflow);
+      const wf3 = await manager.create('level3.md', mockWorkflow);
+      const wf4 = await manager.create('level4.md', mockWorkflow);
+
+      await manager.pushWorkflow(wf1.id);
+      await manager.pushWorkflow(wf2.id);
+      await manager.pushWorkflow(wf3.id);
+      await manager.pushWorkflow(wf4.id);
+
+      expect((await manager.getActive())?.id).toBe(wf4.id);
+
+      await manager.popWorkflow();
+      expect((await manager.getActive())?.id).toBe(wf3.id);
+
+      await manager.popWorkflow();
+      expect((await manager.getActive())?.id).toBe(wf2.id);
+
+      await manager.popWorkflow();
+      expect((await manager.getActive())?.id).toBe(wf1.id);
+
+      await manager.popWorkflow();
+      expect(await manager.getActive()).toBeNull();
+    });
+
+    it('parallel agents have independent stacks', async () => {
+      const main = await manager.create('main.md', mockWorkflow);
+      const child1 = await manager.create('child1.md', mockWorkflow);
+      const child2 = await manager.create('child2.md', mockWorkflow);
+
+      await manager.pushWorkflow(main.id);
+      await manager.pushWorkflow(child1.id, 'agent-001');
+      await manager.pushWorkflow(child2.id, 'agent-002');
+
+      // Each agent sees their own workflow
+      expect((await manager.getActive())?.id).toBe(main.id);
+      expect((await manager.getActive('agent-001'))?.id).toBe(child1.id);
+      expect((await manager.getActive('agent-002'))?.id).toBe(child2.id);
+
+      // Pop one agent doesn't affect others
+      await manager.popWorkflow('agent-001');
+      expect(await manager.getActive('agent-001')).toBeNull();
+      expect((await manager.getActive('agent-002'))?.id).toBe(child2.id);
+      expect((await manager.getActive())?.id).toBe(main.id);
+    });
+  });
 });

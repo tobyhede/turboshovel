@@ -28,7 +28,10 @@ function generateId(): string {
 }
 
 interface SessionData {
-  activeWorkflow: string | null;
+  stacks: Record<string, string[]>;  // agentId → [wf1, wf2, ...]
+  defaultStack: string[];            // main agent stack (no agentId)
+  // Keep for backwards compatibility during migration
+  activeWorkflow?: string | null;
   stashedWorkflowId?: string;
 }
 
@@ -198,18 +201,29 @@ export class WorkflowStateManager {
     }
   }
 
-  async getActive(): Promise<WorkflowState | null> {
+  async getActive(agentId?: string): Promise<WorkflowState | null> {
     const session = await this.loadSession();
-    if (typeof session.activeWorkflow === 'string') {
+
+    // Migration: handle old format
+    if (session.activeWorkflow && !session.stacks && !session.defaultStack) {
       return await this.load(session.activeWorkflow);
     }
-    return null;
+
+    let stack: string[];
+    if (agentId) {
+      stack = session.stacks?.[agentId] ?? [];
+    } else {
+      stack = session.defaultStack ?? [];
+    }
+
+    const topId = stack[stack.length - 1];
+    return topId ? await this.load(topId) : null;
   }
 
   async setActive(id: string | null): Promise<void> {
     await fs.mkdir(path.dirname(this.sessionPath), { recursive: true });
 
-    let session: SessionData = { activeWorkflow: null };
+    let session: SessionData = { activeWorkflow: null, stacks: {}, defaultStack: [] };
     try {
       const content = await fs.readFile(this.sessionPath, 'utf8');
       session = JSON.parse(content) as SessionData;
@@ -219,6 +233,57 @@ export class WorkflowStateManager {
 
     session.activeWorkflow = id;
     await fs.writeFile(this.sessionPath, JSON.stringify(session, null, 2));
+  }
+
+  async pushWorkflow(id: string, agentId?: string): Promise<void> {
+    const session = await this.loadSession();
+
+    // Initialize stacks if not present (migration)
+    if (!session.stacks) {
+      session.stacks = {};
+    }
+    if (!session.defaultStack) {
+      session.defaultStack = [];
+    }
+
+    if (agentId) {
+      if (!session.stacks[agentId]) {
+        session.stacks[agentId] = [];
+      }
+      session.stacks[agentId].push(id);
+    } else {
+      session.defaultStack.push(id);
+    }
+
+    await this.saveSession(session);
+  }
+
+  async popWorkflow(agentId?: string): Promise<string | null> {
+    const session = await this.loadSession();
+
+    // Initialize if not present
+    if (!session.stacks) {
+      session.stacks = {};
+    }
+    if (!session.defaultStack) {
+      session.defaultStack = [];
+    }
+
+    let stack: string[];
+    if (agentId) {
+      stack = session.stacks[agentId] ?? [];
+      stack.pop();
+      session.stacks[agentId] = stack;
+    } else {
+      stack = session.defaultStack;
+      stack.pop();
+      session.defaultStack = stack;
+    }
+
+    await this.saveSession(session);
+
+    // Return new top (parent workflow)
+    return stack[stack.length - 1] ?? null;
   }
 
   async list(): Promise<WorkflowState[]> {
@@ -299,20 +364,47 @@ export class WorkflowStateManager {
     });
   }
 
-  async stash(): Promise<string | null> {
+  async stash(agentId?: string): Promise<string | null> {
     const session = await this.loadSession();
-    const activeId = session.activeWorkflow;
+
+    // Get the active workflow ID - check stacks first, then fall back to activeWorkflow
+    let activeId: string | null | undefined = null;
+    
+    if (agentId) {
+      // Agent-specific stack
+      const stack = session.stacks?.[agentId];
+      activeId = stack?.[stack.length - 1];
+    } else {
+      // Check defaultStack first (new format), then activeWorkflow (old format)
+      const stack = session.defaultStack;
+      activeId = stack && stack.length > 0 ? stack[stack.length - 1] : session.activeWorkflow;
+    }
 
     if (!activeId) return null;
 
-    session.activeWorkflow = null;
+    // Pop from appropriate stack
+    if (agentId) {
+      if (session.stacks?.[agentId]) {
+        session.stacks[agentId].pop();
+      }
+    } else {
+      if (session.defaultStack && session.defaultStack.length > 0) {
+        session.defaultStack.pop();
+      } else if (session.activeWorkflow) {
+        // Migration: clear activeWorkflow for old format
+        session.activeWorkflow = null;
+      }
+    }
+
+    // Store stashed ID (one per agent would need more complex structure)
+    // For now, keep single stash for backwards compat
     session.stashedWorkflowId = activeId;
     await this.saveSession(session);
 
     return activeId;
   }
 
-  async pop(): Promise<WorkflowState | null> {
+  async pop(agentId?: string): Promise<WorkflowState | null> {
     const session = await this.loadSession();
     const stashedId = session.stashedWorkflowId;
 
@@ -325,7 +417,24 @@ export class WorkflowStateManager {
       return null;
     }
 
-    session.activeWorkflow = stashedId;
+    // Push back to appropriate location
+    if (agentId) {
+      // Agent-specific stack
+      if (!session.stacks) session.stacks = {};
+      if (!session.stacks[agentId]) session.stacks[agentId] = [];
+      session.stacks[agentId].push(stashedId);
+    } else {
+      // Default stack (new format) or activeWorkflow (old format for compat)
+      if (session.defaultStack !== undefined || session.stacks !== undefined) {
+        // New format: use defaultStack
+        if (!session.defaultStack) session.defaultStack = [];
+        session.defaultStack.push(stashedId);
+      } else {
+        // Old format: restore to activeWorkflow
+        session.activeWorkflow = stashedId;
+      }
+    }
+
     session.stashedWorkflowId = undefined;
     await this.saveSession(session);
 
@@ -342,7 +451,7 @@ export class WorkflowStateManager {
       const content = await fs.readFile(this.sessionPath, 'utf8');
       return JSON.parse(content) as SessionData;
     } catch {
-      return { activeWorkflow: null };
+      return { activeWorkflow: null, stacks: {}, defaultStack: [] };
     }
   }
 
