@@ -24,6 +24,7 @@ import { withErrorHandling } from '../helpers/wrapper.js';
 export function registerPassCommand(program: Command): void {
   program
     .command('pass')
+    .aliases(['yes', 'ok'])
     .description('Mark current step as passed (triggers PASS transition)')
     .option('--agent <agentId>', 'Specify agent completing step')
     .action(async (options: { agent?: string }) => {
