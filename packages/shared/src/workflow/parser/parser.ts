@@ -258,9 +258,9 @@ export function parseWorkflow(markdown: string): Step[] {
     // Handle code blocks
     if (node.type === 'code' && currentStep) {
       const codeNode = node as Code;
-      const lang = codeNode.lang?.split(/\s+/)[0];
+      const lang = codeNode.lang?.split(/\s+/)[0].toLowerCase();
 
-      if (lang === 'bash') {
+      if (lang === 'bash' || lang === 'sh' || lang === 'shell') {
         // Route to substep if one is pending
         if (currentStep.pendingSubstep) {
           if (currentStep.pendingSubstep.command) {
@@ -268,7 +268,7 @@ export function parseWorkflow(markdown: string): Step[] {
               `Multiple code blocks per substep not allowed in substep ${currentStep.pendingSubstep.id}`
             );
           }
-          currentStep.pendingSubstep.command = { code: codeNode.value };
+          currentStep.pendingSubstep.command = { code: codeNode.value.trim() };
         } else {
           // Existing step-level logic
           if (currentStep.command) {
@@ -277,7 +277,22 @@ export function parseWorkflow(markdown: string): Step[] {
               `Multiple code blocks per step not allowed in Step ${stepLabel}.`
             );
           }
-          currentStep.command = { code: codeNode.value };
+          currentStep.command = { code: codeNode.value.trim() };
+        }
+      } else if (lang === 'prompt') {
+        // Extract as explicit prompt (instructional)
+        if (currentStep.pendingSubstep) {
+          currentStep.pendingSubstep.prompts.push({ text: codeNode.value.trim() });
+        } else {
+          currentStep.prompts.push({ text: codeNode.value.trim() });
+        }
+      } else {
+        // Passive block (json, yaml, etc.) - treat as Prose (implicit text)
+        const passiveText = `\n\`\`\`${codeNode.lang ?? ''}\n${codeNode.value}\n\`\`\`\n`;
+        if (currentStep.pendingSubstep) {
+          currentStep.pendingSubstep.content += passiveText;
+        } else {
+          implicitText += passiveText;
         }
       }
     }
