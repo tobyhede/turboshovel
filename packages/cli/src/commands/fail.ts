@@ -25,6 +25,7 @@ import { withErrorHandling } from '../helpers/wrapper.js';
 export function registerFailCommand(program: Command): void {
   program
     .command('fail')
+    .alias('no')
     .description('Mark current step as failed (triggers FAIL transition)')
     .option('--agent <agentId>', 'Specify agent completing step')
     .action(async (options: { agent?: string }) => {
