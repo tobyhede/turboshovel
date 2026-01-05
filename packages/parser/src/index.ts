@@ -33,3 +33,12 @@ export {
   stepIdEquals
 } from './step-id.js';
 export type { ParseStepIdOptions } from './step-id.js';
+export {
+  extractFrontmatter,
+  nameFromFilename,
+  WorkflowFrontmatterSchema
+} from './frontmatter.js';
+export type {
+  WorkflowFrontmatter,
+  WorkflowFrontmatterType
+} from './frontmatter.js';

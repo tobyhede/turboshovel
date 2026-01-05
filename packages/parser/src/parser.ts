@@ -28,6 +28,7 @@ import {
   extractWorkflowList
 } from './helpers.js';
 import { validateWorkflow } from './validator.js';
+import { extractFrontmatter, nameFromFilename } from './frontmatter.js';
 
 /**
  * Type guard to narrow Node to Heading
@@ -117,8 +118,9 @@ export function parseWorkflow(markdown: string): Step[] {
 /**
  * Parse entire workflow document including metadata
  */
-export function parseWorkflowDocument(markdown: string): Workflow {
-  const tree = fromMarkdown(markdown);
+export function parseWorkflowDocument(markdown: string, filename?: string): Workflow {
+  const { frontmatter, content } = extractFrontmatter(markdown);
+  const tree = fromMarkdown(content);
 
   const steps: Step[] = [];
   let title: string | undefined;
@@ -387,6 +389,10 @@ export function parseWorkflowDocument(markdown: string): Workflow {
   return {
     title,
     description: preamble.trim() || undefined,
+    name: frontmatter?.name ?? (filename ? nameFromFilename(filename) : undefined),
+    version: frontmatter?.version,
+    author: frontmatter?.author,
+    tags: frontmatter?.tags,
     steps
   };
 }

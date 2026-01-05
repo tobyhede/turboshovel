@@ -62,5 +62,9 @@ export interface Step {
 export interface Workflow {
   readonly title?: string;       // From H1 (# Title)
   readonly description?: string; // From preamble prose
+  readonly name?: string;        // From frontmatter or derived from filename
+  readonly version?: string;     // From frontmatter
+  readonly author?: string;      // From frontmatter
+  readonly tags?: readonly string[]; // From frontmatter (readonly for immutability)
   readonly steps: readonly Step[];
 }
