@@ -1,3 +1,5 @@
+# Rundown Format
+
 # title
 [ description ]
 
@@ -41,10 +43,35 @@ where workflows is:
   - workflow_path [ ... ]
 
 where transition is:
-  - { PASS | FAIL } [ { ALL | ANY } ]: result
+  - { PASS | FAIL | YES | NO } [ { ALL | ANY } ]: result
 
 where result is:
   action | RETRY [ count ] [ action ]
 
 where action is:
   CONTINUE | DONE | STOP [ "message" ] | GOTO id | NEXT
+
+---
+
+## Expansion Rules
+
+Syntactic sugar is expanded before execution:
+
+```
+-- Outcome aliases
+YES X  =>  PASS X
+NO X   =>  FAIL X
+
+-- Modifier defaults
+PASS: X  =>  PASS ALL: X
+FAIL: X  =>  FAIL ANY: X
+
+-- RETRY defaults
+RETRY          =>  RETRY 1 STOP
+RETRY n        =>  RETRY n STOP
+RETRY n action =>  RETRY n action
+
+-- Implicit transitions (when none defined)
+<none>  =>  - PASS ALL: CONTINUE
+            - FAIL ANY: STOP
+```
