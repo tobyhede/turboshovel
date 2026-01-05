@@ -14,6 +14,7 @@ import { registerStashCommand } from './commands/stash.js';
 import { registerPopCommand } from './commands/pop.js';
 import { registerGateCommand } from './commands/gate.js';
 import { registerTestCommand } from './commands/test.js';
+import { registerWorkflowsCommand } from './commands/workflows.js';
 
 const program = new CommandClass();
 
@@ -38,6 +39,8 @@ registerListCommand(program);
 registerStashCommand(program);
 
 registerPopCommand(program);
+
+registerWorkflowsCommand(program);
 
 registerGateCommand(program);
 

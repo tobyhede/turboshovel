@@ -5,7 +5,6 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import {
   WorkflowStateManager,
-  parseWorkflow,
   parseWorkflowDocument,
   WorkflowSyntaxError,
   stepIdToString,
@@ -66,7 +65,7 @@ export function registerStartCommand(program: Command): void {
         if (file && !options.step) {
           const filePath = path.isAbsolute(file) ? file : path.join(cwd, file);
           const content = await fs.readFile(filePath, 'utf8');
-          const workflow = parseWorkflowDocument(content);
+          const workflow = parseWorkflowDocument(content, path.basename(filePath));
 
           if (workflow.steps.length === 0) {
             console.error('Error: Workflow has no steps');
@@ -128,7 +127,7 @@ export function registerStartCommand(program: Command): void {
             }
 
             const content = await fs.readFile(workflowPath, 'utf8');
-            const workflow = parseWorkflowDocument(content);
+            const workflow = parseWorkflowDocument(content, path.basename(workflowPath));
 
             if (workflow.steps.length === 0) {
               console.error('Error: Child workflow has no steps');
@@ -175,7 +174,8 @@ export function registerStartCommand(program: Command): void {
         }
       } catch (error) {
         if (isNodeError(error) && error.code === 'ENOENT') {
-          console.error(`Error: Workflow file not found: ${file ?? 'unknown'}`);
+          console.error(`Error: Workflow not found: ${file ?? 'unknown'}`);
+          console.error(`Try 'tsv workflows' to list available workflows.`);
         } else if (error instanceof WorkflowSyntaxError) {
           console.error(`Syntax error: ${error.message}`);
         } else {
