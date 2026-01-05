@@ -35,9 +35,12 @@ where parent_ref is:
 
 where body is:
   [ prompt_text ]
-  [ ```bash
-    command
-    ``` ]
+  [ code_block ]
+
+where code_block is:
+  "```" [ tag ]
+    content
+  "```"
 
 where workflows is:
   - workflow_path [ ... ]
@@ -58,7 +61,7 @@ where action is:
 Syntactic sugar is expanded before execution:
 
 ```
--- Outcome aliases
+-- Transition aliases
 YES X  =>  PASS X
 NO X   =>  FAIL X
 
@@ -74,4 +77,9 @@ RETRY n action =>  RETRY n action
 -- Implicit transitions (when none defined)
 <none>  =>  - PASS ALL: CONTINUE
             - FAIL ANY: STOP
+
+-- Code block semantics
+```bash | sh | shell  =>  Command (Executable)
+```prompt            =>  Prompt (Instructional)
+```[other] | ```      =>  Prose (Passive)
 ```

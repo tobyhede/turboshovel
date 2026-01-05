@@ -10,19 +10,14 @@ Rundown is a format for defining executable workflows using Markdown.
 ## Table of Contents
 
 - [1. Syntax Synopsis](#1-syntax-synopsis)
-- [2. Semantic Defaults](#2-semantic-defaults)
-- [3. Document Structure](#3-document-structure)
-  - [Header](#header)
-  - [Steps](#steps)
-  - [Nesting (Substeps)](#nesting-substeps)
-  - [Identifiers](#identifiers)
-- [4. Step Content](#4-step-content)
-  - [Option A: Step Body](#option-a-step-body)
-  - [Option B: Workflow List](#option-b-workflow-list)
+- [2. Document Structure](#2-document-structure)
+- [3. Step Content](#3-step-content)
+- [4. Substeps](#4-substeps)
 - [5. Transitions](#5-transitions)
 - [6. Actions](#6-actions)
-- [7. Conformance](#7-conformance)
-- [8. Examples](#8-examples)
+- [7. Variables](#7-variables)
+- [8. Conformance](#8-conformance)
+- [9. Examples](#9-examples)
 
 ---
 
@@ -32,31 +27,7 @@ See [rundown-format.md](./rundown-format.md) for the complete BNF-style grammar.
 
 ---
 
-## 2. Semantic Defaults
-
-If syntax elements are omitted, the following defaults are applied by the executor:
-
-### 1. Missing Transitions
-If no transitions are defined for a unit:
-- `PASS ALL: CONTINUE`
-- `FAIL ANY: STOP`
-
-### 2. Missing Modifiers
-If the outcome modifier (`ALL` | `ANY`) is omitted:
-- `PASS` / `YES` defaults to `ALL`
-- `FAIL` / `NO` defaults to `ANY`
-
-### 3. Missing RETRY Action
-If `RETRY` is used without an explicit exhaustion action:
-- `RETRY n STOP` (where `n` is the count, or 1 if count is also omitted)
-
-### 4. Outcome Aliases
-- `YES` is an alias for `PASS`
-- `NO` is an alias for `FAIL`
-
----
-
-## 3. Document Structure
+## 2. Document Structure
 
 A Rundown document (`.workflow.md`) consists of an optional title and description, followed by one or more steps.
 
@@ -70,14 +41,6 @@ Steps are the fundamental units of execution. They are defined using H2 (`##`) h
 **Format:**
 ```markdown
 ## {id} {Title}
-```
-
-### Nesting (Substeps)
-Steps can contain nested steps (substeps) defined using H3 (`###`) headers.
-
-**Format:**
-```markdown
-### {id} {Title}
 ```
 
 ### Identifiers
@@ -99,42 +62,52 @@ Step identifiers (`id`) define the sequence and structure of the workflow.
 
 ---
 
-## 4. Step Content
+## 3. Step Content
 
-A step defines work to be done. It must contain either a **Body** or a **Workflow List**, but not both.
+A step (`##`) defines a unit of work or orchestration. Every step MUST contain exactly one of the following content types:
 
-### Option A: Step Body
-A step body defines local execution logic.
-
+### Option A: Task Step (Body)
+Contains local execution logic.
 1. **Prompt**: Text instructions for the agent/user.
-   - **Implicit**: Any prose text in the step.
-   - **Explicit**: Text following a `**Prompt:**` marker.
-2. **Command**: A fenced code block (````bash````) containing the command to execute.
-   - Exit code `0` = PASS.
-   - Non-zero exit code = FAIL.
-3. **Nested Steps**: A sequence of H3 substeps (only valid for H2 steps).
+2. **Command**: A fenced code block containing the command to execute. See [Code Blocks](#code-blocks).
 
-### Option B: Workflow List
-A step can delegate execution to other Rundown files.
+### Option B: Container Step (Substeps)
+Contains a sequence of nested tasks defined using H3 (`###`) headers. When using this option, the Step header MUST be immediately followed by its Substeps. See [4. Substeps](#4-substeps).
 
-**Format:**
-A bulleted list of file paths immediately following the header.
+### Option C: Proxy Step (Workflow List)
+Delegates execution to other Rundown files.
+- **Format**: A bulleted list of file paths immediately following the header.
+- **Behavior**: The referenced workflows are executed in order.
 
-```markdown
-## 1. Run checks
- - lint.workflow.md
- - test.workflow.md
-```
+---
 
-**Behavior:**
-- The referenced workflows are executed in order.
-- Outcomes are aggregated based on the transition rules.
+## 4. Substeps
+
+Substeps provide fine-grained task definition within a Step.
+
+### Hierarchy and Scope
+- **Headers**: Defined using H3 (`###`) headers.
+- **Nesting**: Only valid as children of H2 steps. Substeps CANNOT contain further nested steps (H4 is invalid).
+- **Exclusivity**: Like Steps, a Substep MUST contain either a **Body** (Option A) or a **Workflow List** (Option C), but not both.
+
+### Identifiers
+Substep identifiers must strictly match the parent Step ID prefix.
+
+| Format | Parent | Child | Context |
+| :--- | :--- | :--- | :--- |
+| `1.1` | Static | Static | Sequential task in a static step. |
+| `1.{n}` | Static | Dynamic | Iterative task in a static step. |
+| `{N}.1` | Dynamic | Static | Fixed task within a dynamic instance. |
+| `{N}.{n}` | Dynamic | Dynamic | Iterative task within a dynamic instance. |
+
+### Outcome Aggregation
+When a Step contains Substeps, the parent step's final outcome is derived from the collective results of its children. This aggregation is controlled by [5. Transitions](#5-transitions) using `ALL` or `ANY` modifiers.
 
 ---
 
 ## 5. Transitions
 
-Transitions define the control flow based on the outcome of a step.
+Transitions define the control flow based on the outcome of a step or substep.
 
 **Syntax:**
 ```markdown
@@ -142,13 +115,17 @@ Transitions define the control flow based on the outcome of a step.
 ```
 
 **Outcomes:**
-- `PASS`: The step (or command) succeeded.
-- `FAIL`: The step (or command) failed.
+- `PASS`: The unit (step, substep, or command) succeeded.
+- `FAIL`: The unit failed.
 
 **Modifiers (Aggregation):**
 Used when a step has multiple child units (substeps or workflows).
 - `ALL`: Trigger only if ALL units have this outcome.
 - `ANY`: Trigger if AT LEAST ONE unit has this outcome.
+
+**Default Behavior (Pessimistic):**
+- `PASS` implies `PASS ALL`
+- `FAIL` implies `FAIL ANY`
 
 ---
 
@@ -158,57 +135,65 @@ Actions determine what happens next.
 
 | Action | Description |
 |--------|-------------|
-| `CONTINUE` | Proceed to the next step. |
+| `CONTINUE` | Proceed to the next unit in sequence. |
 | `STOP ["msg"]` | Halt execution immediately. Optional failure message. |
 | `DONE` | Complete the workflow successfully immediately. |
 | `GOTO {id}` | Jump to a specific step ID. |
-| `NEXT` | Create the next dynamic step instance (N+1) and start execution. Only valid within `## {N}.` context. |
-| `RETRY [n] [act]` | Retry the current step `n` times (default 1). If exhausted, perform `act` (default STOP). |
+| `NEXT` | Create the next dynamic step instance (N+1). Only valid in `## {N}.` context. |
+| `RETRY [n] [act]` | Retry the current unit `n` times (default 1). If exhausted, perform `act`. |
 
 **GOTO Rules:**
 - Target ID must exist.
-- `GOTO {N}` alone is invalid — use `NEXT` to advance to the next dynamic instance.
+- Cannot GOTO into a dynamic step instance from outside (use the parent ID).
 - `GOTO {N}.M` navigates within the current dynamic instance to substep M.
-- `GOTO {n}` alone is invalid (same rule applies to dynamic substeps).
-- Cannot GOTO from outside into a dynamic step or dynamic substep.
-- GOTO resets the retry counter to 0 for the target location.
-- Self-referencing GOTO (same step/substep) is rejected at compile time to prevent infinite loops.
-
-**NEXT Rules:**
-- Only valid within dynamic step context (`## {N}.`).
-- Creates instance N+1 and begins execution at the first substep.
-- Use for explicit iteration control in dynamic workflows.
-
-**CONTINUE in Dynamic Context:**
-- From dynamic substep (`### N.{n}`): Returns outcome to parent step for aggregation.
-- Dynamic substeps have no fixed sibling — use `NEXT` for explicit iteration.
-- This differs from static substeps where `CONTINUE` navigates to the next sibling.
-
-**Workflow Outcomes:**
-- **PASS**: Workflow completed successfully (via `CONTINUE` to end or `DONE` action).
-- **FAIL**: Workflow did not complete (via `STOP` action, retry exhaustion, or unhandled failure).
-- Parent workflows and aggregation use only these two outcomes.
+- Use `NEXT` to advance to the next instance (not `GOTO {N}`).
 
 ---
 
-## 7. Conformance
+## 7. Code Blocks
+
+Rundown uses Markdown fenced code blocks for commands and instructions.
+
+### Executable Blocks
+Any code block with a shell tag will be executed by the workflow runner.
+- **Tags**: `bash`, `sh`, `shell`.
+- **Exit Code**: `0` results in PASS; non-zero results in FAIL.
+
+### Instructional Blocks
+The `prompt` tag is used for code snippets that should be shown to the user/agent but **never executed**.
+- **Tag**: `prompt`.
+- **Behavior**: Content is extracted as a Prompt and included in the instruction set.
+
+### Passive Blocks
+Any other tag (e.g., `json`, `yaml`, `javascript`) or an untagged block is treated as **Prose**. It is included in the implicit instructions but ignored by the command executor.
+
+---
+
+## 8. Variables
+
+Rundown supports simple variable substitution in prompts and commands.
+
+| Variable | Scope | Description |
+|----------|-------|-------------|
+| `{N}`, `{n}` | Dynamic Step | The current index of a dynamic step instance. |
+| `{count}`| Workflow | Total number of items (if applicable). |
+| `{date}` | Global | Current date (YYYY-MM-DD). |
+
+---
+
+## 9. Conformance
 
 Parsers and executors must adhere to strict validation:
 
 1. **Hierarchy**: H1 is Metadata. H2 is Step. H3 is Substep. H4+ is invalid.
-2. **Step Pattern**: A workflow contains EITHER:
-   - One or more sequential static steps (`## 1.`, `## 2.`, ...), OR
-   - Exactly one dynamic step template (`## {N}.`)
+2. **Step Pattern**: A workflow contains EITHER static steps OR exactly one dynamic step template.
 3. **Sequencing**: Static steps must be strictly sequential (1, 2, 3...).
-4. **Exclusivity**:
-    - A step has either a body OR substeps OR a workflow list.
-    - A substep has either a body OR a workflow list.
-    - A substep cannot contain substeps.
+4. **Exclusivity**: Units MUST contain exactly one of their permitted content types.
 5. **Recursion**: `RETRY` actions cannot contain another `RETRY`.
 
 ---
 
-## 8. Examples
+## 10. Examples
 
 Executable examples and conformance test cases are maintained in the `packages/shared/fixtures/workflow/conformance/` directory.
 
