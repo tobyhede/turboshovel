@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { parseHookInput, WorkflowStateSchema, StepNumberSchema, StepIdSchema, ActionSchema } from '../src/schemas.js';
+import { parseHookInput, WorkflowStateSchema, StepNumberSchema, StepIdSchema, ActionSchema, TransitionsSchema } from '../src/schemas.js';
 import { MAX_STEP_NUMBER } from '../src/workflow/types.js';
 
 /**
@@ -179,5 +179,36 @@ describe('Action schema-derived type', () => {
   it('parses DONE action', () => {
     const parsed = ActionSchema.parse({ type: 'DONE' });
     expect(parsed.type).toBe('DONE');
+  });
+});
+
+describe('Transitions schema-derived type', () => {
+  it('parses all:true (pass all) transitions', () => {
+    const parsed = TransitionsSchema.parse({
+      all: true,
+      pass: { type: 'CONTINUE' },
+      fail: { type: 'STOP' }
+    });
+    expect(parsed.all).toBe(true);
+    expect(parsed.pass.type).toBe('CONTINUE');
+    expect(parsed.fail.type).toBe('STOP');
+  });
+
+  it('parses all:false (pass any) transitions', () => {
+    const parsed = TransitionsSchema.parse({
+      all: false,
+      pass: { type: 'DONE' },
+      fail: { type: 'RETRY', max: 2, then: { type: 'STOP' } }
+    });
+    expect(parsed.all).toBe(false);
+  });
+
+  it('parses transitions with GOTO action', () => {
+    const parsed = TransitionsSchema.parse({
+      all: true,
+      pass: { type: 'GOTO', target: { step: 3 } },
+      fail: { type: 'STOP', message: 'Failed' }
+    });
+    expect(parsed.pass.type).toBe('GOTO');
   });
 });

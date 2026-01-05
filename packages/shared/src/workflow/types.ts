@@ -60,25 +60,9 @@ export interface PendingStep {
 export type { Action, NonRetryAction } from '../schemas.js';
 
 /**
- * Outcome-to-action mappings for step completion
- *
- * Valid combinations only:
- * - all: true  = PASS ALL + FAIL ANY (pessimistic, default)
- * - all: false = PASS ANY + FAIL ALL (optimistic)
+ * Transitions type re-exported from schemas (canonical definition)
  */
-interface PassAllTransitions {
-  readonly all: true;
-  readonly pass: Action; // triggers when ALL complete
-  readonly fail: Action; // triggers when ANY blocked
-}
-
-interface PassAnyTransitions {
-  readonly all: false;
-  readonly pass: Action; // triggers when ANY complete
-  readonly fail: Action; // triggers when ALL blocked
-}
-
-export type Transitions = PassAllTransitions | PassAnyTransitions;
+export type { Transitions } from '../schemas.js';
 
 /**
  * Agent binding status

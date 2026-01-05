@@ -169,6 +169,7 @@ export type Action = Readonly<z.output<typeof ActionSchema>>;
 
 /**
  * Zod schema for Transitions
+ * Validates outcome-to-action mappings for step completion
  */
 export const TransitionsSchema = z.union([
   z.object({
@@ -182,6 +183,13 @@ export const TransitionsSchema = z.union([
     fail: ActionSchema,
   }),
 ]);
+
+/**
+ * Transitions type derived from schema
+ * Discriminated by 'all' field: true = pass all, false = pass any
+ * Wrapped in Readonly to preserve immutability contract
+ */
+export type Transitions = Readonly<z.output<typeof TransitionsSchema>>;
 
 /**
  * Zod schema for Substep
