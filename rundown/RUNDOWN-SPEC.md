@@ -10,18 +10,19 @@ Rundown is a format for defining executable workflows using Markdown.
 ## Table of Contents
 
 - [1. Syntax Synopsis](#1-syntax-synopsis)
-- [2. Document Structure](#2-document-structure)
+- [2. Semantic Defaults](#2-semantic-defaults)
+- [3. Document Structure](#3-document-structure)
   - [Header](#header)
   - [Steps](#steps)
   - [Nesting (Substeps)](#nesting-substeps)
   - [Identifiers](#identifiers)
-- [3. Step Content](#3-step-content)
+- [4. Step Content](#4-step-content)
   - [Option A: Step Body](#option-a-step-body)
   - [Option B: Workflow List](#option-b-workflow-list)
-- [4. Transitions](#4-transitions)
-- [5. Actions](#5-actions)
-- [6. Conformance](#6-conformance)
-- [7. Examples](#7-examples)
+- [5. Transitions](#5-transitions)
+- [6. Actions](#6-actions)
+- [7. Conformance](#7-conformance)
+- [8. Examples](#8-examples)
 
 ---
 
@@ -31,7 +32,31 @@ See [rundown-format.md](./rundown-format.md) for the complete BNF-style grammar.
 
 ---
 
-## 2. Document Structure
+## 2. Semantic Defaults
+
+If syntax elements are omitted, the following defaults are applied by the executor:
+
+### 1. Missing Transitions
+If no transitions are defined for a unit:
+- `PASS ALL: CONTINUE`
+- `FAIL ANY: STOP`
+
+### 2. Missing Modifiers
+If the outcome modifier (`ALL` | `ANY`) is omitted:
+- `PASS` / `YES` defaults to `ALL`
+- `FAIL` / `NO` defaults to `ANY`
+
+### 3. Missing RETRY Action
+If `RETRY` is used without an explicit exhaustion action:
+- `RETRY n STOP` (where `n` is the count, or 1 if count is also omitted)
+
+### 4. Outcome Aliases
+- `YES` is an alias for `PASS`
+- `NO` is an alias for `FAIL`
+
+---
+
+## 3. Document Structure
 
 A Rundown document (`.workflow.md`) consists of an optional title and description, followed by one or more steps.
 
@@ -74,7 +99,7 @@ Step identifiers (`id`) define the sequence and structure of the workflow.
 
 ---
 
-## 3. Step Content
+## 4. Step Content
 
 A step defines work to be done. It must contain either a **Body** or a **Workflow List**, but not both.
 
@@ -107,7 +132,7 @@ A bulleted list of file paths immediately following the header.
 
 ---
 
-## 4. Transitions
+## 5. Transitions
 
 Transitions define the control flow based on the outcome of a step.
 
@@ -125,18 +150,9 @@ Used when a step has multiple child units (substeps or workflows).
 - `ALL`: Trigger only if ALL units have this outcome.
 - `ANY`: Trigger if AT LEAST ONE unit has this outcome.
 
-**Default Behavior (Pessimistic):**
-- `PASS` implies `PASS ALL`
-- `FAIL` implies `FAIL ANY`
-
-**Default Transitions:**
-When a step or substep does not define explicit transitions:
-- `PASS`: CONTINUE (proceed to next step/substep, or complete workflow if last)
-- `FAIL`: STOP (halt execution)
-
 ---
 
-## 5. Actions
+## 6. Actions
 
 Actions determine what happens next.
 
@@ -173,13 +189,9 @@ Actions determine what happens next.
 - **FAIL**: Workflow did not complete (via `STOP` action, retry exhaustion, or unhandled failure).
 - Parent workflows and aggregation use only these two outcomes.
 
-**Outcome Aliases:**
-- `YES` is an alias for `PASS` (for natural-language prompts).
-- `NO` is an alias for `FAIL` (for natural-language prompts).
-
 ---
 
-## 6. Conformance
+## 7. Conformance
 
 Parsers and executors must adhere to strict validation:
 
@@ -196,7 +208,7 @@ Parsers and executors must adhere to strict validation:
 
 ---
 
-## 7 . Examples
+## 8. Examples
 
 Executable examples and conformance test cases are maintained in the `packages/shared/fixtures/workflow/conformance/` directory.
 
