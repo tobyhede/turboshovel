@@ -21,12 +21,13 @@ export function registerPopCommand(program: Command): void {
   program
     .command('pop')
     .description('Resume enforcement from stashed workflow')
-    .action(async () => {
+    .option('--agent <agentId>', 'Pop workflow to agent-specific stack')
+    .action(async (options: { agent?: string }) => {
       await withErrorHandling(async () => {
         const cwd = getCwd();
         const manager = new WorkflowStateManager(cwd);
 
-        const state = await manager.pop();
+        const state = await manager.pop(options.agent);
 
         if (!state) {
           console.log('No stashed workflow to restore.');

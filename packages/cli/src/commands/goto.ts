@@ -103,7 +103,8 @@ export function registerGotoCommand(program: Command): void {
         });
 
         // Continue with execution loop
-        const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted);
+        // Goto doesn't have --agent option, so use default stack
+        const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted, undefined);
 
         if (loopResult === 'blocked') {
           process.exit(1);

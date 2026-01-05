@@ -62,6 +62,47 @@ export function registerStartCommand(program: Command): void {
           return;
         }
 
+        // Mode 2: File start (must come before Mode 3 to handle file + --agent case)
+        if (file && !options.step) {
+          const filePath = path.isAbsolute(file) ? file : path.join(cwd, file);
+          const content = await fs.readFile(filePath, 'utf8');
+          const workflow = parseWorkflowDocument(content);
+
+          if (workflow.steps.length === 0) {
+            console.error('Error: Workflow has no steps');
+            process.exit(1);
+          }
+
+          const workflowPath = path.isAbsolute(file) ? path.relative(cwd, file) : file;
+          const state = await manager.create(workflowPath, workflow, {
+            prompted: options.prompted,
+            agentId: options.agent  // Pass agent ID
+          });
+
+          // Use pushWorkflow instead of setActive
+          await manager.pushWorkflow(state.id, options.agent);
+
+          if (workflow.steps[0].substeps && workflow.steps[0].substeps.length > 0) {
+            await manager.initializeSubsteps(state.id, workflow.steps[0].substeps);
+          }
+
+          // Print metadata and action
+          printMetadata(buildMetadata(state));
+          printActionBlock({ action: 'START' });
+
+          // Update lastAction
+          await manager.update(state.id, { lastAction: 'START' });
+
+          // Run execution loop (chains command steps automatically)
+          // For new workflows started without --agent, use default stack (no agentId)
+          const result = await runExecutionLoop(manager, state.id, [...workflow.steps], cwd, !!options.prompted, undefined);
+
+          if (result === 'blocked') {
+            process.exit(1);
+          }
+          return;
+        }
+
         // Mode 3: --agent - Bind agent to pending step
         if (options.agent) {
           const state = await manager.getActive();
@@ -109,7 +150,7 @@ export function registerStartCommand(program: Command): void {
               childWorkflowId: childState.id
             });
 
-            await manager.setActive(childState.id);
+            await manager.pushWorkflow(childState.id, options.agent);
 
             // Print metadata and action
             printMetadata(buildMetadata(childState));
@@ -119,46 +160,11 @@ export function registerStartCommand(program: Command): void {
             await manager.update(childState.id, { lastAction: 'START' });
 
             // Run execution loop (chains command steps automatically)
-            const result = await runExecutionLoop(manager, childState.id, [...workflow.steps], cwd, parentPrompted);
+            const result = await runExecutionLoop(manager, childState.id, [...workflow.steps], cwd, parentPrompted, options.agent);
 
             if (result === 'blocked') {
               process.exit(1);
             }
-          }
-          return;
-        }
-
-        // Mode 2: File start
-        if (file && !options.step && !options.agent) {
-          const filePath = path.isAbsolute(file) ? file : path.join(cwd, file);
-          const content = await fs.readFile(filePath, 'utf8');
-          const workflow = parseWorkflowDocument(content);
-
-          if (workflow.steps.length === 0) {
-            console.error('Error: Workflow has no steps');
-            process.exit(1);
-          }
-
-          const workflowPath = path.isAbsolute(file) ? path.relative(cwd, file) : file;
-          const state = await manager.create(workflowPath, workflow, { prompted: options.prompted });
-          await manager.setActive(state.id);
-
-          if (workflow.steps[0].substeps && workflow.steps[0].substeps.length > 0) {
-            await manager.initializeSubsteps(state.id, workflow.steps[0].substeps);
-          }
-
-          // Print metadata and action
-          printMetadata(buildMetadata(state));
-          printActionBlock({ action: 'START' });
-
-          // Update lastAction
-          await manager.update(state.id, { lastAction: 'START' });
-
-          // Run execution loop (chains command steps automatically)
-          const result = await runExecutionLoop(manager, state.id, [...workflow.steps], cwd, !!options.prompted);
-
-          if (result === 'blocked') {
-            process.exit(1);
           }
           return;
         }

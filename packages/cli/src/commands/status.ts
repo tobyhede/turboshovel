@@ -24,11 +24,12 @@ export function registerStatusCommand(program: Command): void {
   program
     .command('status')
     .description('Show current workflow state')
-    .action(async () => {
+    .option('--agent <agentId>', 'Show status for agent-specific workflow')
+    .action(async (options: { agent?: string }) => {
       await withErrorHandling(async () => {
         const cwd = getCwd();
         const manager = new WorkflowStateManager(cwd);
-        const state = await manager.getActive();
+        const state = await manager.getActive(options.agent);
         const stashedId = await manager.getStashedWorkflowId();
 
         if (!state && !stashedId) {

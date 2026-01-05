@@ -31,7 +31,19 @@ export function registerPassCommand(program: Command): void {
       await withErrorHandling(async () => {
         const cwd = getCwd();
         const manager = new WorkflowStateManager(cwd);
-        const state = await manager.getActive();
+        let state = await manager.getActive(options.agent);
+
+        // If agent specified but no workflow in agent's stack, check default stack for binding
+        if (!state && options.agent) {
+          const parentState = await manager.getActive(); // Default stack
+          if (parentState) {
+            const binding = await manager.getAgentBinding(parentState.id, options.agent);
+            if (binding) {
+              // Agent has binding on parent but no child workflow - operate on parent
+              state = parentState;
+            }
+          }
+        }
 
         if (!state) {
           console.log('No active workflow');
@@ -49,39 +61,41 @@ export function registerPassCommand(program: Command): void {
           throw new Error('Failed to initialize workflow engine');
         }
 
-        // Handle agent completion (substep case)
+        // Handle agent binding completion (substep case)
+        // Only applies when parent workflow has an agent binding - not for standalone agent workflows
         if (options.agent) {
           const binding = await manager.getAgentBinding(state.id, options.agent);
-          if (!binding) {
-            throw new Error(`No binding for agent ${options.agent}`);
-          }
+          if (binding) {
+            // Agent binding exists - handle substep completion
+            let result: 'pass' | 'fail' = 'pass';
 
-          let result: 'pass' | 'fail' = 'pass';
-
-          if (binding.childWorkflowId) {
-            const childResult = await manager.getChildWorkflowResult(binding.childWorkflowId);
-            if (childResult === null) {
-              throw new Error(`Child workflow still active. Complete or stop it first.\nChild workflow: ${binding.childWorkflowId}`);
+            if (binding.childWorkflowId) {
+              const childResult = await manager.getChildWorkflowResult(binding.childWorkflowId);
+              if (childResult === null) {
+                throw new Error(`Child workflow still active. Complete or stop it first.\nChild workflow: ${binding.childWorkflowId}`);
+              }
+              result = childResult;
             }
-            result = childResult;
+
+            await manager.updateAgentBinding(state.id, options.agent, {
+              status: 'done',
+              result
+            });
+            console.log(`Agent ${options.agent} marked as pass`);
+
+            const updated = await manager.load(state.id);
+            const bindings = Object.values(updated?.agentBindings ?? {});
+            const runningCount = bindings.filter((b) => b.status === 'running').length;
+
+            if (runningCount > 0) {
+              console.log(`${String(runningCount)} agent(s) still running`);
+            } else {
+              console.log('All agents complete');
+            }
+            return;
           }
-
-          await manager.updateAgentBinding(state.id, options.agent, {
-            status: 'done',
-            result
-          });
-          console.log(`Agent ${options.agent} marked as pass`);
-
-          const updated = await manager.load(state.id);
-          const bindings = Object.values(updated?.agentBindings ?? {});
-          const runningCount = bindings.filter((b) => b.status === 'running').length;
-
-          if (runningCount > 0) {
-            console.log(`${String(runningCount)} agent(s) still running`);
-          } else {
-            console.log('All agents complete');
-          }
-          return;
+          // No binding - this is a standalone workflow in agent's stack
+          // Continue to main pass flow below
         }
 
         // Capture prev state BEFORE mutation
@@ -130,11 +144,17 @@ export function registerPassCommand(program: Command): void {
         if (isComplete) {
           await manager.update(state.id, { variables: { ...state.variables, completed: true } });
           printWorkflowComplete();
-          if (state.parentWorkflowId) {
-            await manager.setActive(state.parentWorkflowId);
-          } else {
-            await manager.setActive(null);
+
+          // If this was a child workflow with agent, update parent's agent binding
+          if (options.agent && state.parentWorkflowId) {
+            await manager.updateAgentBinding(state.parentWorkflowId, options.agent, {
+              status: 'done',
+              result: 'pass'
+            });
           }
+
+          // Pop current workflow, returns parent ID or null
+          await manager.popWorkflow(options.agent);
           return;
         }
 
@@ -145,7 +165,7 @@ export function registerPassCommand(program: Command): void {
         }
 
         // Continue with execution loop
-        const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted);
+        const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted, options.agent);
         if (loopResult === 'blocked') {
           process.exit(1);
         }

@@ -15,11 +15,12 @@ export function registerStopCommand(program: Command): void {
   program
     .command('stop')
     .description('Abort current workflow')
-    .action(async () => {
+    .option('--agent <agentId>', 'Stop workflow in agent-specific stack')
+    .action(async (options: { agent?: string }) => {
       await withErrorHandling(async () => {
         const cwd = getCwd();
         const manager = new WorkflowStateManager(cwd);
-        const state = await manager.getActive();
+        const state = await manager.getActive(options.agent);
         if (!state) {
           printNoActiveWorkflow();
           return;
@@ -30,7 +31,7 @@ export function registerStopCommand(program: Command): void {
 
         // Delete and clear
         await manager.delete(state.id);
-        await manager.setActive(null);
+        await manager.popWorkflow(options.agent);
 
         // Print terminal message
         printWorkflowStopped();

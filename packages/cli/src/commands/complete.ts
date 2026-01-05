@@ -17,11 +17,12 @@ export function registerCompleteCommand(program: Command): void {
     .command('complete')
     .description('Mark current workflow as complete')
     .option('--status <status>', 'Completion status (ok|blocked)', 'ok')
-    .action(async (options: { status: string }) => {
+    .option('--agent <agentId>', 'Complete workflow in agent-specific stack')
+    .action(async (options: { status: string; agent?: string }) => {
       await withErrorHandling(async () => {
         const cwd = getCwd();
         const manager = new WorkflowStateManager(cwd);
-        const state = await manager.getActive();
+        const state = await manager.getActive(options.agent);
 
         if (!state) {
           printNoActiveWorkflow();
@@ -41,7 +42,7 @@ export function registerCompleteCommand(program: Command): void {
           await manager.update(state.id, {
             variables: { ...state.variables, completed: true }
           });
-          await manager.setActive(null);
+          await manager.popWorkflow(options.agent);
           printWorkflowComplete();
         }
       });

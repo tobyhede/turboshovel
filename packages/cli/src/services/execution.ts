@@ -42,7 +42,8 @@ export async function runExecutionLoop(
   workflowId: string,
   steps: Step[],
   cwd: string,
-  prompted: boolean
+  prompted: boolean,
+  agentId?: string
 ): Promise<'done' | 'blocked' | 'waiting'> {
   let state = await manager.load(workflowId);
   if (!state) return 'blocked';
@@ -143,22 +144,34 @@ export async function runExecutionLoop(
     if (isComplete) {
       await manager.update(workflowId, { variables: { ...updatedState.variables, completed: true } });
       printWorkflowComplete();
-      if (state.parentWorkflowId) {
-        await manager.setActive(state.parentWorkflowId);
-      } else {
-        await manager.setActive(null);
+
+      // If this was a child workflow with agent, update parent's agent binding
+      if (agentId && state.parentWorkflowId) {
+        await manager.updateAgentBinding(state.parentWorkflowId, agentId, {
+          status: 'done',
+          result: 'pass'
+        });
       }
+
+      // Pop current workflow from stack (makes parent active if exists, or clears stack)
+      await manager.popWorkflow(agentId);
       return 'done';
     }
 
     if (isBlocked) {
       await manager.update(workflowId, { variables: { ...updatedState.variables, blocked: true } });
       printWorkflowBlocked({ current: prevStep, total: totalSteps, substep: prevSubstep });
-      if (state.parentWorkflowId) {
-        await manager.setActive(state.parentWorkflowId);
-      } else {
-        await manager.setActive(null);
+
+      // If this was a child workflow with agent, update parent's agent binding
+      if (agentId && state.parentWorkflowId) {
+        await manager.updateAgentBinding(state.parentWorkflowId, agentId, {
+          status: 'done',
+          result: 'fail'
+        });
       }
+
+      // Pop current workflow from stack
+      await manager.popWorkflow(agentId);
       return 'blocked';
     }
 

@@ -15,11 +15,12 @@ export function registerStashCommand(program: Command): void {
   program
     .command('stash')
     .description('Pause workflow enforcement, preserve state')
-    .action(async () => {
+    .option('--agent <agentId>', 'Stash workflow from agent-specific stack')
+    .action(async (options: { agent?: string }) => {
       await withErrorHandling(async () => {
         const cwd = getCwd();
         const manager = new WorkflowStateManager(cwd);
-        const state = await manager.getActive();
+        const state = await manager.getActive(options.agent);
 
         if (!state) {
           printNoActiveWorkflow();
@@ -32,7 +33,7 @@ export function registerStashCommand(program: Command): void {
         printMetadata(buildMetadata(state));
 
         // Stash
-        await manager.stash();
+        await manager.stash(options.agent);
 
         // Print step position and message
         printWorkflowStashed({ current: state.step, total: totalSteps });
