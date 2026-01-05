@@ -1,7 +1,7 @@
 // src/workflow/types.ts
 
 import type { StepId } from './step-id.js';
-import type { StepNumber, Action, NonRetryAction } from '../schemas.js';
+import type { StepNumber, Action, NonRetryAction, Transitions } from '../schemas.js';
 
 /**
  * Re-export StepNumber type from schemas (source of truth)
