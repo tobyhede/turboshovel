@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { parseHookInput, WorkflowStateSchema, StepNumberSchema } from '../src/schemas.js';
+import { parseHookInput, WorkflowStateSchema, StepNumberSchema, StepIdSchema } from '../src/schemas.js';
 import { MAX_STEP_NUMBER } from '../src/workflow/types.js';
 
 /**
@@ -120,5 +120,26 @@ describe('StepNumber schema-derived type', () => {
     if (result.success) {
       expect(result.data).toBe(3);
     }
+  });
+});
+
+describe('StepId schema-derived type', () => {
+  it('parses numeric step', () => {
+    const parsed = StepIdSchema.parse({ step: 3 });
+    expect(parsed.step).toBe(3);
+    expect(parsed.substep).toBeUndefined();
+  });
+
+  it('parses dynamic step with substep', () => {
+    const parsed = StepIdSchema.parse({ step: '{N}', substep: '1' });
+    expect(parsed.step).toBe('{N}');
+    expect(parsed.substep).toBe('1');
+  });
+
+  it('parsed StepId is readonly', () => {
+    const parsed = StepIdSchema.parse({ step: 5, substep: '2' });
+    // TypeScript should prevent: parsed.step = 6;
+    // Runtime check that object has expected shape
+    expect(Object.keys(parsed).sort()).toEqual(['step', 'substep']);
   });
 });

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MAX_STEP_NUMBER, type StepId } from './workflow/types.js';
+import { MAX_STEP_NUMBER } from './workflow/types.js';
 
 /**
  * Zod schema for tool_input in Step tool calls
@@ -115,16 +115,20 @@ export const StepNumberSchema = z
 export type StepNumber = z.output<typeof StepNumberSchema>;
 
 /**
- * Zod schema for StepId branded type
- * Validates object structure and transforms to branded StepId
- * Supports both numeric steps and dynamic '{N}' references
+ * Zod schema for StepId
+ * Validates object structure with branded StepNumber or dynamic '{N}'
  */
-export const StepIdSchema = z
-  .object({
-    step: z.union([StepNumberSchema, z.literal('{N}')]),
-    substep: z.string().optional(),
-  })
-  .transform((obj): StepId => obj as StepId);
+export const StepIdSchema = z.object({
+  step: z.union([StepNumberSchema, z.literal('{N}')]),
+  substep: z.string().optional(),
+});
+
+/**
+ * StepId type derived from schema
+ * Represents a step position: numeric (3, 3.1) or dynamic ({N}.1)
+ * Wrapped in Readonly to preserve immutability contract
+ */
+export type StepId = Readonly<z.output<typeof StepIdSchema>>;
 
 /**
  * Zod schema for Action

@@ -1,14 +1,10 @@
-import { createStepNumber, type StepNumber } from './types.js';
+import { createStepNumber } from './types.js';
 
-/**
- * Step identifier with optional substep
- * Format: "3", "3.1", or "{N}.1" (dynamic substep navigation)
- * Note: "{N}" alone is NOT supported - use NEXT action instead
- */
-export interface StepId {
-  readonly step: StepNumber | '{N}';  // Numeric or dynamic reference
-  readonly substep?: string;          // Numeric string "1", "2", or "{n}"
-}
+// Re-export StepId from schemas (canonical definition)
+export type { StepId } from '../schemas.js';
+
+// Import for use in this module
+import type { StepId } from '../schemas.js';
 
 export interface ParseStepIdOptions {
   /** Require a separator after the step ID (space, dash, colon) */
