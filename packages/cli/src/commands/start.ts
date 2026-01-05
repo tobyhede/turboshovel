@@ -63,7 +63,14 @@ export function registerStartCommand(program: Command): void {
 
         // Mode 2: File start (must come before Mode 3 to handle file + --agent case)
         if (file && !options.step) {
-          const filePath = path.isAbsolute(file) ? file : path.join(cwd, file);
+          const filePath = await resolveWorkflowFile(cwd, file);
+
+          if (!filePath) {
+            console.error(`Error: Workflow not found: ${file}`);
+            console.error(`Try 'tsv workflows' to list available workflows.`);
+            process.exit(1);
+          }
+
           const content = await fs.readFile(filePath, 'utf8');
           const workflow = parseWorkflowDocument(content, path.basename(filePath));
 
