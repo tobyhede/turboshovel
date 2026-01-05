@@ -1,13 +1,17 @@
 ## 1. Setup
 
 ```bash
-npm install
+tsv test --result pass
 ```
+
+- PASS: CONTINUE
+- FAIL: STOP
 
 ## 2. Test
 
 ```bash
-npm test
+tsv test --result fail --result fail --result pass
 ```
 
+- PASS: DONE
 - FAIL: RETRY 2
