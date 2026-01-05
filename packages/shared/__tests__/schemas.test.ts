@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { parseHookInput, WorkflowStateSchema } from '../src/schemas.js';
+import { parseHookInput, WorkflowStateSchema, StepNumberSchema } from '../src/schemas.js';
 import { MAX_STEP_NUMBER } from '../src/workflow/types.js';
 
 /**
@@ -103,5 +103,22 @@ describe('WorkflowStateSchema - StepId validation', () => {
       createValidState({ pendingSteps: [{ substep: '1' }] })
     );
     expect(result.success).toBe(false);
+  });
+});
+
+describe('StepNumber schema-derived type', () => {
+  it('parses valid step number and returns branded type', () => {
+    const parsed = StepNumberSchema.parse(5);
+    expect(parsed).toBe(5);
+    // Runtime check that branded value equals underlying number
+    expect(parsed === 5).toBe(true);
+  });
+
+  it('safeParse returns branded type on success', () => {
+    const result = StepNumberSchema.safeParse(3);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toBe(3);
+    }
   });
 });

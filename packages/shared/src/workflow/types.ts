@@ -1,11 +1,12 @@
 // src/workflow/types.ts
 
 import type { StepId } from './step-id.js';
+import type { StepNumber } from '../schemas.js';
 
 /**
- * Branded type for step numbers (1-indexed, never zero)
+ * Re-export StepNumber type from schemas (source of truth)
  */
-export type StepNumber = number & { readonly __brand: 'StepNumber' };
+export type { StepNumber };
 
 /**
  * Maximum valid step number (prevent overflow, keep IDs reasonable)

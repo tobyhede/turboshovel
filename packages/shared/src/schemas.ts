@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MAX_STEP_NUMBER, type StepNumber, type StepId } from './workflow/types.js';
+import { MAX_STEP_NUMBER, type StepId } from './workflow/types.js';
 
 /**
  * Zod schema for tool_input in Step tool calls
@@ -99,14 +99,20 @@ export type ValidatedSessionState = z.infer<typeof SessionStateSchema>;
 
 /**
  * Zod schema for StepNumber branded type
- * Validates and transforms plain number to branded StepNumber
+ * Uses Zod's native .brand() - schema is source of truth
  */
 export const StepNumberSchema = z
   .number()
   .int('Step number must be an integer')
   .positive('Step number must be positive')
   .max(MAX_STEP_NUMBER, 'Step number exceeds maximum')
-  .transform((n): StepNumber => n as StepNumber);
+  .brand<'StepNumber'>();
+
+/**
+ * StepNumber type derived from schema
+ * This is the canonical definition - types.ts re-exports this
+ */
+export type StepNumber = z.output<typeof StepNumberSchema>;
 
 /**
  * Zod schema for StepId branded type
