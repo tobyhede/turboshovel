@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { parseHookInput, WorkflowStateSchema, StepNumberSchema, StepIdSchema } from '../src/schemas.js';
+import { parseHookInput, WorkflowStateSchema, StepNumberSchema, StepIdSchema, ActionSchema } from '../src/schemas.js';
 import { MAX_STEP_NUMBER } from '../src/workflow/types.js';
 
 /**
@@ -141,5 +141,43 @@ describe('StepId schema-derived type', () => {
     // TypeScript should prevent: parsed.step = 6;
     // Runtime check that object has expected shape
     expect(Object.keys(parsed).sort()).toEqual(['step', 'substep']);
+  });
+});
+
+describe('Action schema-derived type', () => {
+  it('parses CONTINUE action', () => {
+    const parsed = ActionSchema.parse({ type: 'CONTINUE' });
+    expect(parsed.type).toBe('CONTINUE');
+  });
+
+  it('parses GOTO with StepId', () => {
+    const parsed = ActionSchema.parse({ type: 'GOTO', target: { step: 5 } });
+    expect(parsed.type).toBe('GOTO');
+    if (parsed.type === 'GOTO') {
+      expect(parsed.target.step).toBe(5);
+    }
+  });
+
+  it('parses RETRY with nested action', () => {
+    const parsed = ActionSchema.parse({
+      type: 'RETRY',
+      max: 3,
+      then: { type: 'STOP', message: 'Failed after retries' }
+    });
+    expect(parsed.type).toBe('RETRY');
+    if (parsed.type === 'RETRY') {
+      expect(parsed.max).toBe(3);
+      expect(parsed.then.type).toBe('STOP');
+    }
+  });
+
+  it('parses NEXT action', () => {
+    const parsed = ActionSchema.parse({ type: 'NEXT' });
+    expect(parsed.type).toBe('NEXT');
+  });
+
+  it('parses DONE action', () => {
+    const parsed = ActionSchema.parse({ type: 'DONE' });
+    expect(parsed.type).toBe('DONE');
   });
 });

@@ -131,30 +131,41 @@ export const StepIdSchema = z.object({
 export type StepId = Readonly<z.output<typeof StepIdSchema>>;
 
 /**
+ * Non-recursive action types (everything except RETRY)
+ */
+export const NonRetryActionSchema = z.union([
+  z.object({ type: z.literal('CONTINUE') }),
+  z.object({ type: z.literal('DONE') }),
+  z.object({ type: z.literal('STOP'), message: z.string().optional() }),
+  z.object({ type: z.literal('GOTO'), target: StepIdSchema }),
+  z.object({ type: z.literal('NEXT') }),
+]);
+
+/**
+ * NonRetryAction type derived from schema
+ * Wrapped in Readonly to preserve immutability contract
+ */
+export type NonRetryAction = Readonly<z.output<typeof NonRetryActionSchema>>;
+
+/**
  * Zod schema for Action
  * Validates workflow transition actions (CONTINUE, DONE, STOP, GOTO, NEXT, RETRY)
- * Note: Uses z.ZodType without explicit Action param due to branded type transforms
  */
-export const ActionSchema: z.ZodType = z.lazy(() =>
-  z.union([
-    z.object({ type: z.literal('CONTINUE') }),
-    z.object({ type: z.literal('DONE') }),
-    z.object({ type: z.literal('STOP'), message: z.string().optional() }),
-    z.object({ type: z.literal('GOTO'), target: StepIdSchema }),
-    z.object({ type: z.literal('NEXT') }),
-    z.object({
-      type: z.literal('RETRY'),
-      max: z.number().int().positive(),
-      then: z.union([
-        z.object({ type: z.literal('CONTINUE') }),
-        z.object({ type: z.literal('DONE') }),
-        z.object({ type: z.literal('STOP'), message: z.string().optional() }),
-        z.object({ type: z.literal('GOTO'), target: StepIdSchema }),
-        z.object({ type: z.literal('NEXT') }),
-      ]),
-    }),
-  ])
-);
+export const ActionSchema = z.union([
+  NonRetryActionSchema,
+  z.object({
+    type: z.literal('RETRY'),
+    max: z.number().int().positive(),
+    then: NonRetryActionSchema,
+  }),
+]);
+
+/**
+ * Action type derived from schema
+ * Discriminated union for workflow actions
+ * Wrapped in Readonly to preserve immutability contract
+ */
+export type Action = Readonly<z.output<typeof ActionSchema>>;
 
 /**
  * Zod schema for Transitions
