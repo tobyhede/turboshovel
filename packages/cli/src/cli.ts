@@ -15,6 +15,7 @@ import { registerPopCommand } from './commands/pop.js';
 import { registerGateCommand } from './commands/gate.js';
 import { registerTestCommand } from './commands/test.js';
 import { registerWorkflowsCommand } from './commands/workflows.js';
+import { registerValidateCommand } from './commands/validate.js';
 
 const program = new CommandClass();
 
@@ -45,5 +46,7 @@ registerWorkflowsCommand(program);
 registerGateCommand(program);
 
 registerTestCommand(program);
+
+registerValidateCommand(program);
 
 program.parse();
