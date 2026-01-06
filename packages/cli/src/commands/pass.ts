@@ -9,6 +9,7 @@ import {
   printActionBlock,
   printWorkflowComplete,
   printWorkflowBlocked,
+  createStepNumber,
 } from '@turboshovel/shared';
 import { resolveWorkflowFile } from '../helpers/resolve-workflow.js';
 import { getCwd } from '../helpers/context.js';
@@ -142,7 +143,10 @@ export function registerPassCommand(program: Command): void {
 
         // Handle completion
         if (isComplete) {
-          await manager.update(state.id, { variables: { ...state.variables, completed: true } });
+          await manager.update(state.id, {
+            step: createStepNumber(totalSteps) ?? state.step,
+            variables: { ...state.variables, completed: true }
+          });
           printWorkflowComplete();
 
           // If this was a child workflow with agent, update parent's agent binding

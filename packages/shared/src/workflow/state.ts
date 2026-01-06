@@ -17,7 +17,7 @@ import type { StepId } from './step-id.js';
 import { WorkflowStateSchema } from '../schemas.js';
 import { compileWorkflowToMachine } from './compiler.js';
 
-const STATE_DIR = '.claude/turboshovel/workflows';
+const STATE_DIR = '.claude/turboshovel/runbooks';
 const SESSION_FILE = '.claude/turboshovel/session.json';
 
 function generateId(): string {

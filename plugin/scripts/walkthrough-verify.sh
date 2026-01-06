@@ -49,7 +49,7 @@ fi
 echo "All expected log entries found"
 
 # Check workflow state directory exists
-STATE_DIR=".claude/turboshovel/workflows"
+STATE_DIR=".claude/turboshovel/runbooks"
 if [[ ! -d "$STATE_DIR" ]]; then
   echo "FAIL: Workflow state directory not found"
   exit 1

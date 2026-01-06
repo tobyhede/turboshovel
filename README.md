@@ -40,26 +40,9 @@ EOF
 ### 2. Execute a Runbook
 Use a Runbook to guide the agent through a standard process.
 
-**Create a Runbook file:**
-```markdown
-# .claude/runbooks/feature.rundown.md
-
-## 1. Plan
-Create an implementation plan.
-- PASS: CONTINUE
-
-## 2. Implement
-Write the code.
-- PASS: CONTINUE
-
-## 3. Verify
-Run tests.
-- PASS: DONE
-```
-
-**Run it:**
+**Run an existing example:**
 ```bash
-tsv run feature.rundown.md
+tsv run examples/runbooks/simple.runbook.md
 ```
 
 ### 3. Add Safety Nets (Quality Gates)
@@ -106,7 +89,7 @@ npm install -g @turboshovel/cli
 
 ## Examples
 Check the `examples/` directory for ready-to-use configurations and Runbooks:
-- `examples/rundowns/simple.rundown.md` - Minimal Rundown.
+- `examples/runbooks/simple.runbook.md` - Minimal Runbook.
 - `examples/context/` - Example context files.
 - `examples/strict.json` - Strict quality gate configuration.
 

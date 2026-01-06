@@ -196,7 +196,7 @@ Full end-to-end tests via subprocess execution.
 
 ```typescript
 it('completes simple two-step workflow', async () => {
-  let result = runCli('start runbooks/simple.runbook.md', workspace);
+  let result = runCli('run runbooks/simple.runbook.md', workspace);
   expect(result.exitCode).toBe(0);
   
   result = runCli('next', workspace);

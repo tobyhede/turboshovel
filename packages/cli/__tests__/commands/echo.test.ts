@@ -5,7 +5,7 @@ import {
   type TestWorkspace,
 } from '../helpers/test-utils.js';
 
-describe('test command', () => {
+describe('echo command', () => {
   let workspace: TestWorkspace;
 
   beforeEach(async () => {
@@ -17,30 +17,30 @@ describe('test command', () => {
   });
 
   it('exists and shows help', () => {
-    const result = runCli('test --help', workspace);
-    expect(result.stdout).toContain('Test command');
+    const result = runCli('echo --help', workspace);
+    expect(result.stdout).toContain('Echo command');
   });
 
   describe('result sequence', () => {
     beforeEach(async () => {
       // Start a workflow first (prompted mode to keep it active)
-      runCli('start --prompted runbooks/retry.runbook.md', workspace);
+      runCli('run --prompted runbooks/retry.runbook.md', workspace);
     });
 
     it('returns pass by default (no flags)', () => {
-      const result = runCli('test npm install', workspace);
+      const result = runCli('echo npm install', workspace);
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('[PASS]');
     });
 
     it('returns pass with explicit --result pass', () => {
-      const result = runCli('test --result pass npm install', workspace);
+      const result = runCli('echo --result pass npm install', workspace);
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('[PASS]');
     });
 
     it('returns fail with --result fail', () => {
-      const result = runCli('test --result fail npm install', workspace);
+      const result = runCli('echo --result fail npm install', workspace);
       expect(result.exitCode).toBe(1);
       expect(result.stdout).toContain('[FAIL]');
     });
@@ -52,15 +52,15 @@ describe('test command', () => {
 
   describe('error handling', () => {
     it('fails when no active workflow', () => {
-      const result = runCli('test npm install', workspace);
+      const result = runCli('echo npm install', workspace);
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('No active workflow');
     });
 
     it('fails with invalid result value', () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
-      const result = runCli('test --result maybe npm install', workspace);
+      const result = runCli('echo --result maybe npm install', workspace);
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Invalid result');
     });

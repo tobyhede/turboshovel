@@ -49,11 +49,10 @@ You orchestrate the workflow. Use these commands:
 
 | Command | Purpose |
 |---------|---------|
-| `tsv run <file>` | Begin a workflow |
-| `tsv next` | Advance after step completes |
-| `tsv next --goto N` | Jump to specific step |
-| `tsv next --pass --agent <id>` | Mark agent step as passed |
-| `tsv next --fail --agent <id>` | Mark agent step as failed |
+| `tsv run <file>` | Begin a runbook |
+| `tsv pass` | Mark current step as passed |
+| `tsv fail` | Mark current step as failed |
+| `tsv goto N` | Jump to specific step |
 | `tsv status` | Check current state |
 | `tsv complete` | Mark workflow finished |
 | `tsv stop` | Abort workflow |

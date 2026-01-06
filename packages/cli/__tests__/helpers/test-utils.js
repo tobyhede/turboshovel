@@ -11,15 +11,15 @@ const __dirname = dirname(__filename);
 export async function createTestWorkspace() {
     const tempDir = await mkdtemp(join(tmpdir(), 'tsv-test-'));
     // Create .claude/turboshovel structure
-    await mkdir(join(tempDir, '.claude', 'turboshovel', 'workflows'), { recursive: true });
+    await mkdir(join(tempDir, '.claude', 'turboshovel', 'runbooks'), { recursive: true });
     // Copy fixtures to temp dir
     const fixturesDir = join(__dirname, '..', 'fixtures');
-    await cp(fixturesDir, join(tempDir, 'workflows'), { recursive: true });
+    await cp(fixturesDir, join(tempDir, 'runbooks'), { recursive: true });
     return {
         cwd: tempDir,
         cleanup: () => rm(tempDir, { recursive: true, force: true }),
-        workflowPath: (name) => join(tempDir, 'workflows', name),
-        statePath: () => join(tempDir, '.claude', 'turboshovel', 'workflows'),
+        workflowPath: (name) => join(tempDir, 'runbooks', name),
+        statePath: () => join(tempDir, '.claude', 'turboshovel', 'runbooks'),
         sessionPath: () => join(tempDir, '.claude', 'turboshovel', 'session.json'),
     };
 }
@@ -28,7 +28,7 @@ export async function createTestWorkspace() {
  *
  * @param args - Command arguments as string or array. Use array for paths with spaces.
  * @example
- * runCli('start workflow.md', workspace)           // Simple args
+ * runCli('run workflow.md', workspace)           // Simple args
  * runCli(['start', 'my workflow.md'], workspace)   // Path with spaces
  */
 export function runCli(args, workspace) {

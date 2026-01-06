@@ -39,7 +39,7 @@ describe('WorkflowStateManager', () => {
     test('persists state to file', async () => {
       const state = await manager.create('test.runbook.md', { steps: mockSteps });
 
-      const statePath = join(testDir, '.claude/turboshovel/workflows', `${state.id}.json`);
+      const statePath = join(testDir, '.claude/turboshovel/runbooks', `${state.id}.json`);
       const fileContent = await fs.readFile(statePath, 'utf8');
       const parsed = JSON.parse(fileContent);
 

@@ -223,7 +223,7 @@ Parsers and executors must adhere to strict validation:
 
 ## 10. Examples
 
-Executable examples and conformance test cases are maintained in the `packages/shared/fixtures/workflow/conformance/` directory.
+Executable examples and conformance test cases are maintained in the `packages/parser/fixtures/conformance/` directory.
 
-- **Valid Workflows**: `fixtures/workflow/conformance/valid/`
-- **Invalid Workflows (Error Cases)**: `fixtures/workflow/conformance/invalid/`
+- **Valid Runbooks**: `packages/parser/fixtures/conformance/valid/`
+- **Invalid Runbooks (Error Cases)**: `packages/parser/fixtures/conformance/invalid/`

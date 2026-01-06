@@ -11,7 +11,7 @@ describe('Nested Workflow Integration', () => {
         await workspace.cleanup();
     });
     it('should complete full parent-child workflow cycle', async () => {
-        // 1. Create parent and child workflows
+        // 1. Create parent and child runbooks
         const parentWorkflow = `## 1. Dispatch agent
 
 ### 1.1
@@ -25,13 +25,13 @@ Complete the work.
 
 - PASS: DONE
 `;
-        // Write workflows to workspace
-        const workflowsDir = join(workspace.cwd, 'workflows');
-        await mkdir(workflowsDir, { recursive: true });
-        await writeFile(join(workflowsDir, 'parent.runbook.md'), parentWorkflow);
-        await writeFile(join(workflowsDir, 'child.runbook.md'), childWorkflow);
+        // Write runbooks to workspace
+        const runbooksDir = join(workspace.cwd, 'runbooks');
+        await mkdir(runbooksDir, { recursive: true });
+        await writeFile(join(runbooksDir, 'parent.runbook.md'), parentWorkflow);
+        await writeFile(join(runbooksDir, 'child.runbook.md'), childWorkflow);
         // 2. Start parent workflow
-        let result = runCli('start runbooks/parent.runbook.md', workspace);
+        let result = runCli('run runbooks/parent.runbook.md', workspace);
         expect(result.exitCode).toBe(0);
         expect(result.stdout).toContain('Started workflow');
         // 3. Queue task with workflow

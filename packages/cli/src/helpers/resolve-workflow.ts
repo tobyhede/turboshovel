@@ -3,15 +3,15 @@ import * as path from 'path';
 import { findRunbookByName } from '../services/discovery.js';
 
 /**
- * Resolve workflow file by path (existing logic).
+ * Resolve runbook file by path (existing logic).
  * Search order:
- * 1. .claude/workflows/ (project-local)
- * 2. $CLAUDE_PLUGIN_ROOT/workflows/ (plugin directory)
+ * 1. .claude/runbooks/ (project-local)
+ * 2. $CLAUDE_PLUGIN_ROOT/runbooks/ (plugin directory)
  * 3. Relative to cwd
  *
  * @param cwd - Current working directory
- * @param filename - Workflow filename to find
- * @returns Absolute path to workflow file, or null if not found
+ * @param filename - Runbook filename to find
+ * @returns Absolute path to runbook file, or null if not found
  */
 async function resolveByPath(cwd: string, filename: string): Promise<string | null> {
   // 1. Check project-local .claude/runbooks/
@@ -21,7 +21,7 @@ async function resolveByPath(cwd: string, filename: string): Promise<string | nu
     return localPath;
   } catch { /* not found */ }
 
-  // 2. Check plugin workflows directory
+  // 2. Check plugin runbooks directory
   const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
   if (pluginRoot) {
     const pluginPath = path.join(pluginRoot, 'runbooks', filename);
@@ -54,23 +54,23 @@ function isPathIdentifier(identifier: string): boolean {
 }
 
 /**
- * Resolve workflow file from multiple sources.
+ * Resolve runbook file from multiple sources.
  * Supports both path-based and name-based resolution:
- * - Path mode: .claude/workflows/file.md, ./path/to/file.md, etc.
- * - Name mode: "verify", "my-workflow", etc.
+ * - Path mode: .claude/runbooks/file.md, ./path/to/file.md, etc.
+ * - Name mode: "verify", "my-runbook", etc.
  *
  * Search order for path mode:
- * 1. .claude/workflows/ (project-local)
- * 2. $CLAUDE_PLUGIN_ROOT/workflows/ (plugin directory)
+ * 1. .claude/runbooks/ (project-local)
+ * 2. $CLAUDE_PLUGIN_ROOT/runbooks/ (plugin directory)
  * 3. Relative to cwd
  *
  * Search order for name mode:
- * 1. Project workflows directory
- * 2. Plugin workflows directory
+ * 1. Project runbooks directory
+ * 2. Plugin runbooks directory
  *
  * @param cwd - Current working directory
- * @param identifier - Workflow filename or name to find
- * @returns Absolute path to workflow file, or null if not found
+ * @param identifier - Runbook filename or name to find
+ * @returns Absolute path to runbook file, or null if not found
  */
 export async function resolveWorkflowFile(cwd: string, identifier: string): Promise<string | null> {
   // Detect if identifier is path-based or name-based

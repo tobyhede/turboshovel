@@ -3,26 +3,26 @@ import { mkdir, mkdtemp, rm, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import {
-  discoverWorkflows,
-  findWorkflowByName,
+  discoverRunbooks,
+  findRunbookByName,
   scanDirectory,
   getSearchPaths,
-  type DiscoveredWorkflow,
+  type DiscoveredRunbook,
 } from '../../src/services/discovery.js';
 
 describe('discovery service', () => {
   let tempDir: string;
-  let projectWorkflowsDir: string;
-  let pluginWorkflowsDir: string;
+  let projectRunbooksDir: string;
+  let pluginRunbooksDir: string;
 
   beforeEach(async () => {
     // Create isolated temp directories
     tempDir = await mkdtemp(join(tmpdir(), 'discovery-test-'));
-    projectWorkflowsDir = join(tempDir, '.claude', 'workflows');
-    pluginWorkflowsDir = join(tempDir, 'plugin-workflows');
+    projectRunbooksDir = join(tempDir, '.claude', 'runbooks');
+    pluginRunbooksDir = join(tempDir, 'plugin-runbooks');
 
-    await mkdir(projectWorkflowsDir, { recursive: true });
-    await mkdir(pluginWorkflowsDir, { recursive: true });
+    await mkdir(projectRunbooksDir, { recursive: true });
+    await mkdir(pluginRunbooksDir, { recursive: true });
   });
 
   afterEach(async () => {
@@ -34,13 +34,13 @@ describe('discovery service', () => {
       const paths = getSearchPaths(tempDir);
 
       expect(paths.length).toBeGreaterThan(0);
-      expect(paths[0].path).toBe(projectWorkflowsDir);
+      expect(paths[0].path).toBe(projectRunbooksDir);
       expect(paths[0].source).toBe('project');
     });
 
     it('includes plugin directory when CLAUDE_PLUGIN_ROOT is set', async () => {
       const originalEnv = process.env.CLAUDE_PLUGIN_ROOT;
-      process.env.CLAUDE_PLUGIN_ROOT = pluginWorkflowsDir;
+      process.env.CLAUDE_PLUGIN_ROOT = pluginRunbooksDir;
 
       try {
         const paths = getSearchPaths(tempDir);
@@ -48,7 +48,7 @@ describe('discovery service', () => {
         expect(paths.length).toBe(2);
         expect(paths[0].source).toBe('project');
         expect(paths[1].source).toBe('plugin');
-        expect(paths[1].path).toBe(join(pluginWorkflowsDir, 'workflows'));
+        expect(paths[1].path).toBe(join(pluginRunbooksDir, 'runbooks'));
       } finally {
         process.env.CLAUDE_PLUGIN_ROOT = originalEnv;
       }
@@ -83,11 +83,11 @@ description: Test workflow
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'my-workflow.runbook.md'),
+        join(projectRunbooksDir, 'my-workflow.runbook.md'),
         workflowContent
       );
 
-      const workflows = await scanDirectory(projectWorkflowsDir, 'project');
+      const workflows = await scanDirectory(projectRunbooksDir, 'project');
 
       expect(workflows).toHaveLength(1);
       expect(workflows[0].name).toBe('my-workflow');
@@ -118,11 +118,11 @@ Content here
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'test-workflow.runbook.md'),
+        join(projectRunbooksDir, 'test-workflow.runbook.md'),
         workflowContent
       );
 
-      const workflows = await scanDirectory(projectWorkflowsDir, 'project');
+      const workflows = await scanDirectory(projectRunbooksDir, 'project');
 
       expect(workflows).toHaveLength(1);
       expect(workflows[0].name).toBe('test-workflow');
@@ -136,11 +136,11 @@ Content without frontmatter
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'no-frontmatter.runbook.md'),
+        join(projectRunbooksDir, 'no-frontmatter.runbook.md'),
         workflowContent
       );
 
-      const workflows = await scanDirectory(projectWorkflowsDir, 'project');
+      const workflows = await scanDirectory(projectRunbooksDir, 'project');
 
       expect(workflows).toHaveLength(1);
       expect(workflows[0].name).toBe('no-frontmatter');
@@ -148,12 +148,12 @@ Content without frontmatter
 
     it('skips non-.runbook.md files', async () => {
       await writeFile(
-        join(projectWorkflowsDir, 'not-a-workflow.md'),
+        join(projectRunbooksDir, 'not-a-workflow.md'),
         '# Just a markdown file'
       );
-      await writeFile(join(projectWorkflowsDir, 'readme.txt'), 'Not markdown');
+      await writeFile(join(projectRunbooksDir, 'readme.txt'), 'Not markdown');
 
-      const workflows = await scanDirectory(projectWorkflowsDir, 'project');
+      const workflows = await scanDirectory(projectRunbooksDir, 'project');
 
       expect(workflows).toEqual([]);
     });
@@ -167,12 +167,12 @@ invalid: yaml: syntax:
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'invalid.runbook.md'),
+        join(projectRunbooksDir, 'invalid.runbook.md'),
         invalidFrontmatter
       );
 
       // Should not throw, falls back to filename
-      const workflows = await scanDirectory(projectWorkflowsDir, 'project');
+      const workflows = await scanDirectory(projectRunbooksDir, 'project');
 
       // File should be included, using filename as name
       expect(workflows).toHaveLength(1);
@@ -188,11 +188,11 @@ description: Missing name field
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'missing-name.runbook.md'),
+        join(projectRunbooksDir, 'missing-name.runbook.md'),
         missingName
       );
 
-      const workflows = await scanDirectory(projectWorkflowsDir, 'project');
+      const workflows = await scanDirectory(projectRunbooksDir, 'project');
 
       // Should fall back to filename since frontmatter validation fails
       expect(workflows).toHaveLength(1);
@@ -208,14 +208,14 @@ name: test-workflow
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'test-workflow.runbook.md'),
+        join(projectRunbooksDir, 'test-workflow.runbook.md'),
         workflowContent
       );
 
-      const workflows = await scanDirectory(projectWorkflowsDir, 'project');
+      const workflows = await scanDirectory(projectRunbooksDir, 'project');
 
       expect(workflows[0].path).toBe(
-        join(projectWorkflowsDir, 'test-workflow.runbook.md')
+        join(projectRunbooksDir, 'test-workflow.runbook.md')
       );
     });
 
@@ -228,19 +228,19 @@ name: test-workflow
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'test-workflow.runbook.md'),
+        join(projectRunbooksDir, 'test-workflow.runbook.md'),
         workflowContent
       );
 
-      const projectWorkflows = await scanDirectory(projectWorkflowsDir, 'project');
+      const projectWorkflows = await scanDirectory(projectRunbooksDir, 'project');
       expect(projectWorkflows[0].source).toBe('project');
 
-      const pluginWorkflows = await scanDirectory(projectWorkflowsDir, 'plugin');
+      const pluginWorkflows = await scanDirectory(projectRunbooksDir, 'plugin');
       expect(pluginWorkflows[0].source).toBe('plugin');
     });
   });
 
-  describe('discoverWorkflows()', () => {
+  describe('discoverRunbooks()', () => {
     it('finds workflows in project directory', async () => {
       const workflowContent = `---
 name: project-workflow
@@ -250,11 +250,11 @@ name: project-workflow
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'project-workflow.runbook.md'),
+        join(projectRunbooksDir, 'project-workflow.runbook.md'),
         workflowContent
       );
 
-      const workflows = await discoverWorkflows(tempDir);
+      const workflows = await discoverRunbooks(tempDir);
 
       expect(workflows).toHaveLength(1);
       expect(workflows[0].name).toBe('project-workflow');
@@ -262,7 +262,7 @@ name: project-workflow
     });
 
     it('returns empty array when no workflows exist', async () => {
-      const workflows = await discoverWorkflows(tempDir);
+      const workflows = await discoverRunbooks(tempDir);
 
       expect(workflows).toEqual([]);
     });
@@ -284,15 +284,15 @@ description: Second workflow
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'workflow-one.runbook.md'),
+        join(projectRunbooksDir, 'workflow-one.runbook.md'),
         workflow1
       );
       await writeFile(
-        join(projectWorkflowsDir, 'workflow-two.runbook.md'),
+        join(projectRunbooksDir, 'workflow-two.runbook.md'),
         workflow2
       );
 
-      const workflows = await discoverWorkflows(tempDir);
+      const workflows = await discoverRunbooks(tempDir);
 
       expect(workflows).toHaveLength(2);
       expect(workflows.map((w) => w.name)).toEqual(
@@ -304,8 +304,8 @@ description: Second workflow
       // Set up plugin directory
       const originalEnv = process.env.CLAUDE_PLUGIN_ROOT;
       const pluginRoot = join(tempDir, 'plugin-root');
-      const pluginWorkflowDir = join(pluginRoot, 'workflows');
-      await mkdir(pluginWorkflowDir, { recursive: true });
+      const pluginRunbookDir = join(pluginRoot, 'runbooks');
+      await mkdir(pluginRunbookDir, { recursive: true });
       process.env.CLAUDE_PLUGIN_ROOT = pluginRoot;
 
       try {
@@ -327,15 +327,15 @@ description: Plugin version
 `;
 
         await writeFile(
-          join(projectWorkflowsDir, 'shared-workflow.runbook.md'),
+          join(projectRunbooksDir, 'shared-workflow.runbook.md'),
           projectWorkflow
         );
         await writeFile(
-          join(pluginWorkflowDir, 'shared-workflow.runbook.md'),
+          join(pluginRunbookDir, 'shared-workflow.runbook.md'),
           pluginWorkflow
         );
 
-        const workflows = await discoverWorkflows(tempDir);
+        const workflows = await discoverRunbooks(tempDir);
 
         // Should only find one workflow (project version)
         expect(workflows).toHaveLength(1);
@@ -350,8 +350,8 @@ description: Plugin version
       // Set up plugin directory
       const originalEnv = process.env.CLAUDE_PLUGIN_ROOT;
       const pluginRoot = join(tempDir, 'plugin-root');
-      const pluginWorkflowDir = join(pluginRoot, 'workflows');
-      await mkdir(pluginWorkflowDir, { recursive: true });
+      const pluginRunbookDir = join(pluginRoot, 'runbooks');
+      await mkdir(pluginRunbookDir, { recursive: true });
       process.env.CLAUDE_PLUGIN_ROOT = pluginRoot;
 
       try {
@@ -370,15 +370,15 @@ name: plugin-workflow
 `;
 
         await writeFile(
-          join(projectWorkflowsDir, 'project-workflow.runbook.md'),
+          join(projectRunbooksDir, 'project-workflow.runbook.md'),
           projectWorkflow
         );
         await writeFile(
-          join(pluginWorkflowDir, 'plugin-workflow.runbook.md'),
+          join(pluginRunbookDir, 'plugin-workflow.runbook.md'),
           pluginWorkflow
         );
 
-        const workflows = await discoverWorkflows(tempDir);
+        const workflows = await discoverRunbooks(tempDir);
 
         // Should find both workflows
         expect(workflows).toHaveLength(2);
@@ -403,11 +403,11 @@ tags:
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'test-workflow.runbook.md'),
+        join(projectRunbooksDir, 'test-workflow.runbook.md'),
         workflow
       );
 
-      const workflows = await discoverWorkflows(tempDir);
+      const workflows = await discoverRunbooks(tempDir);
 
       expect(workflows).toHaveLength(1);
       expect(workflows[0].name).toBe('test-workflow');
@@ -416,7 +416,7 @@ tags:
     });
   });
 
-  describe('findWorkflowByName()', () => {
+  describe('findRunbookByName()', () => {
     it('finds workflow by frontmatter name', async () => {
       const workflowContent = `---
 name: my-workflow
@@ -428,11 +428,11 @@ Content here
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'my-workflow.runbook.md'),
+        join(projectRunbooksDir, 'my-workflow.runbook.md'),
         workflowContent
       );
 
-      const workflow = await findWorkflowByName(tempDir, 'my-workflow');
+      const workflow = await findRunbookByName(tempDir, 'my-workflow');
 
       expect(workflow).not.toBeNull();
       expect(workflow?.name).toBe('my-workflow');
@@ -445,18 +445,18 @@ Content without frontmatter
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'no-frontmatter.runbook.md'),
+        join(projectRunbooksDir, 'no-frontmatter.runbook.md'),
         workflowContent
       );
 
-      const workflow = await findWorkflowByName(tempDir, 'no-frontmatter');
+      const workflow = await findRunbookByName(tempDir, 'no-frontmatter');
 
       expect(workflow).not.toBeNull();
       expect(workflow?.name).toBe('no-frontmatter');
     });
 
     it('returns null when workflow not found', async () => {
-      const workflow = await findWorkflowByName(tempDir, 'nonexistent');
+      const workflow = await findRunbookByName(tempDir, 'nonexistent');
 
       expect(workflow).toBeNull();
     });
@@ -470,11 +470,11 @@ name: my-workflow
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'my-workflow.runbook.md'),
+        join(projectRunbooksDir, 'my-workflow.runbook.md'),
         workflowContent
       );
 
-      const workflow = await findWorkflowByName(tempDir, 'My-Workflow');
+      const workflow = await findRunbookByName(tempDir, 'My-Workflow');
 
       expect(workflow).toBeNull();
     });
@@ -483,8 +483,8 @@ name: my-workflow
       // Set up plugin directory
       const originalEnv = process.env.CLAUDE_PLUGIN_ROOT;
       const pluginRoot = join(tempDir, 'plugin-root');
-      const pluginWorkflowDir = join(pluginRoot, 'workflows');
-      await mkdir(pluginWorkflowDir, { recursive: true });
+      const pluginRunbookDir = join(pluginRoot, 'runbooks');
+      await mkdir(pluginRunbookDir, { recursive: true });
       process.env.CLAUDE_PLUGIN_ROOT = pluginRoot;
 
       try {
@@ -505,15 +505,15 @@ description: Plugin version
 `;
 
         await writeFile(
-          join(projectWorkflowsDir, 'shared-workflow.runbook.md'),
+          join(projectRunbooksDir, 'shared-workflow.runbook.md'),
           projectWorkflow
         );
         await writeFile(
-          join(pluginWorkflowDir, 'shared-workflow.runbook.md'),
+          join(pluginRunbookDir, 'shared-workflow.runbook.md'),
           pluginWorkflow
         );
 
-        const workflow = await findWorkflowByName(tempDir, 'shared-workflow');
+        const workflow = await findRunbookByName(tempDir, 'shared-workflow');
 
         expect(workflow).not.toBeNull();
         expect(workflow?.source).toBe('project');
@@ -527,8 +527,8 @@ description: Plugin version
       // Set up plugin directory
       const originalEnv = process.env.CLAUDE_PLUGIN_ROOT;
       const pluginRoot = join(tempDir, 'plugin-root');
-      const pluginWorkflowDir = join(pluginRoot, 'workflows');
-      await mkdir(pluginWorkflowDir, { recursive: true });
+      const pluginRunbookDir = join(pluginRoot, 'runbooks');
+      await mkdir(pluginRunbookDir, { recursive: true });
       process.env.CLAUDE_PLUGIN_ROOT = pluginRoot;
 
       try {
@@ -541,11 +541,11 @@ description: Only in plugin
 `;
 
         await writeFile(
-          join(pluginWorkflowDir, 'plugin-only-workflow.runbook.md'),
+          join(pluginRunbookDir, 'plugin-only-workflow.runbook.md'),
           pluginWorkflow
         );
 
-        const workflow = await findWorkflowByName(tempDir, 'plugin-only-workflow');
+        const workflow = await findRunbookByName(tempDir, 'plugin-only-workflow');
 
         expect(workflow).not.toBeNull();
         expect(workflow?.source).toBe('plugin');
@@ -569,18 +569,18 @@ version: 1.0.0
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'complete-workflow.runbook.md'),
+        join(projectRunbooksDir, 'complete-workflow.runbook.md'),
         workflowContent
       );
 
-      const workflow = await findWorkflowByName(tempDir, 'complete-workflow');
+      const workflow = await findRunbookByName(tempDir, 'complete-workflow');
 
       expect(workflow).not.toBeNull();
       expect(workflow?.name).toBe('complete-workflow');
       expect(workflow?.description).toBe('Complete workflow description');
       expect(workflow?.tags).toEqual(['important', 'automation']);
       expect(workflow?.path).toBe(
-        join(projectWorkflowsDir, 'complete-workflow.runbook.md')
+        join(projectRunbooksDir, 'complete-workflow.runbook.md')
       );
       expect(workflow?.source).toBe('project');
     });
@@ -599,11 +599,11 @@ tags:
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'test-workflow.runbook.md'),
+        join(projectRunbooksDir, 'test-workflow.runbook.md'),
         workflowContent
       );
 
-      const workflows = await discoverWorkflows(tempDir);
+      const workflows = await discoverRunbooks(tempDir);
 
       expect(workflows).toHaveLength(1);
       expect(workflows[0].description).toContain('&');
@@ -619,11 +619,11 @@ tags: []
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'no-tags.runbook.md'),
+        join(projectRunbooksDir, 'no-tags.runbook.md'),
         workflowContent
       );
 
-      const workflow = await findWorkflowByName(tempDir, 'no-tags');
+      const workflow = await findRunbookByName(tempDir, 'no-tags');
 
       expect(workflow?.tags).toEqual([]);
     });
@@ -637,11 +637,11 @@ name: minimal-workflow
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'minimal-workflow.runbook.md'),
+        join(projectRunbooksDir, 'minimal-workflow.runbook.md'),
         workflowContent
       );
 
-      const workflow = await findWorkflowByName(tempDir, 'minimal-workflow');
+      const workflow = await findRunbookByName(tempDir, 'minimal-workflow');
 
       expect(workflow?.description).toBeUndefined();
       expect(workflow?.tags).toBeUndefined();

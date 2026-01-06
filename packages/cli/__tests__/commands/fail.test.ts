@@ -22,7 +22,7 @@ describe('fail command', () => {
 
   describe('FAIL: RETRY N', () => {
     beforeEach(async () => {
-      runCli('start --prompted runbooks/retry.runbook.md', workspace);
+      runCli('run --prompted runbooks/retry.runbook.md', workspace);
     });
 
     it('increments retryCount if under max', async () => {
@@ -42,7 +42,7 @@ describe('fail command', () => {
 
   describe('FAIL: STOP', () => {
     beforeEach(async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
     });
 
     it('blocks workflow', async () => {
@@ -71,7 +71,7 @@ describe('fail command', () => {
 
   describe('FAIL: GOTO N', () => {
     beforeEach(async () => {
-      runCli('start --prompted runbooks/fail-goto.runbook.md', workspace);
+      runCli('run --prompted runbooks/fail-goto.runbook.md', workspace);
     });
 
     it('jumps to specified step on failure', async () => {
@@ -91,10 +91,10 @@ describe('fail command', () => {
 - PASS: DONE
 - FAIL: STOP
 `;
-      await mkdir(join(workspace.cwd, 'workflows'), { recursive: true });
-      await writeFile(join(workspace.cwd, 'workflows', 'single-fail.md'), singleStep);
+      await mkdir(join(workspace.cwd, 'runbooks'), { recursive: true });
+      await writeFile(join(workspace.cwd, 'runbooks', 'single-fail.md'), singleStep);
 
-      runCli('start --prompted runbooks/single-fail.md --agent agent-001', workspace);
+      runCli('run --prompted runbooks/single-fail.md --agent agent-001', workspace);
 
       // Fail workflow - should block and pop
       const result = runCli('fail --agent agent-001', workspace);
@@ -121,15 +121,15 @@ Do work.
 - PASS: DONE
 - FAIL: DONE
 `;
-      await mkdir(join(workspace.cwd, 'workflows'), { recursive: true });
-      await writeFile(join(workspace.cwd, 'workflows', 'parent-fail.md'), parentWorkflow);
-      await writeFile(join(workspace.cwd, 'workflows', 'child-fail.md'), childWorkflow);
+      await mkdir(join(workspace.cwd, 'runbooks'), { recursive: true });
+      await writeFile(join(workspace.cwd, 'runbooks', 'parent-fail.md'), parentWorkflow);
+      await writeFile(join(workspace.cwd, 'runbooks', 'child-fail.md'), childWorkflow);
 
       // Start parent (prompted to prevent auto-completion)
-      runCli('start --prompted runbooks/parent-fail.md', workspace);
+      runCli('run --prompted runbooks/parent-fail.md', workspace);
 
       // Start child in same stack (prompted to prevent auto-completion)
-      runCli('start --prompted runbooks/child-fail.md', workspace);
+      runCli('run --prompted runbooks/child-fail.md', workspace);
 
       // Fail child - should complete (FAIL: DONE) and pop to parent
       const result = runCli('fail', workspace);

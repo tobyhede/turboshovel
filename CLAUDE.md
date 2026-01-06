@@ -96,7 +96,7 @@ When using turboshovel alongside other Claude Code plugins (like cipherpowers), 
 
 Claude Code automatically sets `${CLAUDE_PLUGIN_ROOT}` to the correct path for each plugin during hook execution. Project-level overrides break this mechanism.
 
-## Workflow System
+## Rundown System
 
 Execute multi-step processes with state tracking.
 
@@ -111,18 +111,18 @@ npm install -g @turboshovel/cli
 ### Commands
 
 ```bash
-tsv run <file>       # Run a workflow
+tsv run <file>       # Run a runbook
 tsv pass               # Mark current step as passed (evaluates PASS condition)
 tsv fail               # Mark current step as failed (evaluates FAIL condition)
 tsv goto <n>           # Jump to specific step number
 tsv status             # Show current state
-tsv stop               # Abort workflow
+tsv stop               # Abort runbook
 tsv complete           # Mark complete
 tsv stash              # Pause enforcement
 tsv pop                # Resume enforcement
-tsv ls                 # List active workflows
-tsv ls --all           # List available workflow files
-tsv check <file>       # Check workflow for errors
+tsv ls                 # List active runbooks
+tsv ls --all           # List available runbook files
+tsv check <file>       # Check runbook for errors
 tsv gate <name>        # Run a gate
 ```
 

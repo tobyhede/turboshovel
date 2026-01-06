@@ -19,7 +19,7 @@ export declare function createTestWorkspace(): Promise<TestWorkspace>;
  *
  * @param args - Command arguments as string or array. Use array for paths with spaces.
  * @example
- * runCli('start workflow.md', workspace)           // Simple args
+ * runCli('run workflow.md', workspace)           // Simple args
  * runCli(['start', 'my workflow.md'], workspace)   // Path with spaces
  */
 export declare function runCli(args: string | string[], workspace: TestWorkspace): CliResult;

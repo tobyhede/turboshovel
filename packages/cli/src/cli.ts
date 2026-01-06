@@ -15,6 +15,7 @@ import { registerPopCommand } from './commands/pop.js';
 import { registerGateCommand } from './commands/gate.js';
 import { registerEchoCommand } from './commands/echo.js';
 import { registerCheckCommand } from './commands/check.js';
+import { registerPruneCommand } from './commands/prune.js';
 
 const program = new CommandClass();
 
@@ -45,5 +46,7 @@ registerGateCommand(program);
 registerEchoCommand(program);
 
 registerCheckCommand(program);
+
+registerPruneCommand(program);
 
 program.parse();

@@ -13,7 +13,8 @@
     "test": "npm run test -w packages/shared && npm run test -w packages/cli && npm run test -w plugin/core",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "cli": "node packages/cli/dist/cli.js"
+    "cli": "node packages/cli/dist/cli.js",
+    "verify:e2e": "npx tsx scripts/verify-e2e.ts"
   },
   "devDependencies": {
     "eslint": "^9.17.0",

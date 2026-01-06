@@ -35,23 +35,23 @@ Complete task.
 - PASS: DONE
 `;
 
-    const workflowsDir = join(workspace.cwd, 'workflows');
+    const workflowsDir = join(workspace.cwd, 'runbooks');
     await mkdir(workflowsDir, { recursive: true });
     await writeFile(join(workflowsDir, 'parent.md'), parentWorkflow);
     await writeFile(join(workflowsDir, 'child.md'), childWorkflow);
 
     // 1. Start parent workflow (default stack, prompted to keep active)
-    let result = runCli('start --prompted runbooks/parent.md', workspace);
+    let result = runCli('run --prompted runbooks/parent.md', workspace);
     expect(result.exitCode).toBe(0);
 
     // 2. Start 3 child workflows in parallel agent stacks (prompted to keep active)
-    result = runCli('start --prompted runbooks/child.md --agent agent-001', workspace);
+    result = runCli('run --prompted runbooks/child.md --agent agent-001', workspace);
     expect(result.exitCode).toBe(0);
 
-    result = runCli('start --prompted runbooks/child.md --agent agent-002', workspace);
+    result = runCli('run --prompted runbooks/child.md --agent agent-002', workspace);
     expect(result.exitCode).toBe(0);
 
-    result = runCli('start --prompted runbooks/child.md --agent agent-003', workspace);
+    result = runCli('run --prompted runbooks/child.md --agent agent-003', workspace);
     expect(result.exitCode).toBe(0);
 
     // 3. Verify each agent sees their own workflow
@@ -96,16 +96,16 @@ Complete task.
 - PASS: DONE
 `;
 
-    const workflowsDir = join(workspace.cwd, 'workflows');
+    const workflowsDir = join(workspace.cwd, 'runbooks');
     await mkdir(workflowsDir, { recursive: true });
     await writeFile(join(workflowsDir, 'level1.md'), level1);
     await writeFile(join(workflowsDir, 'level2.md'), level2);
     await writeFile(join(workflowsDir, 'level3.md'), level3);
 
     // Start nested workflows (prompted to keep active at each level)
-    runCli('start --prompted runbooks/level1.md', workspace);
-    runCli('start --prompted runbooks/level2.md', workspace);
-    runCli('start --prompted runbooks/level3.md', workspace);
+    runCli('run --prompted runbooks/level1.md', workspace);
+    runCli('run --prompted runbooks/level2.md', workspace);
+    runCli('run --prompted runbooks/level3.md', workspace);
 
     // Verify deepest is active
     let result = runCli('status', workspace);
@@ -131,13 +131,13 @@ Complete task.
     const workflow = `## 1. Step
 - PASS: DONE
 `;
-    await mkdir(join(workspace.cwd, 'workflows'), { recursive: true });
-    await writeFile(join(workspace.cwd, 'workflows', 'test.md'), workflow);
+    await mkdir(join(workspace.cwd, 'runbooks'), { recursive: true });
+    await writeFile(join(workspace.cwd, 'runbooks', 'test.md'), workflow);
 
     // Start workflows in different stacks (prompted to keep active)
-    runCli('start --prompted runbooks/test.md', workspace);
-    runCli('start --prompted runbooks/test.md --agent agent-001', workspace);
-    runCli('start --prompted runbooks/test.md --agent agent-002', workspace);
+    runCli('run --prompted runbooks/test.md', workspace);
+    runCli('run --prompted runbooks/test.md --agent agent-001', workspace);
+    runCli('run --prompted runbooks/test.md --agent agent-002', workspace);
 
     // Read raw session
     const session = await readSession(workspace);

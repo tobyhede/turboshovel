@@ -10,7 +10,7 @@ describe('integration: full workflow scenarios', () => {
     });
     it('completes simple two-task workflow', async () => {
         // Start workflow
-        let result = runCli('start runbooks/simple.runbook.md', workspace);
+        let result = runCli('run runbooks/simple.runbook.md', workspace);
         expect(result.exitCode).toBe(0);
         expect(result.stdout).toContain('Task 1');
         // Advance to task 2
@@ -25,7 +25,7 @@ describe('integration: full workflow scenarios', () => {
         expect(session.active).toBeNull();
     });
     it('handles retry then success flow', async () => {
-        runCli('start runbooks/retry.runbook.md', workspace);
+        runCli('run runbooks/retry.runbook.md', workspace);
         // Fail first attempt
         let result = runCli('next --fail', workspace);
         expect(result.stdout).toContain('Retry 1/');
@@ -40,7 +40,7 @@ describe('integration: full workflow scenarios', () => {
         expect(result.stdout).toContain('complete');
     });
     it('handles GOTO flow', async () => {
-        runCli('start runbooks/goto.runbook.md', workspace);
+        runCli('run runbooks/goto.runbook.md', workspace);
         // Pass task 1 which GOTOs task 3
         let result = runCli('next --pass', workspace);
         expect(result.stdout).toContain('Task 3');
@@ -52,7 +52,7 @@ describe('integration: full workflow scenarios', () => {
         expect(result.stdout).toContain('complete');
     });
     it('handles stash and pop during workflow', async () => {
-        runCli('start runbooks/simple.runbook.md', workspace);
+        runCli('run runbooks/simple.runbook.md', workspace);
         runCli('next', workspace); // Advance to task 2
         // Stash
         let result = runCli('stash', workspace);
@@ -69,16 +69,16 @@ describe('integration: full workflow scenarios', () => {
         expect(result.stdout).toContain('complete');
     });
     it('handles agent binding workflow', async () => {
-        runCli('start runbooks/simple.runbook.md', workspace);
+        runCli('run runbooks/simple.runbook.md', workspace);
         // Queue tasks for agents
-        runCli('start --task 1', workspace);
-        runCli('start --task 2', workspace);
+        runCli('run --task 1', workspace);
+        runCli('run --task 2', workspace);
         // Bind first agent
-        let result = runCli('start --agent agent-1', workspace);
+        let result = runCli('run --agent agent-1', workspace);
         expect(result.stdout).toContain('agent-1');
         expect(result.stdout).toContain('bound');
         // Bind second agent
-        result = runCli('start --agent agent-2', workspace);
+        result = runCli('run --agent agent-2', workspace);
         expect(result.stdout).toContain('agent-2');
         expect(result.stdout).toContain('bound');
         // Check status shows both agents

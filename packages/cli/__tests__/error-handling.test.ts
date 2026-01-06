@@ -27,7 +27,7 @@ This doesn't have proper ## headers
 `;
       await writeFile(join(workspace.cwd, 'invalid.md'), invalidWorkflow);
 
-      const result = runCli('start invalid.md', workspace);
+      const result = runCli('run invalid.md', workspace);
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Syntax error');
@@ -36,7 +36,7 @@ This doesn't have proper ## headers
     it('handles empty workflow file', async () => {
       await writeFile(join(workspace.cwd, 'empty.md'), '');
 
-      const result = runCli('start empty.md', workspace);
+      const result = runCli('run empty.md', workspace);
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Syntax error');
@@ -45,7 +45,7 @@ This doesn't have proper ## headers
 
   describe('file not found', () => {
     it('handles missing workflow file', async () => {
-      const result = runCli('start nonexistent.md', workspace);
+      const result = runCli('run nonexistent.md', workspace);
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('not found');
@@ -55,7 +55,7 @@ This doesn't have proper ## headers
   describe('invalid state', () => {
     it('handles corrupted state file', async () => {
       // Start a workflow
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
       // Corrupt the state file
       const stateDir = workspace.statePath();
@@ -83,9 +83,9 @@ This doesn't have proper ## headers
     });
 
     it('shows specific error for invalid step format', async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
-      const result = runCli('start --step invalid-format', workspace);
+      const result = runCli('run --step invalid-format', workspace);
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Invalid step ID');

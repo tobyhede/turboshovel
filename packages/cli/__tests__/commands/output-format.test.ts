@@ -18,7 +18,7 @@ describe('output format integration tests', () => {
 
   describe('start command output', () => {
     it('prints metadata and action block', async () => {
-      const result = runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      const result = runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
       expect(result.exitCode).toBe(0);
       // Metadata section
@@ -30,13 +30,13 @@ describe('output format integration tests', () => {
     });
 
     it('includes workflow ID in metadata', async () => {
-      const result = runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      const result = runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
       expect(result.stdout).toMatch(/wf-\d{4}-\d{2}-\d{2}/);
     });
 
     it('shows first step details in action block', async () => {
-      const result = runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      const result = runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
       expect(result.stdout).toContain('Step:');
       expect(result.stdout).toContain('1/2');
@@ -46,7 +46,7 @@ describe('output format integration tests', () => {
 
   describe('pass command output', () => {
     beforeEach(async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
     });
 
     it('prints separator before action block', async () => {
@@ -77,7 +77,7 @@ describe('output format integration tests', () => {
 
   describe('fail command output', () => {
     it('prints retry action message for FAIL: RETRY', async () => {
-      runCli('start --prompted runbooks/retry.runbook.md', workspace);
+      runCli('run --prompted runbooks/retry.runbook.md', workspace);
 
       const result = runCli('fail', workspace);
 
@@ -89,7 +89,7 @@ describe('output format integration tests', () => {
     });
 
     it('prints blocked message for FAIL: STOP', async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
       const result = runCli('fail', workspace);
 
@@ -100,7 +100,7 @@ describe('output format integration tests', () => {
     });
 
     it('shows retry count in output', async () => {
-      runCli('start --prompted runbooks/retry.runbook.md', workspace);
+      runCli('run --prompted runbooks/retry.runbook.md', workspace);
 
       const result = runCli('fail', workspace);
 
@@ -111,7 +111,7 @@ describe('output format integration tests', () => {
 
   describe('goto command output', () => {
     beforeEach(async () => {
-      runCli('start --prompted runbooks/goto.runbook.md', workspace);
+      runCli('run --prompted runbooks/goto.runbook.md', workspace);
     });
 
     it('prints action without outcome', async () => {
@@ -142,7 +142,7 @@ describe('output format integration tests', () => {
 
   describe('status command output', () => {
     beforeEach(async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
     });
 
     it('prints metadata and step block', async () => {
@@ -172,7 +172,7 @@ describe('output format integration tests', () => {
     });
 
     it('shows pending steps when present', async () => {
-      runCli('start --step 2', workspace);
+      runCli('run --step 2', workspace);
 
       const result = runCli('status', workspace);
 
@@ -182,7 +182,7 @@ describe('output format integration tests', () => {
 
   describe('stop command output', () => {
     beforeEach(async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
     });
 
     it('prints metadata and stopped message', async () => {
@@ -209,7 +209,7 @@ describe('output format integration tests', () => {
 
   describe('complete command output', () => {
     beforeEach(async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
       runCli('pass', workspace); // Move to step 2 which has PASS: DONE
     });
 
@@ -238,7 +238,7 @@ describe('output format integration tests', () => {
 
   describe('stash command output', () => {
     beforeEach(async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
     });
 
     it('prints metadata, step, and stashed message', async () => {
@@ -269,7 +269,7 @@ describe('output format integration tests', () => {
 
   describe('pop command output', () => {
     beforeEach(async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
       runCli('pass', workspace); // Move to step 2
       runCli('stash', workspace);
     });
@@ -302,11 +302,11 @@ describe('output format integration tests', () => {
     });
   });
 
-  describe('list command output', () => {
+  describe('ls command output', () => {
     it('prints workflow entries', async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
-      const result = runCli('list', workspace);
+      const result = runCli('ls', workspace);
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('simple.runbook.md');
@@ -314,34 +314,34 @@ describe('output format integration tests', () => {
     });
 
     it('marks active workflow', async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
-      const result = runCli('list', workspace);
+      const result = runCli('ls', workspace);
 
       expect(result.stdout).toContain('active');
     });
 
     it('shows step number for each workflow', async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
-      const result = runCli('list', workspace);
+      const result = runCli('ls', workspace);
 
       expect(result.stdout).toContain('1/2');
     });
 
     it('shows all workflows in state directory', async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
       // Start another workflow to have multiple entries
       runCli('stop', workspace);
-      runCli('start --prompted runbooks/retry.runbook.md', workspace);
+      runCli('run --prompted runbooks/retry.runbook.md', workspace);
 
-      const result = runCli('list', workspace);
+      const result = runCli('ls', workspace);
 
       expect(result.stdout).toContain('retry.runbook.md');
     });
 
     it('displays "No workflows" when empty', async () => {
-      const result = runCli('list', workspace);
+      const result = runCli('ls', workspace);
 
       expect(result.stdout).toContain('No workflows');
     });
@@ -349,13 +349,13 @@ describe('output format integration tests', () => {
 
   describe('output formatting consistency across commands', () => {
     beforeEach(async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
     });
 
     it('all commands exit cleanly with proper status codes', async () => {
-      const startResult = runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      const startResult = runCli('run --prompted runbooks/simple.runbook.md', workspace);
       const statusResult = runCli('status', workspace);
-      const listResult = runCli('list', workspace);
+      const listResult = runCli('ls', workspace);
 
       expect(startResult.exitCode).toBe(0);
       expect(statusResult.exitCode).toBe(0);
@@ -364,7 +364,7 @@ describe('output format integration tests', () => {
 
     it('metadata appears consistently across commands', async () => {
       const statusResult = runCli('status', workspace);
-      const listResult = runCli('list', workspace);
+      const listResult = runCli('ls', workspace);
 
       // Both should contain workflow file reference
       expect(statusResult.stdout).toContain('simple.runbook.md');
@@ -373,7 +373,7 @@ describe('output format integration tests', () => {
 
     it('step information is consistently formatted', async () => {
       const statusResult = runCli('status', workspace);
-      const listResult = runCli('list', workspace);
+      const listResult = runCli('ls', workspace);
 
       // Both should show step number in format 1/2
       expect(statusResult.stdout).toContain('1/2');

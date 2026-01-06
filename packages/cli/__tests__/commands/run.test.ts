@@ -22,7 +22,7 @@ describe('start command', () => {
 
   describe('file mode', () => {
     it('creates workflow state from valid workflow file', async () => {
-      const result = runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      const result = runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Action:   START');
@@ -30,14 +30,14 @@ describe('start command', () => {
     });
 
     it('sets workflow as active', async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
       const session = await readSession(workspace);
       expect(session.active).toBeTruthy();
     });
 
     it('stores relative path in state', async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
       const state = await getActiveState(workspace);
       expect(state).not.toBeNull();
@@ -45,7 +45,7 @@ describe('start command', () => {
     });
 
     it('initializes step=1 and retryCount=0', async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
       const state = await getActiveState(workspace);
       expect(state?.step).toBe(1);
@@ -53,28 +53,28 @@ describe('start command', () => {
     });
 
     it('outputs first step description', async () => {
-      const result = runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      const result = runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
       expect(result.stdout).toContain('## 1.');
       expect(result.stdout).toContain('First step');
     });
 
     it('fails if file does not exist', async () => {
-      const result = runCli('start runbooks/nonexistent.md', workspace);
+      const result = runCli('run runbooks/nonexistent.md', workspace);
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('not found');
     });
 
     it('fails if no file argument provided', async () => {
-      const result = runCli('start', workspace);
+      const result = runCli('run', workspace);
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('required');
     });
 
     it('creates state file on disk', async () => {
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
       const stateFiles = await listWorkflowStates(workspace);
       expect(stateFiles.length).toBe(1);
@@ -83,7 +83,7 @@ describe('start command', () => {
 
   describe('auto-execution mode', () => {
     it('executes commands and advances through workflow', async () => {
-      const result = runCli('start runbooks/simple.runbook.md', workspace);
+      const result = runCli('run runbooks/simple.runbook.md', workspace);
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('$ tsv echo --result pass');
@@ -92,7 +92,7 @@ describe('start command', () => {
     });
 
     it('completes workflow when all commands pass', async () => {
-      runCli('start runbooks/simple.runbook.md', workspace);
+      runCli('run runbooks/simple.runbook.md', workspace);
 
       // Workflow completed, so activeWorkflow is null
       const session = await readSession(workspace);
@@ -103,32 +103,32 @@ describe('start command', () => {
   describe('step queueing mode (--step)', () => {
     beforeEach(async () => {
       // Start a workflow first (prompted mode to keep it active)
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
     });
 
     it('pushes step to pendingSteps queue', async () => {
-      const result = runCli('start --step 2', workspace);
+      const result = runCli('run --step 2', workspace);
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('queued');
     });
 
     it('accepts simple step number', async () => {
-      const result = runCli('start --step 1', workspace);
+      const result = runCli('run --step 1', workspace);
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Step 1 queued');
     });
 
     it('accepts substep format', async () => {
-      const result = runCli('start --step 1.1', workspace);
+      const result = runCli('run --step 1.1', workspace);
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('1.1');
     });
 
     it('adds step to state pendingSteps array', async () => {
-      runCli('start --step 2', workspace);
+      runCli('run --step 2', workspace);
 
       const state = await getActiveState(workspace);
       expect(state?.pendingSteps).toHaveLength(1);
@@ -138,20 +138,20 @@ describe('start command', () => {
       // Stop current workflow
       runCli('stop', workspace);
 
-      const result = runCli('start --step 2', workspace);
+      const result = runCli('run --step 2', workspace);
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('No active workflow');
     });
 
     it('fails if invalid step format', async () => {
-      const result = runCli('start --step abc', workspace);
+      const result = runCli('run --step abc', workspace);
 
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Invalid step ID');
     });
 
     it('should queue step with workflow file', async () => {
-      const result = runCli('start --step 1.1 runbooks/simple.runbook.md', workspace);
+      const result = runCli('run --step 1.1 runbooks/simple.runbook.md', workspace);
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('queued');
@@ -166,11 +166,11 @@ describe('start command', () => {
   describe('agent-scoped workflow start', () => {
     it('starts workflow in agent-specific stack', async () => {
       // Start parent in default stack (prompted to keep active)
-      let result = runCli('start --prompted runbooks/simple.runbook.md', workspace);
+      let result = runCli('run --prompted runbooks/simple.runbook.md', workspace);
       expect(result.exitCode).toBe(0);
 
       // Start child in agent-001 stack (prompted to keep active)
-      result = runCli('start --prompted runbooks/retry.runbook.md --agent agent-001', workspace);
+      result = runCli('run --prompted runbooks/retry.runbook.md --agent agent-001', workspace);
       expect(result.exitCode).toBe(0);
 
       // Default status should still show parent (simple.runbook.md)
@@ -186,26 +186,26 @@ describe('start command', () => {
   describe('agent binding mode (--agent)', () => {
     beforeEach(async () => {
       // Start workflow (prompted mode to keep it active) and queue a step
-      runCli('start --prompted runbooks/simple.runbook.md', workspace);
-      runCli('start --step 1', workspace);
+      runCli('run --prompted runbooks/simple.runbook.md', workspace);
+      runCli('run --step 1', workspace);
     });
 
     it('pops step from pendingSteps queue', async () => {
-      runCli('start --agent test-agent', workspace);
+      runCli('run --agent test-agent', workspace);
 
       const state = await getActiveState(workspace);
       expect(state?.pendingSteps).toHaveLength(0);
     });
 
     it('binds agent to popped step', async () => {
-      runCli('start --agent test-agent', workspace);
+      runCli('run --agent test-agent', workspace);
 
       const state = await getActiveState(workspace);
       expect(state?.agentBindings).toHaveProperty('test-agent');
     });
 
     it('sets agent status to running', async () => {
-      runCli('start --agent test-agent', workspace);
+      runCli('run --agent test-agent', workspace);
 
       const state = await getActiveState(workspace);
       const bindings = state?.agentBindings;
@@ -214,7 +214,7 @@ describe('start command', () => {
     });
 
     it('outputs binding info', async () => {
-      const result = runCli('start --agent test-agent', workspace);
+      const result = runCli('run --agent test-agent', workspace);
 
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('test-agent');
@@ -223,10 +223,10 @@ describe('start command', () => {
 
     it('fails if pendingSteps is empty', async () => {
       // Pop the queued step
-      runCli('start --agent agent1', workspace);
+      runCli('run --agent agent1', workspace);
 
       // Try to bind another agent
-      const result = runCli('start --agent agent2', workspace);
+      const result = runCli('run --agent agent2', workspace);
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('No pending step');
     });
@@ -234,20 +234,20 @@ describe('start command', () => {
     it('fails if no active workflow', async () => {
       runCli('stop', workspace);
 
-      const result = runCli('start --agent test-agent', workspace);
+      const result = runCli('run --agent test-agent', workspace);
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('No active workflow');
     });
 
     it('should create child workflow linked to parent', async () => {
       // Pop the step without workflow
-      runCli('start --agent temp-agent', workspace);
+      runCli('run --agent temp-agent', workspace);
 
       // Now queue step 1 with a workflow
-      runCli('start --step 1 runbooks/simple.runbook.md', workspace);
+      runCli('run --step 1 runbooks/simple.runbook.md', workspace);
 
       // Bind agent - should create child workflow
-      const result = runCli('start --agent test-agent-123', workspace);
+      const result = runCli('run --agent test-agent-123', workspace);
       expect(result.exitCode).toBe(0);
 
       // Verify child workflow was created

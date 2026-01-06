@@ -7,6 +7,7 @@ import {
   printWorkflowBlocked,
   printWorkflowComplete,
   printNoActiveWorkflow,
+  createStepNumber,
 } from '@turboshovel/shared';
 import { getCwd, getStepCount } from '../helpers/context.js';
 import { buildMetadata } from '../services/execution.js';
@@ -39,7 +40,9 @@ export function registerCompleteCommand(program: Command): void {
           });
           printWorkflowBlocked({ current: state.step, total: totalSteps, substep: state.substep });
         } else {
+          const totalSteps = await getStepCount(cwd, state.workflow);
           await manager.update(state.id, {
+            step: createStepNumber(totalSteps) ?? state.step,
             variables: { ...state.variables, completed: true }
           });
           await manager.popWorkflow(options.agent);

@@ -15,7 +15,7 @@ describe('test command', () => {
     describe('result sequence', () => {
         beforeEach(async () => {
             // Start a workflow first
-            runCli('start runbooks/retry.runbook.md', workspace);
+            runCli('run runbooks/retry.runbook.md', workspace);
         });
         it('returns pass by default (no flags)', () => {
             const result = runCli('test npm install', workspace);
@@ -63,7 +63,7 @@ describe('test command', () => {
             expect(result.stderr).toContain('No active workflow');
         });
         it('fails with invalid result value', () => {
-            runCli('start runbooks/simple.runbook.md', workspace);
+            runCli('run runbooks/simple.runbook.md', workspace);
             const result = runCli('test --result maybe npm install', workspace);
             expect(result.exitCode).toBe(1);
             expect(result.stderr).toContain('Invalid result');

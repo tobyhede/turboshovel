@@ -1,6 +1,6 @@
 # Rundown Patterns
 
-Common patterns for Rundown workflows. See [RUNDOWN-SPEC.md](./RUNDOWN-SPEC.md) for syntax reference.
+Common patterns for Rundown workflows. See [SPEC.md](./SPEC.md) for syntax reference.
 
 ---
 
@@ -247,6 +247,6 @@ Dispatch subagents to run tasks.
 
 ## See Also
 
-- [RUNDOWN-SPEC.md](./RUNDOWN-SPEC.md) - Full specification
-- [rundown-format.md](./rundown-format.md) - BNF grammar
-- [examples/](./examples/) - Working examples
+- [SPEC.md](./SPEC.md) - Full specification
+- [FORMAT.md](./FORMAT.md) - BNF grammar
+- [examples/runbooks/](../examples/runbooks/) - Working examples
