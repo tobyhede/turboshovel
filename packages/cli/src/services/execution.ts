@@ -66,8 +66,8 @@ export async function runExecutionLoop(
     // Print step block
     printStepBlock({ current: state.step, total: totalSteps, substep: state.substep }, currentStep);
 
-    // If prompted mode OR no command, wait for manual tsv pass/fail
-    if (prompted || !currentStep.command) {
+    // If CLI prompted mode, OR no command, OR command is marked as prompted (```prompt blocks)
+    if (prompted || !currentStep.command || currentStep.command.prompted) {
       return 'waiting';
     }
 
