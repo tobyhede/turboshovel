@@ -46,7 +46,7 @@ Each task creates `.work/tasks/task-{NN}.json`:
 ### 7. Create task-08.json [DELIBERATE ERROR]
 **File:** `.work/tasks/task-08.json`
 **Content:** `{"task": 7, "value": "golf", "agent_id": "{AGENT_ID}"}`
-*Error: writes to task-08.json instead of task-07.json*
+
 
 ### 8. Create task-08.json
 **File:** `.work/tasks/task-08.json`
@@ -63,7 +63,6 @@ Each task creates `.work/tasks/task-{NN}.json`:
 ### 11. Create task-11.json [DELIBERATE ERROR]
 **File:** `.work/tasks/task-11.json`
 **Content:** `{"task": 11, "value": "kilo", "agent_id": "{AGENT_ID}"}`
-*Error: value is "kilo" but should be "lima" for task 11*
 
 ### 12. Create task-12.json
 **File:** `.work/tasks/task-12.json`
@@ -93,6 +92,27 @@ Each task creates `.work/tasks/task-{NN}.json`:
 - Task 2: `task` field mismatch (3 ≠ 2)
 - Task 7: missing `task-07.json`, duplicate `task-08.json`
 - Task 11: `value` mismatch ("kilo" ≠ "lima")
+
+## Workflow Architecture
+
+**Two-tier orchestration:**
+
+```
+execute-plan.workflow.md (9 steps)
+└── Step 2: Execute batch
+    └── 2.{n} → implement-task.workflow.md (per batch)
+          └── {N}.1-{N}.7 (implement → evaluate → checks → tests → troubleshoot → fix → complete)
+```
+
+**Control flow:**
+- execute-plan: `3→4→5→3` (validate → handle failures → fix → revalidate)
+- implement-task: `{N}.3→{N}.5→{N}.6→{N}.3` (checks → troubleshoot → fix → recheck)
+
+**Decision points:**
+- {N}.1: Required changes? NO→skip evaluate, YES→evaluate
+- {N}.2: Changes within parameters? (logic, deps, scope, interfaces)
+
+**STOP propagation:** Any `tsv fail` at decision points stops with "BLOCKED:" message for orchestrator intervention.
 
 ## Usage
 Use `/turboshovel:test-end-to-end` to execute this test plan.
