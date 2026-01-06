@@ -15,7 +15,9 @@ describe('validator strict rules', () => {
         isDynamic: true,
         transitions: { all: true, pass: { type: 'GOTO', target: { step: '{N}' } }, fail: { type: 'STOP' } }
       })];
-      expect(() => validateWorkflow(steps)).toThrow(/GOTO {N} alone is invalid/);
+      const errors = validateWorkflow(steps);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors.some(e => e.message.includes('GOTO {N} alone is invalid'))).toBe(true);
     });
 
     it('rejects GOTO self (step level)', () => {
@@ -23,7 +25,9 @@ describe('validator strict rules', () => {
         number: createStepNumber(1)!,
         transitions: { all: true, pass: { type: 'GOTO', target: { step: 1 as any } }, fail: { type: 'STOP' } }
       })];
-      expect(() => validateWorkflow(steps)).toThrow(/GOTO self creates infinite loop/);
+      const errors = validateWorkflow(steps);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors.some(e => e.message.includes('GOTO self creates infinite loop'))).toBe(true);
     });
 
     it('rejects GOTO self (substep level)', () => {
@@ -34,7 +38,9 @@ describe('validator strict rules', () => {
           transitions: { all: true, pass: { type: 'GOTO', target: { step: 1 as any, substep: '1' } }, fail: { type: 'STOP' } }
         }]
       })];
-      expect(() => validateWorkflow(steps)).toThrow(/GOTO self creates infinite loop/);
+      const errors = validateWorkflow(steps);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors.some(e => e.message.includes('GOTO self creates infinite loop'))).toBe(true);
     });
 
     it('rejects GOTO into dynamic step from outside', () => {
@@ -49,7 +55,9 @@ describe('validator strict rules', () => {
           isDynamic: true
         })
       ];
-      expect(() => validateWorkflow(steps)).toThrow(/Invalid step pattern/);
+      const errors = validateWorkflow(steps);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors.some(e => e.message.includes('Invalid step pattern'))).toBe(true);
     });
   });
 
@@ -59,7 +67,9 @@ describe('validator strict rules', () => {
         number: createStepNumber(1)!,
         transitions: { all: true, pass: { type: 'NEXT' }, fail: { type: 'STOP' } }
       })];
-      expect(() => validateWorkflow(steps)).toThrow(/NEXT action is only valid within dynamic step context/);
+      const errors = validateWorkflow(steps);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors.some(e => e.message.includes('NEXT action is only valid within dynamic step context'))).toBe(true);
     });
   });
 
@@ -70,7 +80,9 @@ describe('validator strict rules', () => {
         prompts: [{ text: 'P' }],
         substeps: [{ id: '1', description: 'S', isDynamic: false, prompts: [] }]
       })];
-      expect(() => validateWorkflow(steps)).toThrow(/Violates Exclusivity Rule/);
+      const errors = validateWorkflow(steps);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors.some(e => e.message.includes('Violates Exclusivity Rule'))).toBe(true);
     });
 
     it('rejects H3 substep with both body and workflows', () => {
@@ -82,7 +94,37 @@ describe('validator strict rules', () => {
           workflows: ['w.workflow.md']
         }]
       })];
-      expect(() => validateWorkflow(steps)).toThrow(/Violates Exclusivity Rule/);
+      const errors = validateWorkflow(steps);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors.some(e => e.message.includes('Violates Exclusivity Rule'))).toBe(true);
+    });
+  });
+
+  describe('Error collection', () => {
+    it('collects multiple errors from single workflow', () => {
+      const steps = [
+        mockStep({
+          number: createStepNumber(1)!,
+          prompts: [{ text: 'P' }],
+          substeps: [{ id: '1', description: 'S', isDynamic: false, prompts: [] }],
+          transitions: { all: true, pass: { type: 'GOTO', target: { step: 1 as any } }, fail: { type: 'STOP' } }
+        })
+      ];
+      const errors = validateWorkflow(steps);
+      expect(errors.length).toBeGreaterThan(1);
+    });
+
+    it('includes line numbers in validation errors', () => {
+      const steps = [mockStep({
+        line: 42,
+        number: createStepNumber(1)!,
+        prompts: [{ text: 'P' }],
+        substeps: [{ id: '1', description: 'S', isDynamic: false, prompts: [] }]
+      })];
+      const errors = validateWorkflow(steps);
+      expect(errors.length).toBeGreaterThan(0);
+      const errorWithLine = errors.find(e => e.line === 42);
+      expect(errorWithLine).toBeDefined();
     });
   });
 });
