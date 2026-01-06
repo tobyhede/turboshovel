@@ -10,11 +10,13 @@ export interface ValidationError {
 /**
  * Validates a parsed workflow against Rundown specification rules.
  */
-export function validateWorkflow(steps: Step[]): void {
+export function validateWorkflow(steps: Step[]): ValidationError[] {
+  const errors: ValidationError[] = [];
+
   if (steps.length === 0) {
-    throw new WorkflowSyntaxError(
-      "Workflow must contain at least one step (heading starting with '##')"
-    );
+    return [{
+      message: "Workflow must contain at least one step (heading starting with '##')"
+    }];
   }
 
   // Schema validation for each step
@@ -22,9 +24,10 @@ export function validateWorkflow(steps: Step[]): void {
     const result = StepSchema.safeParse(step);
     if (!result.success) {
       const stepLabel = step.isDynamic ? '{N}' : String(step.number);
-      throw new WorkflowSyntaxError(
-        `Step ${stepLabel} failed schema validation: ${result.error.issues.map(i => i.message).join(', ')}`
-      );
+      errors.push({
+        line: step.line,
+        message: `Step ${stepLabel} failed schema validation: ${result.error.issues.map(i => i.message).join(', ')}`
+      });
     }
   }
 
@@ -33,15 +36,15 @@ export function validateWorkflow(steps: Step[]): void {
   const dynamicSteps = steps.filter(s => s.isDynamic);
 
   if (staticSteps.length > 0 && dynamicSteps.length > 0) {
-    throw new WorkflowSyntaxError(
-      'Invalid step pattern: workflow must contain static steps OR exactly one dynamic step template, not both.'
-    );
+    errors.push({
+      message: 'Invalid step pattern: workflow must contain static steps OR exactly one dynamic step template, not both.'
+    });
   }
 
   if (dynamicSteps.length > 1) {
-    throw new WorkflowSyntaxError(
-      'Invalid step pattern: workflow can have exactly one dynamic step template (## {N}.), not multiple.'
-    );
+    errors.push({
+      message: 'Invalid step pattern: workflow can have exactly one dynamic step template (## {N}.), not multiple.'
+    });
   }
 
   // Conformance Rule 3: Sequencing
@@ -49,9 +52,10 @@ export function validateWorkflow(steps: Step[]): void {
     for (let i = 0; i < steps.length; i++) {
       const expected = i + 1;
       if (steps[i].number !== expected) {
-        throw new WorkflowSyntaxError(
-          `Steps must be numbered sequentially. Expected step ${String(expected)}, found step ${String(steps[i].number)}.`
-        );
+        errors.push({
+          line: steps[i].line,
+          message: `Steps must be numbered sequentially. Expected step ${String(expected)}, found step ${String(steps[i].number)}.`
+        });
       }
     }
   }
@@ -67,9 +71,10 @@ export function validateWorkflow(steps: Step[]): void {
 
     const contentCount = [hasBody, hasSubsteps, hasWorkflows].filter(Boolean).length;
     if (contentCount > 1) {
-      throw new WorkflowSyntaxError(
-        `Step ${stepLabel}: Violates Exclusivity Rule. A step must have exactly one of {Body, Substeps, Workflow List}.`
-      );
+      errors.push({
+        line: step.line,
+        message: `Step ${stepLabel}: Violates Exclusivity Rule. A step must have exactly one of {Body, Substeps, Workflow List}.`
+      });
     }
 
     if (step.transitions) {
@@ -81,11 +86,12 @@ export function validateWorkflow(steps: Step[]): void {
       for (const substep of step.substeps) {
         const sHasBody = (substep.command !== undefined) || (substep.prompts && substep.prompts.length > 0);
         const sHasWorkflows = (substep.workflows !== undefined && substep.workflows.length > 0);
-        
+
         if (sHasBody && sHasWorkflows) {
-          throw new WorkflowSyntaxError(
-            `Substep ${stepLabel}.${substep.id}: Violates Exclusivity Rule. A substep must have either a Body or a Workflow List, but not both.`
-          );
+          errors.push({
+            line: step.line,
+            message: `Substep ${stepLabel}.${substep.id}: Violates Exclusivity Rule. A substep must have either a Body or a Workflow List, but not both.`
+          });
         }
 
         if (substep.transitions) {
@@ -95,6 +101,8 @@ export function validateWorkflow(steps: Step[]): void {
       }
     }
   }
+
+  return errors;
 }
 
 /**
