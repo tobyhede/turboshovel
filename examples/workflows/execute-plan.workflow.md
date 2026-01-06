@@ -15,7 +15,7 @@ Read and validate the implementation plan.
 ## 2. Execute batch
 
 ### 2.{n}
- - docs/workflows/implement-task.workflow.md
+ - examples/workflows/implement-task.workflow.md
 
 - PASS ALL: CONTINUE
 - FAIL ANY: GOTO 4

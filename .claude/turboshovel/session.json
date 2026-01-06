@@ -1,3 +1,8 @@
 {
-  "activeWorkflow": null
+  "stacks": {
+    "agent-002": [],
+    "agent-003": [],
+    "agent-001": []
+  },
+  "defaultStack": []
 }

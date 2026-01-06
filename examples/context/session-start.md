@@ -6,7 +6,7 @@ This file provides environment context at the beginning of each Claude Code sess
 
 **CLAUDE_PLUGIN_ROOT:** `${pwd}`
 
-This variable points to the root directory of the CipherPowers plugin installation.
+This variable points to the root directory of the Turboshovel plugin installation.
 
 ## Path Reference Convention
 

@@ -106,7 +106,7 @@ npm install -g @turboshovel/cli
 
 ## Examples
 Check the `examples/` directory for ready-to-use configurations and workflows:
-- `examples/simple.workflow.md` - Minimal workflow.
+- `examples/workflows/simple.workflow.md` - Minimal workflow.
 - `examples/context/` - Example context files.
 - `examples/strict.json` - Strict quality gate configuration.
 
