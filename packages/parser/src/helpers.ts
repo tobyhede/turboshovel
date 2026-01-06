@@ -359,7 +359,7 @@ const PROMPTED_TAGS = ['prompt'];
  * Classify code block by language tag
  * @returns false for executable, true for prompted, null for passive
  */
-export function isPromptedCodeBlock(lang: string | undefined): boolean | null {
+export function isPromptedCodeBlock(lang: string | null | undefined): boolean | null {
   const tag = lang?.split(/\s+/)[0].toLowerCase();
   if (tag && EXECUTABLE_TAGS.includes(tag)) return false;  // auto-execute
   if (tag && PROMPTED_TAGS.includes(tag)) return true;     // show, don't run

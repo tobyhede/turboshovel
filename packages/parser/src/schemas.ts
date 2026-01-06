@@ -6,6 +6,14 @@ import { z } from 'zod';
 export const MAX_STEP_NUMBER = 999999;
 
 /**
+ * Zod schema for Command
+ */
+export const CommandSchema = z.object({
+  code: z.string(),
+  prompted: z.boolean().optional(),
+});
+
+/**
  * Zod schema for StepNumber branded type
  */
 export const StepNumberSchema = z
@@ -87,7 +95,7 @@ export const SubstepSchema = z.object({
   agentType: z.string().optional(),
   isDynamic: z.boolean(),
   workflows: z.array(z.string()).optional(),
-  command: z.object({ code: z.string() }).optional(),
+  command: CommandSchema.optional(),
   prompts: z.array(z.object({ text: z.string() })),
   transitions: TransitionsSchema.optional(),
 });
@@ -99,7 +107,7 @@ export const StepSchema = z.object({
   number: StepNumberSchema.optional(),
   isDynamic: z.boolean(),
   description: z.string(),
-  command: z.object({ code: z.string() }).optional(),
+  command: CommandSchema.optional(),
   prompts: z.array(z.object({ text: z.string() })),
   transitions: TransitionsSchema.optional(),
   substeps: z.array(SubstepSchema).optional(),
