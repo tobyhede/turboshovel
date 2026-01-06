@@ -53,8 +53,8 @@ export async function trackStepDispatch(input: HookInput): Promise<StepDispatchR
     const stepIdStr = stepIdToString(stepId);
     // Use --step instead of --task
     const cmd = workflow
-      ? `tsv start --step ${stepIdStr} ${workflow}`
-      : `tsv start --step ${stepIdStr}`;
+      ? `tsv run --step ${stepIdStr} ${workflow}`
+      : `tsv run --step ${stepIdStr}`;
 
     try {
       execSync(cmd, { cwd: input.cwd, stdio: 'pipe' });

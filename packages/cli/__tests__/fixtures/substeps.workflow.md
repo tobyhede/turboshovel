@@ -7,7 +7,7 @@ Has substeps.
 First substep.
 
 ```bash
-tsv test --result pass
+tsv echo --result pass
 ```
 
 - PASS: CONTINUE
@@ -17,7 +17,7 @@ tsv test --result pass
 Second substep.
 
 ```bash
-tsv test --result fail --result pass
+tsv echo --result fail --result pass
 ```
 
 - PASS: CONTINUE
@@ -28,7 +28,7 @@ tsv test --result fail --result pass
 Done.
 
 ```bash
-tsv test --result pass
+tsv echo --result pass
 ```
 
 - PASS: DONE

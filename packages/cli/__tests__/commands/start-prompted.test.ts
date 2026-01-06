@@ -45,7 +45,7 @@ describe('start --prompted', () => {
       expect(result.stdout).toContain('## 1.');
       expect(result.stdout).toContain('Execute command');
       // Should NOT show execution output ($ command format would appear if executed)
-      expect(result.stdout).not.toContain('$ tsv test');
+      expect(result.stdout).not.toContain('$ tsv echo');
     });
 
     it('waits for manual pass/fail in prompted mode', async () => {
@@ -68,7 +68,7 @@ describe('start --prompted', () => {
       // Command should be visible to user
       expect(result.stdout).toContain('Execute command');
       // But not executed (no command execution line)
-      expect(result.stdout).not.toContain('$ tsv test');
+      expect(result.stdout).not.toContain('$ tsv echo');
     });
 
     it('inherits prompted flag in child workflows', async () => {
@@ -95,7 +95,7 @@ describe('start --prompted', () => {
 
       // Without --prompted, commands execute automatically
       expect(result.stdout).toContain('Execute command');
-      expect(result.stdout).toContain('$ tsv test --result pass');
+      expect(result.stdout).toContain('$ tsv echo --result pass');
       expect(result.stdout).toContain('Action:   CONTINUE');
     });
 
@@ -114,11 +114,11 @@ describe('start --prompted', () => {
     });
 
     it('stores lastResult as fail on failed command', async () => {
-      // Using failing command workflow - now uses tsv test which succeeds after retries
+      // Using failing command workflow - now uses tsv echo which succeeds after retries
       const result = runCli('start workflows/with-failing-command.workflow.md', workspace);
 
       // Should show RETRY behavior then eventually pass
-      expect(result.stdout).toContain('$ tsv test');
+      expect(result.stdout).toContain('$ tsv echo');
       // The workflow now completes successfully after retries
       expect(result.stdout).toContain('complete');
     });
@@ -144,7 +144,7 @@ describe('start --prompted', () => {
       const result = runCli('start workflows/with-failing-command.workflow.md', workspace);
 
       // Should trigger retry (FAIL: RETRY 2) then succeed on 3rd attempt
-      expect(result.stdout).toContain('$ tsv test');
+      expect(result.stdout).toContain('$ tsv echo');
       expect(result.stdout).toContain('RETRY');
       // Workflow completes after successful retry
       expect(result.stdout).toContain('complete');
@@ -249,18 +249,18 @@ npm run dangerous-command
     });
 
     it('executes with correct working directory', async () => {
-      // Command uses tsv test, which succeeds
+      // Command uses tsv echo, which succeeds
       const result = runCli('start workflows/with-commands.workflow.md', workspace);
 
       // If working directory is wrong, command might fail
-      expect(result.stdout).toContain('$ tsv test --result pass');
+      expect(result.stdout).toContain('$ tsv echo --result pass');
     });
 
     it('handles command output correctly', async () => {
       const result = runCli('start workflows/with-commands.workflow.md', workspace);
 
       // Should show execution happened
-      expect(result.stdout).toContain('$ tsv test --result pass');
+      expect(result.stdout).toContain('$ tsv echo --result pass');
       expect(result.stdout).toContain('Action:   CONTINUE');
     });
 

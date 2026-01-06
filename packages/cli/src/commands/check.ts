@@ -15,10 +15,10 @@ function countSubsteps(steps: readonly Step[]): number {
   }, 0);
 }
 
-export function registerValidateCommand(program: Command): void {
+export function registerCheckCommand(program: Command): void {
   program
-    .command('validate <file>')
-    .description('Validate a workflow file without starting it')
+    .command('check <file>')
+    .description('Check a workflow file for errors')
     .action((file: string) => {
       // Resolve file path
       const resolvedPath = path.resolve(file);

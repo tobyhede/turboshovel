@@ -3,7 +3,7 @@
 Do something simple.
 
 ```bash
-tsv test --result pass
+tsv echo --result pass
 ```
 
 - PASS: CONTINUE
@@ -14,7 +14,7 @@ tsv test --result pass
 Do another thing.
 
 ```bash
-tsv test --result pass
+tsv echo --result pass
 ```
 
 - PASS: DONE

@@ -49,7 +49,7 @@ You orchestrate the workflow. Use these commands:
 
 | Command | Purpose |
 |---------|---------|
-| `tsv start <file>` | Begin a workflow |
+| `tsv run <file>` | Begin a workflow |
 | `tsv next` | Advance after step completes |
 | `tsv next --goto N` | Jump to specific step |
 | `tsv next --pass --agent <id>` | Mark agent step as passed |
@@ -71,11 +71,11 @@ Step(description="2.1 - Review authentication code", ...)
 The StepId format is `N.X` where N is step number, X is substep number.
 
 **Hook automation:**
-- PostToolUse hook parses StepId from description, calls `tsv start --step 2.1`
+- PostToolUse hook parses StepId from description, calls `tsv run --step 2.1`
 - SubagentStart hook binds the agent to the queued step
 - SubagentStop hook parses STATUS line, calls `tsv next --pass/--fail --agent {id}`
 
-**Do NOT manually call `tsv start --step`** - hooks handle this.
+**Do NOT manually call `tsv run --step`** - hooks handle this.
 
 ### Parallel Substeps
 
@@ -112,4 +112,4 @@ When subagent reports `STATUS: FAIL`: check output, discuss with user, then retr
 | Main agent auto-retries without user | Always discuss failures before retry |
 | Missing StepId in dispatch | Include `N.X` format in Step tool description |
 | Parallel steps without status check | Run `tsv status` before advancing |
-| Manually calling `tsv start --step` | Remove - hooks handle step queuing automatically |
+| Manually calling `tsv run --step` | Remove - hooks handle step queuing automatically |

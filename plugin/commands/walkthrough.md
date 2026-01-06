@@ -21,7 +21,7 @@ This walkthrough exercises all workflow features:
 
 1. Start the workflow:
    ```bash
-   tsv start ${CLAUDE_PLUGIN_ROOT}/workflows/walkthrough.workflow.md
+   tsv run ${CLAUDE_PLUGIN_ROOT}/workflows/walkthrough.workflow.md
    ```
 
 2. Check status anytime:

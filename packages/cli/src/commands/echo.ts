@@ -18,10 +18,10 @@ export function collect(value: string, previous: string[]): string[] {
   return previous.concat([value]);
 }
 
-export function registerTestCommand(program: Command): void {
+export function registerEchoCommand(program: Command): void {
   program
-    .command('test [command...]')
-    .description('Test command for workflow testing')
+    .command('echo [command...]')
+    .description('Echo command for workflow testing')
     .option('-r, --result <outcome>', 'Add result to sequence (pass|fail)', collect, [])
     .action(async (command: string[] | undefined, options: { result: string[] }) => {
       try {

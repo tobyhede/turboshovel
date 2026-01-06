@@ -5,7 +5,7 @@ Tests spec rule: "GOTO resets the retry counter to 0 for the target location"
 ## 1. First attempt
 
 ```bash
-tsv test --result fail --result fail
+tsv echo --result fail --result fail
 ```
 
 - PASS: CONTINUE
@@ -14,7 +14,7 @@ tsv test --result fail --result fail
 ## 2. Second attempt (counter should be 0 again)
 
 ```bash
-tsv test --result fail --result pass
+tsv echo --result fail --result pass
 ```
 
 - PASS: DONE

@@ -55,7 +55,7 @@ export function runCli(args: string | string[], workspace: TestWorkspace): CliRe
   const cliPath = join(__dirname, '..', '..', 'dist', 'cli.js');
   const argArray = Array.isArray(args) ? args : args.split(' ').filter(Boolean);
 
-  // Add node_modules/.bin to PATH for tsv test commands in fixtures
+  // Add node_modules/.bin to PATH for tsv echo commands in fixtures
   const binPath = join(__dirname, '..', '..', '..', '..', 'node_modules', '.bin');
 
   const result = spawnSync('node', [cliPath, ...argArray], {

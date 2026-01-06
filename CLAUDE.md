@@ -111,7 +111,7 @@ npm install -g @turboshovel/cli
 ### Commands
 
 ```bash
-tsv start <file>       # Start workflow
+tsv run <file>       # Run a workflow
 tsv pass               # Mark current step as passed (evaluates PASS condition)
 tsv fail               # Mark current step as failed (evaluates FAIL condition)
 tsv goto <n>           # Jump to specific step number
@@ -120,7 +120,9 @@ tsv stop               # Abort workflow
 tsv complete           # Mark complete
 tsv stash              # Pause enforcement
 tsv pop                # Resume enforcement
-tsv list               # List all workflows
+tsv ls                 # List active workflows
+tsv ls --all           # List available workflow files
+tsv check <file>       # Check workflow for errors
 tsv gate <name>        # Run a gate
 ```
 

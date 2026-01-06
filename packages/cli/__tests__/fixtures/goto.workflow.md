@@ -3,7 +3,7 @@
 Initial step.
 
 ```bash
-tsv test --result pass
+tsv echo --result pass
 ```
 
 - PASS: GOTO 3
@@ -14,7 +14,7 @@ tsv test --result pass
 This gets skipped by GOTO.
 
 ```bash
-tsv test --result pass
+tsv echo --result pass
 ```
 
 - PASS: CONTINUE
@@ -25,7 +25,7 @@ tsv test --result pass
 Jumped here from step 1.
 
 ```bash
-tsv test --result pass
+tsv echo --result pass
 ```
 
 - PASS: DONE

@@ -23,7 +23,7 @@ Read and validate the implementation plan.
 ## 3. Validate batch
 
 ```bash
-tsv test npm run lint && tsv test npm run build && tsv test npm test
+tsv echo npm run lint && tsv echo npm run build && tsv echo npm test
 ```
 
 - PASS: CONTINUE
@@ -82,7 +82,7 @@ Evaluate remaining work.
 ## 8. Final validation
 
 ```bash
-tsv test npm run lint && tsv test npm run build && tsv test npm test
+tsv echo npm run lint && tsv echo npm run build && tsv echo npm test
 ```
 
 - PASS: CONTINUE

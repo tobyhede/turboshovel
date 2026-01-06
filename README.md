@@ -59,7 +59,7 @@ Run tests.
 
 **Run the workflow:**
 ```bash
-tsv start feature.workflow.md
+tsv run feature.workflow.md
 ```
 
 ### 3. Add Safety Nets (Quality Gates)

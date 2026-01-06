@@ -62,7 +62,7 @@ describe('handleSubagentStart', () => {
 });
 
 describe('handleSubagentStart calls CLI', () => {
-  it('should call tsv start --agent with correct parameters', async () => {
+  it('should call tsv run --agent with correct parameters', async () => {
     const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'subagent-cli-test-'));
     try {
       const { handleSubagentStart } = await import('../../../src/workflow/hooks/subagent-start.js');

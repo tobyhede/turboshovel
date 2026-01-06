@@ -106,7 +106,7 @@ workflow: verify.workflow.md
         additionalContext: 'Started workflow: verify.workflow.md'
       });
       expect(mockExecSync).toHaveBeenCalledWith(
-        'tsv start verify.workflow.md',
+        'tsv run verify.workflow.md',
         expect.objectContaining({ cwd: '/test' })
       );
 

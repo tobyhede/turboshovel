@@ -16,7 +16,7 @@ npm install -g @turboshovel/cli
 
 | Command | Description |
 |---------|-------------|
-| `tsv start <file>` | Start a new workflow |
+| `tsv run <file>` | Run a workflow |
 | `tsv pass` | Mark current step as passed |
 | `tsv fail` | Mark current step as failed |
 | `tsv goto <n>` | Jump to specific step number |
@@ -25,18 +25,20 @@ npm install -g @turboshovel/cli
 | `tsv complete` | Mark workflow as complete |
 | `tsv stash` | Pause enforcement |
 | `tsv pop` | Resume enforcement |
-| `tsv list` | List all workflows |
+| `tsv ls` | List active workflows |
+| `tsv ls --all` | List available workflow files |
+| `tsv check <file>` | Check workflow for errors |
 
 ### Subagent Dispatch
 
 ```bash
 # Task Binding (Agent execution)
-tsv start --step 3.1
-tsv start --agent <id>
+tsv run --step 3.1
+tsv run --agent <id>
 
 # Subworkflow Dispatch (Enforced execution)
-tsv start --step 3.1 <workflow-file>
-tsv start --agent <id>
+tsv run --step 3.1 <workflow-file>
+tsv run --agent <id>
 ```
 
 ## License

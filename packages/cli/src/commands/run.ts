@@ -22,10 +22,10 @@ import {
   buildMetadata,
 } from '../services/execution.js';
 
-export function registerStartCommand(program: Command): void {
+export function registerRunCommand(program: Command): void {
   program
-    .command('start [file]')
-    .description('Start a new workflow or queue a step')
+    .command('run [file]')
+    .description('Run a workflow or queue a step')
     .option('--step <stepId>', 'Mark step as started (adds to pending queue)')
     .option('--agent <agentId>', 'Bind agent to pending step')
     .option('--prompted', 'Prompted mode: show commands without auto-executing')
@@ -67,7 +67,7 @@ export function registerStartCommand(program: Command): void {
 
           if (!filePath) {
             console.error(`Error: Workflow not found: ${file}`);
-            console.error(`Try 'tsv workflows' to list available workflows.`);
+            console.error(`Try 'tsv ls --all' to list available workflows.`);
             process.exit(1);
           }
 
@@ -182,7 +182,7 @@ export function registerStartCommand(program: Command): void {
       } catch (error) {
         if (isNodeError(error) && error.code === 'ENOENT') {
           console.error(`Error: Workflow not found: ${file ?? 'unknown'}`);
-          console.error(`Try 'tsv workflows' to list available workflows.`);
+          console.error(`Try 'tsv ls --all' to list available workflows.`);
         } else if (error instanceof WorkflowSyntaxError) {
           console.error(`Syntax error: ${error.message}`);
         } else {

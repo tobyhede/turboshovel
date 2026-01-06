@@ -218,15 +218,15 @@ npm run test:integration
 **1. Task Binding (Agent-managed)**
 Queue a step for an agent to execute autonomously:
 ```bash
-tsv start --step 3.1      # Queue step 3.1
-tsv start --agent xyz123  # Bind agent xyz123 to pending step
+tsv run --step 3.1      # Queue step 3.1
+tsv run --agent xyz123  # Bind agent xyz123 to pending step
 ```
 
 **2. Subworkflow Dispatch (Enforced)**
 Queue a step with a mandatory subworkflow:
 ```bash
-tsv start --step 3.1 subtask.workflow.md  # Queue step with workflow
-tsv start --agent xyz123                  # Bind agent (auto-starts subworkflow)
+tsv run --step 3.1 subtask.workflow.md  # Queue step with workflow
+tsv run --agent xyz123                  # Bind agent (auto-starts subworkflow)
 ```
 
 **Completion & Status:**

@@ -3,7 +3,7 @@
 May need multiple attempts.
 
 ```bash
-tsv test --result fail --result fail --result pass
+tsv echo --result fail --result fail --result pass
 ```
 
 - PASS: CONTINUE
@@ -14,7 +14,7 @@ tsv test --result fail --result fail --result pass
 Complete workflow.
 
 ```bash
-tsv test --result pass
+tsv echo --result pass
 ```
 
 - PASS: DONE

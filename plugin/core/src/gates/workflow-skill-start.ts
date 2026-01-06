@@ -24,7 +24,7 @@ export function execute(input: HookInput): Promise<GateResult> {
 
   // Start workflow via CLI
   try {
-    execSync(`tsv start ${workflow}`, { cwd: input.cwd, stdio: 'pipe' });
+    execSync(`tsv run ${workflow}`, { cwd: input.cwd, stdio: 'pipe' });
     return Promise.resolve({
       additionalContext: `Started workflow: ${workflow}`
     });

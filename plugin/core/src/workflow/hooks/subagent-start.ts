@@ -38,7 +38,7 @@ export async function handleSubagentStart(input: HookInput): Promise<SubagentSta
 
     const pending = state.pendingSteps[0];
 
-    const output = execSync(`tsv start --agent ${agentId}`, {
+    const output = execSync(`tsv run --agent ${agentId}`, {
       cwd: input.cwd,
       encoding: 'utf8',
       stdio: 'pipe'
@@ -66,7 +66,7 @@ export async function handleSubagentStart(input: HookInput): Promise<SubagentSta
 
 function handleCliCall(cwd: string, agentId: string): SubagentStartResult {
   try {
-    const output = execSync(`tsv start --agent ${agentId}`, {
+    const output = execSync(`tsv run --agent ${agentId}`, {
       cwd,
       encoding: 'utf8',
       stdio: 'pipe'

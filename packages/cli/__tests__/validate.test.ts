@@ -7,7 +7,7 @@ import {
 import * as fs from 'fs';
 import * as path from 'path';
 
-describe('tsv validate', () => {
+describe('tsv check', () => {
   let workspace: TestWorkspace;
 
   beforeEach(async () => {
