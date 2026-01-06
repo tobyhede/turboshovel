@@ -41,6 +41,7 @@ export interface Substep {
   readonly prompts: readonly Prompt[];
   readonly transitions?: Transitions;
   readonly workflows?: readonly string[];
+  readonly line?: number;
 }
 
 /**
@@ -55,6 +56,7 @@ export interface Step {
   readonly transitions?: Transitions;
   readonly substeps?: readonly Substep[];
   readonly workflows?: readonly string[];
+  readonly line?: number;
   /** @deprecated Use workflows instead */
   readonly nestedWorkflow?: string;
 }
