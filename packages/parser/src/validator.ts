@@ -2,6 +2,11 @@ import { WorkflowSyntaxError } from './types.js';
 import { StepSchema, ActionSchema } from './schemas.js';
 import type { Step, Action } from './ast.js';
 
+export interface ValidationError {
+  readonly line?: number;
+  readonly message: string;
+}
+
 /**
  * Validates a parsed workflow against Rundown specification rules.
  */

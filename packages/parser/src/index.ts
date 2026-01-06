@@ -1,8 +1,9 @@
 export { parseWorkflow, parseWorkflowDocument } from './parser.js';
-export { 
-  validateWorkflow, 
-  validateAction 
+export {
+  validateWorkflow,
+  validateAction
 } from './validator.js';
+export type { ValidationError } from './validator.js';
 export { 
   WorkflowSyntaxError,
   createStepNumber,
