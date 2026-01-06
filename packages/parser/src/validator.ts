@@ -78,8 +78,8 @@ export function validateWorkflow(steps: Step[]): ValidationError[] {
     }
 
     if (step.transitions) {
-      validateAction(step.transitions.pass, stepNum, undefined, steps, step);
-      validateAction(step.transitions.fail, stepNum, undefined, steps, step);
+      validateAction(step.transitions.pass, stepNum, undefined, steps, step, errors);
+      validateAction(step.transitions.fail, stepNum, undefined, steps, step, errors);
     }
 
     if (step.substeps) {
@@ -95,8 +95,8 @@ export function validateWorkflow(steps: Step[]): ValidationError[] {
         }
 
         if (substep.transitions) {
-          validateAction(substep.transitions.pass, stepNum, substep.id, steps, step);
-          validateAction(substep.transitions.fail, stepNum, substep.id, steps, step);
+          validateAction(substep.transitions.pass, stepNum, substep.id, steps, step, errors);
+          validateAction(substep.transitions.fail, stepNum, substep.id, steps, step, errors);
         }
       }
     }
@@ -113,14 +113,17 @@ export function validateAction(
   currentStepNum: number,
   currentSubstepId: string | undefined,
   steps: Step[],
-  currentStepObj: Step
+  currentStepObj: Step,
+  errors: ValidationError[]
 ): void {
   const result = ActionSchema.safeParse(action);
   if (!result.success) {
     const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
-    throw new WorkflowSyntaxError(
-      `Step ${context}: Action validation failed: ${result.error.issues.map(i => i.message).join(', ')}`
-    );
+    errors.push({
+      line: currentStepObj.line,
+      message: `Step ${context}: Action validation failed: ${result.error.issues.map(i => i.message).join(', ')}`
+    });
+    return;
   }
 
   const isDynamicContext = currentStepObj.isDynamic;
@@ -128,9 +131,11 @@ export function validateAction(
   if (action.type === 'NEXT') {
     if (!isDynamicContext) {
       const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
-      throw new WorkflowSyntaxError(
-        `Step ${context}: NEXT action is only valid within dynamic step context (## {N}.).`
-      );
+      errors.push({
+        line: currentStepObj.line,
+        message: `Step ${context}: NEXT action is only valid within dynamic step context (## {N}.).`
+      });
+      return;
     }
   }
 
@@ -140,9 +145,11 @@ export function validateAction(
 
     if (targetStep === '{N}' && !targetSubstep) {
       const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
-      throw new WorkflowSyntaxError(
-        `Step ${context}: GOTO {N} alone is invalid. Use NEXT to advance to the next dynamic instance.`
-      );
+      errors.push({
+        line: currentStepObj.line,
+        message: `Step ${context}: GOTO {N} alone is invalid. Use NEXT to advance to the next dynamic instance.`
+      });
+      return;
     }
 
     if (targetStep === '{N}') {
@@ -153,9 +160,11 @@ export function validateAction(
 
     if (targetStepNum < 1 || targetStepNum > steps.length) {
       const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
-      throw new WorkflowSyntaxError(
-        `Step ${context}: GOTO target step ${String(targetStepNum)} does not exist (workflow has ${String(steps.length)} steps).`
-      );
+      errors.push({
+        line: currentStepObj.line,
+        message: `Step ${context}: GOTO target step ${String(targetStepNum)} does not exist (workflow has ${String(steps.length)} steps).`
+      });
+      return;
     }
 
     const targetStepObj = steps[targetStepNum - 1];
@@ -164,51 +173,63 @@ export function validateAction(
 
     if (isTargetDynamic && !isInsideDynamicStep) {
       const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
-      throw new WorkflowSyntaxError(
-        `Step ${context}: Cannot GOTO into dynamic step ${String(targetStepNum)} from outside. Use NEXT if it is the current template.`
-      );
+      errors.push({
+        line: currentStepObj.line,
+        message: `Step ${context}: Cannot GOTO into dynamic step ${String(targetStepNum)} from outside. Use NEXT if it is the current template.`
+      });
+      return;
     }
 
     if (targetSubstep) {
       if (!targetStepObj.substeps || targetStepObj.substeps.length === 0) {
         const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
-        throw new WorkflowSyntaxError(
-          `Step ${context}: GOTO ${String(targetStepNum)}.${targetSubstep} invalid - step ${String(targetStepNum)} has no substeps.`
-        );
+        errors.push({
+          line: currentStepObj.line,
+          message: `Step ${context}: GOTO ${String(targetStepNum)}.${targetSubstep} invalid - step ${String(targetStepNum)} has no substeps.`
+        });
+        return;
       }
 
       if (targetSubstep === '{n}') {
         const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
-        throw new WorkflowSyntaxError(
-          `Step ${context}: GOTO ${String(targetStepNum)}.{n} is invalid. Dynamic substeps cannot be targeted directly via GOTO.`
-        );
+        errors.push({
+          line: currentStepObj.line,
+          message: `Step ${context}: GOTO ${String(targetStepNum)}.{n} is invalid. Dynamic substeps cannot be targeted directly via GOTO.`
+        });
+        return;
       }
 
       const substepExists = targetStepObj.substeps.some(s => s.id === targetSubstep);
       if (!substepExists) {
         if (targetStepObj.isDynamic) {
            const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
-           throw new WorkflowSyntaxError(
-             `Step ${context}: cannot GOTO substep of dynamic step. Use GOTO ${String(targetStepNum)} instead.`
-           );
+           errors.push({
+             line: currentStepObj.line,
+             message: `Step ${context}: cannot GOTO substep of dynamic step. Use GOTO ${String(targetStepNum)} instead.`
+           });
+           return;
         }
 
         const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
-        throw new WorkflowSyntaxError(
-          `Step ${context}: GOTO ${String(targetStepNum)}.${targetSubstep} invalid - substep does not exist.`
-        );
+        errors.push({
+          line: currentStepObj.line,
+          message: `Step ${context}: GOTO ${String(targetStepNum)}.${targetSubstep} invalid - substep does not exist.`
+        });
+        return;
       }
     }
 
     if (targetStepNum === currentStepNum && targetSubstep === currentSubstepId) {
       const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
-      throw new WorkflowSyntaxError(
-        `Step ${context}: GOTO self creates infinite loop (use RETRY instead)`
-      );
+      errors.push({
+        line: currentStepObj.line,
+        message: `Step ${context}: GOTO self creates infinite loop (use RETRY instead)`
+      });
+      return;
     }
   }
 
   if (action.type === 'RETRY') {
-    validateAction(action.then, currentStepNum, currentSubstepId, steps, currentStepObj);
+    validateAction(action.then, currentStepNum, currentSubstepId, steps, currentStepObj, errors);
   }
 }
