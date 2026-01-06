@@ -114,6 +114,42 @@ Please look at this example.
     expect(steps[0].prompts[0].text).toContain('```json');
     expect(steps[0].prompts[0].text).toContain('{"key": "value"}');
   });
+
+  it('parses prompt code blocks as prompted commands', () => {
+    const md = `## 1. Step with prompted code
+
+Show this to agent.
+
+\`\`\`prompt
+npm run example --flag value
+\`\`\`
+
+- PASS: DONE
+`;
+    const steps = parseWorkflow(md);
+    expect(steps[0].command).toEqual({
+      code: 'npm run example --flag value',
+      prompted: true,
+    });
+  });
+
+  it('parses bash code blocks as executable commands (no prompted flag)', () => {
+    const md = `## 1. Step with bash code
+
+Run this automatically.
+
+\`\`\`bash
+npm run build
+\`\`\`
+
+- PASS: DONE
+`;
+    const steps = parseWorkflow(md);
+    expect(steps[0].command).toEqual({
+      code: 'npm run build',
+    });
+    expect(steps[0].command?.prompted).toBeUndefined();
+  });
 });
 
 describe('Implicit prompts with lists', () => {
