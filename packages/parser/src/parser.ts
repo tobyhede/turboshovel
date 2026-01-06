@@ -114,7 +114,7 @@ export function parseWorkflowDocument(markdown: string, filename?: string, optio
       if (ps.content.trim()) {
         const contentWithoutWorkflows = ps.content
           .split('\n')
-          .filter(line => !line.trim().startsWith('-') || !line.includes('.workflow.md'))
+          .filter(line => !line.trim().startsWith('-') || !line.includes('.runbook.md'))
           .join('\n')
           .trim();
         if (contentWithoutWorkflows) {
@@ -334,7 +334,7 @@ export function parseWorkflowDocument(markdown: string, filename?: string, optio
         } else {
           const itemText = ' - ' + text + '\n';
           currentStep.content += itemText;
-          if (!/^\S+\.workflow\.md$/.test(text.trim())) {
+          if (!/^\S+\.runbook\.md$/.test(text.trim())) {
             implicitText += itemText;
           }
         }

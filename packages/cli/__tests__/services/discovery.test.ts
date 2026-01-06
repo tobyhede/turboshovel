@@ -70,7 +70,7 @@ describe('discovery service', () => {
   });
 
   describe('scanDirectory()', () => {
-    it('finds .workflow.md files in directory', async () => {
+    it('finds .runbook.md files in directory', async () => {
       // Create test workflow files
       const workflowContent = `---
 name: my-workflow
@@ -83,7 +83,7 @@ description: Test workflow
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'my-workflow.workflow.md'),
+        join(projectWorkflowsDir, 'my-workflow.runbook.md'),
         workflowContent
       );
 
@@ -118,7 +118,7 @@ Content here
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'test-workflow.workflow.md'),
+        join(projectWorkflowsDir, 'test-workflow.runbook.md'),
         workflowContent
       );
 
@@ -136,7 +136,7 @@ Content without frontmatter
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'no-frontmatter.workflow.md'),
+        join(projectWorkflowsDir, 'no-frontmatter.runbook.md'),
         workflowContent
       );
 
@@ -146,7 +146,7 @@ Content without frontmatter
       expect(workflows[0].name).toBe('no-frontmatter');
     });
 
-    it('skips non-.workflow.md files', async () => {
+    it('skips non-.runbook.md files', async () => {
       await writeFile(
         join(projectWorkflowsDir, 'not-a-workflow.md'),
         '# Just a markdown file'
@@ -167,7 +167,7 @@ invalid: yaml: syntax:
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'invalid.workflow.md'),
+        join(projectWorkflowsDir, 'invalid.runbook.md'),
         invalidFrontmatter
       );
 
@@ -188,7 +188,7 @@ description: Missing name field
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'missing-name.workflow.md'),
+        join(projectWorkflowsDir, 'missing-name.runbook.md'),
         missingName
       );
 
@@ -208,14 +208,14 @@ name: test-workflow
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'test-workflow.workflow.md'),
+        join(projectWorkflowsDir, 'test-workflow.runbook.md'),
         workflowContent
       );
 
       const workflows = await scanDirectory(projectWorkflowsDir, 'project');
 
       expect(workflows[0].path).toBe(
-        join(projectWorkflowsDir, 'test-workflow.workflow.md')
+        join(projectWorkflowsDir, 'test-workflow.runbook.md')
       );
     });
 
@@ -228,7 +228,7 @@ name: test-workflow
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'test-workflow.workflow.md'),
+        join(projectWorkflowsDir, 'test-workflow.runbook.md'),
         workflowContent
       );
 
@@ -250,7 +250,7 @@ name: project-workflow
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'project-workflow.workflow.md'),
+        join(projectWorkflowsDir, 'project-workflow.runbook.md'),
         workflowContent
       );
 
@@ -284,11 +284,11 @@ description: Second workflow
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'workflow-one.workflow.md'),
+        join(projectWorkflowsDir, 'workflow-one.runbook.md'),
         workflow1
       );
       await writeFile(
-        join(projectWorkflowsDir, 'workflow-two.workflow.md'),
+        join(projectWorkflowsDir, 'workflow-two.runbook.md'),
         workflow2
       );
 
@@ -327,11 +327,11 @@ description: Plugin version
 `;
 
         await writeFile(
-          join(projectWorkflowsDir, 'shared-workflow.workflow.md'),
+          join(projectWorkflowsDir, 'shared-workflow.runbook.md'),
           projectWorkflow
         );
         await writeFile(
-          join(pluginWorkflowDir, 'shared-workflow.workflow.md'),
+          join(pluginWorkflowDir, 'shared-workflow.runbook.md'),
           pluginWorkflow
         );
 
@@ -370,11 +370,11 @@ name: plugin-workflow
 `;
 
         await writeFile(
-          join(projectWorkflowsDir, 'project-workflow.workflow.md'),
+          join(projectWorkflowsDir, 'project-workflow.runbook.md'),
           projectWorkflow
         );
         await writeFile(
-          join(pluginWorkflowDir, 'plugin-workflow.workflow.md'),
+          join(pluginWorkflowDir, 'plugin-workflow.runbook.md'),
           pluginWorkflow
         );
 
@@ -403,7 +403,7 @@ tags:
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'test-workflow.workflow.md'),
+        join(projectWorkflowsDir, 'test-workflow.runbook.md'),
         workflow
       );
 
@@ -428,7 +428,7 @@ Content here
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'my-workflow.workflow.md'),
+        join(projectWorkflowsDir, 'my-workflow.runbook.md'),
         workflowContent
       );
 
@@ -445,7 +445,7 @@ Content without frontmatter
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'no-frontmatter.workflow.md'),
+        join(projectWorkflowsDir, 'no-frontmatter.runbook.md'),
         workflowContent
       );
 
@@ -470,7 +470,7 @@ name: my-workflow
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'my-workflow.workflow.md'),
+        join(projectWorkflowsDir, 'my-workflow.runbook.md'),
         workflowContent
       );
 
@@ -505,11 +505,11 @@ description: Plugin version
 `;
 
         await writeFile(
-          join(projectWorkflowsDir, 'shared-workflow.workflow.md'),
+          join(projectWorkflowsDir, 'shared-workflow.runbook.md'),
           projectWorkflow
         );
         await writeFile(
-          join(pluginWorkflowDir, 'shared-workflow.workflow.md'),
+          join(pluginWorkflowDir, 'shared-workflow.runbook.md'),
           pluginWorkflow
         );
 
@@ -541,7 +541,7 @@ description: Only in plugin
 `;
 
         await writeFile(
-          join(pluginWorkflowDir, 'plugin-only-workflow.workflow.md'),
+          join(pluginWorkflowDir, 'plugin-only-workflow.runbook.md'),
           pluginWorkflow
         );
 
@@ -569,7 +569,7 @@ version: 1.0.0
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'complete-workflow.workflow.md'),
+        join(projectWorkflowsDir, 'complete-workflow.runbook.md'),
         workflowContent
       );
 
@@ -580,7 +580,7 @@ version: 1.0.0
       expect(workflow?.description).toBe('Complete workflow description');
       expect(workflow?.tags).toEqual(['important', 'automation']);
       expect(workflow?.path).toBe(
-        join(projectWorkflowsDir, 'complete-workflow.workflow.md')
+        join(projectWorkflowsDir, 'complete-workflow.runbook.md')
       );
       expect(workflow?.source).toBe('project');
     });
@@ -599,7 +599,7 @@ tags:
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'test-workflow.workflow.md'),
+        join(projectWorkflowsDir, 'test-workflow.runbook.md'),
         workflowContent
       );
 
@@ -619,7 +619,7 @@ tags: []
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'no-tags.workflow.md'),
+        join(projectWorkflowsDir, 'no-tags.runbook.md'),
         workflowContent
       );
 
@@ -637,7 +637,7 @@ name: minimal-workflow
 `;
 
       await writeFile(
-        join(projectWorkflowsDir, 'minimal-workflow.workflow.md'),
+        join(projectWorkflowsDir, 'minimal-workflow.runbook.md'),
         workflowContent
       );
 

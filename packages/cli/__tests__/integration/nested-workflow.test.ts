@@ -37,11 +37,11 @@ Complete the work.
     // Write workflows to workspace
     const workflowsDir = join(workspace.cwd, 'workflows');
     await mkdir(workflowsDir, { recursive: true });
-    await writeFile(join(workflowsDir, 'parent.workflow.md'), parentWorkflow);
-    await writeFile(join(workflowsDir, 'child.workflow.md'), childWorkflow);
+    await writeFile(join(workflowsDir, 'parent.runbook.md'), parentWorkflow);
+    await writeFile(join(workflowsDir, 'child.runbook.md'), childWorkflow);
 
     // 2. Start parent workflow (prompted to keep it active)
-    let result = runCli('start --prompted workflows/parent.workflow.md', workspace);
+    let result = runCli('start --prompted runbooks/parent.runbook.md', workspace);
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('Action:   START');
 

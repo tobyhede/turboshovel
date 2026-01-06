@@ -172,7 +172,7 @@ Test real component interactions without mocks.
 ```typescript
 test('includes workflow context in dispatch output', async () => {
   const manager = new WorkflowStateManager(testDir);
-  const state = await manager.create('test.workflow.md', mockSteps);
+  const state = await manager.create('test.runbook.md', mockSteps);
   await manager.setActive(state.id);
 
   const input: HookInput = {
@@ -196,7 +196,7 @@ Full end-to-end tests via subprocess execution.
 
 ```typescript
 it('completes simple two-step workflow', async () => {
-  let result = runCli('start workflows/simple.workflow.md', workspace);
+  let result = runCli('start runbooks/simple.runbook.md', workspace);
   expect(result.exitCode).toBe(0);
   
   result = runCli('next', workspace);
@@ -230,16 +230,16 @@ Workflow fixtures in `packages/cli/__tests__/fixtures/`:
 
 | Fixture | Purpose |
 |---------|---------|
-| `simple.workflow.md` | Basic two-task flow |
-| `retry.workflow.md` | RETRY condition handling |
-| `goto.workflow.md` | GOTO navigation |
-| `fail-goto.workflow.md` | FAIL with GOTO |
-| `subtasks.workflow.md` | Nested subtask structure |
+| `simple.runbook.md` | Basic two-task flow |
+| `retry.runbook.md` | RETRY condition handling |
+| `goto.runbook.md` | GOTO navigation |
+| `fail-goto.runbook.md` | FAIL with GOTO |
+| `subtasks.runbook.md` | Nested subtask structure |
 
 **Adding fixtures:**
-1. Create `.workflow.md` file in fixtures directory
+1. Create `.runbook.md` file in fixtures directory
 2. Fixtures are auto-copied to test workspaces
-3. Reference via `workspace.workflowPath('name.workflow.md')`
+3. Reference via `workspace.workflowPath('name.runbook.md')`
 
 ### Known Testing Gaps
 

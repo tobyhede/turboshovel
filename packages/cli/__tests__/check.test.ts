@@ -19,7 +19,7 @@ describe('tsv check', () => {
   });
 
   it('outputs PASS with step count for valid workflow', () => {
-    const workflowPath = path.join(workspace.cwd, 'valid.workflow.md');
+    const workflowPath = path.join(workspace.cwd, 'valid.runbook.md');
     fs.writeFileSync(workflowPath, `## 1. First step
 
 Do something.
@@ -41,7 +41,7 @@ Do another thing.
   });
 
   it('outputs FAIL with all errors for invalid workflow', () => {
-    const workflowPath = path.join(workspace.cwd, 'invalid.workflow.md');
+    const workflowPath = path.join(workspace.cwd, 'invalid.runbook.md');
     fs.writeFileSync(workflowPath, `## 1. First step
 
 Do something.
@@ -66,7 +66,7 @@ Do another thing.
   });
 
   it('includes line numbers in error output', () => {
-    const workflowPath = path.join(workspace.cwd, 'invalid.workflow.md');
+    const workflowPath = path.join(workspace.cwd, 'invalid.runbook.md');
     fs.writeFileSync(workflowPath, `## 1. First step
 
 Do something.

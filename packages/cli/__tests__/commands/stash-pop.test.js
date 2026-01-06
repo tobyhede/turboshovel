@@ -9,7 +9,7 @@ describe('stash command', () => {
         await workspace.cleanup();
     });
     it('moves active workflow to stashed', async () => {
-        runCli('start workflows/simple.workflow.md', workspace);
+        runCli('start runbooks/simple.runbook.md', workspace);
         const beforeSession = await readSession(workspace);
         const workflowId = beforeSession.active;
         runCli('stash', workspace);
@@ -17,13 +17,13 @@ describe('stash command', () => {
         expect(afterSession.stashed).toBe(workflowId);
     });
     it('clears active workflow', async () => {
-        runCli('start workflows/simple.workflow.md', workspace);
+        runCli('start runbooks/simple.runbook.md', workspace);
         runCli('stash', workspace);
         const session = await readSession(workspace);
         expect(session.active).toBeNull();
     });
     it('outputs stash confirmation', async () => {
-        runCli('start workflows/simple.workflow.md', workspace);
+        runCli('start runbooks/simple.runbook.md', workspace);
         const result = runCli('stash', workspace);
         expect(result.stdout).toContain('stashed');
         expect(result.stdout).toContain('Enforcement paused');
@@ -33,7 +33,7 @@ describe('stash command', () => {
         expect(result.stdout).toContain('No active workflow to stash');
     });
     it('preserves workflow state', async () => {
-        runCli('start workflows/simple.workflow.md', workspace);
+        runCli('start runbooks/simple.runbook.md', workspace);
         runCli('next', workspace); // Advance to task 2
         const beforeState = await getActiveState(workspace);
         runCli('stash', workspace);
@@ -52,7 +52,7 @@ describe('pop command', () => {
         await workspace.cleanup();
     });
     it('restores stashed workflow to active', async () => {
-        runCli('start workflows/simple.workflow.md', workspace);
+        runCli('start runbooks/simple.runbook.md', workspace);
         const beforeSession = await readSession(workspace);
         const workflowId = beforeSession.active;
         runCli('stash', workspace);
@@ -61,14 +61,14 @@ describe('pop command', () => {
         expect(afterSession.active).toBe(workflowId);
     });
     it('clears stashed state', async () => {
-        runCli('start workflows/simple.workflow.md', workspace);
+        runCli('start runbooks/simple.runbook.md', workspace);
         runCli('stash', workspace);
         runCli('pop', workspace);
         const session = await readSession(workspace);
         expect(session.stashed).toBeNull();
     });
     it('outputs restored workflow info', async () => {
-        runCli('start workflows/simple.workflow.md', workspace);
+        runCli('start runbooks/simple.runbook.md', workspace);
         runCli('stash', workspace);
         const result = runCli('pop', workspace);
         expect(result.stdout).toContain('restored');
@@ -79,7 +79,7 @@ describe('pop command', () => {
         expect(result.stdout).toContain('No stashed workflow');
     });
     it('shows resuming task info', async () => {
-        runCli('start workflows/simple.workflow.md', workspace);
+        runCli('start runbooks/simple.runbook.md', workspace);
         runCli('next', workspace); // Advance to task 2
         runCli('stash', workspace);
         const result = runCli('pop', workspace);

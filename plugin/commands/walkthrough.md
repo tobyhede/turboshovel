@@ -21,7 +21,7 @@ This walkthrough exercises all workflow features:
 
 1. Start the workflow:
    ```bash
-   tsv run ${CLAUDE_PLUGIN_ROOT}/workflows/walkthrough.workflow.md
+   tsv run ${CLAUDE_PLUGIN_ROOT}/runbooks/walkthrough.runbook.md
    ```
 
 2. Check status anytime:
@@ -36,7 +36,7 @@ This walkthrough exercises all workflow features:
 ## Outputs
 
 - `.work/walkthrough.log` - Execution trace
-- `.claude/turboshovel/workflows/` - Workflow state files
+- `.claude/turboshovel/runbooks/` - Workflow state files
 
 ## Troubleshooting
 

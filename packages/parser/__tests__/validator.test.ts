@@ -91,7 +91,7 @@ describe('validator strict rules', () => {
         substeps: [{
           id: '1', description: 'S', isDynamic: false,
           prompts: [{ text: 'P' }],
-          workflows: ['w.workflow.md']
+          workflows: ['w.runbook.md']
         }]
       })];
       const errors = validateWorkflow(steps);

@@ -75,8 +75,8 @@ describe('renderSubstep', () => {
   });
 
   it('renders substep with workflows', () => {
-    const substep: Substep = { id: '1', description: 'With workflow', isDynamic: false, workflows: ['task.workflow.md'] };
-    expect(renderSubstep(substep, 1)).toBe('### 1.1 With workflow [@task.workflow.md]');
+    const substep: Substep = { id: '1', description: 'With workflow', isDynamic: false, workflows: ['task.runbook.md'] };
+    expect(renderSubstep(substep, 1)).toBe('### 1.1 With workflow [@task.runbook.md]');
   });
 });
 
@@ -283,11 +283,11 @@ FAIL ANY: STOP`;
 
 ### 1.1 Initialize
 
- - setup.workflow.md
+ - setup.runbook.md
 
 ## 2. Continue`;
 
     const parsed = parseWorkflow(markdown);
-    expect(parsed[0].substeps?.[0].workflows).toEqual(['setup.workflow.md']);
+    expect(parsed[0].substeps?.[0].workflows).toEqual(['setup.runbook.md']);
   });
 });

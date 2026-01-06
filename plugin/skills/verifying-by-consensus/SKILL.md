@@ -1,7 +1,7 @@
 ---
 name: verifying-by-consensus
 description: Dispatch N independent review agents, collate by consensus ratio, cross-check exclusive findings
-workflow: verify.workflow.md
+workflow: verify.runbook.md
 ---
 
 # Verifying by Consensus
@@ -38,7 +38,7 @@ Dispatch N agents to independently review the same subject. Collate findings:
 
 1. Determine N (default 2, or from args)
 2. Select agents (from args, plugins, or built-ins)
-3. Start workflow: `tsv run workflows/verify.workflow.md`
+3. Start workflow: `tsv run runbooks/verify.runbook.md`
 4. Dispatch agents with StepId prefix in description:
    ```
    Step(description="1.1 - Review [subject]", prompt="...", subagent_type="...")

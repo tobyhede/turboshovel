@@ -24,7 +24,7 @@ describe('pass command', () => {
 
   describe('PASS: CONTINUE', () => {
     beforeEach(async () => {
-      runCli('start --prompted workflows/simple.workflow.md', workspace);
+      runCli('start --prompted runbooks/simple.runbook.md', workspace);
     });
 
     it('advances to next step', async () => {
@@ -38,7 +38,7 @@ describe('pass command', () => {
 
   describe('PASS: DONE', () => {
     beforeEach(async () => {
-      runCli('start --prompted workflows/simple.workflow.md', workspace);
+      runCli('start --prompted runbooks/simple.runbook.md', workspace);
       runCli('pass', workspace); // Advance to step 2 which has PASS: DONE
     });
 
@@ -59,14 +59,14 @@ describe('pass command', () => {
       runCli('pass', workspace);
 
       const states = await getAllStates(workspace);
-      const state = states.find(s => s.workflow === 'workflows/simple.workflow.md');
+      const state = states.find(s => s.workflow === 'runbooks/simple.runbook.md');
       expect(state?.variables.completed).toBe(true);
     });
   });
 
   describe('PASS: GOTO N', () => {
     beforeEach(async () => {
-      runCli('start --prompted workflows/goto.workflow.md', workspace);
+      runCli('start --prompted runbooks/goto.runbook.md', workspace);
     });
 
     it('jumps to specified step', async () => {
@@ -101,12 +101,12 @@ Do child work.
       await writeFile(join(workspace.cwd, 'workflows', 'child-nest.md'), childWorkflow);
 
       // Start parent workflow (prompted mode to keep it active)
-      runCli('start --prompted workflows/parent-nest.md', workspace);
+      runCli('start --prompted runbooks/parent-nest.md', workspace);
       const session1 = await readSession(workspace);
       const parentId = session1.active;
 
       // Start child workflow in same stack (nested)
-      runCli('start --prompted workflows/child-nest.md', workspace);
+      runCli('start --prompted runbooks/child-nest.md', workspace);
       const session2 = await readSession(workspace);
       expect(session2.active).not.toBe(parentId); // Child is now active
       expect(session2.defaultStack).toContain(parentId); // Parent still in stack
@@ -123,12 +123,12 @@ Do child work.
   describe('agent workflow completion', () => {
     it('should complete agent workflow independently of parent', async () => {
       // Start parent workflow (prompted mode to keep it active)
-      runCli('start --prompted workflows/simple.workflow.md', workspace);
+      runCli('start --prompted runbooks/simple.runbook.md', workspace);
       const session1 = await readSession(workspace);
       const parentId = session1.active;
 
       // Start agent workflow independently (not via binding)
-      runCli('start --prompted workflows/simple.workflow.md --agent test-agent', workspace);
+      runCli('start --prompted runbooks/simple.runbook.md --agent test-agent', workspace);
 
       // Agent has its own workflow
       const session2 = await readSession(workspace);
@@ -171,10 +171,10 @@ Do work.
       await writeFile(join(workspace.cwd, 'workflows', 'child.md'), childWorkflow);
 
       // Start parent (prompted to prevent auto-completion)
-      runCli('start --prompted workflows/parent.md', workspace);
+      runCli('start --prompted runbooks/parent.md', workspace);
 
       // Start child in same stack (prompted to prevent auto-completion)
-      runCli('start --prompted workflows/child.md', workspace);
+      runCli('start --prompted runbooks/child.md', workspace);
 
       // Complete child
       let result = runCli('pass', workspace);
@@ -193,7 +193,7 @@ Do work.
       await mkdir(join(workspace.cwd, 'workflows'), { recursive: true });
       await writeFile(join(workspace.cwd, 'workflows', 'single.md'), singleStep);
 
-      runCli('start --prompted workflows/single.md --agent agent-001', workspace);
+      runCli('start --prompted runbooks/single.md --agent agent-001', workspace);
 
       // Complete workflow
       runCli('pass --agent agent-001', workspace);

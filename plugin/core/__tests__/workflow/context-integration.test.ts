@@ -29,14 +29,14 @@ describe('Workflow Context Injection', () => {
 
   test('returns context for active workflow', async () => {
     const manager = new WorkflowStateManager(testDir);
-    const state = await manager.create('test.workflow.md', { steps: mockSteps });
+    const state = await manager.create('test.runbook.md', { steps: mockSteps });
     await manager.pushWorkflow(state.id);
 
     const context = await getWorkflowContext(testDir);
 
     expect(context).not.toBeNull();
     expect(context).toContain('Active Workflow');
-    expect(context).toContain('test.workflow.md');
+    expect(context).toContain('test.runbook.md');
     expect(context).toContain('Step 1');
     expect(context).toContain('Run tests');
   });

@@ -1,32 +1,32 @@
-# Workflow System
+# Rundown System
 
-Turboshovel includes an executable workflow system that makes skills enforceable. Workflows provide structured, repeatable processes with state tracking, conditional logic, and task management.
+Turboshovel includes an executable workflow system that makes skills enforceable. Runbooks provide structured, repeatable processes with state tracking, conditional logic, and task management.
 
-## Why Workflows?
+## Why Runbooks?
 
-Traditional skills and agents are guidance-only. Workflows enforce process:
+Traditional skills and agents are guidance-only. Runbooks enforce process:
 
 - **State Persistence**: Survives context clears and session restarts
 - **Conditional Logic**: PASS/FAIL branches, GOTO for loops, agent-controlled decisions
 - **Step Tracking**: Monitor progress across multiple substeps
 - **Retry Management**: Automatic retry counts and limits
-- **Variable Storage**: Pass data between workflow tasks
+- **Variable Storage**: Pass data between runbook tasks
 
 ## Execution Paradigm: Claude Executes, Workflow Tracks
 
-**Critical concept:** Workflows are **state trackers**, not executors. Claude still does all the work using its normal tools.
+**Critical concept:** Runbooks are **state trackers**, not executors. Claude still does all the work using its normal tools.
 
 | Component | Who/What | Role |
 |-----------|----------|------|
 | **Workflow file** | Markdown document | Instructions for Claude (like a skill) |
-| **Workflow CLI** | Human/Claude control | Tracks state: current step, variables, retry count |
+| **Rundown CLI** | Human/Claude control | Tracks state: current step, variables, retry count |
 | **Claude** | AI agent | Executes steps using Step, Bash, Edit, etc. |
 
 **What the workflow provides:**
 - **Persistent state** - survives context clears, session restarts
 - **Progress tracking** - current step, retry counts, variables
 - **CLI control** - human can check status, jump steps, stop workflow
-- **Context injection** - active workflow prompt auto-injects into conversation
+- **Context injection** - active runbook prompt auto-injects into conversation
 
 **What the workflow does NOT do:**
 - Execute bash commands automatically (Claude runs them)
@@ -223,10 +223,10 @@ tsv run --agent xyz123  # Bind agent xyz123 to pending step
 ```
 
 **2. Subworkflow Dispatch (Enforced)**
-Queue a step with a mandatory subworkflow:
+Queue a step with a mandatory sub-runbook:
 ```bash
-tsv run --step 3.1 subtask.workflow.md  # Queue step with workflow
-tsv run --agent xyz123                  # Bind agent (auto-starts subworkflow)
+tsv run --step 3.1 subtask.runbook.md  # Queue step with workflow
+tsv run --agent xyz123                  # Bind agent (auto-starts sub-runbook)
 ```
 
 **Completion & Status:**
@@ -247,7 +247,7 @@ tsv pop     # Resume enforcement
 
 ### Persistence
 
-Workflow state persists to `.claude/turboshovel/workflows/{id}.json`.
+Workflow state persists to `.claude/turboshovel/runbooks/{id}.json`.
 Active workflow ID is stored in `.claude/turboshovel/session.json`.
 
 ### Variables
@@ -270,7 +270,7 @@ Variables are set by:
 
 ## Best Practices
 
-### When to Use Workflows vs Gates
+### When to Use Runbooks vs Gates
 
 **Use workflows when:**
 - Multi-task processes with branching
@@ -285,7 +285,7 @@ Variables are set by:
 - No state tracking required
 - Triggered by file edits or keywords
 
-### Workflow Composition Patterns
+### Runbook Composition Patterns
 
 **Sequential tasks** (most common):
 ```markdown

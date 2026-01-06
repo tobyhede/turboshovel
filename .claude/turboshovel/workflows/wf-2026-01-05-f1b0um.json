@@ -1,0 +1,14 @@
+{
+  "id": "wf-2026-01-05-f1b0um",
+  "workflow": "rundown/examples/implement-task.runbook.md",
+  "step": 1,
+  "stepName": "Implement",
+  "retryCount": 0,
+  "variables": {},
+  "steps": [],
+  "pendingSteps": [],
+  "agentBindings": {},
+  "startedAt": "2026-01-05T05:26:41.665Z",
+  "updatedAt": "2026-01-05T05:26:41.667Z",
+  "lastAction": "START"
+}

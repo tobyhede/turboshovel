@@ -20,7 +20,7 @@ describe('integration: full workflow scenarios', () => {
 
   it('completes simple two-step workflow', async () => {
     // Start workflow (prompted mode to test manual pass/fail flow)
-    let result = runCli('start --prompted workflows/simple.workflow.md', workspace);
+    let result = runCli('start --prompted runbooks/simple.runbook.md', workspace);
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('## 1.');
 
@@ -39,7 +39,7 @@ describe('integration: full workflow scenarios', () => {
   });
 
   it('handles retry then success flow', async () => {
-    runCli('start --prompted workflows/retry.workflow.md', workspace);
+    runCli('start --prompted runbooks/retry.runbook.md', workspace);
 
     // Fail first attempt
     let result = runCli('fail', workspace);
@@ -59,7 +59,7 @@ describe('integration: full workflow scenarios', () => {
   });
 
   it('handles GOTO flow', async () => {
-    runCli('start --prompted workflows/goto.workflow.md', workspace);
+    runCli('start --prompted runbooks/goto.runbook.md', workspace);
 
     // Pass step 1 which GOTOs step 3
     let result = runCli('pass', workspace);
@@ -75,7 +75,7 @@ describe('integration: full workflow scenarios', () => {
   });
 
   it('handles stash and pop during workflow', async () => {
-    runCli('start --prompted workflows/simple.workflow.md', workspace);
+    runCli('start --prompted runbooks/simple.runbook.md', workspace);
     runCli('pass', workspace); // Advance to step 2
 
     // Stash
@@ -97,7 +97,7 @@ describe('integration: full workflow scenarios', () => {
   });
 
   it('handles agent binding workflow', async () => {
-    runCli('start --prompted workflows/simple.workflow.md', workspace);
+    runCli('start --prompted runbooks/simple.runbook.md', workspace);
 
     // Queue steps for agents
     runCli('start --step 1', workspace);

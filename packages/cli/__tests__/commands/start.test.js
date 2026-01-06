@@ -10,35 +10,35 @@ describe('start command', () => {
     });
     describe('file mode', () => {
         it('creates workflow state from valid workflow file', async () => {
-            const result = runCli('start workflows/simple.workflow.md', workspace);
+            const result = runCli('start runbooks/simple.runbook.md', workspace);
             expect(result.exitCode).toBe(0);
             expect(result.stdout).toContain('Started workflow');
-            expect(result.stdout).toContain('simple.workflow.md');
+            expect(result.stdout).toContain('simple.runbook.md');
         });
         it('sets workflow as active', async () => {
-            runCli('start workflows/simple.workflow.md', workspace);
+            runCli('start runbooks/simple.runbook.md', workspace);
             const session = await readSession(workspace);
             expect(session.active).toBeTruthy();
         });
         it('stores relative path in state', async () => {
-            runCli('start workflows/simple.workflow.md', workspace);
+            runCli('start runbooks/simple.runbook.md', workspace);
             const state = await getActiveState(workspace);
             expect(state).not.toBeNull();
-            expect(state?.workflow).toBe('workflows/simple.workflow.md');
+            expect(state?.workflow).toBe('runbooks/simple.runbook.md');
         });
         it('initializes task=1 and retryCount=0', async () => {
-            runCli('start workflows/simple.workflow.md', workspace);
+            runCli('start runbooks/simple.runbook.md', workspace);
             const state = await getActiveState(workspace);
             expect(state?.task).toBe(1);
             expect(state?.retryCount).toBe(0);
         });
         it('outputs first task description', async () => {
-            const result = runCli('start workflows/simple.workflow.md', workspace);
+            const result = runCli('start runbooks/simple.runbook.md', workspace);
             expect(result.stdout).toContain('Task 1');
             expect(result.stdout).toContain('First task');
         });
         it('fails if file does not exist', async () => {
-            const result = runCli('start workflows/nonexistent.md', workspace);
+            const result = runCli('start runbooks/nonexistent.md', workspace);
             expect(result.exitCode).toBe(1);
             expect(result.stderr).toContain('not found');
         });
@@ -48,7 +48,7 @@ describe('start command', () => {
             expect(result.stderr).toContain('required');
         });
         it('creates state file on disk', async () => {
-            runCli('start workflows/simple.workflow.md', workspace);
+            runCli('start runbooks/simple.runbook.md', workspace);
             const stateFiles = await listWorkflowStates(workspace);
             expect(stateFiles.length).toBe(1);
         });
@@ -56,7 +56,7 @@ describe('start command', () => {
     describe('task queueing mode (--task)', () => {
         beforeEach(async () => {
             // Start a workflow first
-            runCli('start workflows/simple.workflow.md', workspace);
+            runCli('start runbooks/simple.runbook.md', workspace);
         });
         it('pushes task to pendingTasks queue', async () => {
             const result = runCli('start --task 2', workspace);
@@ -91,19 +91,19 @@ describe('start command', () => {
             expect(result.stderr).toContain('Invalid task ID');
         });
         it('should queue task with workflow file', async () => {
-            const result = runCli('start --task 1.1 workflows/simple.workflow.md', workspace);
+            const result = runCli('start --task 1.1 runbooks/simple.runbook.md', workspace);
             expect(result.exitCode).toBe(0);
             expect(result.stdout).toContain('queued');
             expect(result.stdout).toContain('1.1');
             const state = await getActiveState(workspace);
             expect(state?.pendingTasks).toHaveLength(1);
-            expect(state?.pendingTasks[0].workflow).toBe('workflows/simple.workflow.md');
+            expect(state?.pendingTasks[0].workflow).toBe('runbooks/simple.runbook.md');
         });
     });
     describe('agent binding mode (--agent)', () => {
         beforeEach(async () => {
             // Start workflow and queue a task
-            runCli('start workflows/simple.workflow.md', workspace);
+            runCli('start runbooks/simple.runbook.md', workspace);
             runCli('start --task 1', workspace);
         });
         it('pops task from pendingTasks queue', async () => {
@@ -148,7 +148,7 @@ describe('start command', () => {
             // Pop the task without workflow
             runCli('start --agent temp-agent', workspace);
             // Now queue task 1 with a workflow
-            runCli('start --task 1 workflows/simple.workflow.md', workspace);
+            runCli('start --task 1 runbooks/simple.runbook.md', workspace);
             // Bind agent - should create child workflow
             const result = runCli('start --agent test-agent-123', workspace);
             expect(result.exitCode).toBe(0);

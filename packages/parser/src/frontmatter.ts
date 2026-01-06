@@ -101,10 +101,10 @@ export function extractFrontmatter(markdown: string): {
 
 /**
  * Extract workflow name from filename
- * Removes the .workflow.md extension
+ * Removes the .runbook.md extension
  *
- * Example: "my-workflow.workflow.md" -> "my-workflow"
+ * Example: "my-runbook.runbook.md" -> "my-runbook"
  */
 export function nameFromFilename(filename: string): string {
-  return filename.replace(/\.workflow\.md$/i, '');
+  return filename.replace(/\.runbook\.md$/i, '');
 }

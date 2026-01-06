@@ -130,7 +130,7 @@ The `turboshovel` command is an alias for `tsv`.
 
 ### State Persistence
 
-State persists in `.claude/turboshovel/workflows/` (workflow files) and `.claude/turboshovel/session.json` (active workflow tracking). Both survive context clears.
+State persists in `.claude/turboshovel/runbooks/` (workflow files) and `.claude/turboshovel/session.json` (active workflow tracking). Both survive context clears.
 
 ## Commands
 

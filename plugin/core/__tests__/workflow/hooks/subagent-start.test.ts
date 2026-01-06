@@ -120,7 +120,7 @@ describe('handleSubagentStart with substeps', () => {
   it('binds agent to substep and updates substepState', async () => {
     const manager = new WorkflowStateManager(testDir);
 
-    const state = await manager.create('test.workflow.md', { steps: mockSteps });
+    const state = await manager.create('test.runbook.md', { steps: mockSteps });
     await manager.initializeSubsteps(state.id, [
       { id: '1', description: 'First', isDynamic: false }
     ]);

@@ -10,4 +10,4 @@ logs/
 .work/
 
 # Workflow state files (dev artifacts)
-.claude/turboshovel/workflows/
+.claude/turboshovel/runbooks/

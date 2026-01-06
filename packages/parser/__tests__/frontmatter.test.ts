@@ -93,14 +93,14 @@ description: Never closed
 });
 
 describe('nameFromFilename()', () => {
-  it('extracts name from standard .workflow.md filename', () => {
-    const filename = 'verify.workflow.md';
+  it('extracts name from standard .runbook.md filename', () => {
+    const filename = 'verify.runbook.md';
     const name = nameFromFilename(filename);
     expect(name).toBe('verify');
   });
 
   it('preserves hyphens in workflow names', () => {
-    const filename = 'my-workflow.workflow.md';
+    const filename = 'my-workflow.runbook.md';
     const name = nameFromFilename(filename);
     expect(name).toBe('my-workflow');
   });

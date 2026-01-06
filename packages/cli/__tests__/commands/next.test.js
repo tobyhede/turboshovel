@@ -10,7 +10,7 @@ describe('next command', () => {
     });
     describe('standard advance (bare next)', () => {
         beforeEach(async () => {
-            runCli('start workflows/simple.workflow.md', workspace);
+            runCli('start runbooks/simple.runbook.md', workspace);
         });
         it('increments task number', async () => {
             runCli('next', workspace);
@@ -53,7 +53,7 @@ describe('next command', () => {
     });
     describe('step jump (--step N)', () => {
         beforeEach(async () => {
-            runCli('start workflows/goto.workflow.md', workspace);
+            runCli('start runbooks/goto.runbook.md', workspace);
         });
         it('jumps to specified task number', async () => {
             const result = runCli('next --step 3', workspace);
@@ -75,7 +75,7 @@ describe('next command', () => {
     });
     describe('retry (--retry)', () => {
         beforeEach(async () => {
-            runCli('start workflows/retry.workflow.md', workspace);
+            runCli('start runbooks/retry.runbook.md', workspace);
         });
         it('increments retryCount', async () => {
             runCli('next --retry', workspace);
@@ -104,7 +104,7 @@ describe('next command', () => {
     describe('pass condition (--pass)', () => {
         describe('PASS: CONTINUE', () => {
             beforeEach(async () => {
-                runCli('start workflows/simple.workflow.md', workspace);
+                runCli('start runbooks/simple.runbook.md', workspace);
             });
             it('advances to next task', async () => {
                 const result = runCli('next --pass', workspace);
@@ -115,7 +115,7 @@ describe('next command', () => {
         });
         describe('PASS: DONE', () => {
             beforeEach(async () => {
-                runCli('start workflows/simple.workflow.md', workspace);
+                runCli('start runbooks/simple.runbook.md', workspace);
                 runCli('next', workspace); // Advance to task 2 which has PASS: DONE
             });
             it('marks workflow complete', async () => {
@@ -130,13 +130,13 @@ describe('next command', () => {
             it('should set variables.completed=true when completing workflow', async () => {
                 runCli('next --pass', workspace);
                 const states = await getAllStates(workspace);
-                const state = states.find(s => s.workflow === 'workflows/simple.workflow.md');
+                const state = states.find(s => s.workflow === 'runbooks/simple.runbook.md');
                 expect(state?.variables.completed).toBe(true);
             });
         });
         describe('PASS: GOTO N', () => {
             beforeEach(async () => {
-                runCli('start workflows/goto.workflow.md', workspace);
+                runCli('start runbooks/goto.runbook.md', workspace);
             });
             it('jumps to specified task', async () => {
                 const result = runCli('next --pass', workspace);
@@ -154,7 +154,7 @@ describe('next command', () => {
     describe('fail condition (--fail)', () => {
         describe('FAIL: RETRY N', () => {
             beforeEach(async () => {
-                runCli('start workflows/retry.workflow.md', workspace);
+                runCli('start runbooks/retry.runbook.md', workspace);
             });
             it('increments retryCount if under max', async () => {
                 runCli('next --fail', workspace);
@@ -169,7 +169,7 @@ describe('next command', () => {
         });
         describe('FAIL: STOP', () => {
             beforeEach(async () => {
-                runCli('start workflows/simple.workflow.md', workspace);
+                runCli('start runbooks/simple.runbook.md', workspace);
             });
             it('blocks workflow', async () => {
                 const result = runCli('next --fail', workspace);
@@ -187,7 +187,7 @@ describe('next command', () => {
         });
         describe('FAIL: GOTO N', () => {
             beforeEach(async () => {
-                runCli('start workflows/fail-goto.workflow.md', workspace);
+                runCli('start runbooks/fail-goto.runbook.md', workspace);
             });
             it('jumps to specified task on failure', async () => {
                 const result = runCli('next --fail', workspace);
@@ -200,13 +200,13 @@ describe('next command', () => {
     describe('child workflow completion restores parent', () => {
         it('should restore parent workflow as active when child completes via next', async () => {
             // Start parent workflow
-            runCli('start workflows/simple.workflow.md', workspace);
+            runCli('start runbooks/simple.runbook.md', workspace);
             const session1 = await readSession(workspace);
             const parentId = session1.active;
             expect(parentId).not.toBeNull();
             // Queue task and bind agent with child workflow
-            runCli(['start', '--task', '1.1', 'workflows/simple.workflow.md'], workspace);
-            runCli(['start', '--agent', 'test-agent', 'workflows/simple.workflow.md'], workspace);
+            runCli(['start', '--task', '1.1', 'runbooks/simple.runbook.md'], workspace);
+            runCli(['start', '--agent', 'test-agent', 'runbooks/simple.runbook.md'], workspace);
             // Verify child is now active
             const session2 = await readSession(workspace);
             const childId = session2.active;
@@ -224,16 +224,16 @@ describe('next command', () => {
             expect(session3.active).toBe(parentId);
             // Verify output confirms parent restoration
             const result = runCli('status', workspace);
-            expect(result.stdout).toContain('simple.workflow.md');
+            expect(result.stdout).toContain('simple.runbook.md');
         });
         it('should restore parent workflow as active when child completes via --pass', async () => {
             // Start parent workflow
-            runCli('start workflows/simple.workflow.md', workspace);
+            runCli('start runbooks/simple.runbook.md', workspace);
             const session1 = await readSession(workspace);
             const parentId = session1.active;
             // Queue task and bind agent with child workflow
-            runCli(['start', '--task', '1.1', 'workflows/simple.workflow.md'], workspace);
-            runCli(['start', '--agent', 'test-agent', 'workflows/simple.workflow.md'], workspace);
+            runCli(['start', '--task', '1.1', 'runbooks/simple.runbook.md'], workspace);
+            runCli(['start', '--agent', 'test-agent', 'runbooks/simple.runbook.md'], workspace);
             // Verify child is now active
             const session2 = await readSession(workspace);
             const childId = session2.active;
@@ -248,12 +248,12 @@ describe('next command', () => {
     describe('blocks agent completion while child workflow active', () => {
         it('should error when trying to complete agent with active child workflow', async () => {
             // Start parent workflow
-            runCli('start workflows/simple.workflow.md', workspace);
+            runCli('start runbooks/simple.runbook.md', workspace);
             const session1 = await readSession(workspace);
             const parentId = session1.active;
             // Queue task and bind agent with child workflow
-            runCli(['start', '--task', '1.1', 'workflows/simple.workflow.md'], workspace);
-            runCli(['start', '--agent', 'test-agent', 'workflows/simple.workflow.md'], workspace);
+            runCli(['start', '--task', '1.1', 'runbooks/simple.runbook.md'], workspace);
+            runCli(['start', '--agent', 'test-agent', 'runbooks/simple.runbook.md'], workspace);
             // Child workflow is now active - DO NOT complete it
             // Manually set parent as active to test the blocking behavior
             await writeSession(workspace, { active: parentId });

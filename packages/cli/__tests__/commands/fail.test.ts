@@ -22,7 +22,7 @@ describe('fail command', () => {
 
   describe('FAIL: RETRY N', () => {
     beforeEach(async () => {
-      runCli('start --prompted workflows/retry.workflow.md', workspace);
+      runCli('start --prompted runbooks/retry.runbook.md', workspace);
     });
 
     it('increments retryCount if under max', async () => {
@@ -42,7 +42,7 @@ describe('fail command', () => {
 
   describe('FAIL: STOP', () => {
     beforeEach(async () => {
-      runCli('start --prompted workflows/simple.workflow.md', workspace);
+      runCli('start --prompted runbooks/simple.runbook.md', workspace);
     });
 
     it('blocks workflow', async () => {
@@ -64,14 +64,14 @@ describe('fail command', () => {
       // After blocking, the workflow is saved but no longer active
       // Retrieve from all states
       const states = await getAllStates(workspace);
-      const state = states.find(s => s.workflow === 'workflows/simple.workflow.md');
+      const state = states.find(s => s.workflow === 'runbooks/simple.runbook.md');
       expect(state?.variables.blocked).toBe(true);
     });
   });
 
   describe('FAIL: GOTO N', () => {
     beforeEach(async () => {
-      runCli('start --prompted workflows/fail-goto.workflow.md', workspace);
+      runCli('start --prompted runbooks/fail-goto.runbook.md', workspace);
     });
 
     it('jumps to specified step on failure', async () => {
@@ -94,7 +94,7 @@ describe('fail command', () => {
       await mkdir(join(workspace.cwd, 'workflows'), { recursive: true });
       await writeFile(join(workspace.cwd, 'workflows', 'single-fail.md'), singleStep);
 
-      runCli('start --prompted workflows/single-fail.md --agent agent-001', workspace);
+      runCli('start --prompted runbooks/single-fail.md --agent agent-001', workspace);
 
       // Fail workflow - should block and pop
       const result = runCli('fail --agent agent-001', workspace);
@@ -126,10 +126,10 @@ Do work.
       await writeFile(join(workspace.cwd, 'workflows', 'child-fail.md'), childWorkflow);
 
       // Start parent (prompted to prevent auto-completion)
-      runCli('start --prompted workflows/parent-fail.md', workspace);
+      runCli('start --prompted runbooks/parent-fail.md', workspace);
 
       // Start child in same stack (prompted to prevent auto-completion)
-      runCli('start --prompted workflows/child-fail.md', workspace);
+      runCli('start --prompted runbooks/child-fail.md', workspace);
 
       // Fail child - should complete (FAIL: DONE) and pop to parent
       const result = runCli('fail', workspace);

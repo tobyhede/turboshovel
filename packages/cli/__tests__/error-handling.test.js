@@ -39,7 +39,7 @@ This doesn't have proper ## headers
     describe('invalid state', () => {
         it('handles corrupted state file', async () => {
             // Start a workflow
-            runCli('start workflows/simple.workflow.md', workspace);
+            runCli('start runbooks/simple.runbook.md', workspace);
             // Corrupt the state file
             const stateDir = workspace.statePath();
             const stateFiles = await import('fs/promises').then((fs) => fs.readdir(stateDir));
@@ -59,7 +59,7 @@ This doesn't have proper ## headers
             expect(result.stderr.length).toBeGreaterThan(0);
         });
         it('shows specific error for invalid task format', async () => {
-            runCli('start workflows/simple.workflow.md', workspace);
+            runCli('start runbooks/simple.runbook.md', workspace);
             const result = runCli('start --task invalid-format', workspace);
             expect(result.exitCode).toBe(1);
             expect(result.stderr).toContain('Invalid task ID');

@@ -5,9 +5,9 @@ import * as path from 'path';
 import { extractFrontmatter, nameFromFilename } from '@turboshovel/parser';
 
 /**
- * Discovered workflow metadata
+ * Discovered runbook metadata
  */
-export interface DiscoveredWorkflow {
+export interface DiscoveredRunbook {
   name: string;
   path: string;
   source: 'project' | 'plugin';
@@ -24,25 +24,25 @@ interface SearchPath {
 }
 
 /**
- * Get search paths for workflows
+ * Get search paths for runbooks
  * Returns project directory first (takes precedence), then plugin directory
  */
 export function getSearchPaths(cwd: string): SearchPath[] {
   const paths: SearchPath[] = [];
 
-  // Project workflows directory
-  const projectWorkflowsDir = path.join(cwd, '.claude', 'workflows');
+  // Project runbooks directory
+  const projectRunbooksDir = path.join(cwd, '.claude', 'runbooks');
   paths.push({
-    path: projectWorkflowsDir,
+    path: projectRunbooksDir,
     source: 'project',
   });
 
-  // Plugin workflows directory (from CLAUDE_PLUGIN_ROOT environment variable)
+  // Plugin runbooks directory (from CLAUDE_PLUGIN_ROOT environment variable)
   const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
   if (pluginRoot) {
-    const pluginWorkflowsDir = path.join(pluginRoot, 'workflows');
+    const pluginRunbooksDir = path.join(pluginRoot, 'runbooks');
     paths.push({
-      path: pluginWorkflowsDir,
+      path: pluginRunbooksDir,
       source: 'plugin',
     });
   }
@@ -51,17 +51,17 @@ export function getSearchPaths(cwd: string): SearchPath[] {
 }
 
 /**
- * Scan a directory for *.workflow.md files and extract metadata
+ * Scan a directory for *.runbook.md files and extract metadata
  */
-export async function scanDirectory(dirPath: string, source: 'project' | 'plugin'): Promise<DiscoveredWorkflow[]> {
-  const workflows: DiscoveredWorkflow[] = [];
+export async function scanDirectory(dirPath: string, source: 'project' | 'plugin'): Promise<DiscoveredRunbook[]> {
+  const runbooks: DiscoveredRunbook[] = [];
 
   try {
     const entries = await fs.readdir(dirPath, { withFileTypes: true });
 
     for (const entry of entries) {
       if (!entry.isFile()) continue;
-      if (!entry.name.endsWith('.workflow.md')) continue;
+      if (!entry.name.endsWith('.runbook.md')) continue;
 
       try {
         const filePath = path.join(dirPath, entry.name);
@@ -69,10 +69,10 @@ export async function scanDirectory(dirPath: string, source: 'project' | 'plugin
         const { frontmatter } = extractFrontmatter(content);
 
         // Match by frontmatter name or filename stem
-        const workflowName = frontmatter?.name || nameFromFilename(entry.name);
+        const runbookName = frontmatter?.name || nameFromFilename(entry.name);
 
-        workflows.push({
-          name: workflowName,
+        runbooks.push({
+          name: runbookName,
           path: filePath,
           source,
           description: frontmatter?.description,
@@ -88,46 +88,46 @@ export async function scanDirectory(dirPath: string, source: 'project' | 'plugin
     return [];
   }
 
-  return workflows;
+  return runbooks;
 }
 
 /**
- * Discover all workflows from project and plugin directories
- * Project workflows take precedence over plugin workflows with same name
+ * Discover all runbooks from project and plugin directories
+ * Project runbooks take precedence over plugin runbooks with same name
  */
-export async function discoverWorkflows(cwd: string): Promise<DiscoveredWorkflow[]> {
+export async function discoverRunbooks(cwd: string): Promise<DiscoveredRunbook[]> {
   const searchPaths = getSearchPaths(cwd);
-  const allWorkflows: DiscoveredWorkflow[] = [];
+  const allRunbooks: DiscoveredRunbook[] = [];
   const seen = new Set<string>();
 
   for (const { path: dirPath, source } of searchPaths) {
-    const workflows = await scanDirectory(dirPath, source);
+    const runbooks = await scanDirectory(dirPath, source);
 
-    for (const workflow of workflows) {
+    for (const runbook of runbooks) {
       // Skip if already seen (project takes precedence over plugin)
-      if (seen.has(workflow.name)) continue;
+      if (seen.has(runbook.name)) continue;
 
-      allWorkflows.push(workflow);
-      seen.add(workflow.name);
+      allRunbooks.push(runbook);
+      seen.add(runbook.name);
     }
   }
 
-  return allWorkflows;
+  return allRunbooks;
 }
 
 /**
- * Find a workflow by name
- * Project workflows take precedence over plugin workflows
+ * Find a runbook by name
+ * Project runbooks take precedence over plugin runbooks
  */
-export async function findWorkflowByName(cwd: string, name: string): Promise<DiscoveredWorkflow | null> {
+export async function findRunbookByName(cwd: string, name: string): Promise<DiscoveredRunbook | null> {
   const searchPaths = getSearchPaths(cwd);
 
   for (const { path: dirPath, source } of searchPaths) {
-    const workflows = await scanDirectory(dirPath, source);
+    const runbooks = await scanDirectory(dirPath, source);
 
-    for (const workflow of workflows) {
-      if (workflow.name === name) {
-        return workflow;
+    for (const runbook of runbooks) {
+      if (runbook.name === name) {
+        return runbook;
       }
     }
   }

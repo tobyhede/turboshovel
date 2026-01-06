@@ -213,7 +213,7 @@ export function getStepRetryMax(step: Step): number {
 export function buildMetadata(state: WorkflowState): WorkflowMetadata {
   return {
     file: state.workflow,
-    state: `.claude/turboshovel/workflows/${state.id}.json`,
+    state: `.claude/turboshovel/runbooks/${state.id}.json`,
     prompted: state.prompted ?? undefined,
   };
 }

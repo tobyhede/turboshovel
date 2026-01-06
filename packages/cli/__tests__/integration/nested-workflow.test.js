@@ -28,14 +28,14 @@ Complete the work.
         // Write workflows to workspace
         const workflowsDir = join(workspace.cwd, 'workflows');
         await mkdir(workflowsDir, { recursive: true });
-        await writeFile(join(workflowsDir, 'parent.workflow.md'), parentWorkflow);
-        await writeFile(join(workflowsDir, 'child.workflow.md'), childWorkflow);
+        await writeFile(join(workflowsDir, 'parent.runbook.md'), parentWorkflow);
+        await writeFile(join(workflowsDir, 'child.runbook.md'), childWorkflow);
         // 2. Start parent workflow
-        let result = runCli('start workflows/parent.workflow.md', workspace);
+        let result = runCli('start runbooks/parent.runbook.md', workspace);
         expect(result.exitCode).toBe(0);
         expect(result.stdout).toContain('Started workflow');
         // 3. Queue task with workflow
-        result = runCli(['start', '--task', '1.1', 'workflows/child.workflow.md'], workspace);
+        result = runCli(['start', '--task', '1.1', 'runbooks/child.runbook.md'], workspace);
         expect(result.stdout).toContain('Task 1.1 queued');
         // 4. Bind agent - should create child workflow
         result = runCli(['start', '--agent', 'test-agent'], workspace);

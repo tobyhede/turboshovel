@@ -6,7 +6,7 @@ import {
   printNoWorkflows,
   printWorkflowListEntry,
 } from '@turboshovel/shared';
-import { discoverWorkflows } from '../services/discovery.js';
+import { discoverRunbooks } from '../services/discovery.js';
 import { getCwd, getStepCount } from '../helpers/context.js';
 import { withErrorHandling } from '../helpers/wrapper.js';
 
@@ -23,17 +23,17 @@ export function registerLsCommand(program: Command): void {
 
         // MODE 1: List available workflows (--all)
         if (options.all) {
-            let workflows = await discoverWorkflows(cwd);
+            let runbooks = await discoverRunbooks(cwd);
 
             // Filter by tags
             if (options.tags) {
               const filterTags = options.tags.split(',').map((t) => t.trim().toLowerCase());
-              workflows = workflows.filter((w) =>
+              runbooks = runbooks.filter((w) =>
                 w.tags?.some((tag) => filterTags.includes(tag.toLowerCase()))
               );
             }
 
-            if (workflows.length === 0) {
+            if (runbooks.length === 0) {
               if (options.json) {
                  console.log('[]');
               } else {
@@ -43,7 +43,7 @@ export function registerLsCommand(program: Command): void {
             }
 
             if (options.json) {
-              const output = workflows.map((w) => ({
+              const output = runbooks.map((w) => ({
                 name: w.name,
                 source: w.source,
                 description: w.description,
@@ -55,8 +55,8 @@ export function registerLsCommand(program: Command): void {
             }
 
             console.log('Available workflows:\n');
-            for (const workflow of workflows) {
-              const displayName = 
+            for (const workflow of runbooks) {
+              const displayName =
                 workflow.source === 'plugin' ? `${workflow.name} [${workflow.source}]` : workflow.name;
               const description = workflow.description ? ` - ${workflow.description}` : '';
               console.log(`  ${displayName}${description}`);

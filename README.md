@@ -2,7 +2,7 @@
 
 **Automate context, enforce quality, and guide agents.**
 
-Turboshovel is a Claude Code plugin that turns your documentation into active agent instructions. It injects context when it matters, enforces quality checks before code is committed, and guides agents through complex workflows.
+Turboshovel is a Claude Code plugin that turns your documentation into active agent instructions. It injects context when it matters, enforces quality checks before code is committed, and guides agents through complex **Runbooks**.
 
 ## Features
 
@@ -11,9 +11,9 @@ Turboshovel is a Claude Code plugin that turns your documentation into active ag
 Simply create markdown files in `.claude/context/` and they will be injected into the agent's context exactly when needed—when a session starts, when a command runs, or when a tool is used.
 *Zero configuration required.*
 
-### 📋 Guided Workflows
+### 📋 Runbooks (Guided Workflows)
 **Keep agents on track with executable plans.**
-Define step-by-step workflows in simple Markdown. Turboshovel enforces the process, ensuring no steps are skipped and criteria are met before moving forward.
+Define step-by-step processes in simple Markdown using the **Rundown** format. Turboshovel enforces the process, ensuring no steps are skipped and criteria are met before moving forward.
 
 ### 🛡️ Quality Gates
 **Prevent mistakes with automatic checks.**
@@ -37,12 +37,12 @@ EOF
 ```
 *Now, every time you start a session, the agent knows the rules.*
 
-### 2. Guide the Agent (Workflows)
-Use a workflow to guide the agent through a standard process.
+### 2. Execute a Runbook
+Use a Runbook to guide the agent through a standard process.
 
-**Create a workflow file:**
+**Create a Runbook file:**
 ```markdown
-# .claude/workflows/feature.workflow.md
+# .claude/runbooks/feature.rundown.md
 
 ## 1. Plan
 Create an implementation plan.
@@ -57,9 +57,9 @@ Run tests.
 - PASS: DONE
 ```
 
-**Run the workflow:**
+**Run it:**
 ```bash
-tsv run feature.workflow.md
+tsv run feature.rundown.md
 ```
 
 ### 3. Add Safety Nets (Quality Gates)
@@ -92,21 +92,21 @@ claude plugin marketplace add tobyhede/turboshovel
 claude plugin install turboshovel@turboshovel
 ```
 
-### CLI (Required for Workflows)
+### CLI (Required for Runbooks)
 ```bash
 npm install -g @turboshovel/cli
 ```
 
 ## Documentation
 
-- **[WORKFLOWS.md](docs/WORKFLOWS.md)** - detailed guide to creating and running workflows.
+- **[RUNDOWN.md](docs/RUNDOWN.md)** - detailed guide to the Rundown format and execution.
 - **[SETUP.md](SETUP.md)** - full configuration guide for gates and hooks.
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - deep dive into how Turboshovel works.
 - **[VERIFICATION.md](docs/VERIFICATION.md)** - guide to the "Verify by Consensus" skill.
 
 ## Examples
-Check the `examples/` directory for ready-to-use configurations and workflows:
-- `examples/workflows/simple.workflow.md` - Minimal workflow.
+Check the `examples/` directory for ready-to-use configurations and Runbooks:
+- `examples/rundowns/simple.rundown.md` - Minimal Rundown.
 - `examples/context/` - Example context files.
 - `examples/strict.json` - Strict quality gate configuration.
 

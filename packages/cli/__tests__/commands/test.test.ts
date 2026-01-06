@@ -24,7 +24,7 @@ describe('test command', () => {
   describe('result sequence', () => {
     beforeEach(async () => {
       // Start a workflow first (prompted mode to keep it active)
-      runCli('start --prompted workflows/retry.workflow.md', workspace);
+      runCli('start --prompted runbooks/retry.runbook.md', workspace);
     });
 
     it('returns pass by default (no flags)', () => {
@@ -58,7 +58,7 @@ describe('test command', () => {
     });
 
     it('fails with invalid result value', () => {
-      runCli('start --prompted workflows/simple.workflow.md', workspace);
+      runCli('start --prompted runbooks/simple.runbook.md', workspace);
 
       const result = runCli('test --result maybe npm install', workspace);
       expect(result.exitCode).toBe(1);

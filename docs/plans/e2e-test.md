@@ -98,9 +98,9 @@ Each task creates `.work/tasks/task-{NN}.json`:
 **Two-tier orchestration:**
 
 ```
-execute-plan.workflow.md (9 steps)
+execute-plan.runbook.md (9 steps)
 └── Step 2: Execute batch
-    └── 2.{n} → implement-task.workflow.md (per batch)
+    └── 2.{n} → implement-task.runbook.md (per batch)
           └── {N}.1-{N}.7 (implement → evaluate → checks → tests → troubleshoot → fix → complete)
 ```
 

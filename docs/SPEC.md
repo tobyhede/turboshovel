@@ -29,7 +29,7 @@ See [rundown-format.md](./rundown-format.md) for the complete BNF-style grammar.
 
 ## 2. Document Structure
 
-A Rundown document (`.workflow.md`) consists of an optional title and description, followed by one or more steps.
+A Rundown document (`.runbook.md`) consists of an optional title and description, followed by one or more steps.
 
 ### Header
 - **Title**: An optional H1 header (`# Title`).

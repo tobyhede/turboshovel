@@ -25,7 +25,7 @@ Displayed when a workflow starts or resumes.
 
 ```
 File:     {WorkflowPath}
-State:    .claude/turboshovel/workflows/{StateId}.json
+State:    .claude/turboshovel/runbooks/{StateId}.json
 Prompt:   Yes
 ```
 *Note: The `Prompt:` line is only displayed if prompted mode is enabled.*

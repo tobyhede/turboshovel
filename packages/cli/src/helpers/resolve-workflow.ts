@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { findWorkflowByName } from '../services/discovery.js';
+import { findRunbookByName } from '../services/discovery.js';
 
 /**
  * Resolve workflow file by path (existing logic).
@@ -14,8 +14,8 @@ import { findWorkflowByName } from '../services/discovery.js';
  * @returns Absolute path to workflow file, or null if not found
  */
 async function resolveByPath(cwd: string, filename: string): Promise<string | null> {
-  // 1. Check project-local .claude/workflows/
-  const localPath = path.join(cwd, '.claude/workflows', filename);
+  // 1. Check project-local .claude/runbooks/
+  const localPath = path.join(cwd, '.claude/runbooks', filename);
   try {
     await fs.access(localPath);
     return localPath;
@@ -24,7 +24,7 @@ async function resolveByPath(cwd: string, filename: string): Promise<string | nu
   // 2. Check plugin workflows directory
   const pluginRoot = process.env.CLAUDE_PLUGIN_ROOT;
   if (pluginRoot) {
-    const pluginPath = path.join(pluginRoot, 'workflows', filename);
+    const pluginPath = path.join(pluginRoot, 'runbooks', filename);
     try {
       await fs.access(pluginPath);
       return pluginPath;
@@ -79,7 +79,7 @@ export async function resolveWorkflowFile(cwd: string, identifier: string): Prom
     return resolveByPath(cwd, identifier);
   } else {
     // Name-based resolution: use discovery service
-    const discovered = await findWorkflowByName(cwd, identifier);
+    const discovered = await findRunbookByName(cwd, identifier);
     return discovered ? discovered.path : null;
   }
 }

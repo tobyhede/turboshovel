@@ -32,7 +32,7 @@ describe('Dispatcher Workflow Integration', () => {
   test('includes workflow context in dispatch output', async () => {
     // Create active workflow
     const manager = new WorkflowStateManager(testDir);
-    const state = await manager.create('test.workflow.md', { steps: mockSteps });
+    const state = await manager.create('test.runbook.md', { steps: mockSteps });
     await manager.pushWorkflow(state.id);
 
     const input: HookInput = {
@@ -46,6 +46,6 @@ describe('Dispatcher Workflow Integration', () => {
     expect(result.blockReason).toBeUndefined();
     expect(result.stopMessage).toBeUndefined();
     expect(result.context).toContain('Active Workflow');
-    expect(result.context).toContain('test.workflow.md');
+    expect(result.context).toContain('test.runbook.md');
   });
 });

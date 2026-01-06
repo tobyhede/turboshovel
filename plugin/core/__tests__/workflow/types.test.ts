@@ -73,7 +73,7 @@ describe('WorkflowState orchestration fields', () => {
   it('includes pendingSteps array', () => {
     const state: WorkflowState = {
       id: 'wf-test',
-      workflow: 'test.workflow.md',
+      workflow: 'test.runbook.md',
       step: createStepNumber(1)!,
       stepName: 'Test',
       retryCount: 0,
@@ -90,7 +90,7 @@ describe('WorkflowState orchestration fields', () => {
   it('includes agentBindings map', () => {
     const state: WorkflowState = {
       id: 'wf-test',
-      workflow: 'test.workflow.md',
+      workflow: 'test.runbook.md',
       step: createStepNumber(1)!,
       stepName: 'Test',
       retryCount: 0,
@@ -109,7 +109,7 @@ describe('WorkflowState orchestration fields', () => {
   it('includes optional parent workflow fields', () => {
     const state: WorkflowState = {
       id: 'wf-child',
-      workflow: 'child.workflow.md',
+      workflow: 'child.runbook.md',
       step: createStepNumber(1)!,
       stepName: 'Child Step',
       retryCount: 0,

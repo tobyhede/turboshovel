@@ -41,17 +41,17 @@ Complete task.
     await writeFile(join(workflowsDir, 'child.md'), childWorkflow);
 
     // 1. Start parent workflow (default stack, prompted to keep active)
-    let result = runCli('start --prompted workflows/parent.md', workspace);
+    let result = runCli('start --prompted runbooks/parent.md', workspace);
     expect(result.exitCode).toBe(0);
 
     // 2. Start 3 child workflows in parallel agent stacks (prompted to keep active)
-    result = runCli('start --prompted workflows/child.md --agent agent-001', workspace);
+    result = runCli('start --prompted runbooks/child.md --agent agent-001', workspace);
     expect(result.exitCode).toBe(0);
 
-    result = runCli('start --prompted workflows/child.md --agent agent-002', workspace);
+    result = runCli('start --prompted runbooks/child.md --agent agent-002', workspace);
     expect(result.exitCode).toBe(0);
 
-    result = runCli('start --prompted workflows/child.md --agent agent-003', workspace);
+    result = runCli('start --prompted runbooks/child.md --agent agent-003', workspace);
     expect(result.exitCode).toBe(0);
 
     // 3. Verify each agent sees their own workflow
@@ -103,9 +103,9 @@ Complete task.
     await writeFile(join(workflowsDir, 'level3.md'), level3);
 
     // Start nested workflows (prompted to keep active at each level)
-    runCli('start --prompted workflows/level1.md', workspace);
-    runCli('start --prompted workflows/level2.md', workspace);
-    runCli('start --prompted workflows/level3.md', workspace);
+    runCli('start --prompted runbooks/level1.md', workspace);
+    runCli('start --prompted runbooks/level2.md', workspace);
+    runCli('start --prompted runbooks/level3.md', workspace);
 
     // Verify deepest is active
     let result = runCli('status', workspace);
@@ -135,9 +135,9 @@ Complete task.
     await writeFile(join(workspace.cwd, 'workflows', 'test.md'), workflow);
 
     // Start workflows in different stacks (prompted to keep active)
-    runCli('start --prompted workflows/test.md', workspace);
-    runCli('start --prompted workflows/test.md --agent agent-001', workspace);
-    runCli('start --prompted workflows/test.md --agent agent-002', workspace);
+    runCli('start --prompted runbooks/test.md', workspace);
+    runCli('start --prompted runbooks/test.md --agent agent-001', workspace);
+    runCli('start --prompted runbooks/test.md --agent agent-002', workspace);
 
     // Read raw session
     const session = await readSession(workspace);

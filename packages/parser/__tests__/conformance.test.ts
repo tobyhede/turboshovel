@@ -11,7 +11,7 @@ const FIXTURES_DIR = path.join(__dirname, '../fixtures/conformance');
 describe('Rundown Conformance (Fixture Driven)', () => {
   describe('Valid Workflows', () => {
     const validDir = path.join(FIXTURES_DIR, 'valid');
-    const files = fs.readdirSync(validDir).filter(f => f.endsWith('.workflow.md'));
+    const files = fs.readdirSync(validDir).filter(f => f.endsWith('.runbook.md'));
 
     it.each(files)('should parse valid workflow: %s', (file) => {
       const content = fs.readFileSync(path.join(validDir, file), 'utf8');
@@ -21,7 +21,7 @@ describe('Rundown Conformance (Fixture Driven)', () => {
 
   describe('Invalid Workflows', () => {
     const invalidDir = path.join(FIXTURES_DIR, 'invalid');
-    const files = fs.readdirSync(invalidDir).filter(f => f.endsWith('.workflow.md'));
+    const files = fs.readdirSync(invalidDir).filter(f => f.endsWith('.runbook.md'));
 
     it.each(files)('should reject invalid workflow: %s', (file) => {
       const content = fs.readFileSync(path.join(invalidDir, file), 'utf8');

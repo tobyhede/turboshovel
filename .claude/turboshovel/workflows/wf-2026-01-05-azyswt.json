@@ -1,0 +1,21 @@
+{
+  "id": "wf-2026-01-05-azyswt",
+  "workflow": ".repro_test/child.runbook.md",
+  "step": 1,
+  "stepName": "Child Step",
+  "retryCount": 0,
+  "variables": {},
+  "steps": [],
+  "pendingSteps": [],
+  "agentBindings": {},
+  "agentId": "agent2",
+  "parentWorkflowId": "wf-2026-01-05-micrvs",
+  "parentStepId": {
+    "step": 1,
+    "substep": "1"
+  },
+  "startedAt": "2026-01-05T05:21:46.398Z",
+  "updatedAt": "2026-01-05T05:21:46.399Z",
+  "prompted": false,
+  "lastAction": "START"
+}

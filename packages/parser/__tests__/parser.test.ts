@@ -7,20 +7,20 @@ describe('Step-level workflows', () => {
 
 ### 1.1 Execute workflow
 
- - task-details.workflow.md
+ - task-details.runbook.md
 
 - PASS: CONTINUE
 - FAIL: STOP
 `;
     const steps = parseWorkflow(markdown);
     expect(steps[0].substeps).toHaveLength(1);
-    expect(steps[0].substeps![0].workflows).toEqual(['task-details.workflow.md']);
+    expect(steps[0].substeps![0].workflows).toEqual(['task-details.runbook.md']);
   });
 
   it('rejects step with both workflows and substeps', () => {
     const markdown = `## 1. Execute
 
- - task.workflow.md
+ - task.runbook.md
 
 ### 1.1 Substep
 
@@ -37,8 +37,8 @@ Do work.
 
 ### 1.1 Workflows
 
- - workflow-a.workflow.md
- - workflow-b.workflow.md
+ - workflow-a.runbook.md
+ - workflow-b.runbook.md
 
 - PASS: CONTINUE
 - FAIL: STOP
@@ -46,8 +46,8 @@ Do work.
     const steps = parseWorkflow(markdown);
     expect(steps[0].substeps).toHaveLength(1);
     expect(steps[0].substeps![0].workflows).toEqual([
-      'workflow-a.workflow.md',
-      'workflow-b.workflow.md'
+      'workflow-a.runbook.md',
+      'workflow-b.runbook.md'
     ]);
   });
 });
@@ -59,8 +59,8 @@ describe('parseWorkflow with substep workflows', () => {
 ## 1. Dispatch agents
 
 ### 1.{n} Review step
- - review.workflow.md
- - security.workflow.md
+ - review.runbook.md
+ - security.runbook.md
 
 - PASS: CONTINUE
 - FAIL: STOP
@@ -69,8 +69,8 @@ describe('parseWorkflow with substep workflows', () => {
     const steps = parseWorkflow(markdown);
     expect(steps[0].substeps).toHaveLength(1);
     expect(steps[0].substeps![0].workflows).toEqual([
-      'review.workflow.md',
-      'security.workflow.md'
+      'review.runbook.md',
+      'security.runbook.md'
     ]);
   });
 });

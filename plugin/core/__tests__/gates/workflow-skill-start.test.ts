@@ -24,14 +24,14 @@ describe('workflow-skill-start gate', () => {
       const content = `---
 name: verify
 description: Verify something
-workflow: verify.workflow.md
+workflow: verify.runbook.md
 ---
 
 # Skill content`;
 
       const result = parseWorkflowFromFrontmatter(content);
 
-      expect(result).toBe('verify.workflow.md');
+      expect(result).toBe('verify.runbook.md');
     });
 
     it('returns undefined when no frontmatter', () => {
@@ -83,7 +83,7 @@ description: No workflow
     it('starts workflow when skill has workflow in frontmatter', async () => {
       const skillContent = `---
 name: verify
-workflow: verify.workflow.md
+workflow: verify.runbook.md
 ---
 # Content`;
 
@@ -103,10 +103,10 @@ workflow: verify.workflow.md
       const result = await execute(input);
 
       expect(result).toEqual({
-        additionalContext: 'Started workflow: verify.workflow.md'
+        additionalContext: 'Started workflow: verify.runbook.md'
       });
       expect(mockExecSync).toHaveBeenCalledWith(
-        'tsv run verify.workflow.md',
+        'tsv run verify.runbook.md',
         expect.objectContaining({ cwd: '/test' })
       );
 

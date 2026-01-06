@@ -143,13 +143,13 @@ describe('parseAction GOTO with substep', () => {
 describe('extractWorkflowList', () => {
   it('should extract workflow files from markdown list', () => {
     const content = `### 1.{n} Dispatch agents
- - verify-review.workflow.md
- - security-review.workflow.md
+ - verify-review.runbook.md
+ - security-review.runbook.md
 
 Some other content`;
 
     const result = extractWorkflowList(content);
-    expect(result).toEqual(['verify-review.workflow.md', 'security-review.workflow.md']);
+    expect(result).toEqual(['verify-review.runbook.md', 'security-review.runbook.md']);
   });
 
   it('should return empty array if no workflows', () => {
@@ -161,14 +161,14 @@ Just a description, no workflows.`;
     expect(result).toEqual([]);
   });
 
-  it('should only match .workflow.md files', () => {
+  it('should only match .runbook.md files', () => {
     const content = `### 1.{n}
- - valid.workflow.md
+ - valid.runbook.md
  - not-a-workflow.md
- - another.workflow.md`;
+ - another.runbook.md`;
 
     const result = extractWorkflowList(content);
-    expect(result).toEqual(['valid.workflow.md', 'another.workflow.md']);
+    expect(result).toEqual(['valid.runbook.md', 'another.runbook.md']);
   });
 });
 

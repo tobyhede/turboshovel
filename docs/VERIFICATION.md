@@ -28,7 +28,7 @@ Dispatch N independent review agents to independently review the same subject. C
 
 ### Phase 1: Dispatch
 1. Determine N (default 2).
-2. Start the verification workflow (`verify.workflow.md`).
+2. Start the verification workflow (`verify.runbook.md`).
 3. Dispatch N agents in parallel. Each agent produces a review file: `.work/{date}-verify-{agentId}.md`.
 
 ### Phase 2: Collate

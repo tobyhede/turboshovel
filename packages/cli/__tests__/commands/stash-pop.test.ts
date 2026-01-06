@@ -19,7 +19,7 @@ describe('stash command', () => {
   });
 
   it('moves active workflow to stashed', async () => {
-    runCli('start --prompted workflows/simple.workflow.md', workspace);
+    runCli('start --prompted runbooks/simple.runbook.md', workspace);
     const beforeSession = await readSession(workspace);
     const workflowId = beforeSession.active;
 
@@ -30,7 +30,7 @@ describe('stash command', () => {
   });
 
   it('clears active workflow', async () => {
-    runCli('start --prompted workflows/simple.workflow.md', workspace);
+    runCli('start --prompted runbooks/simple.runbook.md', workspace);
 
     runCli('stash', workspace);
 
@@ -39,7 +39,7 @@ describe('stash command', () => {
   });
 
   it('outputs stash confirmation', async () => {
-    runCli('start --prompted workflows/simple.workflow.md', workspace);
+    runCli('start --prompted runbooks/simple.runbook.md', workspace);
 
     const result = runCli('stash', workspace);
 
@@ -54,7 +54,7 @@ describe('stash command', () => {
   });
 
   it('preserves workflow state', async () => {
-    runCli('start --prompted workflows/simple.workflow.md', workspace);
+    runCli('start --prompted runbooks/simple.runbook.md', workspace);
     runCli('pass', workspace); // Advance to step 2
     const beforeState = await getActiveState(workspace);
 
@@ -79,7 +79,7 @@ describe('pop command', () => {
   });
 
   it('restores stashed workflow to active', async () => {
-    runCli('start --prompted workflows/simple.workflow.md', workspace);
+    runCli('start --prompted runbooks/simple.runbook.md', workspace);
     const beforeSession = await readSession(workspace);
     const workflowId = beforeSession.active;
 
@@ -91,7 +91,7 @@ describe('pop command', () => {
   });
 
   it('clears stashed state', async () => {
-    runCli('start --prompted workflows/simple.workflow.md', workspace);
+    runCli('start --prompted runbooks/simple.runbook.md', workspace);
     runCli('stash', workspace);
 
     runCli('pop', workspace);
@@ -101,7 +101,7 @@ describe('pop command', () => {
   });
 
   it('outputs restored workflow info', async () => {
-    runCli('start --prompted workflows/simple.workflow.md', workspace);
+    runCli('start --prompted runbooks/simple.runbook.md', workspace);
     runCli('stash', workspace);
 
     const result = runCli('pop', workspace);
@@ -117,7 +117,7 @@ describe('pop command', () => {
   });
 
   it('shows resuming step info', async () => {
-    runCli('start --prompted workflows/simple.workflow.md', workspace);
+    runCli('start --prompted runbooks/simple.runbook.md', workspace);
     runCli('pass', workspace); // Advance to step 2
     runCli('stash', workspace);
 

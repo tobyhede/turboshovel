@@ -20,39 +20,39 @@ describe('resolveWorkflowFile', () => {
     await fs.rm(testDir, { recursive: true, force: true });
   });
 
-  it('should find workflow in .claude/workflows/', async () => {
+  it('should find workflow in .claude/runbooks/', async () => {
     const claudeDir = path.join(testDir, '.claude/workflows');
     await fs.mkdir(claudeDir, { recursive: true });
-    await fs.writeFile(path.join(claudeDir, 'test.workflow.md'), '# Test');
+    await fs.writeFile(path.join(claudeDir, 'test.runbook.md'), '# Test');
 
-    const result = await resolveWorkflowFile(testDir, 'test.workflow.md');
+    const result = await resolveWorkflowFile(testDir, 'test.runbook.md');
 
-    expect(result).toBe(path.join(claudeDir, 'test.workflow.md'));
+    expect(result).toBe(path.join(claudeDir, 'test.runbook.md'));
   });
 
   it('should find workflow in plugin workflows directory', async () => {
     const pluginDir = path.join(testDir, 'plugin/workflows');
     await fs.mkdir(pluginDir, { recursive: true });
-    await fs.writeFile(path.join(pluginDir, 'plugin.workflow.md'), '# Plugin');
+    await fs.writeFile(path.join(pluginDir, 'plugin.runbook.md'), '# Plugin');
 
     // Set CLAUDE_PLUGIN_ROOT for this test
     process.env.CLAUDE_PLUGIN_ROOT = path.join(testDir, 'plugin');
 
-    const result = await resolveWorkflowFile(testDir, 'plugin.workflow.md');
-    expect(result).toBe(path.join(pluginDir, 'plugin.workflow.md'));
+    const result = await resolveWorkflowFile(testDir, 'plugin.runbook.md');
+    expect(result).toBe(path.join(pluginDir, 'plugin.runbook.md'));
     // afterEach restores originalPluginRoot
   });
 
   it('should find workflow relative to cwd', async () => {
-    await fs.writeFile(path.join(testDir, 'relative.workflow.md'), '# Relative');
+    await fs.writeFile(path.join(testDir, 'relative.runbook.md'), '# Relative');
 
-    const result = await resolveWorkflowFile(testDir, 'relative.workflow.md');
+    const result = await resolveWorkflowFile(testDir, 'relative.runbook.md');
 
-    expect(result).toBe(path.join(testDir, 'relative.workflow.md'));
+    expect(result).toBe(path.join(testDir, 'relative.runbook.md'));
   });
 
   it('should return null if workflow not found', async () => {
-    const result = await resolveWorkflowFile(testDir, 'nonexistent.workflow.md');
+    const result = await resolveWorkflowFile(testDir, 'nonexistent.runbook.md');
 
     expect(result).toBeNull();
   });
@@ -61,11 +61,11 @@ describe('resolveWorkflowFile', () => {
     // Create in both locations
     const claudeDir = path.join(testDir, '.claude/workflows');
     await fs.mkdir(claudeDir, { recursive: true });
-    await fs.writeFile(path.join(claudeDir, 'test.workflow.md'), '# Claude');
-    await fs.writeFile(path.join(testDir, 'test.workflow.md'), '# Relative');
+    await fs.writeFile(path.join(claudeDir, 'test.runbook.md'), '# Claude');
+    await fs.writeFile(path.join(testDir, 'test.runbook.md'), '# Relative');
 
-    const result = await resolveWorkflowFile(testDir, 'test.workflow.md');
+    const result = await resolveWorkflowFile(testDir, 'test.runbook.md');
 
-    expect(result).toBe(path.join(claudeDir, 'test.workflow.md'));
+    expect(result).toBe(path.join(claudeDir, 'test.runbook.md'));
   });
 });

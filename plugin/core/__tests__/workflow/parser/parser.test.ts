@@ -298,7 +298,7 @@ Process the item
 echo "command"
 \`\`\`
 
- - task.workflow.md
+ - task.runbook.md
 
 - PASS: CONTINUE
 `;
@@ -312,7 +312,7 @@ echo "command"
 
 Some prompt text here.
 
- - task.workflow.md
+ - task.runbook.md
 
 - PASS: CONTINUE
 `;
@@ -326,14 +326,14 @@ Some prompt text here.
 
 ### 1.1 Execute workflow
 
- - task.workflow.md
+ - task.runbook.md
 
 - PASS ALL: CONTINUE
 - FAIL ANY: STOP
 `;
       const steps = parseWorkflow(markdown);
       expect(steps[0].substeps).toHaveLength(1);
-      expect(steps[0].substeps?.[0].workflows).toEqual(['task.workflow.md']);
+      expect(steps[0].substeps?.[0].workflows).toEqual(['task.runbook.md']);
       expect(steps[0].command).toBeUndefined();
       // Note: The workflow reference text may be parsed as a prompt at step level
       // due to how list items are handled, but validation ensures proper XOR
@@ -344,7 +344,7 @@ Some prompt text here.
       const markdown = `
 ## 1. Mixed step
 
- - task.workflow.md
+ - task.runbook.md
 
 ### 1.1 A substep
 `;
@@ -414,7 +414,7 @@ Some content
 
 ### {N}.1 Execute task
 
- - item-task.workflow.md
+ - item-task.runbook.md
 
 - PASS ALL: CONTINUE
 - FAIL ANY: STOP
@@ -422,7 +422,7 @@ Some content
       const steps = parseWorkflow(markdown);
       expect(steps[0].isDynamic).toBe(true);
       expect(steps[0].substeps).toHaveLength(1);
-      expect(steps[0].substeps?.[0].workflows).toEqual(['item-task.workflow.md']);
+      expect(steps[0].substeps?.[0].workflows).toEqual(['item-task.runbook.md']);
     });
   });
 

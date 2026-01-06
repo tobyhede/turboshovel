@@ -50,19 +50,19 @@ describe('output formatter', () => {
   describe('printMetadata', () => {
     it('prints metadata without prompt line in default mode', () => {
       printMetadata({
-        file: 'workflows/build.md',
-        state: '.claude/turboshovel/workflows/wf-123.json',
+        file: 'runbooks/build.md',
+        state: '.claude/turboshovel/runbooks/wf-123.json',
       });
       expect(consoleOutput).toEqual([
-        'File:     workflows/build.md',
-        'State:    .claude/turboshovel/workflows/wf-123.json',
+        'File:     runbooks/build.md',
+        'State:    .claude/turboshovel/runbooks/wf-123.json',
       ]);
     });
 
     it('prints prompt line when prompted is true', () => {
       printMetadata({
-        file: 'workflows/build.md',
-        state: '.claude/turboshovel/workflows/wf-123.json',
+        file: 'runbooks/build.md',
+        state: '.claude/turboshovel/runbooks/wf-123.json',
         prompted: true,
       });
       expect(consoleOutput).toContain('Prompt:   Yes');
@@ -70,8 +70,8 @@ describe('output formatter', () => {
 
     it('omits prompt line when prompted is false', () => {
       printMetadata({
-        file: 'workflows/build.md',
-        state: '.claude/turboshovel/workflows/wf-123.json',
+        file: 'runbooks/build.md',
+        state: '.claude/turboshovel/runbooks/wf-123.json',
         prompted: false,
       });
       expect(consoleOutput).not.toContain('Prompt:   Yes');

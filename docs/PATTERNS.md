@@ -69,7 +69,7 @@ Use dynamic substeps `### {N}.{n}` with workflow list for parallel/sequential su
 ## 1. Execute tasks
 
 ### 1.{n}
- - implement-task.workflow.md
+ - implement-task.runbook.md
 
 - PASS ALL: CONTINUE
 - FAIL ANY: STOP "Task failed"
@@ -84,7 +84,7 @@ All tasks passed.
 
 **Characteristics:**
 - `### 1.{n}` is dynamic substep template
-- Workflow list (`- file.workflow.md`) delegates to child workflow
+- Workflow list (`- file.runbook.md`) delegates to child workflow
 - Runtime enumerates tasks, creates instances: 1.1, 1.2, 1.3...
 - Each instance dispatches the child workflow
 - `PASS ALL` / `FAIL ANY` aggregates substep outcomes
@@ -112,7 +112,7 @@ Review the plan.
 ## 2. Execute batch
 
 ### 2.{n}
- - implement-task.workflow.md
+ - implement-task.runbook.md
 
 - PASS ALL: CONTINUE
 - FAIL ANY: STOP "BLOCKED"
@@ -163,16 +163,16 @@ Static step delegates to multiple child workflows in sequence.
 ```markdown
 ## 1. Build pipeline
 
- - lint.workflow.md
- - build.workflow.md
- - test.workflow.md
+ - lint.runbook.md
+ - build.runbook.md
+ - test.runbook.md
 
 - PASS ALL: CONTINUE
 - FAIL ANY: STOP
 
 ## 2. Deploy
 
- - deploy.workflow.md
+ - deploy.runbook.md
 
 - PASS: DONE
 - FAIL: STOP
@@ -210,7 +210,7 @@ Static step delegates to multiple child workflows in sequence.
 
 Dispatch subagents to run tasks.
 
- - task.workflow.md
+ - task.runbook.md
 
 - PASS: CONTINUE
 ```
