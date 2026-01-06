@@ -27,7 +27,7 @@ This test validates:
 
 2. **Start main workflow**:
    ```bash
-   npm run cli -- start docs/workflows/execute-plan.workflow.md
+   npm run cli -- start examples/workflows/execute-plan.workflow.md
    ```
 
 3. **Read the test plan** at `docs/plans/e2e-test.md`
@@ -51,7 +51,7 @@ This test validates:
    TASK: Create task-{NN}.json
 
    INSTRUCTIONS:
-   1. Start workflow: npm run cli -- start docs/workflows/implement-task.workflow.md --agent {YOUR_AGENT_ID}
+   1. Start workflow: npm run cli -- start examples/workflows/implement-task.workflow.md --agent {YOUR_AGENT_ID}
    2. Create file .work/tasks/task-{NN}.json with content:
       {"task": {N}, "value": "{value}", "agent_id": "{YOUR_AGENT_ID}"}
    3. Complete workflow: npm run cli -- pass --agent {YOUR_AGENT_ID}
