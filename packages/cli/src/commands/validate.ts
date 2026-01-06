@@ -7,13 +7,13 @@ import { parseWorkflowDocument, validateWorkflow, type ValidationError, type Ste
 
 function formatErrors(errors: ValidationError[]): string {
   return errors
-    .map(e => e.line ? `Line ${e.line}: ${e.message}` : e.message)
+    .map(e => e.line ? `Line ${String(e.line)}: ${e.message}` : e.message)
     .join('\n');
 }
 
 function countSubsteps(steps: readonly Step[]): number {
   return steps.reduce((count, step) => {
-    return count + (step.substeps?.length || 0);
+    return count + (step.substeps?.length ?? 0);
   }, 0);
 }
 
@@ -21,7 +21,7 @@ export function registerValidateCommand(program: Command): void {
   program
     .command('validate <file>')
     .description('Validate a workflow file without starting it')
-    .action(async (file: string) => {
+    .action((file: string) => {
       // Resolve file path
       const resolvedPath = path.resolve(file);
 
@@ -36,7 +36,7 @@ export function registerValidateCommand(program: Command): void {
         const errors = validateWorkflow(workflow.steps);
 
         if (errors.length > 0) {
-          console.log(`FAIL: ${errors.length} error${errors.length > 1 ? 's' : ''}\n`);
+          console.log(`FAIL: ${String(errors.length)} error${errors.length > 1 ? 's' : ''}\n`);
           console.log(formatErrors(errors));
           process.exit(1);
         }
@@ -45,12 +45,13 @@ export function registerValidateCommand(program: Command): void {
         const substepCount = countSubsteps(workflow.steps);
 
         if (substepCount > 0) {
-          console.log(`PASS: ${stepCount} step${stepCount > 1 ? 's' : ''}, ${substepCount} substep${substepCount > 1 ? 's' : ''}`);
+          console.log(`PASS: ${String(stepCount)} step${stepCount > 1 ? 's' : ''}, ${String(substepCount)} substep${substepCount > 1 ? 's' : ''}`);
         } else {
-          console.log(`PASS: ${stepCount} step${stepCount > 1 ? 's' : ''}`);
+          console.log(`PASS: ${String(stepCount)} step${stepCount > 1 ? 's' : ''}`);
         }
-      } catch (error: any) {
-        console.error(`FAIL: ${error.message}`);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(`FAIL: ${message}`);
         process.exit(1);
       }
     });
