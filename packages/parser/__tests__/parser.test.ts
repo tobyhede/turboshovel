@@ -92,7 +92,7 @@ pwd
     expect(steps[1].command?.code).toBe('pwd');
   });
 
-  it('supports prompt tag for non-executable prompts', () => {
+  it('treats prompt tag as prompted command (show but do not execute)', () => {
     const markdown = `## 1. Instruction
 \`\`\`prompt
 Please look at this example.
