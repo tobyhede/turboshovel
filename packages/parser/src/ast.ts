@@ -13,10 +13,13 @@ export {
 };
 
 /**
- * Command to execute (bash code block)
+ * Code block command
+ * - prompted: false (default) - auto-execute (bash/sh/shell)
+ * - prompted: true - show to agent, don't run (prompt blocks)
  */
 export interface Command {
   readonly code: string;
+  readonly prompted?: boolean;
 }
 
 /**
