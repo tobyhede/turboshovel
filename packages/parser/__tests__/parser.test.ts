@@ -99,8 +99,9 @@ Please look at this example.
 \`\`\`
 `;
     const steps = parseWorkflow(markdown);
-    expect(steps[0].command).toBeUndefined();
-    expect(steps[0].prompts[0].text).toBe('Please look at this example.');
+    expect(steps[0].command).toBeDefined();
+    expect(steps[0].command?.code).toBe('Please look at this example.');
+    expect(steps[0].command?.prompted).toBe(true);
   });
 
   it('treats other tags as passive prose', () => {

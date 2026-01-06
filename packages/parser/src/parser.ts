@@ -25,7 +25,8 @@ import {
   extractSubstepHeader,
   parseConditional,
   convertToTransitions,
-  extractWorkflowList
+  extractWorkflowList,
+  isPromptedCodeBlock
 } from './helpers.js';
 import { validateWorkflow } from './validator.js';
 import { extractFrontmatter, nameFromFilename } from './frontmatter.js';
@@ -269,16 +270,29 @@ export function parseWorkflowDocument(markdown: string, filename?: string): Work
 
     if (node.type === 'code' && currentStep) {
       const codeNode = node as Code;
-      const lang = codeNode.lang?.split(/\s+/)[0].toLowerCase();
+      const prompted = isPromptedCodeBlock(codeNode.lang);
 
-      if (lang === 'bash' || lang === 'sh' || lang === 'shell') {
+      if (prompted === null) {
+        // Passive - preserve as prose with fences
+        const promptText = '\n```' + (codeNode.lang ?? '') + '\n' + codeNode.value + '\n```\n';
+        if (currentStep.pendingSubstep) {
+          currentStep.pendingSubstep.content += promptText;
+        } else {
+          implicitText += promptText;
+        }
+      } else {
+        // Command (executable or prompted)
+        const cmd: Command = prompted
+          ? { code: codeNode.value.trim(), prompted: true }
+          : { code: codeNode.value.trim() };
+
         if (currentStep.pendingSubstep) {
           if (currentStep.pendingSubstep.command) {
             throw new WorkflowSyntaxError(
               `Multiple code blocks per substep not allowed in substep ${currentStep.pendingSubstep.id}`
             );
           }
-          currentStep.pendingSubstep.command = { code: codeNode.value.trim() };
+          currentStep.pendingSubstep.command = cmd;
         } else {
           if (currentStep.command) {
             const stepLabel = currentStep.isDynamic ? '{N}' : String(currentStep.number);
@@ -286,20 +300,7 @@ export function parseWorkflowDocument(markdown: string, filename?: string): Work
               `Multiple code blocks per step not allowed in Step ${stepLabel}.`
             );
           }
-          currentStep.command = { code: codeNode.value.trim() };
-        }
-      } else if (lang === 'prompt') {
-        if (currentStep.pendingSubstep) {
-          currentStep.pendingSubstep.prompts.push({ text: codeNode.value.trim() });
-        } else {
-          currentStep.prompts.push({ text: codeNode.value.trim() });
-        }
-      } else {
-        const passiveText = '\n' + '```' + (codeNode.lang ?? '') + '\n' + codeNode.value + '\n' + '```' + '\n';
-        if (currentStep.pendingSubstep) {
-          currentStep.pendingSubstep.content += passiveText;
-        } else {
-          implicitText += passiveText;
+          currentStep.command = cmd;
         }
       }
     }
