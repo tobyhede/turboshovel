@@ -361,7 +361,7 @@ const PROMPTED_TAGS = ['prompt'];
  */
 export function isPromptedCodeBlock(lang: string | null | undefined): boolean | null {
   const tag = lang?.split(/\s+/)[0].toLowerCase();
-  if (tag && EXECUTABLE_TAGS.includes(tag)) return false;  // auto-execute
+  if (tag && EXECUTABLE_TAGS.includes(tag)) return false;  // executable
   if (tag && PROMPTED_TAGS.includes(tag)) return true;     // show, don't run
   return null;  // passive (not a command)
 }

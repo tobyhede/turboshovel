@@ -190,10 +190,10 @@ The parsed `Command` object uses an optional `prompted` boolean:
 
 | `command.prompted` | Meaning |
 |--------------------|---------|
-| `undefined` | Auto-execute (from `bash`/`sh`/`shell` blocks) |
-| `true` | Show to agent, wait for manual `tsv pass/fail` (from `prompt` blocks) |
+| `undefined` | Executable (runs automatically, from `bash`/`sh`/`shell` blocks) |
+| `true` | Prompted (show to agent, wait for manual `tsv pass/fail`) |
 
-**Note**: The absence of `prompted` (undefined) means the command will auto-execute. Only `prompt` code blocks set `prompted: true`.
+**Note**: The absence of `prompted` (undefined) means the command is executable and runs automatically. Only `prompt` code blocks set `prompted: true`.
 
 ---
 
