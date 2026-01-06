@@ -60,6 +60,7 @@ interface SubstepBuilder {
   command?: Command;
   prompts: Prompt[];
   pendingConditionals: ParsedConditional[];
+  line?: number;
 }
 
 interface StepBuilder {
@@ -71,6 +72,7 @@ interface StepBuilder {
   substeps: Substep[];
   pendingSubstep?: SubstepBuilder;
   content: string;
+  line?: number;
 }
 
 /**
@@ -123,7 +125,8 @@ export function parseWorkflowDocument(markdown: string, filename?: string): Work
         command: ps.command,
         prompts: prompts,
         transitions: transitions ?? undefined,
-        workflows: workflows.length > 0 ? workflows : undefined
+        workflows: workflows.length > 0 ? workflows : undefined,
+        line: ps.line
       };
       currentStep.substeps.push(substep);
       currentStep.pendingSubstep = undefined;
@@ -167,7 +170,8 @@ export function parseWorkflowDocument(markdown: string, filename?: string): Work
           description: parsed.description,
           prompts: [],
           substeps: [],
-          content: ''
+          content: '',
+          line: node.position?.start?.line
         };
       }
     }
@@ -228,7 +232,8 @@ export function parseWorkflowDocument(markdown: string, filename?: string): Work
           content: '',
           command: undefined,
           prompts: [],
-          pendingConditionals: []
+          pendingConditionals: [],
+          line: node.position?.start?.line
         };
       }
     }
@@ -372,6 +377,7 @@ function finalizeStep(
     prompts: prompts,
     transitions: transitions ?? undefined,
     substeps: step.substeps.length > 0 ? step.substeps : undefined,
-    workflows: workflows.length > 0 ? workflows : undefined
+    workflows: workflows.length > 0 ? workflows : undefined,
+    line: step.line
   };
 }
