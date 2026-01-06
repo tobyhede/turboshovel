@@ -343,7 +343,11 @@ export function parseWorkflowDocument(markdown: string, filename?: string): Work
     steps.push(finalizeStep(currentStep, pendingConditionals, implicitText));
   }
 
-  validateWorkflow(steps);
+  const errors = validateWorkflow(steps);
+  if (errors.length > 0) {
+    // For backwards compatibility, throw the first error
+    throw new WorkflowSyntaxError(errors[0].message);
+  }
 
   return {
     title,
