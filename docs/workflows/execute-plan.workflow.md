@@ -14,8 +14,6 @@ Read and validate the implementation plan.
 
 ## 2. Execute batch
 
-Execute tasks in current batch sequentially.
-
 ### 2.{n}
  - docs/workflows/implement-task.workflow.md
 
