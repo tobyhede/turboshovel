@@ -86,26 +86,25 @@ npm test
 
 ### Prompts
 
-Prompts guide agent behavior. Two types:
-
-**Explicit prompts** (using `**Prompt:**` marker):
+Steps can combine prompt text with code blocks:
 
 ```markdown
-## 1. Review code
-
-**Prompt:** Review the implementation for security issues.
-```
-
-**Implicit prompts** (step description becomes prompt):
-
-```markdown
-## 1. Review code
+## 1. Review and test code
 
 Review the implementation for security issues.
 Check for SQL injection, XSS, and auth bypasses.
+
+```bash
+npm test
+```
 ```
 
-If no code block and no explicit prompt, all step text becomes the implicit prompt.
+**How it works:**
+- **Prompt text** (lines before code block): Instructions for the agent
+- **Code block** (bash/shell): Command to execute
+- **Both together**: Agent reads instructions, then executes command
+
+If no code block exists, all step text becomes the prompt.
 
 ### Conditions (PASS/FAIL)
 
@@ -150,7 +149,7 @@ Since IF/ELSE is not yet implemented, use agent-driven decisions with the `--got
 ```markdown
 ## 5. Check remaining steps
 
-**Prompt:** Check TodoWrite for remaining steps.
+Check TodoWrite for remaining steps.
 
 If more steps remain → `tsv goto 3`
 If all done → `tsv pass`
@@ -307,7 +306,7 @@ Variables are set by:
 
 ## 2. Check remaining
 
-**Prompt:** Check if more items remain.
+Check if more items remain.
 
 If more items → `tsv goto 1`
 If complete → `tsv pass`

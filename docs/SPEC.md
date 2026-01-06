@@ -152,20 +152,37 @@ Actions determine what happens next.
 
 ## 7. Code Blocks
 
-Rundown uses Markdown fenced code blocks for commands and instructions.
+A step body can contain **both** prompt text and a code block:
 
-### Executable Blocks
-Any code block with a shell tag will be executed by the workflow runner.
-- **Tags**: `bash`, `sh`, `shell`.
-- **Exit Code**: `0` results in PASS; non-zero results in FAIL.
+```
+## 1. Step Title
 
-### Instructional Blocks
-The `prompt` tag is used for code snippets that should be shown to the user/agent but **never executed**.
-- **Tag**: `prompt`.
-- **Behavior**: Content is extracted as a Prompt and included in the instruction set.
+Prompt text (instructions for agent/user).
 
-### Passive Blocks
-Any other tag (e.g., `json`, `yaml`, `javascript`) or an untagged block is treated as **Prose**. It is included in the implicit instructions but ignored by the command executor.
+\`\`\`bash
+command-to-run
+\`\`\`
+```
+
+### Classification
+
+| Tag | Type | Behavior |
+|-----|------|----------|
+| `bash`, `sh`, `shell` | Executable | Auto-run, exit code determines PASS/FAIL |
+| `prompt` | Instructional | Show to agent, never execute |
+| Other/none | Passive | Preserved as prose in prompts |
+
+### CLI Interaction
+
+| Code Block Tag | CLI `--prompted` | Result |
+|----------------|------------------|--------|
+| `bash`/`sh`/`shell` | No | **Execute** automatically |
+| `bash`/`sh`/`shell` | Yes | **Show**, wait for `tsv pass/fail` |
+| `prompt` | No | **Show**, wait for `tsv pass/fail` |
+| `prompt` | Yes | **Show**, wait for `tsv pass/fail` |
+| Other/none | Any | Preserved in prompts (not a command) |
+
+**Key insight**: `prompt` blocks **never** execute, regardless of CLI flag. The `--prompted` flag only affects executable blocks.
 
 ---
 
