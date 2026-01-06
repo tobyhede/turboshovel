@@ -51,41 +51,6 @@ function extractText(node: PhrasingContent | Heading | Paragraph | ListItem): st
   return '';
 }
 
-/**
- * Check if paragraph contains **Prompt:** marker
- */
-function hasPromptMarker(node: Paragraph): boolean {
-  for (const child of node.children) {
-    if (child.type === 'strong') {
-      const text = extractText(child);
-      if (text.trim() === 'Prompt:') {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-/**
- * Extract prompt text (everything after **Prompt:** marker)
- */
-function extractPromptText(node: Paragraph): string {
-  let foundMarker = false;
-  let promptText = '';
-
-  for (const child of node.children) {
-    if (child.type === 'strong' && extractText(child).trim() === 'Prompt:') {
-      foundMarker = true;
-      continue;
-    }
-    if (foundMarker) {
-      promptText += extractText(child);
-    }
-  }
-
-  return promptText.trim();
-}
-
 interface SubstepBuilder {
   id: string;
   description: string;
@@ -315,18 +280,6 @@ export function parseWorkflowDocument(markdown: string, filename?: string): Work
       }
 
       if (currentStep) {
-        if (hasPromptMarker(paragraphNode)) {
-          const promptText = extractPromptText(paragraphNode);
-          if (promptText) {
-            if (currentStep.pendingSubstep) {
-              currentStep.pendingSubstep.prompts.push({ text: promptText });
-            } else {
-              currentStep.prompts.push({ text: promptText });
-            }
-          }
-          return;
-        }
-
         const lines = text.split('\n');
         let hasConditional = false;
 

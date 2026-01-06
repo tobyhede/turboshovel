@@ -170,24 +170,6 @@ The following instructions are important:
   });
 });
 
-describe('Mixed implicit and explicit prompts', () => {
-  it('preserves both explicit and implicit prompts', () => {
-    const markdown = `## 1. Execute
-**Prompt:** Explicit instruction.
-- Implicit instruction 1
-- Implicit instruction 2
-
-- PASS: CONTINUE
-- FAIL: STOP
-`;
-    const steps = parseWorkflow(markdown);
-    const combinedPrompt = steps[0].prompts.map(p => p.text).join('\n');
-    expect(combinedPrompt).toContain('Explicit instruction.');
-    expect(combinedPrompt).toContain('- Implicit instruction 1');
-    expect(combinedPrompt).toContain('- Implicit instruction 2');
-  });
-});
-
 describe('GOTO substep validation', () => {
   it('accepts GOTO 2.1 when step 2 has static substep 1', () => {
     const markdown = `
@@ -250,21 +232,6 @@ Do work.
 });
 
 describe('substep with prompts', () => {
-  it('parses explicit prompt in substep', () => {
-    const markdown = `## 1. Execute
-
-### 1.1 Implement task
-
-**Prompt:** Do the implementation work.
-
-- PASS: CONTINUE
-- FAIL: STOP
-`;
-    const steps = parseWorkflow(markdown);
-    expect(steps[0].substeps![0].prompts).toHaveLength(1);
-    expect(steps[0].substeps![0].prompts[0].text).toBe('Do the implementation work.');
-  });
-
   it('parses implicit prompt in substep', () => {
     const markdown = `## 1. Execute
 
