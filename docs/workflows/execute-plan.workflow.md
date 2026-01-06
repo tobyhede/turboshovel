@@ -4,23 +4,25 @@ Execute an implementation plan in batches with review checkpoints.
 
 ## 1. Load plan
 
-Read the implementation plan and review critically.
+Read and validate the implementation plan.
 
-**tsv pass:** Plan is clear, no blocking concerns
-**tsv fail:** Plan has gaps, questions, or blocking concerns
+**tsv pass:** Plan is clear, tasks well-defined, batches identified
+**tsv fail:** Plan has gaps, ambiguities, or blocking concerns
 
 - PASS: CONTINUE
-- FAIL: STOP
+- FAIL: STOP "BLOCKED: Plan validation failed"
 
 ## 2. Execute batch
+
+Execute tasks in current batch sequentially.
 
 ### 2.{n}
  - docs/workflows/implement-task.workflow.md
 
 - PASS ALL: CONTINUE
-- FAIL ANY: STOP "BLOCKED: Task failed"
+- FAIL ANY: GOTO 4
 
-## 3. Validate
+## 3. Validate batch
 
 ```bash
 tsv test npm run lint && tsv test npm run build && tsv test npm test
@@ -29,22 +31,71 @@ tsv test npm run lint && tsv test npm run build && tsv test npm test
 - PASS: CONTINUE
 - FAIL: GOTO 4
 
-## 4. Troubleshoot
+## 4. Handle failures
 
-Can you fix the validation issues without changing plan approach?
+Analyze failures and present options to orchestrator.
 
-**tsv yes:** Syntax, typos, imports, test fixes
-**tsv no:** Algorithm, library, API changes needed
+**Prompt:** Summarize failures and present:
+- FIX: Attempt inline fixes (syntax, imports, types)
+- REVISE: Plan needs modification
+- ABORT: Stop execution
+
+**tsv pass:** Orchestrator chose FIX, issues are resolvable
+**tsv fail:** Orchestrator chose REVISE or ABORT
+
+- PASS: GOTO 5
+- FAIL: STOP "BLOCKED: Orchestrator decision required"
+
+## 5. Apply fixes
+
+Apply inline fixes within plan constraints.
+
+**HOW changes** (`tsv pass`): syntax, imports, types, test setup
+**WHAT changes** (`tsv fail`): algorithm, library, data structure, scope
+
+When uncertain, `tsv fail`.
 
 - PASS: GOTO 3
-- FAIL: STOP "BLOCKED: Validation failed"
+- FAIL: STOP "BLOCKED: Requires plan revision"
 
-## 5. Batch complete
+## 6. Code review
 
-Batch complete.
+Review batch changes before proceeding.
 
-**tsv yes:** More batches remaining
+**Prompt:** Dispatch code review for batch changes.
+Categorize findings: BLOCKING or NON-BLOCKING.
+
+**tsv pass:** No blocking issues (or fixed)
+**tsv fail:** Blocking issues remain
+
+- PASS: CONTINUE
+- FAIL: STOP "BLOCKED: Code review issues"
+
+## 7. Check remaining
+
+Evaluate remaining work.
+
+**tsv yes:** More batches remain → goto 2
 **tsv no:** All batches complete
 
 - PASS: GOTO 2
-- FAIL: DONE
+- FAIL: CONTINUE
+
+## 8. Final validation
+
+```bash
+tsv test npm run lint && tsv test npm run build && tsv test npm test
+```
+
+- PASS: CONTINUE
+- FAIL: STOP "BLOCKED: Final validation failed"
+
+## 9. Complete
+
+```
+STATUS: COMPLETE
+PLAN: {plan_name}
+BATCHES: {count}
+```
+
+- PASS: DONE

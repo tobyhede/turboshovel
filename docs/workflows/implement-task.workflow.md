@@ -1,56 +1,67 @@
 # Implement Task
 
-Execute a single task from the implementation plan.
+Execute tasks from the implementation plan sequentially.
 
-## 1. Implement
+## {N}. Task
 
-Execute the task exactly as specified in the plan.
+### {N}.1 Implement
 
-**tsv pass:** Syntax corrections, error handling details, naming, organization
-**tsv fail:** Different algorithm, library, data structure, or scope
+Follow the plan exactly.
 
-- PASS: CONTINUE
-- FAIL: STOP "BLOCKED"
+Required changes from plan?
 
-## 2. Checks
+- NO: GOTO {N}.3
+- YES: GOTO {N}.2
+
+### {N}.2 Evaluate
+
+Assess changes to logic, dependencies, scope, interfaces.
+
+Within acceptable parameters?
+
+- YES: CONTINUE
+- NO: STOP "BLOCKED: Changes exceed parameters"
+
+### {N}.3 Checks
 
 ```bash
 tsv test npm run lint && tsv test npm run build
 ```
 
 - PASS: CONTINUE
-- FAIL: GOTO 4
+- FAIL: GOTO {N}.5
 
-## 3. Tests
+### {N}.4 Tests
 
 ```bash
 tsv test npm test
 ```
 
 - PASS: CONTINUE
-- FAIL: GOTO 4
+- FAIL: GOTO {N}.5
 
-## 4. Troubleshoot
+### {N}.5 Troubleshoot
 
-Can you fix this without changing the plan's approach?
+Can you fix without changing approach?
 
-**tsv yes:** Syntax, typos, imports, error handling, naming
-**tsv no:** Algorithm, library, data structure, API changes
+- YES: GOTO {N}.6
+- NO: STOP "BLOCKED: Requires plan revision"
 
-When in doubt, tsv no.
+### {N}.6 Apply fixes
 
-- PASS: GOTO 2
-- FAIL: STOP "BLOCKED"
+Apply inline fixes.
 
-## 5. Complete
+- PASS: GOTO {N}.3
+- FAIL: STOP "BLOCKED: Could not apply fixes"
 
-Task passed all checks.
+### {N}.7 Complete
 
 ```
 STATUS: OK
-TASK: {task_id}
-SUMMARY: {implementation_summary}
+TASK: {N}
 ```
 
-- PASS: DONE
-- FAIL: STOP
+More tasks?
+
+- YES: NEXT
+- NO: DONE
