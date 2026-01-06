@@ -3,7 +3,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import type { Command } from 'commander';
-import { parseWorkflowDocument, validateWorkflow, type ValidationError } from '@turboshovel/parser';
+import { parseWorkflowDocument, validateWorkflow, type ValidationError, type Step } from '@turboshovel/parser';
 
 function formatErrors(errors: ValidationError[]): string {
   return errors
@@ -11,7 +11,7 @@ function formatErrors(errors: ValidationError[]): string {
     .join('\n');
 }
 
-function countSubsteps(steps: any[]): number {
+function countSubsteps(steps: readonly Step[]): number {
   return steps.reduce((count, step) => {
     return count + (step.substeps?.length || 0);
   }, 0);

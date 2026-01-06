@@ -10,7 +10,7 @@ export interface ValidationError {
 /**
  * Validates a parsed workflow against Rundown specification rules.
  */
-export function validateWorkflow(steps: Step[]): ValidationError[] {
+export function validateWorkflow(steps: readonly Step[]): ValidationError[] {
   const errors: ValidationError[] = [];
 
   if (steps.length === 0) {
@@ -112,7 +112,7 @@ export function validateAction(
   action: Action,
   currentStepNum: number,
   currentSubstepId: string | undefined,
-  steps: Step[],
+  steps: readonly Step[],
   currentStepObj: Step,
   errors: ValidationError[]
 ): void {
