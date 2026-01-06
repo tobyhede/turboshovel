@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { parseAction, extractWorkflowList } from '../src/index.js';
+import { parseAction, extractWorkflowList, isPromptedCodeBlock } from '../src/index.js';
 
 describe('parseAction NEXT', () => {
   it('parses NEXT as action', () => {
@@ -169,5 +169,77 @@ Just a description, no workflows.`;
 
     const result = extractWorkflowList(content);
     expect(result).toEqual(['valid.workflow.md', 'another.workflow.md']);
+  });
+});
+
+describe('isPromptedCodeBlock', () => {
+  describe('executable tags (returns false)', () => {
+    it('returns false for bash', () => {
+      expect(isPromptedCodeBlock('bash')).toBe(false);
+    });
+
+    it('returns false for sh', () => {
+      expect(isPromptedCodeBlock('sh')).toBe(false);
+    });
+
+    it('returns false for shell', () => {
+      expect(isPromptedCodeBlock('shell')).toBe(false);
+    });
+
+    it('returns false for BASH (mixed case)', () => {
+      expect(isPromptedCodeBlock('BASH')).toBe(false);
+    });
+
+    it('returns false for Bash (title case)', () => {
+      expect(isPromptedCodeBlock('Bash')).toBe(false);
+    });
+
+    it('returns false for bash with attributes', () => {
+      expect(isPromptedCodeBlock('bash filename="test.sh"')).toBe(false);
+    });
+  });
+
+  describe('prompted tags (returns true)', () => {
+    it('returns true for prompt', () => {
+      expect(isPromptedCodeBlock('prompt')).toBe(true);
+    });
+
+    it('returns true for PROMPT (uppercase)', () => {
+      expect(isPromptedCodeBlock('PROMPT')).toBe(true);
+    });
+
+    it('returns true for Prompt (title case)', () => {
+      expect(isPromptedCodeBlock('Prompt')).toBe(true);
+    });
+
+    it('returns true for prompt with attributes', () => {
+      expect(isPromptedCodeBlock('prompt title="Example"')).toBe(true);
+    });
+  });
+
+  describe('passive/other tags (returns null)', () => {
+    it('returns null for json', () => {
+      expect(isPromptedCodeBlock('json')).toBeNull();
+    });
+
+    it('returns null for typescript', () => {
+      expect(isPromptedCodeBlock('typescript')).toBeNull();
+    });
+
+    it('returns null for empty string', () => {
+      expect(isPromptedCodeBlock('')).toBeNull();
+    });
+
+    it('returns null for undefined', () => {
+      expect(isPromptedCodeBlock(undefined)).toBeNull();
+    });
+
+    it('returns null for null', () => {
+      expect(isPromptedCodeBlock(null)).toBeNull();
+    });
+
+    it('returns null for whitespace only', () => {
+      expect(isPromptedCodeBlock('   ')).toBeNull();
+    });
   });
 });

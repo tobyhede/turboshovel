@@ -14,7 +14,7 @@ export {
 
 /**
  * Code block command
- * - prompted: false (default) - auto-execute (bash/sh/shell)
+ * - prompted: undefined (default) - auto-execute (bash/sh/shell blocks)
  * - prompted: true - show to agent, don't run (prompt blocks)
  */
 export interface Command {

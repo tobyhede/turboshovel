@@ -24,7 +24,8 @@ export {
   parseConditional,
   convertToTransitions,
   extractSubstepHeader,
-  extractWorkflowList
+  extractWorkflowList,
+  isPromptedCodeBlock
 } from './helpers.js';
 export type { ParsedStepHeader, ParsedSubstepHeader } from './helpers.js';
 export {

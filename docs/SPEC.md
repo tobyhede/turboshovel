@@ -184,6 +184,17 @@ command-to-run
 
 **Key insight**: `prompt` blocks **never** execute, regardless of CLI flag. The `--prompted` flag only affects executable blocks.
 
+### Command Interface
+
+The parsed `Command` object uses an optional `prompted` boolean:
+
+| `command.prompted` | Meaning |
+|--------------------|---------|
+| `undefined` | Auto-execute (from `bash`/`sh`/`shell` blocks) |
+| `true` | Show to agent, wait for manual `tsv pass/fail` (from `prompt` blocks) |
+
+**Note**: The absence of `prompted` (undefined) means the command will auto-execute. Only `prompt` code blocks set `prompted: true`.
+
 ---
 
 ## 8. Variables
