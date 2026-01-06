@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
 import {
   createTestWorkspace,
   runCli,
@@ -165,6 +167,33 @@ describe('start --prompted', () => {
       // Third fail should block (max retries exceeded)
       result = runCli('fail', workspace);
       expect(result.exitCode).not.toBe(0);
+    });
+
+    it('does not execute prompt code blocks even without CLI --prompted flag', async () => {
+      // Create workflow with prompt code block
+      const workflowsDir = join(workspace.cwd, 'workflows');
+      await mkdir(workflowsDir, { recursive: true });
+      await writeFile(join(workflowsDir, 'with-prompt-block.workflow.md'), `# Prompt Block Test
+
+## 1. Step with prompt block
+
+Show this command to the agent.
+
+\`\`\`prompt
+npm run dangerous-command
+\`\`\`
+
+- PASS: DONE
+`);
+
+      const result = runCli('start workflows/with-prompt-block.workflow.md', workspace);
+
+      // Should NOT execute the command (no $ prefix showing execution)
+      expect(result.stdout).not.toContain('$ npm run dangerous-command');
+      // Should show the step
+      expect(result.stdout).toContain('## 1.');
+      // Should wait for manual pass/fail (not auto-complete)
+      expect(result.exitCode).toBe(0);
     });
   });
 
