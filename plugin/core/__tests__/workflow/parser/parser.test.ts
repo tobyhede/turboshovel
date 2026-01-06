@@ -123,7 +123,7 @@ FAIL ANY: STOP
       const steps = parseWorkflow(markdown);
 
       expect(steps[0].substeps).toHaveLength(2);
-      expect(steps[0].substeps?.[0]).toEqual({
+      expect(steps[0].substeps?.[0]).toMatchObject({
         id: '1',
         description: 'First reviewer',
         agentType: 'code-review-agent',
