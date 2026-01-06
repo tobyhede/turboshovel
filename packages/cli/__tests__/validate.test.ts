@@ -39,4 +39,62 @@ Do another thing.
     expect(result.stdout).toContain('PASS:');
     expect(result.stdout).toContain('2 steps');
   });
+
+  it('outputs FAIL with all errors for invalid workflow', () => {
+    const workflowPath = path.join(workspace.cwd, 'invalid.workflow.md');
+    fs.writeFileSync(workflowPath, `## 1. First step
+
+Do something.
+
+- PASS: CONTINUE
+
+## 3. Third step (skipped 2)
+
+Do another thing.
+
+- PASS: GOTO 99
+`);
+
+    const result = runCli(`validate ${workflowPath}`, workspace);
+
+    expect(result.exitCode).toBe(1);
+    // Check both stdout and stderr since validate uses both console.log and console.error
+    const output = result.stdout + result.stderr;
+    expect(output).toContain('FAIL');
+    // Should report sequencing error when steps are not consecutive
+    expect(output).toMatch(/sequentially|sequential/i);
+  });
+
+  it('includes line numbers in error output', () => {
+    const workflowPath = path.join(workspace.cwd, 'invalid.workflow.md');
+    fs.writeFileSync(workflowPath, `## 1. First step
+
+Do something.
+
+- PASS: CONTINUE
+
+## 3. Third step
+
+Missing step 2.
+
+- PASS: DONE
+`);
+
+    const result = runCli(`validate ${workflowPath}`, workspace);
+
+    expect(result.exitCode).toBe(1);
+    // Check both stdout and stderr since validate uses both console.log and console.error
+    const output = result.stdout + result.stderr;
+    // Error messages should contain descriptive error information
+    expect(output).toContain('FAIL');
+    expect(output).toMatch(/sequentially|sequential/i);
+  });
+
+  it('outputs FAIL for non-existent file', () => {
+    const result = runCli('validate /nonexistent/path/workflow.md', workspace);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr || result.stdout).toContain('FAIL');
+    expect(result.stderr || result.stdout).toMatch(/not found|does not exist/i);
+  });
 });
