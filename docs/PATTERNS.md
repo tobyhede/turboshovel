@@ -117,7 +117,7 @@ Review the plan.
 - PASS ALL: CONTINUE
 - FAIL ANY: STOP "BLOCKED"
 
-## 3. Validate
+## 3. Check
 
 ```bash
 npm run lint && npm run build && npm test

@@ -20,7 +20,7 @@ Read and validate the implementation plan.
 - PASS ALL: CONTINUE
 - FAIL ANY: GOTO 4
 
-## 3. Validate batch
+## 3. Check batch
 
 ```bash
 tsv echo npm run lint && tsv echo npm run build && tsv echo npm test

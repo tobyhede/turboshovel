@@ -33,7 +33,7 @@ Do another thing.
 - PASS: DONE
 `);
 
-    const result = runCli(`validate ${workflowPath}`, workspace);
+    const result = runCli(`check ${workflowPath}`, workspace);
 
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('PASS:');
@@ -55,7 +55,7 @@ Do another thing.
 - PASS: GOTO 99
 `);
 
-    const result = runCli(`validate ${workflowPath}`, workspace);
+    const result = runCli(`check ${workflowPath}`, workspace);
 
     expect(result.exitCode).toBe(1);
     // Check both stdout and stderr since validate uses both console.log and console.error
@@ -80,7 +80,7 @@ Missing step 2.
 - PASS: DONE
 `);
 
-    const result = runCli(`validate ${workflowPath}`, workspace);
+    const result = runCli(`check ${workflowPath}`, workspace);
 
     expect(result.exitCode).toBe(1);
     // Check both stdout and stderr since validate uses console.error for failures
@@ -92,7 +92,7 @@ Missing step 2.
   });
 
   it('outputs FAIL for non-existent file', () => {
-    const result = runCli('validate /nonexistent/path/workflow.md', workspace);
+    const result = runCli('check /nonexistent/path/workflow.md', workspace);
 
     expect(result.exitCode).toBe(1);
     expect(result.stderr || result.stdout).toContain('FAIL');
