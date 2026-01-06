@@ -1,4 +1,4 @@
-export { parseWorkflow, parseWorkflowDocument } from './parser.js';
+export { parseWorkflow, parseWorkflowDocument, type ParseOptions } from './parser.js';
 export {
   validateWorkflow,
   validateAction

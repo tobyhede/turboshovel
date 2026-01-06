@@ -1,5 +1,3 @@
-// packages/cli/src/commands/validate.ts
-
 import * as fs from 'fs';
 import * as path from 'path';
 import type { Command } from 'commander';
@@ -32,12 +30,12 @@ export function registerValidateCommand(program: Command): void {
 
       try {
         const content = fs.readFileSync(resolvedPath, 'utf-8');
-        const workflow = parseWorkflowDocument(content, path.basename(resolvedPath));
+        const workflow = parseWorkflowDocument(content, path.basename(resolvedPath), { skipValidation: true });
         const errors = validateWorkflow(workflow.steps);
 
         if (errors.length > 0) {
-          console.log(`FAIL: ${String(errors.length)} error${errors.length > 1 ? 's' : ''}\n`);
-          console.log(formatErrors(errors));
+          console.error(`FAIL: ${String(errors.length)} error${errors.length > 1 ? 's' : ''}\n`);
+          console.error(formatErrors(errors));
           process.exit(1);
         }
 

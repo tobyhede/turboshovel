@@ -83,10 +83,15 @@ export function parseWorkflow(markdown: string): Step[] {
   return [...doc.steps];
 }
 
+export interface ParseOptions {
+  /** If true, skip validation and don't throw on errors */
+  skipValidation?: boolean;
+}
+
 /**
  * Parse entire workflow document including metadata
  */
-export function parseWorkflowDocument(markdown: string, filename?: string): Workflow {
+export function parseWorkflowDocument(markdown: string, filename?: string, options?: ParseOptions): Workflow {
   const { frontmatter, content } = extractFrontmatter(markdown);
   const tree = fromMarkdown(content);
 
@@ -343,10 +348,12 @@ export function parseWorkflowDocument(markdown: string, filename?: string): Work
     steps.push(finalizeStep(currentStep, pendingConditionals, implicitText));
   }
 
-  const errors = validateWorkflow(steps);
-  if (errors.length > 0) {
-    // For backwards compatibility, throw the first error
-    throw new WorkflowSyntaxError(errors[0].message);
+  if (!options?.skipValidation) {
+    const errors = validateWorkflow(steps);
+    if (errors.length > 0) {
+      // For backwards compatibility, throw the first error
+      throw new WorkflowSyntaxError(errors[0].message);
+    }
   }
 
   return {

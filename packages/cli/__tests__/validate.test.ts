@@ -83,10 +83,11 @@ Missing step 2.
     const result = runCli(`validate ${workflowPath}`, workspace);
 
     expect(result.exitCode).toBe(1);
-    // Check both stdout and stderr since validate uses both console.log and console.error
+    // Check both stdout and stderr since validate uses console.error for failures
     const output = result.stdout + result.stderr;
-    // Error messages should contain descriptive error information
+    // Error messages should contain descriptive error information with line numbers
     expect(output).toContain('FAIL');
+    expect(output).toMatch(/Line \d+:/);
     expect(output).toMatch(/sequentially|sequential/i);
   });
 
