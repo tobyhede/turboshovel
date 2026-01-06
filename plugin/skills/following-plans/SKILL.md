@@ -54,12 +54,12 @@ Is change syntax/naming only?
 - Skipping/adding planned functionality
 - Refactoring not in plan
 
-## Acceptable Parameters
+## Implementation Boundaries
 
 When evaluating changes from plan:
 
-| Domain | Acceptable (tsv pass) | Requires BLOCKED (tsv fail) |
-|--------|----------------------|----------------------------|
+| Domain | Within Boundaries (tsv pass) | Exceeds Boundaries (tsv fail) |
+|--------|-----------------------------|-------------------------------|
 | Logic | syntax/naming | algorithm changes |
 | Deps | calls within lib | swap library |
 | Scope | edge cases | add/skip features |

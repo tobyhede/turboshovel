@@ -17,10 +17,10 @@ Required changes from plan?
 
 Assess changes to logic, dependencies, scope, interfaces.
 
-Within acceptable parameters?
+Within implementation boundaries?
 
 - YES: CONTINUE
-- NO: STOP "BLOCKED: Changes exceed parameters"
+- NO: STOP "BLOCKED: Changes exceed implementation boundaries"
 
 ### {N}.3 Checks
 
