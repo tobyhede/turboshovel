@@ -37,6 +37,12 @@ export function registerGotoCommand(program: Command): void {
           process.exit(1);
         }
 
+        // Reject NEXT via CLI
+        if (target.step === 'NEXT') {
+          console.error('Error: GOTO NEXT is only valid as a runbook transition, not via CLI');
+          process.exit(1);
+        }
+
         const workflowPath = await resolveWorkflowFile(cwd, state.workflow);
         if (!workflowPath) {
           console.error(`Error: Workflow file ${state.workflow} not found`);
