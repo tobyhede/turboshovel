@@ -22,7 +22,7 @@ Do something.
 
 Do something else.
 
-- PASS: DONE
+- PASS: COMPLETE
 - FAIL: GOTO 1
 ```
 
@@ -48,13 +48,13 @@ Process item {N} from the queue.
 **tsv no:** Queue empty
 
 - PASS: GOTO NEXT
-- FAIL: DONE
+- FAIL: COMPLETE
 ```
 
 **Characteristics:**
 - `{N}` is placeholder, runtime creates instances: 1, 2, 3...
 - `GOTO NEXT` advances to instance N+1
-- `DONE` exits the loop
+- `COMPLETE` exits the loop
 - Cannot mix static and dynamic top-level steps
 
 ---
@@ -78,7 +78,7 @@ Use dynamic substeps `### {N}.{n}` with workflow list for parallel/sequential su
 
 All tasks passed.
 
-- PASS: DONE
+- PASS: COMPLETE
 - FAIL: STOP
 ```
 
@@ -142,7 +142,7 @@ Can you fix without changing approach?
 **tsv no:** All done
 
 - PASS: GOTO 2
-- FAIL: DONE
+- FAIL: COMPLETE
 ```
 
 **Characteristics:**
@@ -174,7 +174,7 @@ Static step delegates to multiple child workflows in sequence.
 
  - deploy.runbook.md
 
-- PASS: DONE
+- PASS: COMPLETE
 - FAIL: STOP
 ```
 
@@ -196,7 +196,7 @@ Static step delegates to multiple child workflows in sequence.
 **tsv no:** Done
 
 - PASS: GOTO 1
-- FAIL: DONE
+- FAIL: COMPLETE
 ```
 
 **Problem:** Requires manual state tracking. Use dynamic steps instead.
