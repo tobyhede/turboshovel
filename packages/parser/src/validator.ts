@@ -153,6 +153,13 @@ export function validateAction(
     }
 
     if (targetStep === '{N}') {
+      if (!isDynamicContext) {
+        const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
+        errors.push({
+          line: currentStepObj.line,
+          message: `Step ${context}: GOTO {N}.M is only valid within dynamic step context (## {N}.).`
+        });
+      }
       return;
     }
 

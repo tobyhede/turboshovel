@@ -78,6 +78,28 @@ describe('validator strict rules', () => {
       const errors = validateWorkflow(steps);
       expect(errors.filter(e => e.message.includes('GOTO NEXT'))).toHaveLength(0);
     });
+
+    it('rejects GOTO {N}.M from static context', () => {
+      const steps = [
+        mockStep({
+          number: createStepNumber(1)!,
+          transitions: { all: true, pass: { type: 'GOTO', target: { step: '{N}', substep: '1' } }, fail: { type: 'STOP' } }
+        })
+      ];
+      const errors = validateWorkflow(steps);
+      expect(errors.length).toBeGreaterThan(0);
+      expect(errors.some(e => e.message.includes('GOTO {N}.M is only valid within dynamic step context'))).toBe(true);
+    });
+
+    it('accepts GOTO {N}.M in dynamic context', () => {
+      const steps = [mockStep({
+        isDynamic: true,
+        substeps: [{ id: '1', description: 'Sub', isDynamic: false, prompts: [] }],
+        transitions: { all: true, pass: { type: 'GOTO', target: { step: '{N}', substep: '1' } }, fail: { type: 'STOP' } }
+      })];
+      const errors = validateWorkflow(steps);
+      expect(errors.filter(e => e.message.includes('GOTO {N}'))).toHaveLength(0);
+    });
   });
 
 
