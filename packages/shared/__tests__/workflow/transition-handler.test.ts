@@ -2,56 +2,39 @@ import { createStepNumber } from '../../src/workflow/types.js';
 import { evaluateFailCondition, evaluatePassCondition, evaluateSubstepAggregation } from '../../src/workflow/transition-handler.js';
 import type { SubstepState } from '../../src/workflow/types.js';
 
-describe('NEXT action handling', () => {
-  it('evaluatePassCondition returns next for NEXT action', () => {
+describe('GOTO NEXT action handling', () => {
+  it('evaluatePassCondition returns goto for GOTO NEXT action', () => {
     const step = {
       number: createStepNumber(1)!,
       description: 'Test',
-      prompts: [],
       isDynamic: true,
+      prompts: [],
       transitions: {
         all: true as const,
-        pass: { type: 'NEXT' as const },
+        pass: { type: 'GOTO' as const, target: { step: 'NEXT' as const } },
         fail: { type: 'STOP' as const }
       }
     };
-
     const result = evaluatePassCondition(step);
-    expect(result).toEqual({ action: 'next' });
+    expect(result.action).toBe('goto');
+    expect(result.gotoTarget).toEqual({ step: 'NEXT' });
   });
 
-  it('evaluateFailCondition returns next for NEXT action', () => {
+  it('evaluateFailCondition returns goto for GOTO NEXT action', () => {
     const step = {
       number: createStepNumber(1)!,
       description: 'Test',
-      prompts: [],
       isDynamic: true,
+      prompts: [],
       transitions: {
         all: true as const,
         pass: { type: 'CONTINUE' as const },
-        fail: { type: 'NEXT' as const }
+        fail: { type: 'GOTO' as const, target: { step: 'NEXT' as const } }
       }
     };
-
     const result = evaluateFailCondition(step, 0);
-    expect(result).toEqual({ action: 'next' });
-  });
-
-  it('returns next when retries exhausted with NEXT action', () => {
-    const step = {
-      number: createStepNumber(1)!,
-      description: 'Test',
-      prompts: [],
-      isDynamic: true,
-      transitions: {
-        all: true as const,
-        pass: { type: 'CONTINUE' as const },
-        fail: { type: 'RETRY' as const, max: 2, then: { type: 'NEXT' as const } }
-      }
-    };
-
-    const result = evaluateFailCondition(step, 2);
-    expect(result).toEqual({ action: 'next' });
+    expect(result.action).toBe('goto');
+    expect(result.gotoTarget).toEqual({ step: 'NEXT' });
   });
 });
 
