@@ -9,15 +9,13 @@ Rundown is a format for defining executable workflows using Markdown.
 
 ## Table of Contents
 
-- [Syntax Synopsis](syntax-synopsis)
-- [Document Structure](document-structure)
-- [Step Definitions](step-definitions)
-- [Substeps](substeps)
-- [Transitions](transitions)
-- [Actions](actions)
-- [Variables](variables)
+- [Syntax Synopsis](#syntax-synopsis)
+- [Document Structure](#document-structure)
+- [Step Definitions](#step-definitions)
+- [Transitions](#transitions)
+- [Actions](#actions)
 - [Conformance](conformance)
-- [Examples](examples)
+- [Examples](#examples)
 
 ---
 
@@ -76,13 +74,21 @@ Steps can be `dynamic`. Dynamic steps enable steps to be defined at runtime.
 4. Dynamic identifiers (`{N}`, `{n}`) are placeholders.
 
 
-#### Dynamic
+#### Dynamic Identifiers and Steps
 
-{}
+Dynamic steps are for repeating the same procedure across a set of targets until the work is COMPLETE.
+Think of a Dynamic Step as a loop construct for agents. Instead of hardcoding steps, a "template" is defined that can be repeated as many times as required.
 
+Example:
 
+```markdown
+## {N} For each assigned task
+### {N}.1 Implement the code
+### {N}.2 Run the tests
+```
 
 ---
+
 ### Prompt
 
 A step may have a prompt and/or a code block.
@@ -93,22 +99,24 @@ A step may have a prompt and/or a code block.
 ```markdown
 ## {Identifier} {Title}
 {Prompt}
-{CodeBlock}
+\`\`\`bash
+{Command}
+\`\`\`
 ```
 
 #### Code Blocks
 
 Code blocks enable automatic execution and handling of commands.
+The exit code of an executed command maps to the Step PASS/FAIL transition and action.
 
 - **Executable**: code blocks may be executed automatically.
 - **Prompt Code Block**: A code block marked `prompt` is never executed - the block is output for the agent/user.
 
-```markdown
-## {Identifier} {Title}
-\`\`\`bash
-command-to-run
-\`\`\`
-```
+
+| Tag                   | Type          | Behavior                                 |
+|-----------------------|---------------|------------------------------------------|
+| `bash`, `sh`, `shell` | Executable    | Auto-run, exit code determines PASS/FAIL |
+| `prompt`              | Instructional | Output only, never executed              |
 
 ---
 
@@ -131,7 +139,7 @@ Substep identifiers must strictly match the parent Step ID prefix.
 | `{N}.{n}` | Dynamic | Dynamic | Iterative task within a dynamic instance. |
 
 #### Result Aggregation
-When a Step contains Substeps, the parent step's final outcome is derived from the collective results of its children. This aggregation is controlled by [5. Transitions](#5-transitions) using `ALL` or `ANY` modifiers.
+When a Step contains Substeps, the parent step's final outcome is derived from the collective results of its children. This aggregation is controlled by [Transitions](#transitions) using `ALL` or `ANY` modifiers.
 
 
 ---
@@ -176,9 +184,11 @@ Actions determine what happens next.
 
 ### GOTO
 
-- Target ID must exist.
+- The target Identifier must exist.
 - `GOTO {N}.M` navigates within the current dynamic instance to substep M.
-- Use `NEXT` to advance to the next instance (not `GOTO {N}`).
+- Use `NEXT` to advance to the next dynamic instance.
+- `GOTO {N}` is invalid. Use `NEXT`.
+
 
 | Target     | Valid From        | Description                                       |
 |------------|-------------------|---------------------------------------------------|
@@ -189,7 +199,7 @@ Actions determine what happens next.
 
 ---
 
-## 9. Conformance
+## Conformance
 
 Parsers and executors must adhere to strict validation:
 
@@ -201,7 +211,7 @@ Parsers and executors must adhere to strict validation:
 
 ---
 
-## 10. Examples
+## Examples
 
 Executable examples and conformance test cases are maintained in the `packages/parser/fixtures/conformance/` directory.
 
