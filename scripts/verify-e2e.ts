@@ -18,6 +18,12 @@ interface TaskSpec {
   value: string;
 }
 
+interface TaskData {
+  task: number;
+  value: string;
+  agent_id?: string;
+}
+
 interface FileResult {
   exists: boolean;
   task_number: number;
@@ -118,12 +124,11 @@ async function verify(): Promise<VerificationResult> {
 
       try {
         const content = await readFile(filepath, 'utf-8');
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const data = JSON.parse(content) as any;
+        const data = JSON.parse(content) as TaskData;
 
         fileResult.actual_task = data.task;
         fileResult.actual_value = data.value;
-        fileResult.agent_id = data.agent_id;
+        fileResult.agent_id = data.agent_id ?? null;
 
         fileResult.task_match = data.task === spec.task;
         fileResult.value_match = data.value === spec.value;
@@ -155,7 +160,7 @@ async function verify(): Promise<VerificationResult> {
             (agentIdCounts.get(data.agent_id) ?? 0) + 1
           );
         }
-      } catch (e: unknown) {
+      } catch (e) {
         const errorMessage = e instanceof Error ? e.message : String(e);
         fileResult.error = errorMessage;
         result.errors.push({
@@ -191,7 +196,8 @@ verify()
     console.log(JSON.stringify(result, null, 2));
     process.exit(result.success ? 0 : 1);
   })
-  .catch((error) => {
-    console.error(JSON.stringify({ error: error.message }));
+  .catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(JSON.stringify({ error: message }));
     process.exit(2);
   });

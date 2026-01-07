@@ -83,7 +83,7 @@ export function validateWorkflow(steps: readonly Step[]): ValidationError[] {
 
     if (step.substeps) {
       for (const substep of step.substeps) {
-        const sHasBody = (substep.command !== undefined) || (substep.prompts && substep.prompts.length > 0);
+        const sHasBody = (substep.command !== undefined) || (substep.prompts.length > 0);
         const sHasWorkflows = (substep.workflows !== undefined && substep.workflows.length > 0);
 
         if (sHasBody && sHasWorkflows) {

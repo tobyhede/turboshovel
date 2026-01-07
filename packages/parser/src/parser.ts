@@ -349,6 +349,7 @@ export function parseWorkflowDocument(markdown: string, filename?: string, optio
 
   finalizePendingSubstep();
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- currentStep changes in the loop
   if (currentStep) {
     steps.push(finalizeStep(currentStep, pendingConditionals, implicitText));
   }

@@ -7,7 +7,7 @@ import {
   printSeparator,
   printCommandExec,
   printWorkflowComplete,
-  printWorkflowStopped, printWorkflowStoppedAtStep,
+  printWorkflowStoppedAtStep,
   type Step,
   type WorkflowMetadata,
   type WorkflowState,

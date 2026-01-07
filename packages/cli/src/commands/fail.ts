@@ -9,7 +9,6 @@ import {
   printSeparator,
   printActionBlock,
   printWorkflowComplete,
-  printWorkflowStopped,
   printWorkflowStoppedAtStep,
   createStepNumber,
 } from '@turboshovel/shared';
@@ -103,7 +102,7 @@ export function registerFailCommand(program: Command): void {
 
             const updated = await manager.load(state.id);
             const bindings = Object.values(updated?.agentBindings ?? {});
-            const runningCount = bindings.filter((b: any) => b.status === 'running').length;
+            const runningCount = bindings.filter((b: { status: string }) => b.status === 'running').length;
 
             if (runningCount > 0) {
               console.log(`${String(runningCount)} agent(s) still running`);

@@ -21,7 +21,7 @@ Rundown is a format for defining executable workflows using Markdown.
 
 ## Syntax Synopsis
 
-See [rundown-format.md](./rundown-format.md) for the complete BNF-style grammar.
+See [rundown-format.md](.FORMAT.md) for the complete BNF-style grammar.
 
 ---
 
@@ -150,9 +150,12 @@ Transitions define the control flow based on the result of a step or substep.
 - { PASS | FAIL | YES | NO } [ { ALL | ANY } ]: action
 ```
 
+
 **Result:**
 - `PASS` / `YES`: The unit (step, substep, or command) succeeded.
 - `FAIL` / `NO`: The unit failed.
+
+Aliases are optimised for readability (YES/NO for prompts, PASS/FAIL for command results).
 
 **Modifiers (Aggregation):**
 Used when a step has substeps or runbooks.

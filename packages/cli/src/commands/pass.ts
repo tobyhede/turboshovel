@@ -8,7 +8,6 @@ import {
   printSeparator,
   printActionBlock,
   printWorkflowComplete,
-  printWorkflowStopped,
   printWorkflowStoppedAtStep,
   createStepNumber,
 } from '@turboshovel/shared';

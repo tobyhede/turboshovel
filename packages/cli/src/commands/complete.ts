@@ -5,7 +5,6 @@ import {
   WorkflowStateManager,
   printMetadata,
   printWorkflowComplete,
-  printWorkflowStopped,
   printWorkflowStoppedAtStep,
   printNoActiveWorkflow,
   createStepNumber,
