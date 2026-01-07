@@ -174,7 +174,7 @@ Actions determine what happens next.
 | `CONTINUE` | Proceed to the next unit in sequence. |
 | `COMPLETE` | Runbook has completed successfully. |
 | `STOP ["msg"]` | Halt execution immediately. Optional failure message. |
-| `GOTO {id | NEXT}` | Jump to Step `id` or create new dynamic step instance. |
+| `GOTO {id \| NEXT}` | Jump to Step `id` or create new dynamic step instance. |
 | `RETRY [n] [action]` | Retry the current unit `n` times (default 1). If exhausted, perform `action`. |
 
 ### GOTO
