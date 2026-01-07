@@ -181,9 +181,8 @@ describe('Action schema-derived type', () => {
     }
   });
 
-  it('parses NEXT action', () => {
-    const parsed = ActionSchema.parse({ type: 'NEXT' });
-    expect(parsed.type).toBe('NEXT');
+  it('rejects standalone NEXT action (use GOTO NEXT)', () => {
+    expect(() => ActionSchema.parse({ type: 'NEXT' })).toThrow();
   });
 
   it('parses DONE action', () => {
