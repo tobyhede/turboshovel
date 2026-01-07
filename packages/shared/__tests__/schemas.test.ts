@@ -142,6 +142,16 @@ describe('StepId schema-derived type', () => {
     // Runtime check that object has expected shape
     expect(Object.keys(parsed).sort()).toEqual(['step', 'substep']);
   });
+
+  it('parses GOTO NEXT target', () => {
+    const parsed = StepIdSchema.parse({ step: 'NEXT' });
+    expect(parsed.step).toBe('NEXT');
+    expect(parsed.substep).toBeUndefined();
+  });
+
+  it('rejects NEXT with substep', () => {
+    expect(() => StepIdSchema.parse({ step: 'NEXT', substep: '1' })).toThrow();
+  });
 });
 
 describe('Action schema-derived type', () => {

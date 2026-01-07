@@ -32,9 +32,12 @@ export type StepNumber = z.output<typeof StepNumberSchema>;
  * Zod schema for StepId
  */
 export const StepIdSchema = z.object({
-  step: z.union([StepNumberSchema, z.literal('{N}')]),
+  step: z.union([StepNumberSchema, z.literal('{N}'), z.literal('NEXT')]),
   substep: z.string().optional(),
-});
+}).refine(
+  (data) => data.step !== 'NEXT' || data.substep === undefined,
+  { message: 'NEXT target cannot have substep' }
+);
 
 /**
  * StepId type derived from schema
