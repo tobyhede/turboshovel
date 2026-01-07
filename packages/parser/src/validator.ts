@@ -147,7 +147,7 @@ export function validateAction(
       const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
       errors.push({
         line: currentStepObj.line,
-        message: `Step ${context}: GOTO {N} alone is invalid. Use NEXT to advance to the next dynamic instance.`
+        message: `Step ${context}: GOTO {N} alone is invalid. Use GOTO NEXT to advance to the next dynamic instance.`
       });
       return;
     }
@@ -182,7 +182,7 @@ export function validateAction(
       const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
       errors.push({
         line: currentStepObj.line,
-        message: `Step ${context}: Cannot GOTO into dynamic step ${String(targetStepNum)} from outside. Use NEXT if it is the current template.`
+        message: `Step ${context}: Cannot GOTO into dynamic step ${String(targetStepNum)} from outside. Use GOTO NEXT if it is the current template.`
       });
       return;
     }
