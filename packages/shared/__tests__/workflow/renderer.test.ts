@@ -38,12 +38,16 @@ describe('renderAction', () => {
     expect(renderAction({ type: 'RETRY', max: 2, then: { type: 'STOP' } })).toBe('RETRY 2 STOP');
   });
 
-  it('renders NEXT', () => {
-    expect(renderAction({ type: 'NEXT' })).toBe('NEXT');
+  it('renders GOTO NEXT', () => {
+    expect(renderAction({ type: 'GOTO', target: { step: 'NEXT' } })).toBe('GOTO NEXT');
   });
 
-  it('renders RETRY with NEXT', () => {
-    expect(renderAction({ type: 'RETRY', max: 3, then: { type: 'NEXT' } })).toBe('RETRY 3 NEXT');
+  it('renders RETRY with GOTO NEXT', () => {
+    expect(renderAction({
+      type: 'RETRY',
+      max: 3,
+      then: { type: 'GOTO', target: { step: 'NEXT' } }
+    })).toBe('RETRY 3 GOTO NEXT');
   });
 });
 

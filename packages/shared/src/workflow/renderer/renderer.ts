@@ -22,8 +22,6 @@ function renderNonRetryAction(action: NonRetryAction): string {
       return action.message ? `STOP "${action.message}"` : 'STOP';
     case 'GOTO':
       return `GOTO ${stepIdToString(action.target)}`;
-    case 'NEXT':
-      return 'NEXT';
   }
 }
 
