@@ -77,7 +77,6 @@ Steps can be `dynamic`. Dynamic steps enable steps to be defined at runtime.
 - Dynamic steps are for repeating the same procedure across a set of targets until the work is COMPLETE.
 - Think of a Dynamic Step as a **loop construct** for agents. Instead of hardcoding steps, a "template" is defined that can be repeated as many times as required.
 
-
 Example:
 ```markdown
 ## {N} For each assigned task
@@ -140,6 +139,18 @@ When a Step contains Substeps, the parent step's final outcome is derived from t
 
 ---
 
+### Runbooks
+
+Runbooks enable nested workflows.
+
+Example:
+```markdown
+## 1. Code Review
+  - code-review.runbook.md
+  - security-review.runbook.md
+```
+
+---
 
 ## Transitions
 
@@ -196,9 +207,7 @@ Actions determine what happens next.
 | GOTO N       | Any step          | Jump to step N (must exist, N ≤ total steps)      |
 | GOTO N.M     | Any step          | Jump to substep M of step N                       |
 | GOTO {N}.M   | Dynamic step {N}. | Jump to substep M within current dynamic instance |
-| GOTO NEXT    | Dynamic step {N}. | Create the next dynamic step instance (N+1)       |
-
-### RETRY
+| GOTO NEXT    | Dynamic step {N}. | Jump to {N} and create the next dynamic step instance (N+1). |
 
 
 
@@ -209,7 +218,7 @@ Actions determine what happens next.
 Parsers and executors must adhere to strict validation:
 
 1. **Hierarchy**: H1 is Metadata. H2 is Step. H3 is Substep. H4+ is invalid.
-2. **Step Pattern**: A runbook contains EITHER static steps OR exactly one dynamic step template.
+2. **Step Pattern**: A runbook contains EITHER static steps OR exactly one dynamic step template at each level.
 3. **Sequencing**: Static steps must be strictly sequential (1, 2, 3...).
 4. **Exclusivity**: Units MUST contain exactly one of their permitted content types.
 5. **Recursion**: `RETRY` actions cannot contain another `RETRY`.
