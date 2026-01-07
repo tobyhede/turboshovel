@@ -117,6 +117,23 @@ function nonRetryActionToTransition(
     case 'GOTO': {
       const targetStep = action.target.step;
 
+      // Handle GOTO NEXT - advance to next dynamic instance
+      if (targetStep === 'NEXT') {
+        const firstStep = steps[0];
+        const nextSubstepId = firstStep.substeps && firstStep.substeps.length > 0
+          ? firstStep.substeps[0].id
+          : undefined;
+
+        return {
+          target: formatStateId(1, nextSubstepId),
+          actions: assign({
+            retryCount: 0,
+            substep: nextSubstepId,
+            nextInstance: true  // Signal to executor: increment instance number
+          })
+        };
+      }
+
       // Handle dynamic {N}.M references (substep navigation within current instance)
       if (targetStep === '{N}') {
         // {N}.M - stay in dynamic context (step 1), target substep M
@@ -145,21 +162,7 @@ function nonRetryActionToTransition(
         })
       };
     }
-    case 'NEXT': {
-      // NEXT creates next instance - stay in dynamic template but signal instance increment
-      // Dynamic template is always Step 1. Target first substep if it exists.
-      const firstStep = steps[0];
-      const nextSubstepId = firstStep.substeps && firstStep.substeps.length > 0 ? firstStep.substeps[0].id : undefined;
 
-      return {
-        target: formatStateId(1, nextSubstepId),
-        actions: assign({
-          retryCount: 0,
-          substep: nextSubstepId,
-          nextInstance: true  // Signal to executor: increment instance number
-        })
-      };
-    }
   }
 }
 

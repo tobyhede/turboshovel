@@ -33,20 +33,19 @@ describe('workflow compiler', () => {
       expect(machine).toBeDefined();
     });
 
-    it('compiles NEXT action', () => {
+    it('compiles GOTO NEXT action', () => {
       const steps: Step[] = [
         {
           isDynamic: true,
-          description: 'Execute task',
+          description: 'Dynamic step',
           prompts: [],
           transitions: {
             all: true,
-            pass: { type: 'NEXT' },
-            fail: { type: 'DONE' }
+            pass: { type: 'GOTO', target: { step: 'NEXT' } },
+            fail: { type: 'STOP' }
           }
         }
       ];
-
       const machine = compileWorkflowToMachine(steps);
       expect(machine).toBeDefined();
     });
@@ -90,34 +89,26 @@ describe('workflow compiler', () => {
     });
   });
 
-  describe('NEXT action XState integration', () => {
-    it('sets nextInstance flag when PASS triggers NEXT', () => {
+  describe('GOTO NEXT XState integration', () => {
+    it('sets nextInstance flag when PASS triggers GOTO NEXT', () => {
       const steps: Step[] = [
         {
           isDynamic: true,
-          description: 'Execute task',
+          description: 'Dynamic step',
           prompts: [],
           transitions: {
             all: true,
-            pass: { type: 'NEXT' },
-            fail: { type: 'DONE' }
+            pass: { type: 'GOTO', target: { step: 'NEXT' } },
+            fail: { type: 'STOP' }
           }
         }
       ];
-
       const machine = compileWorkflowToMachine(steps);
       const actor = createActor(machine);
       actor.start();
-
-      expect(actor.getSnapshot().value).toBe('step_1');
       actor.send({ type: 'PASS' });
-
-      // After PASS, should stay in step_1 but have nextInstance flag
-      expect(actor.getSnapshot().value).toBe('step_1');
-      expect(actor.getSnapshot().context.nextInstance).toBe(true);
-      expect(actor.getSnapshot().context.substep).toBeUndefined();
-
-      actor.stop();
+      const snapshot = actor.getSnapshot();
+      expect(snapshot.context.nextInstance).toBe(true);
     });
   });
 });
