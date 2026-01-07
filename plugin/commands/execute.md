@@ -1,19 +1,19 @@
 ---
-description: Execute implementation plans in batches with specialised agents
-argument-hint: [plan-file]
+description: Execute an implementation plan with workflow orchestration
+argument-hint: <plan-file>
 ---
 
-# Test: End-to-End
+# Execute Plan
 
 Execute implementation plans with workflow orchestration.
 
 ## Usage
 
 ```
-/turboshovel:test-end-to-end [plan-file]
+/turboshovel:execute <plan-file>
 ```
 
-- `$1` - plan file path (default: `docs/plans/e2e-test.md`)
+- `$1` - plan file path (required)
 
 <instructions>
 ## Instructions
