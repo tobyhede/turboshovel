@@ -107,7 +107,7 @@ Static steps with GOTO loop for batches, dynamic substeps for task dispatch.
 Review the plan.
 
 - PASS: CONTINUE
-- FAIL: STOP "BLOCKED"
+- FAIL: STOP "STOPPED"
 
 ## 2. Execute batch
 
@@ -115,7 +115,7 @@ Review the plan.
  - implement-task.runbook.md
 
 - PASS ALL: CONTINUE
-- FAIL ANY: STOP "BLOCKED"
+- FAIL ANY: STOP "STOPPED"
 
 ## 3. Check
 
@@ -134,7 +134,7 @@ Can you fix without changing approach?
 **tsv no:** Needs plan revision
 
 - PASS: GOTO 3
-- FAIL: STOP "BLOCKED"
+- FAIL: STOP "STOPPED"
 
 ## 5. Batch complete
 

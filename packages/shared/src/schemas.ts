@@ -136,7 +136,7 @@ export const WorkflowStateSchema = z.object({
   variables: z.record(z.string(), z.union([z.boolean(), z.number(), z.string()])),
   steps: z.array(z.object({
     id: z.string(),
-    status: z.enum(['pending', 'running', 'complete', 'blocked']),
+    status: z.enum(['pending', 'running', 'complete', 'stopped']),
     subagentType: z.string().optional(),
     startedAt: z.string().optional(),
     completedAt: z.string().optional()

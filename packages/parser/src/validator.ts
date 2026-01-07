@@ -1,4 +1,3 @@
-import { WorkflowSyntaxError } from './types.js';
 import { StepSchema, ActionSchema } from './schemas.js';
 import type { Step, Action } from './ast.js';
 

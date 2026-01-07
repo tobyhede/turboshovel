@@ -92,6 +92,8 @@ export function registerLsCommand(program: Command): void {
             status = 'stashed';
           } else if (state.variables.completed) {
             status = 'complete';
+          } else if (state.variables.stopped) {
+            status = 'stopped';
           } else {
             status = 'inactive';
           }

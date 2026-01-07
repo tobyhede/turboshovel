@@ -28,5 +28,5 @@ Jumped here on failure.
 tsv echo --result pass
 ```
 
-- PASS: DONE
+- PASS: COMPLETE
 - FAIL: STOP

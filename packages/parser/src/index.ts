@@ -16,7 +16,7 @@ export type {
   AggregationModifier,
   StepNumber
 } from './types.js';
-export * from './ast.js';
+export type * from './ast.js';
 export * from './schemas.js';
 export {
   stripSeparator,

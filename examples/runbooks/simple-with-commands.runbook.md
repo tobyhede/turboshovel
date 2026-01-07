@@ -41,5 +41,5 @@ tsv echo --result fail --result pass npm run build
 tsv echo --result fail --result fail --result pass npm run deploy
 ```
 
-- PASS: DONE
+- PASS: COMPLETE
 - FAIL: RETRY 3

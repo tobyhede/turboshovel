@@ -13,5 +13,5 @@ tsv echo --result pass
 tsv echo --result fail --result fail --result pass
 ```
 
-- PASS: DONE
+- PASS: COMPLETE
 - FAIL: RETRY 2

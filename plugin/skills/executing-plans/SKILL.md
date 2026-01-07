@@ -53,11 +53,11 @@ For each task:
 
    Read and follow: @${CLAUDE_PLUGIN_ROOT}skills/following-plans/SKILL.md
 
-   This skill defines when you can make changes vs when you must report BLOCKED.
+   This skill defines when you can make changes vs when you must report STOPPED.
 
    REQUIRED: Your completion report MUST include STATUS:
    - STATUS: OK (task completed as planned)
-   - STATUS: BLOCKED (plan approach won't work, need approval for deviation)
+   - STATUS: STOPPED (plan approach won't work, need approval for deviation)
 
    The plan approach was chosen for specific reasons during design.
    Do NOT rationalize "simpler" approaches without approval.
@@ -67,7 +67,7 @@ For each task:
 5. Run verifications as specified
 6. **Check agent completion status:**
    - STATUS: OK → Mark as completed, continue
-   - STATUS: BLOCKED → STOP, handle escalation (see Handling BLOCKED Status)
+   - STATUS: STOPPED → STOP, handle escalation (see Handling STOPPED Status)
    - No STATUS → Agent violated protocol, escalate
 
 ### Step 3: Review Batch (REQUIRED)
@@ -122,12 +122,12 @@ After all tasks complete and verified:
 
 **Don't force through blockers** - stop and ask.
 
-## Handling BLOCKED Status
+## Handling STOPPED Status
 
 <EXTREMELY-IMPORTANT>
-When an agent reports STATUS: BLOCKED:
+When an agent reports STATUS: STOPPED:
 
-1. **Read the BLOCKED reason carefully**
+1. **Read the STOPPED reason carefully**
    - What does agent say won't work?
    - What deviation does agent want to make?
 
@@ -137,7 +137,7 @@ When an agent reports STATUS: BLOCKED:
 
 3. **Ask user what to do** via AskUserQuestion:
    ```
-   Agent reported BLOCKED on: {task}
+   Agent reported STOPPED on: {task}
 
    Reason: {agent's reason}
 
@@ -179,7 +179,7 @@ When an agent reports STATUS: BLOCKED:
 - Embed following-plans skill in agent prompts
 - Select the right agent using semantic understanding (not keyword matching)
 - Check for STATUS in agent completions
-- Handle BLOCKED status by asking user (never auto-approve deviations)
+- Handle STOPPED status by asking user (never auto-approve deviations)
 - Code review after every batch (mandatory)
 - User can request `/verify execute` if concerned about plan adherence
 - Don't skip verifications

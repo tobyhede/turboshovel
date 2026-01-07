@@ -15,7 +15,7 @@ describe('renderAction', () => {
   });
 
   it('renders DONE', () => {
-    expect(renderAction({ type: 'DONE' })).toBe('DONE');
+    expect(renderAction({ type: 'COMPLETE' })).toBe('COMPLETE');
   });
 
   it('renders STOP without message', () => {

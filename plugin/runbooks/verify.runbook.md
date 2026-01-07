@@ -54,4 +54,4 @@ Present final verification summary with all findings and their status.
 - Exclusive INVALIDATED: Can skip
 - Exclusive UNCERTAIN: User decides
 
-- PASS: DONE
+- PASS: COMPLETE

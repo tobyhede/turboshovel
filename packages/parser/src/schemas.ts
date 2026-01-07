@@ -46,7 +46,7 @@ export type StepId = Readonly<z.output<typeof StepIdSchema>>;
  */
 export const NonRetryActionSchema = z.union([
   z.object({ type: z.literal('CONTINUE') }),
-  z.object({ type: z.literal('DONE') }),
+  z.object({ type: z.literal('COMPLETE') }),
   z.object({ type: z.literal('STOP'), message: z.string().optional() }),
   z.object({ type: z.literal('GOTO'), target: StepIdSchema }),
   z.object({ type: z.literal('NEXT') }),

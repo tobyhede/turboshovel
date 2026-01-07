@@ -43,10 +43,10 @@ function isHeading(node: Node): node is Heading {
  */
 function extractText(node: PhrasingContent | Heading | Paragraph | ListItem): string {
   if (node.type === 'text') {
-    return (node as any).value;
+    return (node as { value: string }).value;
   }
   if ('children' in node && Array.isArray(node.children)) {
-    return node.children.map((child) => extractText(child as any)).join('');
+    return node.children.map((child) => extractText(child as PhrasingContent | Heading | Paragraph | ListItem)).join('');
   }
   return '';
 }
@@ -97,7 +97,7 @@ export function parseWorkflowDocument(markdown: string, filename?: string, optio
 
   const steps: Step[] = [];
   let title: string | undefined;
-  let preamble: string = '';
+  let preamble = '';
   
   let currentStep: StepBuilder | null = null;
   let pendingConditionals: ParsedConditional[] = [];
@@ -147,7 +147,7 @@ export function parseWorkflowDocument(markdown: string, filename?: string, optio
           `H1 headers (# ...) cannot be used as step headers. Use H2 (## ${headingText}) instead.`
         );
       }
-      if (!title) title = headingText;
+      title ??= headingText;
     }
 
     if (isHeading(node) && node.depth >= 4) {
@@ -176,7 +176,7 @@ export function parseWorkflowDocument(markdown: string, filename?: string, optio
           prompts: [],
           substeps: [],
           content: '',
-          line: node.position?.start?.line
+          line: node.position?.start.line
         };
       }
     }
@@ -238,7 +238,7 @@ export function parseWorkflowDocument(markdown: string, filename?: string, optio
           command: undefined,
           prompts: [],
           pendingConditionals: [],
-          line: node.position?.start?.line
+          line: node.position?.start.line
         };
       }
     }
@@ -321,7 +321,7 @@ export function parseWorkflowDocument(markdown: string, filename?: string, optio
       const listItemNode = node as ListItem;
       const firstParagraph = listItemNode.children.find((c) => c.type === 'paragraph');
       if (firstParagraph) {
-        const text = extractText(firstParagraph as Paragraph);
+        const text = extractText(firstParagraph as PhrasingContent | Heading | Paragraph | ListItem);
         const conditional = parseConditional(text);
         if (conditional) {
           if (currentStep.pendingSubstep) {

@@ -167,6 +167,14 @@ export class WorkflowStateManager {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const stateValue = snapshot.value as string;
 
+    // If the workflow is in a final state, don't try to parse a step number.
+    // Just update the snapshot and variables, preserving the last step number.
+    if (stateValue === 'COMPLETE' || stateValue === 'STOPPED') {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const variables = snapshot.context.variables as Record<string, boolean | number | string>;
+        return await this.update(id, { variables, snapshot });
+    }
+
     const match = /^step_(\d+)(?:_(\S+))?$/.exec(stateValue);
     const stepNum = match ? parseInt(match[1], 10) : 1;
     
@@ -487,7 +495,7 @@ export class WorkflowStateManager {
     const child = await this.load(childId);
     if (!child) return 'pass';
 
-    if (child.variables.blocked === true) return 'fail';
+    if (child.variables.stopped === true) return 'fail';
     if (child.variables.completed === true) return 'pass';
 
     return null;

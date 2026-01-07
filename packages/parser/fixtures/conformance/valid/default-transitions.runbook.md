@@ -14,4 +14,4 @@ tsv echo --result pass
 tsv echo --result pass
 ```
 
-- PASS: DONE
+- PASS: COMPLETE

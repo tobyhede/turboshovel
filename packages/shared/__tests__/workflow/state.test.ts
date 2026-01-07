@@ -38,9 +38,9 @@ describe('WorkflowStateManager', () => {
       expect(result).toBe('pass');
     });
 
-    it('should return fail when child has blocked=true', async () => {
+    it('should return fail when child has stopped=true', async () => {
       const child = await manager.create('child.runbook.md', mockWorkflow);
-      await manager.update(child.id, { variables: { blocked: true } });
+      await manager.update(child.id, { variables: { stopped: true } });
 
       const result = await manager.getChildWorkflowResult(child.id);
       expect(result).toBe('fail');

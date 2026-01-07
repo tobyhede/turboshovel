@@ -98,7 +98,7 @@ describe('evaluateSubstepAggregation', () => {
       ];
 
       const result = evaluateSubstepAggregation(states, passAllTransitions);
-      expect(result?.action).toBe('blocked');
+      expect(result?.action).toBe('stopped');
     });
   });
 
@@ -120,7 +120,7 @@ describe('evaluateSubstepAggregation', () => {
       ];
 
       const result = evaluateSubstepAggregation(states, passAnyTransitions);
-      expect(result?.action).toBe('blocked');
+      expect(result?.action).toBe('stopped');
     });
   });
 });
@@ -158,7 +158,7 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
     expect(result).toEqual({ action: 'continue' });
   });
 
-  it('returns blocked with message when retries exhausted with STOP', () => {
+  it('returns stopped with message when retries exhausted with STOP', () => {
     const step = {
       number: createStepNumber(1)!,
       description: 'Test',
@@ -171,7 +171,7 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
     };
 
     const result = evaluateFailCondition(step, 3);
-    expect(result).toEqual({ action: 'blocked', message: 'Build failed' });
+    expect(result).toEqual({ action: 'stopped', message: 'Build failed' });
   });
 
   it('returns done when retries exhausted with DONE action', () => {
@@ -182,12 +182,12 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       transitions: {
         all: true as const,
         pass: { type: 'CONTINUE' as const },
-        fail: { type: 'RETRY' as const, max: 2, then: { type: 'DONE' as const } }
+        fail: { type: 'RETRY' as const, max: 2, then: { type: 'COMPLETE' as const } }
       }
     };
 
     const result = evaluateFailCondition(step, 2);
-    expect(result).toEqual({ action: 'done' });
+    expect(result).toEqual({ action: 'complete' });
   });
 
   it('returns retry when not yet exhausted', () => {

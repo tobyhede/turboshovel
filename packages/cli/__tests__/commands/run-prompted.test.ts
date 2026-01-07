@@ -183,7 +183,7 @@ Show this command to the agent.
 npm run dangerous-command
 \`\`\`
 
-- PASS: DONE
+- PASS: COMPLETE
 `);
 
       const result = runCli('run runbooks/with-prompt-block.runbook.md', workspace);

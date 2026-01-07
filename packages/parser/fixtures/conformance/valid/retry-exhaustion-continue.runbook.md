@@ -8,7 +8,7 @@ Tests that RETRY exhaustion triggers CONTINUE fallback action.
 tsv echo --result fail --result fail
 ```
 
-- PASS: DONE
+- PASS: COMPLETE
 - FAIL: RETRY 1 CONTINUE
 
 ## 2. Fallback step
@@ -17,4 +17,4 @@ tsv echo --result fail --result fail
 tsv echo --result pass
 ```
 
-- PASS: DONE
+- PASS: COMPLETE

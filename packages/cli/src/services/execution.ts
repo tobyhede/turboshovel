@@ -7,7 +7,7 @@ import {
   printSeparator,
   printCommandExec,
   printWorkflowComplete,
-  printWorkflowBlocked,
+  printWorkflowStopped, printWorkflowStoppedAtStep,
   type Step,
   type WorkflowMetadata,
   type WorkflowState,
@@ -19,23 +19,23 @@ import {
  * Check if workflow snapshot indicates completion
  */
 export function isWorkflowComplete(snapshot: { status: string; value: unknown }): boolean {
-  return snapshot.status === 'done' && snapshot.value === 'complete';
+  return snapshot.status === 'done' && snapshot.value === 'COMPLETE';
 }
 
 /**
- * Check if workflow snapshot indicates blocked state
+ * Check if workflow snapshot indicates stopped state
  */
-export function isWorkflowBlocked(snapshot: { status: string; value: unknown }): boolean {
-  return snapshot.status === 'done' && snapshot.value === 'blocked';
+export function isWorkflowStopped(snapshot: { status: string; value: unknown }): boolean {
+  return snapshot.status === 'done' && snapshot.value === 'STOPPED';
 }
 
 /**
  * Execute command steps in a loop until:
- * - Workflow completes or blocks
+ * - Workflow completes or stops
  * - A prompt-only step is reached (no command)
  * - In prompted mode (no auto-execution)
  *
- * @returns 'done' | 'blocked' | 'waiting' (waiting = prompt-only step reached)
+ * @returns 'done' | 'stopped' | 'waiting' (waiting = prompt-only step reached)
  */
 export async function runExecutionLoop(
   manager: WorkflowStateManager,
@@ -44,13 +44,13 @@ export async function runExecutionLoop(
   cwd: string,
   prompted: boolean,
   agentId?: string
-): Promise<'done' | 'blocked' | 'waiting'> {
+): Promise<'done' | 'stopped' | 'waiting'> {
   // Note: state is loaded here and reloaded at end of each loop iteration.
   // Some immutable properties (parentWorkflowId, agentId) are accessed from
   // the initial load for completion handling. This is safe because these
   // properties are set at workflow creation and never modified.
   let state = await manager.load(workflowId);
-  if (!state) return 'blocked';
+  if (!state) return 'stopped';
 
   // Detect if this is a dynamic workflow (single step with isDynamic: true)
   // In dynamic workflows, steps array has only the template step, but state.step is the instance number
@@ -85,7 +85,7 @@ export async function runExecutionLoop(
 
     // Send event to actor
     const actor = await manager.createActor(workflowId, steps);
-    if (!actor) return 'blocked';
+    if (!actor) return 'stopped';
 
     actor.send({ type: execResult.success ? 'PASS' : 'FAIL' });
     let updatedState = await manager.updateFromActor(workflowId, actor, steps);
@@ -96,12 +96,12 @@ export async function runExecutionLoop(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const isComplete = isWorkflowComplete(snapshot);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const isBlocked = isWorkflowBlocked(snapshot);
+    const isStopped = isWorkflowStopped(snapshot);
 
     // Handle NEXT action: increment instance number for dynamic steps
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const nextInstance = snapshot.context.nextInstance as boolean | undefined;
-    if (nextInstance && !isComplete && !isBlocked) {
+    if (nextInstance && !isComplete && !isStopped) {
       // Increment instance number (stay in step_1 for dynamic workflows)
       const currentInstanceNum = updatedState.step;
       const nextStepNumberValue = currentInstanceNum + 1;
@@ -127,7 +127,7 @@ export async function runExecutionLoop(
       updatedState.retryCount,
       retryMax,
       isComplete,
-      isBlocked
+      isStopped
     );
 
     // Update lastAction in state
@@ -162,9 +162,9 @@ export async function runExecutionLoop(
       return 'done';
     }
 
-    if (isBlocked) {
-      await manager.update(workflowId, { variables: { ...updatedState.variables, blocked: true } });
-      printWorkflowBlocked({ current: prevStep, total: totalSteps, substep: prevSubstep });
+    if (isStopped) {
+      await manager.update(workflowId, { variables: { ...updatedState.variables, stopped: true } });
+      printWorkflowStoppedAtStep({ current: prevStep, total: totalSteps, substep: prevSubstep });
 
       // If this was a child workflow with agent, update parent's agent binding
       if (agentId && state.parentWorkflowId) {
@@ -176,12 +176,12 @@ export async function runExecutionLoop(
 
       // Pop current workflow from stack
       await manager.popWorkflow(agentId);
-      return 'blocked';
+      return 'stopped';
     }
 
     // Reload state for next iteration
     state = await manager.load(workflowId);
-    if (!state) return 'blocked';
+    if (!state) return 'stopped';
   }
 }
 
@@ -230,10 +230,10 @@ export function deriveAction(
   newRetryCount: number,
   retryMax: number,
   isComplete: boolean,
-  isBlocked: boolean
+  isStopped: boolean
 ): string {
   if (isComplete) return 'COMPLETE';
-  if (isBlocked) return 'STOP';
+  if (isStopped) return 'STOP';
   if (newStep === prevStep && newRetryCount > prevRetryCount) {
     return `RETRY (${String(newRetryCount)}/${String(retryMax)})`;
   }

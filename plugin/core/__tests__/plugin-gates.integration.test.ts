@@ -117,7 +117,7 @@ describe('Plugin Gate Composition Integration', () => {
 
     const result = await dispatch(input);
 
-    // Should be blocked (blockReason will be set)
+    // Should be stopped (blockReason will be set)
     expect(result.blockReason).toBeDefined();
   });
 

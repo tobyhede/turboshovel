@@ -35,10 +35,10 @@ describe('pass command', () => {
     });
   });
 
-  describe('PASS: DONE', () => {
+  describe('PASS: COMPLETE', () => {
     beforeEach(async () => {
       runCli('run --prompted runbooks/simple.runbook.md', workspace);
-      runCli('pass', workspace); // Advance to step 2 which has PASS: DONE
+      runCli('pass', workspace); // Advance to step 2 which has PASS: COMPLETE
     });
 
     it('marks workflow complete', async () => {
@@ -89,11 +89,11 @@ describe('pass command', () => {
       // Create parent/child workflows for nesting test
       const parentWorkflow = `## 1. Parent step
 Do parent work.
-- PASS: DONE
+- PASS: COMPLETE
 `;
       const childWorkflow = `## 1. Child step
 Do child work.
-- PASS: DONE
+- PASS: COMPLETE
 `;
       await mkdir(join(workspace.cwd, 'runbooks'), { recursive: true });
       await writeFile(join(workspace.cwd, 'runbooks', 'parent-nest.md'), parentWorkflow);
@@ -157,13 +157,13 @@ Do child work.
 
 Do something.
 
-- PASS: DONE
+- PASS: COMPLETE
 `;
       const childWorkflow = `## 1. Step one
 
 Do work.
 
-- PASS: DONE
+- PASS: COMPLETE
 `;
       await mkdir(join(workspace.cwd, 'runbooks'), { recursive: true });
       await writeFile(join(workspace.cwd, 'runbooks', 'parent.md'), parentWorkflow);
@@ -187,7 +187,7 @@ Do work.
     it('agent workflow pops to null when no parent', async () => {
       // Create a single-step workflow for quick completion
       const singleStep = `## 1. Do it
-- PASS: DONE
+- PASS: COMPLETE
 `;
       await mkdir(join(workspace.cwd, 'runbooks'), { recursive: true });
       await writeFile(join(workspace.cwd, 'runbooks', 'single.md'), singleStep);

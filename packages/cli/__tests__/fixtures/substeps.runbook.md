@@ -31,5 +31,5 @@ Done.
 tsv echo --result pass
 ```
 
-- PASS: DONE
+- PASS: COMPLETE
 - FAIL: STOP

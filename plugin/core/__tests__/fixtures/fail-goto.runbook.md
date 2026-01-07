@@ -16,5 +16,5 @@ Skipped on failure.
 
 Jumped here on failure.
 
-- PASS: DONE
+- PASS: COMPLETE
 - FAIL: STOP

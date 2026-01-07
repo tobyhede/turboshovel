@@ -8,5 +8,5 @@ Tests that RETRY succeeds before count is exhausted.
 tsv echo --result fail --result pass
 ```
 
-- PASS: DONE
+- PASS: COMPLETE
 - FAIL: RETRY 3 STOP

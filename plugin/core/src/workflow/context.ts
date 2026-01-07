@@ -38,7 +38,7 @@ function formatWorkflowContext(state: WorkflowState): string {
   }
 
   // BLOCKED warning
-  if (state.variables.blocked) {
+  if (state.variables.stopped) {
     lines.push('');
     lines.push('*** WORKFLOW BLOCKED *** - Present options to user before continuing.');
   }

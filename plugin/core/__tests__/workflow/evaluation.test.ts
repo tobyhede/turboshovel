@@ -16,10 +16,10 @@ describe('evaluateTransitions', () => {
       expect(evaluateTransitions(steps, transitions)).toEqual(passAction);
     });
 
-    it('returns fail when any blocked', () => {
+    it('returns fail when any stopped', () => {
       const steps = [
         { id: '1', status: 'complete' },
-        { id: '2', status: 'blocked' }
+        { id: '2', status: 'stopped' }
       ] as StepState[];
       expect(evaluateTransitions(steps, transitions)).toEqual(failAction);
     });
@@ -31,15 +31,15 @@ describe('evaluateTransitions', () => {
     it('returns pass when any complete', () => {
       const steps = [
         { id: '1', status: 'complete' },
-        { id: '2', status: 'blocked' }
+        { id: '2', status: 'stopped' }
       ] as StepState[];
       expect(evaluateTransitions(steps, transitions)).toEqual(passAction);
     });
 
-    it('returns fail when all blocked', () => {
+    it('returns fail when all stopped', () => {
       const steps = [
-        { id: '1', status: 'blocked' },
-        { id: '2', status: 'blocked' }
+        { id: '1', status: 'stopped' },
+        { id: '2', status: 'stopped' }
       ] as StepState[];
       expect(evaluateTransitions(steps, transitions)).toEqual(failAction);
     });
@@ -51,13 +51,13 @@ describe('evaluateTransitions', () => {
       const optimistic: Transitions = { all: false, pass: passAction, fail: failAction };
 
       const complete = [{ id: '1', status: 'complete' }] as StepState[];
-      const blocked = [{ id: '1', status: 'blocked' }] as StepState[];
+      const stopped = [{ id: '1', status: 'stopped' }] as StepState[];
 
       // Both modes should produce same result for single task
       expect(evaluateTransitions(complete, pessimistic)).toEqual(passAction);
       expect(evaluateTransitions(complete, optimistic)).toEqual(passAction);
-      expect(evaluateTransitions(blocked, pessimistic)).toEqual(failAction);
-      expect(evaluateTransitions(blocked, optimistic)).toEqual(failAction);
+      expect(evaluateTransitions(stopped, pessimistic)).toEqual(failAction);
+      expect(evaluateTransitions(stopped, optimistic)).toEqual(failAction);
     });
   });
 });

@@ -86,7 +86,7 @@ Each task creates `.work/tasks/task-{NN}.json`:
 **Execution:**
 - 12 files created in `.work/tasks/`
 - All 12 AGENT_IDs are unique (proves parallel dispatch)
-- Workflow completes without BLOCKED
+- Workflow completes without STOPPED
 
 **Verification must detect:**
 - Task 2: `task` field mismatch (3 ≠ 2)
@@ -112,7 +112,7 @@ execute-plan.runbook.md (9 steps)
 - {N}.1: Required changes? NO→skip evaluate, YES→evaluate
 - {N}.2: Changes within parameters? (logic, deps, scope, interfaces)
 
-**STOP propagation:** Any `tsv fail` at decision points stops with "BLOCKED:" message for orchestrator intervention.
+**STOP propagation:** Any `tsv fail` at decision points stops with "STOPPED:" message for orchestrator intervention.
 
 ## Usage
 Use `/turboshovel:test-end-to-end` to execute this test plan.

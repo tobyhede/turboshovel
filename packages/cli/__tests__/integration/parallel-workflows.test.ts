@@ -27,11 +27,11 @@ Dispatch work.
 
 ## 2. Verify
 Check results.
-- PASS: DONE
+- PASS: COMPLETE
 `;
     const childWorkflow = `## 1. Do work
 Complete task.
-- PASS: DONE
+- PASS: COMPLETE
 `;
 
     const workflowsDir = join(workspace.cwd, 'runbooks');
@@ -86,13 +86,13 @@ Complete task.
   it('supports arbitrary nesting depth', async () => {
     // Create nested workflows
     const level1 = `## 1. Start level 2
-- PASS: DONE
+- PASS: COMPLETE
 `;
     const level2 = `## 1. Start level 3
-- PASS: DONE
+- PASS: COMPLETE
 `;
     const level3 = `## 1. Do work
-- PASS: DONE
+- PASS: COMPLETE
 `;
 
     const workflowsDir = join(workspace.cwd, 'runbooks');
@@ -128,7 +128,7 @@ Complete task.
 
   it('session stacks persist correctly', async () => {
     const workflow = `## 1. Step
-- PASS: DONE
+- PASS: COMPLETE
 `;
     await mkdir(join(workspace.cwd, 'runbooks'), { recursive: true });
     await writeFile(join(workspace.cwd, 'runbooks', 'test.md'), workflow);

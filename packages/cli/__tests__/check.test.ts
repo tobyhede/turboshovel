@@ -30,7 +30,7 @@ Do something.
 
 Do another thing.
 
-- PASS: DONE
+- PASS: COMPLETE
 `);
 
     const result = runCli(`check ${workflowPath}`, workspace);
@@ -77,7 +77,7 @@ Do something.
 
 Missing step 2.
 
-- PASS: DONE
+- PASS: COMPLETE
 `);
 
     const result = runCli(`check ${workflowPath}`, workspace);

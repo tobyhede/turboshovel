@@ -103,7 +103,7 @@ export function registerRunCommand(program: Command): void {
           // For new workflows started without --agent, use default stack (no agentId)
           const result = await runExecutionLoop(manager, state.id, [...workflow.steps], cwd, !!options.prompted, undefined);
 
-          if (result === 'blocked') {
+          if (result === 'stopped') {
             process.exit(1);
           }
           return;
@@ -168,7 +168,7 @@ export function registerRunCommand(program: Command): void {
             // Run execution loop (chains command steps automatically)
             const result = await runExecutionLoop(manager, childState.id, [...workflow.steps], cwd, parentPrompted, options.agent);
 
-            if (result === 'blocked') {
+            if (result === 'stopped') {
               process.exit(1);
             }
           }

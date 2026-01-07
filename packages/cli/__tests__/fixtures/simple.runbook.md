@@ -17,5 +17,5 @@ Do another thing.
 tsv echo --result pass
 ```
 
-- PASS: DONE
+- PASS: COMPLETE
 - FAIL: RETRY 2

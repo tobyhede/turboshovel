@@ -1,7 +1,7 @@
 import type { Step, SubstepState, Action, NonRetryAction, StepId } from './types.js';
 
 export interface ConditionResult {
-  action: 'retry' | 'blocked' | 'goto' | 'continue' | 'done' | 'next';
+  action: 'retry' | 'stopped' | 'goto' | 'continue' | 'complete' | 'next';
   newRetryCount?: number;
   gotoTarget?: StepId;
   message?: string;
@@ -16,7 +16,7 @@ export function evaluateFailCondition(
 ): ConditionResult {
   if (!step.transitions) {
     return {
-      action: 'blocked',
+      action: 'stopped',
       message: 'No FAIL condition defined for step'
     };
   }
@@ -39,7 +39,7 @@ export function evaluateFailCondition(
 
     case 'STOP':
       return {
-        action: 'blocked',
+        action: 'stopped',
         message: failAction.message
       };
 
@@ -50,7 +50,7 @@ export function evaluateFailCondition(
       };
 
     case 'CONTINUE':
-    case 'DONE':
+    case 'COMPLETE':
       return { action: 'continue' };
 
     case 'NEXT':
@@ -58,7 +58,7 @@ export function evaluateFailCondition(
 
     default:
       return {
-        action: 'blocked',
+        action: 'stopped',
         message: 'Unknown FAIL action'
       };
   }
@@ -75,8 +75,8 @@ export function evaluatePassCondition(step: Step): ConditionResult {
   const passAction = step.transitions.pass;
 
   switch (passAction.type) {
-    case 'DONE':
-      return { action: 'done' };
+    case 'COMPLETE':
+      return { action: 'complete' };
 
     case 'GOTO':
       return {
@@ -86,7 +86,7 @@ export function evaluatePassCondition(step: Step): ConditionResult {
 
     case 'STOP':
       return {
-        action: 'blocked',
+        action: 'stopped',
         message: passAction.message
       };
 
@@ -129,11 +129,11 @@ function evaluateNonRetryAction(action: NonRetryAction): ConditionResult {
     case 'CONTINUE':
       return { action: 'continue' };
     case 'STOP':
-      return { action: 'blocked', message: action.message };
+      return { action: 'stopped', message: action.message };
+    case 'COMPLETE':
+      return { action: 'complete' };
     case 'GOTO':
       return { action: 'goto', gotoTarget: action.target };
-    case 'DONE':
-      return { action: 'done' };
     case 'NEXT':
       return { action: 'next' };
   }

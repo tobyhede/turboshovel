@@ -137,8 +137,8 @@ describe('parseAction', () => {
     expect(result).toEqual({ type: 'GOTO', target: { step: 3, substep: undefined } });
   });
 
-  test('parses DONE', () => {
-    expect(parseAction('DONE')).toEqual({ type: 'DONE' });
+  test('parses COMPLETE', () => {
+    expect(parseAction('COMPLETE')).toEqual({ type: 'COMPLETE' });
   });
 
   test('parses RETRY without max', () => {

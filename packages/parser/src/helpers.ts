@@ -112,8 +112,8 @@ export function parseAction(text: string): Action | null {
     return { type: 'CONTINUE' };
   }
 
-  if (trimmed === 'DONE') {
-    return { type: 'DONE' };
+  if (trimmed === 'COMPLETE') {
+    return { type: 'COMPLETE' };
   }
 
   if (trimmed === 'NEXT') {
@@ -160,8 +160,7 @@ function parseRetryWithArgs(rest: string): Action | null {
   const numberMatch = /^(\d+)(?:\s+(.*))?$/.exec(remaining);
   if (numberMatch) {
     max = parseInt(numberMatch[1], 10);
-    remaining = numberMatch[2] ?? '';
-    remaining = remaining.trim();
+    remaining = (numberMatch[2] || '').trim();
   }
 
   if (!remaining) {
@@ -192,8 +191,8 @@ function parseNonRetryAction(input: string): NonRetryAction | null {
     return { type: 'CONTINUE' };
   }
 
-  if (trimmed === 'DONE') {
-    return { type: 'DONE' };
+  if (trimmed === 'COMPLETE') {
+    return { type: 'COMPLETE' };
   }
 
   if (trimmed === 'NEXT') {
@@ -364,4 +363,23 @@ export function isPromptedCodeBlock(lang: string | null | undefined): boolean | 
   if (tag && EXECUTABLE_TAGS.includes(tag)) return false;  // executable
   if (tag && PROMPTED_TAGS.includes(tag)) return true;     // show, don't run
   return null;  // passive (not a command)
+}
+
+export function formatAction(action: Action): string {
+  switch (action.type) {
+    case 'CONTINUE':
+      return 'CONTINUE';
+    case 'COMPLETE':
+      return 'COMPLETE';
+    case 'NEXT':
+      return 'NEXT';
+    case 'STOP':
+      return action.message ? `STOP "${action.message}"` : 'STOP';
+    case 'GOTO':
+      return `GOTO ${String(action.target.step)}`;
+    case 'RETRY':
+      return action.max ? `RETRY ${String(action.max)}` : 'RETRY';
+    default:
+      return 'UNKNOWN';
+  }
 }

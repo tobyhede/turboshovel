@@ -20,7 +20,7 @@ Assess changes to logic, dependencies, scope, interfaces.
 Within implementation boundaries?
 
 - YES: CONTINUE
-- NO: STOP "BLOCKED: Changes exceed implementation boundaries"
+- NO: STOP "STOPPED: Changes exceed implementation boundaries"
 
 ### {N}.3 Checks
 
@@ -45,14 +45,14 @@ tsv echo npm test
 Can you fix without changing approach?
 
 - YES: GOTO {N}.6
-- NO: STOP "BLOCKED: Requires plan revision"
+- NO: STOP "STOPPED: Requires plan revision"
 
 ### {N}.6 Apply fixes
 
 Apply inline fixes.
 
 - PASS: GOTO {N}.3
-- FAIL: STOP "BLOCKED: Could not apply fixes"
+- FAIL: STOP "STOPPED: Could not apply fixes"
 
 ### {N}.7 Complete
 
@@ -64,4 +64,4 @@ TASK: {N}
 More tasks?
 
 - YES: NEXT
-- NO: DONE
+- NO: COMPLETE

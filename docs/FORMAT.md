@@ -10,12 +10,12 @@ where static_steps is:
 
 where static_step is:
   "##" integer title
-    { body | substeps | workflows }
+    { body | substeps | runbooks }
     [ transition ... ]
 
 where dynamic_step is:
   "##" "{N}" title
-    { body | substeps | workflows }
+    { body | substeps | runbooks }
     [ transition ... ]
 
 where substeps is:
@@ -23,7 +23,7 @@ where substeps is:
 
 where substep is:
   "###" substep_id title
-    { body | workflows }
+    { body | runbooks }
     [ transition ... ]
 
 where substep_id is:
@@ -42,8 +42,8 @@ where code_block is:
     content
   "```"
 
-where workflows is:
-  - workflow_path [ ... ]
+where runbooks is:
+  - runbook_path [ ... ]
 
 where transition is:
   - { PASS | FAIL | YES | NO } [ { ALL | ANY } ]: result
@@ -52,7 +52,7 @@ where result is:
   action | RETRY [ count ] [ action ]
 
 where action is:
-  CONTINUE | DONE | STOP [ "message" ] | GOTO id | NEXT
+  CONTINUE | COMPLETE | STOP [ "message" ] | GOTO {id | NEXT}
 
 ---
 

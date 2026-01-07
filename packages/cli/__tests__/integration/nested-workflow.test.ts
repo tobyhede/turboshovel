@@ -24,14 +24,14 @@ describe('Nested Workflow Integration', () => {
 
 Parent step that dispatches work.
 
-- PASS: DONE
+- PASS: COMPLETE
 `;
 
     const childWorkflow = `## 1. Do work
 
 Complete the work.
 
-- PASS: DONE
+- PASS: COMPLETE
 `;
 
     // Write workflows to workspace

@@ -84,8 +84,8 @@ function findNextStateId(stepNum: StepNumber, substepId: string | undefined, ste
     return formatStateId(nextNum);
   }
 
-  // End of workflow
-  return 'complete';
+  // End of rundown
+  return 'COMPLETE';
 }
 
 // XState requires any for transition builder (snapshot types not fully typed)
@@ -110,10 +110,10 @@ function nonRetryActionToTransition(
         })
       };
     }
-    case 'DONE':
-      return { target: 'complete' };
+    case 'COMPLETE':
+      return { target: 'COMPLETE' };
     case 'STOP':
-      return { target: 'blocked' };
+      return { target: 'STOPPED' };
     case 'GOTO': {
       const targetStep = action.target.step;
 
@@ -258,8 +258,8 @@ export function compileWorkflowToMachine(steps: Step[]) {
     },
     states: {
       ...states,
-      complete: { type: 'final' },
-      blocked: { type: 'final' }
+      COMPLETE: { type: 'final' },
+      STOPPED: { type: 'final' }
     }
   });
 }

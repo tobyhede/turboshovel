@@ -88,7 +88,7 @@ describe('output format integration tests', () => {
       expect(result.stdout).toContain('1/');
     });
 
-    it('prints blocked message for FAIL: STOP', async () => {
+    it('prints stopped message for FAIL: STOP', async () => {
       runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
       const result = runCli('fail', workspace);
@@ -210,7 +210,7 @@ describe('output format integration tests', () => {
   describe('complete command output', () => {
     beforeEach(async () => {
       runCli('run --prompted runbooks/simple.runbook.md', workspace);
-      runCli('pass', workspace); // Move to step 2 which has PASS: DONE
+      runCli('pass', workspace); // Move to step 2 which has PASS: COMPLETE
     });
 
     it('prints metadata and complete message', async () => {

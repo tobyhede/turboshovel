@@ -9,7 +9,7 @@
   "scripts": {
     "verify:claude": "./scripts/verify-install.sh",
     "verify:claude:npm": "./scripts/verify-install.sh npm",
-    "build": "npm run build -w packages/shared && npm run build -w packages/cli && npm run build -w plugin/core",
+    "build": "npm run build -w packages/parser && npm run build -w packages/shared && npm run build -w packages/cli && npm run build -w plugin/core",
     "test": "npm run test -w packages/shared && npm run test -w packages/cli && npm run test -w plugin/core",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

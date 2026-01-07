@@ -8,7 +8,8 @@ import {
   printSeparator,
   printActionBlock,
   printWorkflowComplete,
-  printWorkflowBlocked,
+  printWorkflowStopped,
+  printWorkflowStoppedAtStep,
   createStepNumber,
 } from '@turboshovel/shared';
 import { resolveWorkflowFile } from '../helpers/resolve-workflow.js';
@@ -18,7 +19,7 @@ import {
   deriveAction,
   getStepRetryMax,
   isWorkflowComplete,
-  isWorkflowBlocked,
+  isWorkflowStopped,
 } from '../services/execution.js';
 import { withErrorHandling } from '../helpers/wrapper.js';
 
@@ -115,7 +116,7 @@ export function registerPassCommand(program: Command): void {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         const isComplete = isWorkflowComplete(snapshot);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        const isBlocked = isWorkflowBlocked(snapshot);
+        const isStopped = isWorkflowStopped(snapshot);
 
         // Derive action
         const currentStep = steps[prevStep - 1];
@@ -124,13 +125,18 @@ export function registerPassCommand(program: Command): void {
           prevStep, updatedState.step,
           prevSubstep, updatedState.substep,
           prevRetryCount, updatedState.retryCount,
-          retryMax, isComplete, isBlocked
+          retryMax, isComplete, isStopped
         );
 
         // Update lastAction
-        const actionType = action.startsWith('GOTO') ? 'GOTO' :
-                           action.startsWith('RETRY') ? 'RETRY' :
-                           action as 'CONTINUE' | 'COMPLETE' | 'STOP';
+        let actionType: 'GOTO' | 'RETRY' | 'CONTINUE' | 'COMPLETE' | 'STOP';
+        if (action.startsWith('GOTO')) {
+          actionType = 'GOTO';
+        } else if (action.startsWith('RETRY')) {
+          actionType = 'RETRY';
+        } else {
+          actionType = action as 'CONTINUE' | 'COMPLETE' | 'STOP';
+        }
         await manager.update(state.id, { lastAction: actionType });
 
         // Print separator and action block
@@ -162,15 +168,15 @@ export function registerPassCommand(program: Command): void {
           return;
         }
 
-        if (isBlocked) {
-          await manager.update(state.id, { variables: { ...state.variables, blocked: true } });
-          printWorkflowBlocked({ current: prevStep, total: totalSteps, substep: prevSubstep });
+        if (isStopped) {
+          await manager.update(state.id, { variables: { ...state.variables, stopped: true } });
+          printWorkflowStoppedAtStep({ current: prevStep, total: totalSteps, substep: prevSubstep });
           process.exit(1);
         }
 
         // Continue with execution loop
         const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted, options.agent);
-        if (loopResult === 'blocked') {
+        if (loopResult === 'stopped') {
           process.exit(1);
         }
       });

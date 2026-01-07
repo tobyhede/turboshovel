@@ -1,6 +1,6 @@
-# RETRY Exhaustion with DONE
+# RETRY Exhaustion with COMPLETE
 
-Tests that RETRY exhaustion triggers DONE fallback action.
+Tests that RETRY exhaustion triggers COMPLETE fallback action.
 
 ## 1. Flaky step
 
@@ -9,4 +9,4 @@ tsv echo --result fail --result fail
 ```
 
 - PASS: CONTINUE
-- FAIL: RETRY 1 DONE
+- FAIL: RETRY 1 COMPLETE

@@ -9,90 +9,118 @@ Rundown is a format for defining executable workflows using Markdown.
 
 ## Table of Contents
 
-- [1. Syntax Synopsis](#1-syntax-synopsis)
-- [2. Document Structure](#2-document-structure)
-- [3. Step Content](#3-step-content)
-- [4. Substeps](#4-substeps)
-- [5. Transitions](#5-transitions)
-- [6. Actions](#6-actions)
-- [7. Variables](#7-variables)
-- [8. Conformance](#8-conformance)
-- [9. Examples](#9-examples)
+- [Syntax Synopsis](syntax-synopsis)
+- [Document Structure](document-structure)
+- [Step Definitions](step-definitions)
+- [Substeps](substeps)
+- [Transitions](transitions)
+- [Actions](actions)
+- [Variables](variables)
+- [Conformance](conformance)
+- [Examples](examples)
 
 ---
 
-## 1. Syntax Synopsis
+## Syntax Synopsis
 
 See [rundown-format.md](./rundown-format.md) for the complete BNF-style grammar.
 
 ---
 
-## 2. Document Structure
+## Document Structure
 
 A Rundown document (`.runbook.md`) consists of an optional title and description, followed by one or more steps.
 
 ### Header
 - **Title**: An optional H1 header (`# Title`).
-- **Description**: Optional prose text following the title.
+- **Description**: Optional description text.
 
 ### Steps
 Steps are the fundamental units of execution. They are defined using H2 (`##`) headers.
+---
 
-**Format:**
+## Step Definitions
+
+A step (`##`) defines a unit of work or orchestration.
+A step always has an identifier and title.
+
 ```markdown
-## {id} {Title}
+## {Identifier} {Title}
 ```
 
+A step may contain ONE of the following following content types:
+
+- **Prompt**: prompt text and/or code block.
+- **Substeps**: sequence of nested steps defined using H3 (`###`).
+- **Runbooks**: list of one or more runbooks.
+
+
 ### Identifiers
-Step identifiers (`id`) define the sequence and structure of the workflow.
+Step identifiers define the sequence and structure of the runbook.
+Steps can be `dynamic`. Dynamic steps enable steps to be defined at runtime.
+
 
 | Format | Type | Description |
 |--------|------|-------------|
 | `1` | Static | Standard sequential step |
-| `{N}` | Dynamic | Template step instantiated at runtime |
 | `1.1` | Static Substep | Explicitly numbered nested step |
 | `1.{n}` | Dynamic Substep | Template nested step |
+| `{N}` | Dynamic | Template step instantiated at runtime |
 | `{N}.1` | Nested Static | Static child of dynamic parent |
 | `{N}.{n}`| Nested Dynamic | Dynamic child of dynamic parent |
 
 **Rules:**
-1. Top-level static steps MUST be numbered sequentially starting from 1.
+1. Static steps MUST be numbered sequentially starting from 1.
 2. Static substeps MUST be numbered sequentially starting from 1.
-3. Dynamic identifiers (`{N}`, `{n}`) are placeholders for runtime enumeration.
+3. Only one dynamic step can be defined at each level.
+4. Dynamic identifiers (`{N}`, `{n}`) are placeholders.
+
+
+#### Dynamic
+
+{}
+
+
 
 ---
+### Prompt
 
-## 3. Step Content
+A step may have a prompt and/or a code block.
 
-A step (`##`) defines a unit of work or orchestration.
-A step may be empty, in which case the title is the step.
+- **Prompt**: text instructions for the agent/user.
+- **Code Block**: code block containing a command.
 
-A step may contain ONE of the following following content types:
+```markdown
+## {Identifier} {Title}
+{Prompt}
+{CodeBlock}
+```
 
-### Prompt and/or Command
-1. **Prompt**: Text instructions for the agent/user.
-2. **Command**: A code block containing a command. See [Code Blocks](#code-blocks).
+#### Code Blocks
+
+Code blocks enable automatic execution and handling of commands.
+
+- **Executable**: code blocks may be executed automatically.
+- **Prompt Code Block**: A code block marked `prompt` is never executed - the block is output for the agent/user.
+
+```markdown
+## {Identifier} {Title}
+\`\`\`bash
+command-to-run
+\`\`\`
+```
+
+---
 
 ### Substeps
-A sequence of nested tasks defined using H3 (`###`) headers.
-The Step H2 header (`##`) MUST be immediately followed by its Substeps. See [4. Substeps](#4-substeps).
 
-### Sub Runbooks
-A list of Rundown file paths.
+Substeps enable grouping of related processes within a Step.
 
-
----
-
-## 4. Substeps
-
-Substeps provide fine-grained task definition within a Step.
-
-### Hierarchy and Scope
 - **Headers**: Defined using H3 (`###`) headers.
 - **Nesting**: Only valid as children of H2 steps. Substeps CANNOT contain further nested steps (H4 is invalid).
-- **Exclusivity**: Like Steps, a Substep MUST contain either a **Body** (Option A) or a **Workflow List** (Option C), but not both.
+- **Exclusivity**: Like Steps, a Substep MUST contain either a **Prompt** or a **Runbook List**, but not both.
 
-### Identifiers
+#### Identifiers
 Substep identifiers must strictly match the parent Step ID prefix.
 
 | Format | Parent | Child | Context |
@@ -102,21 +130,23 @@ Substep identifiers must strictly match the parent Step ID prefix.
 | `{N}.1` | Dynamic | Static | Fixed task within a dynamic instance. |
 | `{N}.{n}` | Dynamic | Dynamic | Iterative task within a dynamic instance. |
 
-### Outcome Aggregation
+#### Result Aggregation
 When a Step contains Substeps, the parent step's final outcome is derived from the collective results of its children. This aggregation is controlled by [5. Transitions](#5-transitions) using `ALL` or `ANY` modifiers.
+
 
 ---
 
-## 5. Transitions
 
-Transitions define the control flow based on the outcome of a step or substep.
+## Transitions
+
+Transitions define the control flow based on the result of a step or substep.
 
 **Syntax:**
-```markdown
-- {Outcome} [{Modifier}]: {Result}
+```
+- { PASS | FAIL | YES | NO } [ { ALL | ANY } ]: action
 ```
 
-**Outcomes:**
+**Result:**
 - `PASS`: The unit (step, substep, or command) succeeded.
 - `FAIL`: The unit failed.
 
@@ -131,71 +161,31 @@ Used when a step has multiple child units (substeps or workflows).
 
 ---
 
-## 6. Actions
+## Actions
 
 Actions determine what happens next.
 
 | Action | Description |
 |--------|-------------|
 | `CONTINUE` | Proceed to the next unit in sequence. |
+| `COMPLETE` | Runbook has completed successfully. |
 | `STOP ["msg"]` | Halt execution immediately. Optional failure message. |
-| `DONE` | Complete the workflow successfully immediately. |
-| `GOTO {id}` | Jump to a specific step ID. |
-| `NEXT` | Create the next dynamic step instance (N+1). Only valid in `## {N}.` context. |
-| `RETRY [n] [act]` | Retry the current unit `n` times (default 1). If exhausted, perform `act`. |
+| `GOTO {id \| NEXT}` | Jump to Step `id` or jump and create new dynamic step instance. |
+| `RETRY [n] [action]` | Retry the current unit `n` times (default 1). If exhausted, perform `action`. |
 
-**GOTO Rules:**
+
+### GOTO
+
 - Target ID must exist.
-- Cannot GOTO into a dynamic step instance from outside (use the parent ID).
 - `GOTO {N}.M` navigates within the current dynamic instance to substep M.
 - Use `NEXT` to advance to the next instance (not `GOTO {N}`).
 
----
-
-## 7. Code Blocks
-
-A step body can contain **both** prompt text and a code block:
-
-```
-## 1. Step Title
-
-Prompt text (instructions for agent/user).
-
-\`\`\`bash
-command-to-run
-\`\`\`
-```
-
-### Classification
-
-| Tag | Type | Behavior |
-|-----|------|----------|
-| `bash`, `sh`, `shell` | Executable | Auto-run, exit code determines PASS/FAIL |
-| `prompt` | Instructional | Show to agent, never execute |
-| Other/none | Passive | Preserved as prose in prompts |
-
-### CLI Interaction
-
-| Code Block Tag | CLI `--prompted` | Result |
-|----------------|------------------|--------|
-| `bash`/`sh`/`shell` | No | **Execute** automatically |
-| `bash`/`sh`/`shell` | Yes | **Show**, wait for `tsv pass/fail` |
-| `prompt` | No | **Show**, wait for `tsv pass/fail` |
-| `prompt` | Yes | **Show**, wait for `tsv pass/fail` |
-| Other/none | Any | Preserved in prompts (not a command) |
-
-**Key insight**: `prompt` blocks **never** execute, regardless of CLI flag. The `--prompted` flag only affects executable blocks.
-
-### Command Interface
-
-The parsed `Command` object uses an optional `prompted` boolean:
-
-| `command.prompted` | Meaning |
-|--------------------|---------|
-| `undefined` | Executable (runs automatically, from `bash`/`sh`/`shell` blocks) |
-| `true` | Prompted (show to agent, wait for manual `tsv pass/fail`) |
-
-**Note**: The absence of `prompted` (undefined) means the command is executable and runs automatically. Only `prompt` code blocks set `prompted: true`.
+| Target     | Valid From        | Description                                       |
+|------------|-------------------|---------------------------------------------------|
+| GOTO N     | Static step       | Jump to step N (must exist, N ≤ total steps)      |
+| GOTO N.M   | Any step          | Jump to substep M of step N                       |
+| GOTO {N}.M | Dynamic step {N}. | Jump to substep M within current dynamic instance |
+| GOTO NEXT  | Dynamic step {N}. | Create the next dynamic step instance (N+1)       |
 
 ---
 

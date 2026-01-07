@@ -47,7 +47,7 @@ export interface AgentBinding {
  */
 export interface StepState {
   readonly id: string;
-  readonly status: 'pending' | 'running' | 'complete' | 'blocked';
+  readonly status: 'pending' | 'running' | 'complete' | 'stopped';
   readonly subagentType?: string;
   readonly startedAt?: string;
   readonly completedAt?: string;

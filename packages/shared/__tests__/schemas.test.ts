@@ -177,8 +177,8 @@ describe('Action schema-derived type', () => {
   });
 
   it('parses DONE action', () => {
-    const parsed = ActionSchema.parse({ type: 'DONE' });
-    expect(parsed.type).toBe('DONE');
+    const parsed = ActionSchema.parse({ type: 'COMPLETE' });
+    expect(parsed.type).toBe('COMPLETE');
   });
 });
 
@@ -197,7 +197,7 @@ describe('Transitions schema-derived type', () => {
   it('parses all:false (pass any) transitions', () => {
     const parsed = TransitionsSchema.parse({
       all: false,
-      pass: { type: 'DONE' },
+      pass: { type: 'COMPLETE' },
       fail: { type: 'RETRY', max: 2, then: { type: 'STOP' } }
     });
     expect(parsed.all).toBe(false);

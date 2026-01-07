@@ -7,8 +7,8 @@ import {
   printStepBlock,
   printCommandExec,
   printWorkflowComplete,
-  printWorkflowStopped,
-  printWorkflowBlocked,
+  printWorkflowStopped, printWorkflowStoppedAtStep,
+  printWorkflowStopped, printWorkflowStoppedAtStep,
   printWorkflowStashed,
   printNoActiveWorkflow,
 } from '../../src/cli/output.js';
@@ -158,15 +158,15 @@ describe('output formatter', () => {
     });
   });
 
-  describe('printWorkflowBlocked', () => {
-    it('prints blocked message with step number', () => {
-      printWorkflowBlocked({ current: 2, total: 5 });
-      expect(consoleOutput).toContain('Workflow blocked at step 2.');
+  describe('printWorkflowStopped', () => {
+    it('prints stopped message with step number', () => {
+      printWorkflowStoppedAtStep({ current: 2, total: 5 });
+      expect(consoleOutput).toContain('Workflow stopped at step 2.');
     });
 
-    it('prints blocked message with substep', () => {
-      printWorkflowBlocked({ current: 2, total: 5, substep: '1' });
-      expect(consoleOutput).toContain('Workflow blocked at step 2.1.');
+    it('prints stopped message with substep', () => {
+      printWorkflowStoppedAtStep({ current: 2, total: 5, substep: '1' });
+      expect(consoleOutput).toContain('Workflow stopped at step 2.1.');
     });
   });
 

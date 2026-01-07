@@ -9,7 +9,8 @@ import {
   printSeparator,
   printActionBlock,
   printWorkflowComplete,
-  printWorkflowBlocked,
+  printWorkflowStopped,
+  printWorkflowStoppedAtStep,
   createStepNumber,
 } from '@turboshovel/shared';
 import { resolveWorkflowFile } from '../helpers/resolve-workflow.js';
@@ -19,7 +20,7 @@ import {
   deriveAction,
   getStepRetryMax,
   isWorkflowComplete,
-  isWorkflowBlocked,
+  isWorkflowStopped,
 } from '../services/execution.js';
 import { withErrorHandling } from '../helpers/wrapper.js';
 
@@ -81,7 +82,7 @@ export function registerFailCommand(program: Command): void {
               console.log(`Agent ${options.agent} retrying step ${String(stepNum)}`);
               // Continue with execution loop for retry
               const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted, options.agent);
-              if (loopResult === 'blocked') process.exit(1);
+              if (loopResult === 'stopped') process.exit(1);
               return;
             } else if (failResult.action === 'goto') {
               actor.send({ type: 'FAIL' });
@@ -89,7 +90,7 @@ export function registerFailCommand(program: Command): void {
               console.log(`Agent ${options.agent} failed, workflow jumped to step ${String(updated.step)}`);
               // Continue with execution loop after GOTO
               const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted, options.agent);
-              if (loopResult === 'blocked') process.exit(1);
+              if (loopResult === 'stopped') process.exit(1);
               return;
             }
 
@@ -102,7 +103,7 @@ export function registerFailCommand(program: Command): void {
 
             const updated = await manager.load(state.id);
             const bindings = Object.values(updated?.agentBindings ?? {});
-            const runningCount = bindings.filter((b) => b.status === 'running').length;
+            const runningCount = bindings.filter((b: any) => b.status === 'running').length;
 
             if (runningCount > 0) {
               console.log(`${String(runningCount)} agent(s) still running`);
@@ -132,7 +133,7 @@ export function registerFailCommand(program: Command): void {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         const isComplete = isWorkflowComplete(snapshot);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        const isBlocked = isWorkflowBlocked(snapshot);
+        const isStopped = isWorkflowStopped(snapshot);
 
         // Derive action
         const retryMax = getStepRetryMax(currentStep);
@@ -140,13 +141,18 @@ export function registerFailCommand(program: Command): void {
           prevStep, updatedState.step,
           prevSubstep, updatedState.substep,
           prevRetryCount, updatedState.retryCount,
-          retryMax, isComplete, isBlocked
+          retryMax, isComplete, isStopped
         );
 
         // Update lastAction
-        const actionType = action.startsWith('GOTO') ? 'GOTO' :
-                           action.startsWith('RETRY') ? 'RETRY' :
-                           action as 'CONTINUE' | 'COMPLETE' | 'STOP';
+        let actionType: 'GOTO' | 'RETRY' | 'CONTINUE' | 'COMPLETE' | 'STOP';
+        if (action.startsWith('GOTO')) {
+          actionType = 'GOTO';
+        } else if (action.startsWith('RETRY')) {
+          actionType = 'RETRY';
+        } else {
+          actionType = action as 'CONTINUE' | 'COMPLETE' | 'STOP';
+        }
         await manager.update(state.id, { lastAction: actionType });
 
         // Print separator and action block
@@ -157,10 +163,10 @@ export function registerFailCommand(program: Command): void {
           result: 'FAIL',
         });
 
-        // Handle blocked
-        if (isBlocked) {
-          await manager.update(state.id, { variables: { ...state.variables, blocked: true } });
-          printWorkflowBlocked({ current: prevStep, total: totalSteps, substep: prevSubstep });
+        // Handle stopped
+        if (isStopped) {
+          await manager.update(state.id, { variables: { ...state.variables, stopped: true } });
+          printWorkflowStoppedAtStep({ current: prevStep, total: totalSteps, substep: prevSubstep });
 
           // If this was a child workflow with agent, update parent's agent binding
           if (options.agent && state.parentWorkflowId) {
@@ -196,7 +202,7 @@ export function registerFailCommand(program: Command): void {
 
         // Continue with execution loop
         const loopResult = await runExecutionLoop(manager, state.id, steps, cwd, !!state.prompted, options.agent);
-        if (loopResult === 'blocked') {
+        if (loopResult === 'stopped') {
           process.exit(1);
         }
       });

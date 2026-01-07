@@ -17,7 +17,7 @@ tsv echo --result fail --result fail --result fail
 tsv echo --result pass
 ```
 
-- PASS: DONE
+- PASS: COMPLETE
 
 ## 3. Recovery step
 
@@ -25,4 +25,4 @@ tsv echo --result pass
 tsv echo --result pass
 ```
 
-- PASS: DONE
+- PASS: COMPLETE

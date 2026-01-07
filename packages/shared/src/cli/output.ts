@@ -81,14 +81,14 @@ export function printWorkflowStopped(): void {
 }
 
 /**
- * Print workflow blocked message
+ * Print workflow stopped message with step position
  */
-export function printWorkflowBlocked(pos: StepPosition): void {
+export function printWorkflowStoppedAtStep(pos: StepPosition): void {
   console.log('');
   const stepStr = pos.substep
     ? `${String(pos.current)}.${pos.substep}`
     : String(pos.current);
-  console.log(`Workflow blocked at step ${stepStr}.`);
+  console.log(`Workflow stopped at step ${stepStr}.`);
 }
 
 /**

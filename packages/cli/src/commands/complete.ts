@@ -4,8 +4,9 @@ import type { Command } from 'commander';
 import {
   WorkflowStateManager,
   printMetadata,
-  printWorkflowBlocked,
   printWorkflowComplete,
+  printWorkflowStopped,
+  printWorkflowStoppedAtStep,
   printNoActiveWorkflow,
   createStepNumber,
 } from '@turboshovel/shared';
@@ -17,7 +18,7 @@ export function registerCompleteCommand(program: Command): void {
   program
     .command('complete')
     .description('Mark current workflow as complete')
-    .option('--status <status>', 'Completion status (ok|blocked)', 'ok')
+    .option('--status <status>', 'Completion status (ok|stopped)', 'ok')
     .option('--agent <agentId>', 'Complete workflow in agent-specific stack')
     .action(async (options: { status: string; agent?: string }) => {
       await withErrorHandling(async () => {
@@ -33,12 +34,12 @@ export function registerCompleteCommand(program: Command): void {
         // Print metadata
         printMetadata(buildMetadata(state));
 
-        if (options.status === 'blocked') {
+        if (options.status === 'stopped') {
           const totalSteps = await getStepCount(cwd, state.workflow);
           await manager.update(state.id, {
-            variables: { ...state.variables, blocked: true }
+            variables: { ...state.variables, stopped: true }
           });
-          printWorkflowBlocked({ current: state.step, total: totalSteps, substep: state.substep });
+          printWorkflowStoppedAtStep({ current: state.step, total: totalSteps, substep: state.substep });
         } else {
           const totalSteps = await getStepCount(cwd, state.workflow);
           await manager.update(state.id, {

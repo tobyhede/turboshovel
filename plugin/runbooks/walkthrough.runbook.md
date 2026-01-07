@@ -74,7 +74,7 @@ Run verification script to validate entire walkthrough execution.
 ${CLAUDE_PLUGIN_ROOT}/scripts/walkthrough-verify.sh
 ```
 
-- PASS: DONE
+- PASS: COMPLETE
 - FAIL: GOTO 6
 
 ## 6. Error Handler
@@ -83,4 +83,4 @@ Handle walkthrough failures.
 
 **Prompt:** The walkthrough encountered an error. Check .work/walkthrough.log for the execution trace and diagnose the issue.
 
-- FAIL: BLOCKED
+- FAIL: STOPPED

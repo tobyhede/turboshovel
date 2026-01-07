@@ -54,10 +54,10 @@ describe('fail command', () => {
     it('outputs error message', async () => {
       const result = runCli('fail', workspace);
 
-      expect(result.stdout).toContain('blocked');
+      expect(result.stdout).toContain('stopped');
     });
 
-    it('should set variables.blocked=true when STOP action triggered', async () => {
+    it('should set variables.stopped=true when STOP action triggered', async () => {
       // workflow already started by beforeEach
       runCli('fail', workspace);
 
@@ -65,7 +65,7 @@ describe('fail command', () => {
       // Retrieve from all states
       const states = await getAllStates(workspace);
       const state = states.find(s => s.workflow === 'runbooks/simple.runbook.md');
-      expect(state?.variables.blocked).toBe(true);
+      expect(state?.variables.stopped).toBe(true);
     });
   });
 
@@ -88,7 +88,7 @@ describe('fail command', () => {
       // Create a single-step workflow that blocks on fail
       const singleStep = `## 1. Do it
 
-- PASS: DONE
+- PASS: COMPLETE
 - FAIL: STOP
 `;
       await mkdir(join(workspace.cwd, 'runbooks'), { recursive: true });
@@ -111,15 +111,15 @@ describe('fail command', () => {
 
 Do something.
 
-- PASS: DONE
-- FAIL: DONE
+- PASS: COMPLETE
+- FAIL: COMPLETE
 `;
       const childWorkflow = `## 1. Step one
 
 Do work.
 
-- PASS: DONE
-- FAIL: DONE
+- PASS: COMPLETE
+- FAIL: COMPLETE
 `;
       await mkdir(join(workspace.cwd, 'runbooks'), { recursive: true });
       await writeFile(join(workspace.cwd, 'runbooks', 'parent-fail.md'), parentWorkflow);
@@ -131,7 +131,7 @@ Do work.
       // Start child in same stack (prompted to prevent auto-completion)
       runCli('run --prompted runbooks/child-fail.md', workspace);
 
-      // Fail child - should complete (FAIL: DONE) and pop to parent
+      // Fail child - should complete (FAIL: COMPLETE) and pop to parent
       const result = runCli('fail', workspace);
       expect(result.stdout).toContain('complete');
 

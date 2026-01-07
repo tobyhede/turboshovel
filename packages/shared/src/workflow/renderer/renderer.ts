@@ -1,4 +1,4 @@
-import { type Step, type Action, type Transitions, type Substep, type Workflow } from '../types.js';
+import { type Step, type Action, type Transitions, type Substep, type Workflow, type NonRetryAction } from '../types.js';
 import { stepIdToString } from '../step-id.js';
 
 /**
@@ -6,20 +6,24 @@ import { stepIdToString } from '../step-id.js';
  */
 export function renderAction(action: Action): string {
   if (action.type === 'RETRY') {
-    return `RETRY ${String(action.max)} ${renderAction(action.then)}`;
+    const actionStr = renderNonRetryAction(action.then);
+    return `RETRY ${String(action.max)} ${actionStr}`;
   }
+  return renderNonRetryAction(action);
+}
 
+function renderNonRetryAction(action: NonRetryAction): string {
   switch (action.type) {
     case 'CONTINUE':
       return 'CONTINUE';
-    case 'DONE':
-      return 'DONE';
-    case 'NEXT':
-      return 'NEXT';
+    case 'COMPLETE':
+      return 'COMPLETE';
     case 'STOP':
       return action.message ? `STOP "${action.message}"` : 'STOP';
     case 'GOTO':
       return `GOTO ${stepIdToString(action.target)}`;
+    case 'NEXT':
+      return 'NEXT';
   }
 }
 

@@ -118,7 +118,8 @@ async function verify(): Promise<VerificationResult> {
 
       try {
         const content = await readFile(filepath, 'utf-8');
-        const data = JSON.parse(content);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data = JSON.parse(content) as any;
 
         fileResult.actual_task = data.task;
         fileResult.actual_value = data.value;
@@ -151,17 +152,18 @@ async function verify(): Promise<VerificationResult> {
           result.agent_ids.push(data.agent_id);
           agentIdCounts.set(
             data.agent_id,
-            (agentIdCounts.get(data.agent_id) || 0) + 1
+            (agentIdCounts.get(data.agent_id) ?? 0) + 1
           );
         }
-      } catch (e) {
-        fileResult.error = e instanceof Error ? e.message : String(e);
+      } catch (e: unknown) {
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        fileResult.error = errorMessage;
         result.errors.push({
           task: spec.task,
           filename: spec.filename,
           type: 'parse_error',
           expected: 'valid JSON',
-          actual: fileResult.error,
+          actual: errorMessage,
         });
       }
     }

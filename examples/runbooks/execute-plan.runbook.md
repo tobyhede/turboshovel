@@ -10,7 +10,7 @@ Read and validate the implementation plan.
 **tsv fail:** Plan has gaps, ambiguities, or blocking concerns
 
 - PASS: CONTINUE
-- FAIL: STOP "BLOCKED: Plan validation failed"
+- FAIL: STOP "STOPPED: Plan validation failed"
 
 ## 2. Execute batch
 
@@ -42,7 +42,7 @@ Analyze failures and present options to orchestrator.
 **tsv fail:** Orchestrator chose REVISE or ABORT
 
 - PASS: GOTO 5
-- FAIL: STOP "BLOCKED: Orchestrator decision required"
+- FAIL: STOP "STOPPED: Orchestrator decision required"
 
 ## 5. Apply fixes
 
@@ -54,7 +54,7 @@ Apply inline fixes within plan constraints.
 When uncertain, `tsv fail`.
 
 - PASS: GOTO 3
-- FAIL: STOP "BLOCKED: Requires plan revision"
+- FAIL: STOP "STOPPED: Requires plan revision"
 
 ## 6. Code review
 
@@ -67,7 +67,7 @@ Categorize findings: BLOCKING or NON-BLOCKING.
 **tsv fail:** Blocking issues remain
 
 - PASS: CONTINUE
-- FAIL: STOP "BLOCKED: Code review issues"
+- FAIL: STOP "STOPPED: Code review issues"
 
 ## 7. Check remaining
 
@@ -86,7 +86,7 @@ tsv echo npm run lint && tsv echo npm run build && tsv echo npm test
 ```
 
 - PASS: CONTINUE
-- FAIL: STOP "BLOCKED: Final validation failed"
+- FAIL: STOP "STOPPED: Final validation failed"
 
 ## 9. Complete
 
@@ -96,4 +96,4 @@ PLAN: {plan_name}
 BATCHES: {count}
 ```
 
-- PASS: DONE
+- PASS: COMPLETE
