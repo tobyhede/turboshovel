@@ -128,11 +128,6 @@ export function parseAction(text: string): Action | null {
     return { type: 'STOP', message };
   }
 
-  if (trimmed === 'NEXT') {
-    // NEXT is shorthand for GOTO NEXT
-    return { type: 'GOTO', target: { step: 'NEXT' } };
-  }
-
   if (trimmed.startsWith('GOTO ')) {
     const targetStr = trimmed.slice(5).trim();
     const target = parseStepIdFromString(targetStr);
@@ -206,11 +201,6 @@ function parseNonRetryAction(input: string): NonRetryAction | null {
       rest = rest.slice(1, -1);
     }
     return { type: 'STOP', message: rest };
-  }
-
-  if (trimmed === 'NEXT') {
-    // NEXT is shorthand for GOTO NEXT
-    return { type: 'GOTO', target: { step: 'NEXT' } };
   }
 
   if (trimmed.startsWith('GOTO ')) {

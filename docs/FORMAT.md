@@ -81,5 +81,3 @@ RETRY n action =>  RETRY n action
 -- Code block semantics
 ```bash | sh | shell  =>  Command (Executable)
 ```prompt            =>  Prompt (Instructional)
-```[other] | ```      =>  Prose (Passive)
-```

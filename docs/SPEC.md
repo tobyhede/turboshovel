@@ -14,14 +14,14 @@ Rundown is a format for defining executable workflows using Markdown.
 - [Step Definitions](#step-definitions)
 - [Transitions](#transitions)
 - [Actions](#actions)
-- [Conformance](#9-conformance)
-- [Examples](#10-examples)
+- [Conformance](#conformance)
+- [Examples](#examples)
 
 ---
 
 ## Syntax Synopsis
 
-See [rundown-format.md](.FORMAT.md) for the complete BNF-style grammar.
+See [rundown-format.md](./FORMAT.md) for the complete BNF-style grammar.
 
 ---
 
@@ -150,12 +150,11 @@ Transitions define the control flow based on the result of a step or substep.
 - { PASS | FAIL | YES | NO } [ { ALL | ANY } ]: action
 ```
 
-
 **Result:**
 - `PASS` / `YES`: The unit (step, substep, or command) succeeded.
 - `FAIL` / `NO`: The unit failed.
 
-Aliases are optimised for readability (YES/NO for prompts, PASS/FAIL for command results).
+Aliases are optimised for readability (`YES/NO` for prompts, `PASS/FAIL` for command results).
 
 **Modifiers (Aggregation):**
 Used when a step has substeps or runbooks.
@@ -180,6 +179,11 @@ Actions determine what happens next.
 | `GOTO {id \| NEXT}` | Jump to Step `id` or create new dynamic step instance. |
 | `RETRY [n] [action]` | Retry the current unit `n` times (default 1). If exhausted, perform `action`. |
 
+**Default Actions:**
+- `PASS: CONTINUE`
+- `FAIL: STOP`
+
+
 ### GOTO
 
 - The target Identifier must exist.
@@ -192,8 +196,11 @@ Actions determine what happens next.
 | GOTO N       | Any step          | Jump to step N (must exist, N ≤ total steps)      |
 | GOTO N.M     | Any step          | Jump to substep M of step N                       |
 | GOTO {N}.M   | Dynamic step {N}. | Jump to substep M within current dynamic instance |
-| GOTO {N}.{M} | Dynamic step {N}. | Jump to substep M within current dynamic instance |
 | GOTO NEXT    | Dynamic step {N}. | Create the next dynamic step instance (N+1)       |
+
+### RETRY
+
+
 
 ---
 
