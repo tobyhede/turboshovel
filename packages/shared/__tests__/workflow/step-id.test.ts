@@ -114,3 +114,15 @@ describe('dynamic substep references', () => {
     expect(result).toBeNull();
   });
 });
+
+describe('NEXT target', () => {
+  it('parses NEXT as valid target', () => {
+    const result = parseStepIdFromString('NEXT');
+    expect(result).toEqual({ step: 'NEXT' });
+  });
+
+  it('rejects NEXT with substep notation', () => {
+    const result = parseStepIdFromString('NEXT.1');
+    expect(result).toBeNull();
+  });
+});

@@ -12,6 +12,16 @@ export interface ParseStepIdOptions {
 export function parseStepIdFromString(input: string, options?: ParseStepIdOptions): StepId | null {
   if (!input) return null;
 
+  // Handle NEXT as special GOTO target
+  if (input === 'NEXT') {
+    return { step: 'NEXT' };
+  }
+
+  // Reject NEXT with substep notation
+  if (input.startsWith('NEXT.')) {
+    return null;
+  }
+
   const requireSeparator = options?.requireSeparator ?? false;
 
   // Check for dynamic substep reference: {N}.M
