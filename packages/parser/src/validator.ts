@@ -14,7 +14,7 @@ export function validateWorkflow(steps: readonly Step[]): ValidationError[] {
 
   if (steps.length === 0) {
     return [{
-      message: "Workflow must contain at least one step (heading starting with '##')"
+      message: "Runbook must contain at least one step (heading starting with '##')"
     }];
   }
 
@@ -36,13 +36,13 @@ export function validateWorkflow(steps: readonly Step[]): ValidationError[] {
 
   if (staticSteps.length > 0 && dynamicSteps.length > 0) {
     errors.push({
-      message: 'Invalid step pattern: workflow must contain static steps OR exactly one dynamic step template, not both.'
+      message: 'Invalid step pattern: runbook must contain static steps OR exactly one dynamic step template, not both.'
     });
   }
 
   if (dynamicSteps.length > 1) {
     errors.push({
-      message: 'Invalid step pattern: workflow can have exactly one dynamic step template (## {N}.), not multiple.'
+      message: 'Invalid step pattern: runbook can have exactly one dynamic step template (## {N}.), not multiple.'
     });
   }
 
@@ -72,7 +72,7 @@ export function validateWorkflow(steps: readonly Step[]): ValidationError[] {
     if (contentCount > 1) {
       errors.push({
         line: step.line,
-        message: `Step ${stepLabel}: Violates Exclusivity Rule. A step must have exactly one of {Body, Substeps, Workflow List}.`
+        message: `Step ${stepLabel}: Violates Exclusivity Rule. A step must have exactly one of {Body, Substeps, Runbook List}.`
       });
     }
 
@@ -89,7 +89,7 @@ export function validateWorkflow(steps: readonly Step[]): ValidationError[] {
         if (sHasBody && sHasWorkflows) {
           errors.push({
             line: step.line,
-            message: `Substep ${stepLabel}.${substep.id}: Violates Exclusivity Rule. A substep must have either a Body or a Workflow List, but not both.`
+            message: `Substep ${stepLabel}.${substep.id}: Violates Exclusivity Rule. A substep must have either a Body or a Runbook List, but not both.`
           });
         }
 
@@ -127,20 +127,21 @@ export function validateAction(
 
   const isDynamicContext = currentStepObj.isDynamic;
 
-  if (action.type === 'NEXT') {
-    if (!isDynamicContext) {
-      const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
-      errors.push({
-        line: currentStepObj.line,
-        message: `Step ${context}: NEXT action is only valid within dynamic step context (## {N}.).`
-      });
-      return;
-    }
-  }
-
   if (action.type === 'GOTO') {
     const targetStep = action.target.step;
     const targetSubstep = action.target.substep;
+
+    // Handle GOTO NEXT - only valid in dynamic context
+    if (targetStep === 'NEXT') {
+      if (!isDynamicContext) {
+        const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
+        errors.push({
+          line: currentStepObj.line,
+          message: `Step ${context}: GOTO NEXT is only valid within dynamic step context (## {N}.).`
+        });
+      }
+      return;
+    }
 
     if (targetStep === '{N}' && !targetSubstep) {
       const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
@@ -152,7 +153,7 @@ export function validateAction(
     }
 
     if (targetStep === '{N}') {
-      return; 
+      return;
     }
 
     const targetStepNum = targetStep as number;
@@ -161,7 +162,7 @@ export function validateAction(
       const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
       errors.push({
         line: currentStepObj.line,
-        message: `Step ${context}: GOTO target step ${String(targetStepNum)} does not exist (workflow has ${String(steps.length)} steps).`
+        message: `Step ${context}: GOTO target step ${String(targetStepNum)} does not exist (Runbook has ${String(steps.length)} steps).`
       });
       return;
     }
@@ -201,12 +202,12 @@ export function validateAction(
       const substepExists = targetStepObj.substeps.some(s => s.id === targetSubstep);
       if (!substepExists) {
         if (targetStepObj.isDynamic) {
-           const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
-           errors.push({
-             line: currentStepObj.line,
-             message: `Step ${context}: cannot GOTO substep of dynamic step. Use GOTO ${String(targetStepNum)} instead.`
-           });
-           return;
+          const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);
+          errors.push({
+            line: currentStepObj.line,
+            message: `Step ${context}: cannot GOTO substep of dynamic step. Use GOTO ${String(targetStepNum)} instead.`
+          });
+          return;
         }
 
         const context = currentSubstepId ? `${String(currentStepNum)}.${currentSubstepId}` : String(currentStepNum);

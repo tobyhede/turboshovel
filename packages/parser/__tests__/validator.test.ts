@@ -59,19 +59,27 @@ describe('validator strict rules', () => {
       expect(errors.length).toBeGreaterThan(0);
       expect(errors.some(e => e.message.includes('Invalid step pattern'))).toBe(true);
     });
-  });
 
-  describe('NEXT rules', () => {
-    it('rejects NEXT in static context', () => {
+    it('rejects GOTO NEXT in static context', () => {
       const steps = [mockStep({
         number: createStepNumber(1)!,
-        transitions: { all: true, pass: { type: 'NEXT' }, fail: { type: 'STOP' } }
+        transitions: { all: true, pass: { type: 'GOTO', target: { step: 'NEXT' } }, fail: { type: 'STOP' } }
       })];
       const errors = validateWorkflow(steps);
       expect(errors.length).toBeGreaterThan(0);
-      expect(errors.some(e => e.message.includes('NEXT action is only valid within dynamic step context'))).toBe(true);
+      expect(errors.some(e => e.message.includes('GOTO NEXT is only valid within dynamic step context'))).toBe(true);
+    });
+
+    it('accepts GOTO NEXT in dynamic context', () => {
+      const steps = [mockStep({
+        isDynamic: true,
+        transitions: { all: true, pass: { type: 'GOTO', target: { step: 'NEXT' } }, fail: { type: 'STOP' } }
+      })];
+      const errors = validateWorkflow(steps);
+      expect(errors.filter(e => e.message.includes('GOTO NEXT'))).toHaveLength(0);
     });
   });
+
 
   describe('Exclusivity rules', () => {
     it('rejects H2 step with both body and substeps', () => {
