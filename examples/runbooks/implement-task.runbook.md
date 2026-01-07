@@ -63,5 +63,5 @@ TASK: {N}
 
 More tasks?
 
-- YES: NEXT
+- YES: GOTO NEXT
 - NO: COMPLETE

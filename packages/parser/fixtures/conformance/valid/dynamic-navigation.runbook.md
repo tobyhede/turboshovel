@@ -6,4 +6,4 @@ Do work.
 
 ### {N}.2 Second substep
 Do more work.
-- PASS: NEXT
+- PASS: GOTO NEXT

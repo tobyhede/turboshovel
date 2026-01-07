@@ -5,5 +5,5 @@ Tests navigation in dynamic context.
 
 ### {N}.1 Task
 Process item.
-- PASS: NEXT
+- PASS: GOTO NEXT
 - FAIL: STOP "Dynamic failure"
