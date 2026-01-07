@@ -116,10 +116,6 @@ export function parseAction(text: string): Action | null {
     return { type: 'COMPLETE' };
   }
 
-  if (trimmed === 'NEXT') {
-    return { type: 'NEXT' };
-  }
-
   if (trimmed === 'STOP') {
     return { type: 'STOP' };
   }
@@ -193,10 +189,6 @@ function parseNonRetryAction(input: string): NonRetryAction | null {
 
   if (trimmed === 'COMPLETE') {
     return { type: 'COMPLETE' };
-  }
-
-  if (trimmed === 'NEXT') {
-    return { type: 'NEXT' };
   }
 
   if (trimmed === 'STOP') {
@@ -371,8 +363,6 @@ export function formatAction(action: Action): string {
       return 'CONTINUE';
     case 'COMPLETE':
       return 'COMPLETE';
-    case 'NEXT':
-      return 'NEXT';
     case 'STOP':
       return action.message ? `STOP "${action.message}"` : 'STOP';
     case 'GOTO':

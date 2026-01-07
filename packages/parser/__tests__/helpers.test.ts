@@ -1,27 +1,23 @@
 import { describe, it, expect } from '@jest/globals';
 import { parseAction, extractWorkflowList, isPromptedCodeBlock } from '../src/index.js';
 
-describe('parseAction NEXT', () => {
-  it('parses NEXT as action', () => {
+describe('parseAction GOTO NEXT', () => {
+  it('parses GOTO NEXT as action', () => {
+    const result = parseAction('GOTO NEXT');
+    expect(result).toEqual({ type: 'GOTO', target: { step: 'NEXT' } });
+  });
+
+  it('rejects standalone NEXT', () => {
     const result = parseAction('NEXT');
-    expect(result).toEqual({ type: 'NEXT' });
+    expect(result).toBeNull();
   });
 
-  it('parses RETRY NEXT as RETRY 1 NEXT', () => {
-    const result = parseAction('RETRY NEXT');
-    expect(result).toEqual({
-      type: 'RETRY',
-      max: 1,
-      then: { type: 'NEXT' }
-    });
-  });
-
-  it('parses RETRY 3 NEXT', () => {
-    const result = parseAction('RETRY 3 NEXT');
+  it('parses RETRY 3 GOTO NEXT', () => {
+    const result = parseAction('RETRY 3 GOTO NEXT');
     expect(result).toEqual({
       type: 'RETRY',
       max: 3,
-      then: { type: 'NEXT' }
+      then: { type: 'GOTO', target: { step: 'NEXT' } }
     });
   });
 });
