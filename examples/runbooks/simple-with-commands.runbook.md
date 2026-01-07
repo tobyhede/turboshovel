@@ -1,19 +1,45 @@
-# Simple Feature Workflow
+# Simple Runbook with Commands
 
-A simple workflow to implement a feature.
+Simple sequential build & deploy workflow
 
-## 1. Create Implementation Plan
+## 1. Install project dependencies
 
-Create a plan for the implementation.
+```bash
+tsv echo npm install
+```
+
+## 2. Run lint
+
+```bash
+tsv echo npm run lint
+```
 
 - PASS: CONTINUE
-- FAIL: STOP "Plan is required."
+- FAIL: STOP
 
-## 2. Implement Feature
+## 3. Run tests
 
-Write the code and tests.
+```bash
+tsv echo npm test
+```
 
-## 3. Verify
+- PASS: CONTINUE
+- FAIL: STOP "Failed to run tests"
 
-Run tests to ensure quality.
+## 4. Build
 
+```bash
+tsv echo --result fail --result pass npm run build
+```
+
+- PASS: CONTINUE
+- FAIL: RETRY
+
+## 5. Deploy
+
+```bash
+tsv echo --result fail --result fail --result pass npm run deploy
+```
+
+- PASS: DONE
+- FAIL: RETRY 3

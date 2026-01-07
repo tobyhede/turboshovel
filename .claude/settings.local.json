@@ -21,7 +21,9 @@
       "Skill(cipherpowers:plan)",
       "Bash(mkdir:*)",
       "mcp__serena__activate_project",
-      "Bash(npm run cli:*)"
+      "Bash(npm run cli:*)",
+      "Skill(cipherpowers:requesting-code-review)",
+      "Bash(git rev-parse:*)"
     ],
     "deny": [],
     "ask": []

@@ -145,12 +145,12 @@ function nonRetryActionToTransition(
         })
       };
     }
-    case 'NEXT':
+    case 'NEXT': {
       // NEXT creates next instance - stay in dynamic template but signal instance increment
       // Dynamic template is always Step 1. Target first substep if it exists.
       const firstStep = steps[0];
       const nextSubstepId = firstStep.substeps && firstStep.substeps.length > 0 ? firstStep.substeps[0].id : undefined;
-      
+
       return {
         target: formatStateId(1, nextSubstepId),
         actions: assign({
@@ -159,6 +159,7 @@ function nonRetryActionToTransition(
           nextInstance: true  // Signal to executor: increment instance number
         })
       };
+    }
   }
 }
 
@@ -219,7 +220,7 @@ export function compileWorkflowToMachine(steps: Step[]) {
     actions: assign({
       retryCount: 0,
       substep: ({ event }: { event: WorkflowEvent }) =>
-        event.type === 'GOTO' ? (event.target.substep || target.substepId) : undefined
+        event.type === 'GOTO' ? (event.target.substep ?? target.substepId) : undefined
     })
   }));
 

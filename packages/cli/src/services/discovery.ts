@@ -69,7 +69,7 @@ export async function scanDirectory(dirPath: string, source: 'project' | 'plugin
         const { frontmatter } = extractFrontmatter(content);
 
         // Match by frontmatter name or filename stem
-        const runbookName = frontmatter?.name || nameFromFilename(entry.name);
+        const runbookName = frontmatter?.name ?? nameFromFilename(entry.name);
 
         runbooks.push({
           name: runbookName,

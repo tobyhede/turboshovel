@@ -64,20 +64,22 @@ Step identifiers (`id`) define the sequence and structure of the workflow.
 
 ## 3. Step Content
 
-A step (`##`) defines a unit of work or orchestration. Every step MUST contain exactly one of the following content types:
+A step (`##`) defines a unit of work or orchestration.
+A step may be empty, in which case the title is the step.
 
-### Option A: Task Step (Body)
-Contains local execution logic.
+A step may contain ONE of the following following content types:
+
+### Prompt and/or Command
 1. **Prompt**: Text instructions for the agent/user.
-2. **Command**: A fenced code block containing the command to execute. See [Code Blocks](#code-blocks).
+2. **Command**: A code block containing a command. See [Code Blocks](#code-blocks).
 
-### Option B: Container Step (Substeps)
-Contains a sequence of nested tasks defined using H3 (`###`) headers. When using this option, the Step header MUST be immediately followed by its Substeps. See [4. Substeps](#4-substeps).
+### Substeps
+A sequence of nested tasks defined using H3 (`###`) headers.
+The Step H2 header (`##`) MUST be immediately followed by its Substeps. See [4. Substeps](#4-substeps).
 
-### Option C: Proxy Step (Workflow List)
-Delegates execution to other Rundown files.
-- **Format**: A bulleted list of file paths immediately following the header.
-- **Behavior**: The referenced workflows are executed in order.
+### Sub Runbooks
+A list of Rundown file paths.
+
 
 ---
 
@@ -194,18 +196,6 @@ The parsed `Command` object uses an optional `prompted` boolean:
 | `true` | Prompted (show to agent, wait for manual `tsv pass/fail`) |
 
 **Note**: The absence of `prompted` (undefined) means the command is executable and runs automatically. Only `prompt` code blocks set `prompted: true`.
-
----
-
-## 8. Variables
-
-Rundown supports simple variable substitution in prompts and commands.
-
-| Variable | Scope | Description |
-|----------|-------|-------------|
-| `{N}`, `{n}` | Dynamic Step | The current index of a dynamic step instance. |
-| `{count}`| Workflow | Total number of items (if applicable). |
-| `{date}` | Global | Current date (YYYY-MM-DD). |
 
 ---
 

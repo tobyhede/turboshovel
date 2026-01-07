@@ -205,14 +205,17 @@ export class WorkflowStateManager {
     const session = await this.loadSession();
 
     // Migration: handle old format
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (session.activeWorkflow && !session.stacks && !session.defaultStack) {
       return await this.load(session.activeWorkflow);
     }
 
     let stack: string[];
     if (agentId) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       stack = session.stacks?.[agentId] ?? [];
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       stack = session.defaultStack ?? [];
     }
 
@@ -244,14 +247,17 @@ export class WorkflowStateManager {
     const session = await this.loadSession();
 
     // Initialize stacks if not present (migration)
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!session.stacks) {
       session.stacks = {};
     }
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!session.defaultStack) {
       session.defaultStack = [];
     }
 
     if (agentId) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!session.stacks[agentId]) {
         session.stacks[agentId] = [];
       }
@@ -267,9 +273,11 @@ export class WorkflowStateManager {
     const session = await this.loadSession();
 
     // Initialize if not present
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!session.stacks) {
       session.stacks = {};
     }
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!session.defaultStack) {
       session.defaultStack = [];
     }
@@ -359,6 +367,7 @@ export class WorkflowStateManager {
     if (!state) throw new Error(`Workflow ${id} not found`);
 
     const existing = state.agentBindings[agentId];
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!existing) throw new Error(`No binding for agent ${agentId}`);
 
     await this.update(id, {
@@ -374,14 +383,17 @@ export class WorkflowStateManager {
 
     // Get the active workflow ID - check stacks first, then fall back to activeWorkflow
     let activeId: string | null | undefined = null;
-    
+
     if (agentId) {
       // Agent-specific stack
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       const stack = session.stacks?.[agentId];
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       activeId = stack?.[stack.length - 1];
     } else {
       // Check defaultStack first (new format), then activeWorkflow (old format)
       const stack = session.defaultStack;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       activeId = stack && stack.length > 0 ? stack[stack.length - 1] : session.activeWorkflow;
     }
 
@@ -389,10 +401,12 @@ export class WorkflowStateManager {
 
     // Pop from appropriate stack
     if (agentId) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (session.stacks?.[agentId]) {
         session.stacks[agentId].pop();
       }
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (session.defaultStack && session.defaultStack.length > 0) {
         session.defaultStack.pop();
       } else if (session.activeWorkflow) {
@@ -425,13 +439,17 @@ export class WorkflowStateManager {
     // Push back to appropriate location
     if (agentId) {
       // Agent-specific stack
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!session.stacks) session.stacks = {};
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (!session.stacks[agentId]) session.stacks[agentId] = [];
       session.stacks[agentId].push(stashedId);
     } else {
       // Default stack (new format) or activeWorkflow (old format for compat)
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (session.defaultStack !== undefined || session.stacks !== undefined) {
         // New format: use defaultStack
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (!session.defaultStack) session.defaultStack = [];
         session.defaultStack.push(stashedId);
       } else {

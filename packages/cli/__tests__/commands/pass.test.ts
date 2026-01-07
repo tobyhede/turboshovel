@@ -7,7 +7,6 @@ import {
   getActiveState,
   readSession,
   getAllStates,
-  writeSession,
   type TestWorkspace,
 } from '../helpers/test-utils.js';
 

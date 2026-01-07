@@ -24,6 +24,10 @@ describe('start command', () => {
     it('creates workflow state from valid workflow file', async () => {
       const result = runCli('run --prompted runbooks/simple.runbook.md', workspace);
 
+      if (result.exitCode !== 0) {
+        console.log('Run failed:', result.stdout, result.stderr);
+      }
+
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Action:   START');
       expect(result.stdout).toContain('simple.runbook.md');

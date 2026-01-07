@@ -20,7 +20,6 @@ export function registerLsCommand(program: Command): void {
     .action(async (options: { all?: boolean; json?: boolean; tags?: string }) => {
       await withErrorHandling(async () => {
         const cwd = getCwd();
-
         // MODE 1: List available workflows (--all)
         if (options.all) {
             let runbooks = await discoverRunbooks(cwd);
@@ -37,7 +36,7 @@ export function registerLsCommand(program: Command): void {
               if (options.json) {
                  console.log('[]');
               } else {
-                 console.log('No workflows found.');
+                 console.log('No runbooks found.');
               }
               return;
             }
@@ -54,7 +53,7 @@ export function registerLsCommand(program: Command): void {
               return;
             }
 
-            console.log('Available workflows:\n');
+            console.log('Available runbooks:\n');
             for (const workflow of runbooks) {
               const displayName =
                 workflow.source === 'plugin' ? `${workflow.name} [${workflow.source}]` : workflow.name;

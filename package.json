@@ -14,7 +14,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "cli": "node packages/cli/dist/cli.js",
-    "verify:e2e": "npx tsx scripts/verify-e2e.ts"
+    "verify:e2e": "npx tsx scripts/verify-e2e.ts",
+    "release": "./scripts/release.sh",
+    "release:dry": "./scripts/release.sh --dry-run"
   },
   "devDependencies": {
     "eslint": "^9.17.0",

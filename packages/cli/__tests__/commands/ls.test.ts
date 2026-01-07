@@ -1,6 +1,6 @@
 // packages/cli/__tests__/commands/ls.test.ts
 
-import { createTestWorkspace, runCli, readSession } from '../helpers/test-utils.js';
+import { createTestWorkspace, runCli } from '../helpers/test-utils.js';
 
 describe('tsv ls', () => {
   let workspace: Awaited<ReturnType<typeof createTestWorkspace>>;

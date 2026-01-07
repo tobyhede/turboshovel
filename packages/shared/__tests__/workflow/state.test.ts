@@ -48,6 +48,7 @@ describe('WorkflowStateManager', () => {
 
     it('should return null when child is still active', async () => {
       const child = await manager.create('child.runbook.md', mockWorkflow);
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       await manager.setActive(child.id);
 
       const result = await manager.getChildWorkflowResult(child.id);
@@ -61,6 +62,7 @@ describe('WorkflowStateManager', () => {
 
     it('should return null when child is stashed', async () => {
       const child = await manager.create('child.runbook.md', mockWorkflow);
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       await manager.setActive(child.id);
       await manager.stash();
 

@@ -10,15 +10,23 @@ const __dirname = dirname(__filename);
  */
 export async function createTestWorkspace() {
     const tempDir = await mkdtemp(join(tmpdir(), 'tsv-test-'));
-    // Create .claude/turboshovel structure
-    await mkdir(join(tempDir, '.claude', 'turboshovel', 'runbooks'), { recursive: true });
-    // Copy fixtures to temp dir
+    const projectRunbooksDir = join(tempDir, '.claude', 'runbooks');
+    const pluginDir = join(tempDir, 'plugin');
+    const pluginRunbooksDir = join(pluginDir, 'runbooks');
+    
+    await mkdir(projectRunbooksDir, { recursive: true });
+    await mkdir(pluginRunbooksDir, { recursive: true });
+
+    // Copy fixtures to temp dir, then move one to simulate a plugin runbook
     const fixturesDir = join(__dirname, '..', 'fixtures');
-    await cp(fixturesDir, join(tempDir, 'runbooks'), { recursive: true });
+    await cp(fixturesDir, projectRunbooksDir, { recursive: true });
+    await cp(fixturesDir, pluginRunbooksDir, { recursive: true }); // Keep one in project too for tests
+
     return {
         cwd: tempDir,
         cleanup: () => rm(tempDir, { recursive: true, force: true }),
-        workflowPath: (name) => join(tempDir, 'runbooks', name),
+        pluginDir,
+        workflowPath: (name) => join(projectRunbooksDir, name),
         statePath: () => join(tempDir, '.claude', 'turboshovel', 'runbooks'),
         sessionPath: () => join(tempDir, '.claude', 'turboshovel', 'session.json'),
     };
@@ -33,12 +41,17 @@ export async function createTestWorkspace() {
  */
 export function runCli(args, workspace) {
     const cliPath = join(__dirname, '..', '..', 'dist', 'cli.js');
+    const projectRoot = join(__dirname, '..', '..');
+    const newPath = `${join(projectRoot, 'node_modules', '.bin')}:${process.env.PATH}`;
+
     const argArray = Array.isArray(args) ? args : args.split(' ').filter(Boolean);
     const result = spawnSync('node', [cliPath, ...argArray], {
         cwd: workspace.cwd,
         encoding: 'utf-8',
         env: {
             ...process.env,
+            PATH: newPath,
+            CLAUDE_PLUGIN_ROOT: workspace.pluginDir,
             NO_COLOR: '1',
             TURBOSHOVEL_LOG: '0', // Disable logging during tests
         },

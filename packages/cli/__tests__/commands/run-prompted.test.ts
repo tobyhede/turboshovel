@@ -202,7 +202,7 @@ npm run dangerous-command
       // First: prompted mode
       runCli('stop', workspace);
       runCli('run --prompted runbooks/simple.runbook.md', workspace);
-      let state = await getActiveState(workspace);
+      const state = await getActiveState(workspace);
       expect(state?.prompted).toBe(true);
 
       // Clean up

@@ -7,7 +7,6 @@ import {
   findRunbookByName,
   scanDirectory,
   getSearchPaths,
-  type DiscoveredRunbook,
 } from '../../src/services/discovery.js';
 
 describe('discovery service', () => {

@@ -26,18 +26,27 @@ export interface CliResult {
  */
 export async function createTestWorkspace(): Promise<TestWorkspace> {
   const tempDir = await mkdtemp(join(tmpdir(), 'tsv-test-'));
+  const projectRunbooksDir = join(tempDir, '.claude', 'runbooks');
+  const pluginDir = join(tempDir, 'plugin');
+  const pluginRunbooksDir = join(pluginDir, 'runbooks');
+  const rootRunbooksDir = join(tempDir, 'runbooks');
 
   // Create .claude/turboshovel structure
   await mkdir(join(tempDir, '.claude', 'turboshovel', 'runbooks'), { recursive: true });
+  await mkdir(projectRunbooksDir, { recursive: true });
+  await mkdir(pluginRunbooksDir, { recursive: true });
+  await mkdir(rootRunbooksDir, { recursive: true });
 
   // Copy fixtures to temp dir
   const fixturesDir = join(__dirname, '..', 'fixtures');
-  await cp(fixturesDir, join(tempDir, 'runbooks'), { recursive: true });
+  await cp(fixturesDir, projectRunbooksDir, { recursive: true });
+  await cp(fixturesDir, pluginRunbooksDir, { recursive: true });
+  await cp(fixturesDir, rootRunbooksDir, { recursive: true });
 
   return {
     cwd: tempDir,
     cleanup: () => rm(tempDir, { recursive: true, force: true }),
-    workflowPath: (name: string) => join(tempDir, 'runbooks', name),
+    workflowPath: (name: string) => join(rootRunbooksDir, name),
     statePath: () => join(tempDir, '.claude', 'turboshovel', 'runbooks'),
     sessionPath: () => join(tempDir, '.claude', 'turboshovel', 'session.json'),
   };
@@ -57,13 +66,17 @@ export function runCli(args: string | string[], workspace: TestWorkspace): CliRe
 
   // Add node_modules/.bin to PATH for tsv echo commands in fixtures
   const binPath = join(__dirname, '..', '..', '..', '..', 'node_modules', '.bin');
+  
+  // Plugin root for discovery tests
+  const pluginDir = join(workspace.cwd, 'plugin');
 
   const result = spawnSync('node', [cliPath, ...argArray], {
     cwd: workspace.cwd,
     encoding: 'utf-8',
     env: {
       ...process.env,
-      PATH: `${binPath}:${process.env.PATH}`,
+      PATH: `${binPath}:${process.env.PATH ?? ''}`,
+      CLAUDE_PLUGIN_ROOT: pluginDir,
       NO_COLOR: '1',
       TURBOSHOVEL_LOG: '0', // Disable logging during tests
     },
@@ -97,8 +110,8 @@ export async function readSession(workspace: TestWorkspace): Promise<{
 
     // Support both old and new formats
     const activeWorkflow = session.activeWorkflow ?? session.active_workflow;
-    const stacks = (session.stacks as Record<string, string[]>) ?? {};
-    const defaultStack = (session.defaultStack as string[]) ?? [];
+    const stacks = (session.stacks as Record<string, string[]> | undefined) ?? {};
+    const defaultStack = (session.defaultStack as string[] | undefined) ?? [];
 
     // Detect format: if stacks or defaultStack exist, we're in new format
     const isNewFormat = Object.keys(stacks).length > 0 || (defaultStack as unknown[]).length > 0;

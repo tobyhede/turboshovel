@@ -67,7 +67,7 @@ describe('workflow compiler', () => {
         }
       ];
       const machine = compileWorkflowToMachine(steps);
-      // @ts-ignore - states is internal to machine
+      // @ts-expect-error - states is internal to machine
       const stateIds = Object.keys(machine.config.states);
       expect(stateIds).toContain('step_1_1');
       expect(stateIds).toContain('step_1_2');
@@ -84,7 +84,7 @@ describe('workflow compiler', () => {
         }
       ];
       const machine = compileWorkflowToMachine(steps);
-      // @ts-ignore
+      // @ts-expect-error - accessing internal states property
       const stateIds = Object.keys(machine.config.states);
       expect(stateIds).toContain('step_1');
     });

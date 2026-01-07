@@ -3,7 +3,6 @@ import {
   createTestWorkspace,
   runCli,
   readSession,
-  getAgentActiveState,
   type TestWorkspace,
 } from '../helpers/test-utils.js';
 import { writeFile, mkdir } from 'fs/promises';
