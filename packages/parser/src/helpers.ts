@@ -128,6 +128,11 @@ export function parseAction(text: string): Action | null {
     return { type: 'STOP', message };
   }
 
+  if (trimmed === 'NEXT') {
+    // NEXT is shorthand for GOTO NEXT
+    return { type: 'GOTO', target: { step: 'NEXT' } };
+  }
+
   if (trimmed.startsWith('GOTO ')) {
     const targetStr = trimmed.slice(5).trim();
     const target = parseStepIdFromString(targetStr);
@@ -201,6 +206,11 @@ function parseNonRetryAction(input: string): NonRetryAction | null {
       rest = rest.slice(1, -1);
     }
     return { type: 'STOP', message: rest };
+  }
+
+  if (trimmed === 'NEXT') {
+    // NEXT is shorthand for GOTO NEXT
+    return { type: 'GOTO', target: { step: 'NEXT' } };
   }
 
   if (trimmed.startsWith('GOTO ')) {
@@ -290,6 +300,37 @@ function resolveAggregationMode(
   if (failModifier === 'ALL') return false;
 
   return true;
+}
+
+/**
+ * Check if an action contains a NEXT target
+ */
+function containsNEXT(action: Action | NonRetryAction): boolean {
+  if (action.type === 'GOTO' && 'target' in action) {
+    return action.target.step === 'NEXT';
+  }
+  if (action.type === 'RETRY' && 'then' in action) {
+    return containsNEXT(action.then);
+  }
+  return false;
+}
+
+/**
+ * Validate that NEXT is only used in dynamic step contexts
+ */
+export function validateNEXTUsage(conditionals: ParsedConditional[], isDynamicStep: boolean): void {
+  if (isDynamicStep) {
+    // NEXT is allowed in dynamic steps
+    return;
+  }
+
+  for (const conditional of conditionals) {
+    if (containsNEXT(conditional.action)) {
+      throw new WorkflowSyntaxError(
+        `NEXT action is only allowed in dynamic step contexts (steps with {N} prefix)`
+      );
+    }
+  }
 }
 
 export function convertToTransitions(conditionals: ParsedConditional[]): Transitions | null {

@@ -73,8 +73,8 @@ async function getSubstepWorkflow(cwd: string, stepId: StepId): Promise<string |
   const state = await manager.getActive();
   if (!state) return undefined;
 
-  // Dynamic references {N} are resolved at runtime, not at parse time
-  if (stepId.step === '{N}') {
+  // Dynamic references {N} and NEXT are resolved at runtime, not at parse time
+  if (stepId.step === '{N}' || stepId.step === 'NEXT') {
     return undefined;
   }
 

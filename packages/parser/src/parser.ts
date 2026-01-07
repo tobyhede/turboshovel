@@ -26,7 +26,8 @@ import {
   parseConditional,
   convertToTransitions,
   extractWorkflowList,
-  isPromptedCodeBlock
+  isPromptedCodeBlock,
+  validateNEXTUsage
 } from './helpers.js';
 import { validateWorkflow } from './validator.js';
 import { extractFrontmatter, nameFromFilename } from './frontmatter.js';
@@ -108,6 +109,10 @@ export function parseWorkflowDocument(markdown: string, filename?: string, optio
     if (currentStep?.pendingSubstep) {
       const ps = currentStep.pendingSubstep;
       const workflows = extractWorkflowList(ps.content);
+
+      // Validate NEXT usage before converting to transitions
+      validateNEXTUsage(ps.pendingConditionals, currentStep.isDynamic);
+
       const transitions = convertToTransitions(ps.pendingConditionals);
 
       const prompts = [...ps.prompts];
@@ -376,6 +381,9 @@ function finalizeStep(
   if (implicitText.trim()) {
     prompts.push({ text: implicitText.trim() });
   }
+
+  // Validate NEXT usage before converting to transitions
+  validateNEXTUsage(pendingConditionals, step.isDynamic);
 
   const transitions = convertToTransitions(pendingConditionals);
   const workflows = extractWorkflowList(step.content);
