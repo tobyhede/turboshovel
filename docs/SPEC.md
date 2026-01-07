@@ -14,8 +14,8 @@ Rundown is a format for defining executable workflows using Markdown.
 - [Step Definitions](#step-definitions)
 - [Transitions](#transitions)
 - [Actions](#actions)
-- [Conformance](conformance)
-- [Examples](#examples)
+- [Conformance](#9-conformance)
+- [Examples](#10-examples)
 
 ---
 
@@ -35,6 +35,7 @@ A Rundown document (`.runbook.md`) consists of an optional title and description
 
 ### Steps
 Steps are the fundamental units of execution. They are defined using H2 (`##`) headers.
+
 ---
 
 ## Step Definitions
@@ -46,17 +47,15 @@ A step always has an identifier and title.
 ## {Identifier} {Title}
 ```
 
-A step may contain ONE of the following following content types:
+A step may contain ONE of the following content types:
 
-- **Prompt**: prompt text and/or code block.
+- **Prompt**: prompt text and/or a code block.
 - **Substeps**: sequence of nested steps defined using H3 (`###`).
 - **Runbooks**: list of one or more runbooks.
-
 
 ### Identifiers
 Step identifiers define the sequence and structure of the runbook.
 Steps can be `dynamic`. Dynamic steps enable steps to be defined at runtime.
-
 
 | Format | Type | Description |
 |--------|------|-------------|
@@ -73,14 +72,13 @@ Steps can be `dynamic`. Dynamic steps enable steps to be defined at runtime.
 3. Only one dynamic step can be defined at each level.
 4. Dynamic identifiers (`{N}`, `{n}`) are placeholders.
 
-
 #### Dynamic Identifiers and Steps
 
-Dynamic steps are for repeating the same procedure across a set of targets until the work is COMPLETE.
-Think of a Dynamic Step as a loop construct for agents. Instead of hardcoding steps, a "template" is defined that can be repeated as many times as required.
+- Dynamic steps are for repeating the same procedure across a set of targets until the work is COMPLETE.
+- Think of a Dynamic Step as a **loop construct** for agents. Instead of hardcoding steps, a "template" is defined that can be repeated as many times as required.
+
 
 Example:
-
 ```markdown
 ## {N} For each assigned task
 ### {N}.1 Implement the code
@@ -96,13 +94,13 @@ A step may have a prompt and/or a code block.
 - **Prompt**: text instructions for the agent/user.
 - **Code Block**: code block containing a command.
 
-```markdown
+````markdown
 ## {Identifier} {Title}
 {Prompt}
-\`\`\`bash
+```bash
 {Command}
-\`\`\`
 ```
+````
 
 #### Code Blocks
 
@@ -111,7 +109,6 @@ The exit code of an executed command maps to the Step PASS/FAIL transition and a
 
 - **Executable**: code blocks may be executed automatically.
 - **Prompt Code Block**: A code block marked `prompt` is never executed - the block is output for the agent/user.
-
 
 | Tag                   | Type          | Behavior                                 |
 |-----------------------|---------------|------------------------------------------|
@@ -141,7 +138,6 @@ Substep identifiers must strictly match the parent Step ID prefix.
 #### Result Aggregation
 When a Step contains Substeps, the parent step's final outcome is derived from the collective results of its children. This aggregation is controlled by [Transitions](#transitions) using `ALL` or `ANY` modifiers.
 
-
 ---
 
 
@@ -155,11 +151,11 @@ Transitions define the control flow based on the result of a step or substep.
 ```
 
 **Result:**
-- `PASS`: The unit (step, substep, or command) succeeded.
-- `FAIL`: The unit failed.
+- `PASS` / `YES`: The unit (step, substep, or command) succeeded.
+- `FAIL` / `NO`: The unit failed.
 
 **Modifiers (Aggregation):**
-Used when a step has multiple child units (substeps or workflows).
+Used when a step has substeps or runbooks.
 - `ALL`: Trigger only if ALL units have this outcome.
 - `ANY`: Trigger if AT LEAST ONE unit has this outcome.
 
@@ -178,24 +174,23 @@ Actions determine what happens next.
 | `CONTINUE` | Proceed to the next unit in sequence. |
 | `COMPLETE` | Runbook has completed successfully. |
 | `STOP ["msg"]` | Halt execution immediately. Optional failure message. |
-| `GOTO {id \| NEXT}` | Jump to Step `id` or jump and create new dynamic step instance. |
+| `GOTO {id | NEXT}` | Jump to Step `id` or create new dynamic step instance. |
 | `RETRY [n] [action]` | Retry the current unit `n` times (default 1). If exhausted, perform `action`. |
-
 
 ### GOTO
 
 - The target Identifier must exist.
 - `GOTO {N}.M` navigates within the current dynamic instance to substep M.
-- Use `NEXT` to advance to the next dynamic instance.
-- `GOTO {N}` is invalid. Use `NEXT`.
+- `GOTO NEXT` advances to the next dynamic instance (N+1).
+- `GOTO {N}` is invalid. Use `GOTO NEXT`.
 
-
-| Target     | Valid From        | Description                                       |
-|------------|-------------------|---------------------------------------------------|
-| GOTO N     | Static step       | Jump to step N (must exist, N ≤ total steps)      |
-| GOTO N.M   | Any step          | Jump to substep M of step N                       |
-| GOTO {N}.M | Dynamic step {N}. | Jump to substep M within current dynamic instance |
-| GOTO NEXT  | Dynamic step {N}. | Create the next dynamic step instance (N+1)       |
+| Target       | Valid From        | Description                                       |
+|--------------|-------------------|---------------------------------------------------|
+| GOTO N       | Any step          | Jump to step N (must exist, N ≤ total steps)      |
+| GOTO N.M     | Any step          | Jump to substep M of step N                       |
+| GOTO {N}.M   | Dynamic step {N}. | Jump to substep M within current dynamic instance |
+| GOTO {N}.{M} | Dynamic step {N}. | Jump to substep M within current dynamic instance |
+| GOTO NEXT    | Dynamic step {N}. | Create the next dynamic step instance (N+1)       |
 
 ---
 
@@ -204,7 +199,7 @@ Actions determine what happens next.
 Parsers and executors must adhere to strict validation:
 
 1. **Hierarchy**: H1 is Metadata. H2 is Step. H3 is Substep. H4+ is invalid.
-2. **Step Pattern**: A workflow contains EITHER static steps OR exactly one dynamic step template.
+2. **Step Pattern**: A runbook contains EITHER static steps OR exactly one dynamic step template.
 3. **Sequencing**: Static steps must be strictly sequential (1, 2, 3...).
 4. **Exclusivity**: Units MUST contain exactly one of their permitted content types.
 5. **Recursion**: `RETRY` actions cannot contain another `RETRY`.

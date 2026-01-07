@@ -35,7 +35,7 @@ Do something else.
 
 ## Pattern 2: Dynamic Iteration
 
-Use `## {N}` dynamic step with `NEXT` action for batch processing.
+Use `## {N}` dynamic step with `GOTO NEXT` action for batch processing.
 
 **Use when:** Unknown number of iterations determined at runtime.
 
@@ -47,13 +47,13 @@ Process item {N} from the queue.
 **tsv yes:** More items remaining
 **tsv no:** Queue empty
 
-- PASS: NEXT
+- PASS: GOTO NEXT
 - FAIL: DONE
 ```
 
 **Characteristics:**
 - `{N}` is placeholder, runtime creates instances: 1, 2, 3...
-- `NEXT` advances to instance N+1
+- `GOTO NEXT` advances to instance N+1
 - `DONE` exits the loop
 - Cannot mix static and dynamic top-level steps
 
@@ -150,7 +150,7 @@ Can you fix without changing approach?
 - Dynamic substep `### 2.{n}` for task iteration with workflow list
 - GOTO loop (`GOTO 2`) for batch iteration
 - Validation as separate static steps
-- Cannot use `NEXT` (requires dynamic top-level step)
+- Cannot use `GOTO NEXT` (requires dynamic top-level step)
 
 ---
 
@@ -201,7 +201,7 @@ Static step delegates to multiple child workflows in sequence.
 
 **Problem:** Requires manual state tracking. Use dynamic steps instead.
 
-**Fix:** Use `## {N}` with `NEXT` action.
+**Fix:** Use `## {N}` with `GOTO NEXT` action.
 
 ### ❌ Mixing prose with workflow list
 
