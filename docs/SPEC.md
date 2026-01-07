@@ -114,6 +114,23 @@ The exit code of an executed command maps to the Step PASS/FAIL transition and a
 | `bash`, `sh`, `shell` | Executable    | Auto-run, exit code determines PASS/FAIL |
 | `prompt`              | Instructional | Output only, never executed              |
 
+#### Execution Semantics
+
+When executable code blocks run:
+
+| Aspect | Behavior |
+|--------|----------|
+| **Working Directory** | Project root (where `tsv run` was invoked) |
+| **Timeout** | None (commands can run indefinitely) |
+| **Environment** | Inherited from parent process |
+| **Result** | Exit code only (0 = PASS, non-zero = FAIL) |
+| **Output** | Streams to terminal (`stdio: 'inherit'`) |
+
+**Notes:**
+- stderr content does NOT affect pass/fail determination
+- For monorepo patterns, use explicit `cd`: `cd packages/foo && npm test`
+- Long-running commands should use agent-driven mode (`tsv pass`/`tsv fail`)
+
 ---
 
 ### Substeps

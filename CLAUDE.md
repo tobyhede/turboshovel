@@ -132,6 +132,14 @@ The `turboshovel` command is an alias for `tsv`.
 
 State persists in `.claude/turboshovel/runbooks/` (workflow files) and `.claude/turboshovel/session.json` (active workflow tracking). Both survive context clears.
 
+### Command Execution
+
+When runbooks auto-execute bash code blocks:
+- **Working directory**: Project root (where `tsv run` was invoked)
+- **Result**: Exit code only (0 = pass, non-zero = fail)
+- **Timeout**: None (use agent-driven mode for long commands)
+- **stderr**: Diagnostic only, doesn't affect pass/fail
+
 ## Commands
 
 - `/turboshovel:verify` - Verify with consensus-based collation
