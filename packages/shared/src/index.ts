@@ -1,4 +1,4 @@
-// @turboshovel/shared - Shared workflow and configuration library
+// @turboshovel/shared - Shared types and utilities
 
 // Core types and schemas
 export * from './types.js';
@@ -7,19 +7,8 @@ export {
   type ParseResult,
   parseHookInput,
   SessionStateSchema,
-  type ValidatedSessionState,
-  WorkflowStateSchema,
-  type ValidatedWorkflowState,
-  // Schema-first exports
-  StepNumberSchema,
-  StepIdSchema,
-  ActionSchema,
-  NonRetryActionSchema,
-  TransitionsSchema,
+  type ValidatedSessionState
 } from './schemas.js';
-
-// Workflow types
-export type { PendingStep } from './workflow/types.js';
 
 // Errors
 export * from './errors.js';
@@ -30,9 +19,3 @@ export * from './config.js';
 // Utilities
 export * from './utils.js';
 export * from './logger.js';
-
-// Workflow system
-export * from './workflow/index.js';
-
-// CLI output module
-export * from './cli/index.js';
