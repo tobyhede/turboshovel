@@ -98,44 +98,49 @@ Claude Code automatically sets `${CLAUDE_PLUGIN_ROOT}` to the correct path for e
 
 ## Rundown System
 
-Execute multi-step processes with state tracking.
+Execute multi-step processes with state tracking. Workflow orchestration is handled by the external `rundown` CLI.
 
 ### Installation
 
-Install the CLI globally:
+Install rundown CLI globally:
 
 ```bash
-npm install -g @turboshovel/cli
+npm install -g @rundown/cli
 ```
 
 ### Commands
 
 ```bash
-tsv run <file>       # Run a runbook
-tsv pass               # Mark current step as passed (evaluates PASS condition)
-tsv fail               # Mark current step as failed (evaluates FAIL condition)
-tsv goto <n>           # Jump to specific step number
-tsv status             # Show current state
-tsv stop               # Abort runbook
-tsv complete           # Mark complete
-tsv stash              # Pause enforcement
-tsv pop                # Resume enforcement
-tsv ls                 # List active runbooks
-tsv ls --all           # List available runbook files
-tsv check <file>       # Check runbook for errors
-tsv gate <name>        # Run a gate
+rundown run <file>     # Run a runbook
+rundown pass           # Mark current step as passed
+rundown fail           # Mark current step as failed
+rundown goto <n>       # Jump to specific step number
+rundown status         # Show current state
+rundown stop           # Abort runbook
+rundown complete       # Mark complete
+rundown stash          # Pause enforcement
+rundown pop            # Resume enforcement
+rundown ls             # List active runbooks
+rundown ls --all       # List available runbook files
+rundown check <file>   # Check runbook for errors
 ```
 
-The `turboshovel` command is an alias for `tsv`.
+### Turboshovel CLI
+
+Turboshovel CLI provides quality gates functionality:
+
+```bash
+turboshovel gate <name>  # Run a gate from config
+```
 
 ### State Persistence
 
-State persists in `.claude/turboshovel/runbooks/` (workflow files) and `.claude/turboshovel/session.json` (active workflow tracking). Both survive context clears.
+State persists in `.claude/rundown/runbooks/` (workflow files) and `.claude/rundown/session.json` (active workflow tracking). Both survive context clears.
 
 ### Command Execution
 
 When runbooks auto-execute bash code blocks:
-- **Working directory**: Project root (where `tsv run` was invoked)
+- **Working directory**: Project root (where `rundown run` was invoked)
 - **Result**: Exit code only (0 = pass, non-zero = fail)
 - **Timeout**: None (for long commands, use `--prompted` flag)
 - **stderr**: Diagnostic only, doesn't affect pass/fail
