@@ -36,7 +36,7 @@ describe('handleSubagentStop calls CLI', () => {
       cwd: testDir
     };
 
-    await handleSubagentStop(input);
+    handleSubagentStop(input);
 
     expect(mockExecSync).toHaveBeenCalledWith(
       'rundown pass --agent abc123',
@@ -52,7 +52,7 @@ describe('handleSubagentStop calls CLI', () => {
       cwd: testDir
     };
 
-    await handleSubagentStop(input);
+    handleSubagentStop(input);
 
     expect(mockExecSync).toHaveBeenCalledWith(
       'rundown fail --agent abc123',

@@ -7,8 +7,8 @@ import { handleSubagentStart } from '../workflow/hooks/subagent-start.js';
  * Wraps handleSubagentStart logic as a configurable gate.
  * Binds agents to pending tasks when workflow is active.
  */
-export async function execute(input: HookInput): Promise<GateResult> {
-  const result = await handleSubagentStart(input);
+export function execute(input: HookInput): GateResult {
+  const result = handleSubagentStart(input);
 
   if (result.violation) {
     return {

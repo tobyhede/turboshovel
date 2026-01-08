@@ -15,7 +15,7 @@ describe('workflow-subagent-stop gate', () => {
   });
 
   it('returns empty result when no context or violation', async () => {
-    mockHandleSubagentStop.mockResolvedValue({});
+    mockHandleSubagentStop.mockReturnValue({});
 
     const input: HookInput = {
       hook_event_name: 'SubagentStop',
@@ -23,13 +23,13 @@ describe('workflow-subagent-stop gate', () => {
       agent_id: 'agent-123'
     };
 
-    const result = await execute(input);
+    const result = execute(input);
 
     expect(result).toEqual({});
   });
 
   it('returns additionalContext when context provided', async () => {
-    mockHandleSubagentStop.mockResolvedValue({
+    mockHandleSubagentStop.mockReturnValue({
       context: 'Agent agent-123 complete.'
     });
 
@@ -39,7 +39,7 @@ describe('workflow-subagent-stop gate', () => {
       agent_id: 'agent-123'
     };
 
-    const result = await execute(input);
+    const result = execute(input);
 
     expect(result).toEqual({
       additionalContext: 'Agent agent-123 complete.'
@@ -47,7 +47,7 @@ describe('workflow-subagent-stop gate', () => {
   });
 
   it('returns block decision when violation occurs', async () => {
-    mockHandleSubagentStop.mockResolvedValue({
+    mockHandleSubagentStop.mockReturnValue({
       violation: 'SubagentStop for unknown agent: agent-xyz'
     });
 
@@ -57,7 +57,7 @@ describe('workflow-subagent-stop gate', () => {
       agent_id: 'agent-xyz'
     };
 
-    const result = await execute(input);
+    const result = execute(input);
 
     expect(result).toEqual({
       decision: 'block',

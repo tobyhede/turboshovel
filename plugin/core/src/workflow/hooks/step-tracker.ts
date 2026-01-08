@@ -9,7 +9,7 @@ export interface StepDispatchResult {
 /**
  * Track Step tool dispatches in workflow state
  */
-export async function trackStepDispatch(input: HookInput): Promise<StepDispatchResult> {
+export function trackStepDispatch(input: HookInput): StepDispatchResult {
   // Handle both Step and Task tool (Task for backward compatibility/LLM training)
   if (input.tool_name !== 'Step' && input.tool_name !== 'Task') {
     return {};

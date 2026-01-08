@@ -244,7 +244,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
   let accumulatedContext = contextContent ?? '';
 
   // Inject workflow context if active
-  const workflowContext = await getWorkflowContext(input.cwd);
+  const workflowContext = getWorkflowContext(input.cwd);
   if (workflowContext) {
     accumulatedContext = accumulatedContext
       ? accumulatedContext + '\n\n' + workflowContext

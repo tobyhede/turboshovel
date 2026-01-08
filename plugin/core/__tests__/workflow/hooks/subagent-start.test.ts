@@ -23,7 +23,7 @@ describe('handleSubagentStart', () => {
       cwd: testDir
     };
 
-    const result = await handleSubagentStart(input);
+    const result = handleSubagentStart(input);
 
     expect(result.violation).toBeUndefined();
     expect(result.context).toBeUndefined();
@@ -36,7 +36,7 @@ describe('handleSubagentStart', () => {
       agent_id: 'agent-xyz'
     };
 
-    const result = await handleSubagentStart(input);
+    const result = handleSubagentStart(input);
     expect(result).toBeDefined();
   });
 
@@ -47,7 +47,7 @@ describe('handleSubagentStart', () => {
       agent_id: 'agent-xyz'
     };
 
-    const result = await handleSubagentStart(input);
+    const result = handleSubagentStart(input);
 
     expect(result.violation).toBeUndefined();
     expect(result.context).toBeUndefined();
@@ -66,7 +66,7 @@ describe('handleSubagentStart calls CLI', () => {
         cwd: testDir
       };
 
-      const result = await handleSubagentStart(input);
+      const result = handleSubagentStart(input);
       expect(result.context ?? result.violation ?? !result.violation).toBeDefined();
     } finally {
       await fs.rm(testDir, { recursive: true, force: true });
@@ -94,7 +94,7 @@ describe('handleSubagentStart via synthetic dispatch', () => {
       subagent_type: 'code-review-agent'
     };
 
-    const result = await handleSubagentStart(input);
+    const result = handleSubagentStart(input);
     expect(result).toBeDefined();
   });
 });

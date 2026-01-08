@@ -7,8 +7,8 @@ import { handleSubagentStop } from '../workflow/hooks/subagent-stop.js';
  * Wraps handleSubagentStop logic as a configurable gate.
  * Handles agent completion and advances workflow state.
  */
-export async function execute(input: HookInput): Promise<GateResult> {
-  const result = await handleSubagentStop(input);
+export function execute(input: HookInput): GateResult {
+  const result = handleSubagentStop(input);
 
   if (result.violation) {
     return {

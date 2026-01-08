@@ -15,7 +15,7 @@ describe('workflow-step-tracker gate', () => {
   });
 
   it('returns empty result when no violation', async () => {
-    mockTrackStepDispatch.mockResolvedValue({
+    mockTrackStepDispatch.mockReturnValue({
       stepId: { step: 1 }
     });
 
@@ -25,14 +25,14 @@ describe('workflow-step-tracker gate', () => {
       cwd: '/test'
     };
 
-    const result = await execute(input);
+    const result = execute(input);
 
     expect(result).toEqual({});
     expect(mockTrackStepDispatch).toHaveBeenCalledWith(input);
   });
 
   it('returns block decision when violation occurs', async () => {
-    mockTrackStepDispatch.mockResolvedValue({
+    mockTrackStepDispatch.mockReturnValue({
       violation: 'Step description must start with StepId'
     });
 
@@ -42,7 +42,7 @@ describe('workflow-step-tracker gate', () => {
       cwd: '/test'
     };
 
-    const result = await execute(input);
+    const result = execute(input);
 
     expect(result).toEqual({
       decision: 'block',

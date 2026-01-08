@@ -17,7 +17,7 @@ function isExecSyncError(error: unknown): error is ExecSyncError {
 /**
  * Handle SubagentStart hook
  */
-export async function handleSubagentStart(input: HookInput): Promise<SubagentStartResult> {
+export function handleSubagentStart(input: HookInput): SubagentStartResult {
   if (input.hook_event_name !== 'SubagentStart') {
     return {};
   }

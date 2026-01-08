@@ -36,7 +36,7 @@ function parseAgentStatus(output?: string): 'pass' | 'fail' {
 /**
  * Handle SubagentStop hook
  */
-export async function handleSubagentStop(input: HookInput): Promise<SubagentStopResult> {
+export function handleSubagentStop(input: HookInput): SubagentStopResult {
   if (input.hook_event_name !== 'SubagentStop') {
     return {};
   }

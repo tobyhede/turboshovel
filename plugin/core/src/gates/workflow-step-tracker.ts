@@ -7,8 +7,8 @@ import { trackStepDispatch } from '../workflow/hooks/step-tracker.js';
  * Wraps trackStepDispatch logic as a configurable gate.
  * Enforces StepId prefix on Step tool descriptions when workflow is active.
  */
-export async function execute(input: HookInput): Promise<GateResult> {
-  const result = await trackStepDispatch(input);
+export function execute(input: HookInput): GateResult {
+  const result = trackStepDispatch(input);
 
   if (result.violation) {
     return {
