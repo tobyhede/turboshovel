@@ -30,8 +30,8 @@ function renderNonRetryAction(action: NonRetryAction): string {
  */
 export function renderTransitions(transitions: Transitions): string {
   const lines: string[] = [];
-  lines.push(`- PASS: ${renderAction(transitions.pass)}`);
-  lines.push(`- FAIL: ${renderAction(transitions.fail)}`);
+  lines.push(`- PASS: ${renderAction(transitions.pass.action)}`);
+  lines.push(`- FAIL: ${renderAction(transitions.fail.action)}`);
   return lines.join('\n');
 }
 

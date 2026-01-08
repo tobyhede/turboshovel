@@ -11,8 +11,8 @@ describe('GOTO NEXT action handling', () => {
       prompts: [],
       transitions: {
         all: true as const,
-        pass: { type: 'GOTO' as const, target: { step: 'NEXT' as const } },
-        fail: { type: 'STOP' as const }
+        pass: { kind: 'pass' as const, action: { type: 'GOTO' as const, target: { step: 'NEXT' as const } } },
+        fail: { kind: 'fail' as const, action: { type: 'STOP' as const } }
       }
     };
     const result = evaluatePassCondition(step);
@@ -28,8 +28,8 @@ describe('GOTO NEXT action handling', () => {
       prompts: [],
       transitions: {
         all: true as const,
-        pass: { type: 'CONTINUE' as const },
-        fail: { type: 'GOTO' as const, target: { step: 'NEXT' as const } }
+        pass: { kind: 'pass' as const, action: { type: 'CONTINUE' as const } },
+        fail: { kind: 'fail' as const, action: { type: 'GOTO' as const, target: { step: 'NEXT' as const } } }
       }
     };
     const result = evaluateFailCondition(step, 0);
@@ -42,15 +42,15 @@ describe('evaluateSubstepAggregation', () => {
   // PASS ALL mode (all: true)
   const passAllTransitions = {
     all: true,
-    pass: { type: 'CONTINUE' as const },
-    fail: { type: 'STOP' as const, message: 'Substep failed' }
+    pass: { kind: 'pass' as const, action: { type: 'CONTINUE' as const } },
+    fail: { kind: 'fail' as const, action: { type: 'STOP' as const, message: 'Substep failed' } }
   };
 
   // PASS ANY mode (all: false)
   const passAnyTransitions = {
     all: false,
-    pass: { type: 'CONTINUE' as const },
-    fail: { type: 'STOP' as const, message: 'All substeps failed' }
+    pass: { kind: 'pass' as const, action: { type: 'CONTINUE' as const } },
+    fail: { kind: 'fail' as const, action: { type: 'STOP' as const, message: 'All substeps failed' } }
   };
 
   describe('PASS ALL mode', () => {
@@ -116,8 +116,8 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       prompts: [],
       transitions: {
         all: true as const,
-        pass: { type: 'CONTINUE' as const },
-        fail: { type: 'RETRY' as const, max: 2, then: { type: 'GOTO' as const, target: { step: createStepNumber(5)! } as any } }
+        pass: { kind: 'pass' as const, action: { type: 'CONTINUE' as const } },
+        fail: { kind: 'fail' as const, action: { type: 'RETRY' as const, max: 2, then: { type: 'GOTO' as const, target: { step: createStepNumber(5)! } as any } } }
       }
     };
 
@@ -132,8 +132,8 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       prompts: [],
       transitions: {
         all: true as const,
-        pass: { type: 'CONTINUE' as const },
-        fail: { type: 'RETRY' as const, max: 1, then: { type: 'CONTINUE' as const } }
+        pass: { kind: 'pass' as const, action: { type: 'CONTINUE' as const } },
+        fail: { kind: 'fail' as const, action: { type: 'RETRY' as const, max: 1, then: { type: 'CONTINUE' as const } } }
       }
     };
 
@@ -148,8 +148,8 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       prompts: [],
       transitions: {
         all: true as const,
-        pass: { type: 'CONTINUE' as const },
-        fail: { type: 'RETRY' as const, max: 3, then: { type: 'STOP' as const, message: 'Build failed' } }
+        pass: { kind: 'pass' as const, action: { type: 'CONTINUE' as const } },
+        fail: { kind: 'fail' as const, action: { type: 'RETRY' as const, max: 3, then: { type: 'STOP' as const, message: 'Build failed' } } }
       }
     };
 
@@ -164,8 +164,8 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       prompts: [],
       transitions: {
         all: true as const,
-        pass: { type: 'CONTINUE' as const },
-        fail: { type: 'RETRY' as const, max: 2, then: { type: 'COMPLETE' as const } }
+        pass: { kind: 'pass' as const, action: { type: 'CONTINUE' as const } },
+        fail: { kind: 'fail' as const, action: { type: 'RETRY' as const, max: 2, then: { type: 'COMPLETE' as const } } }
       }
     };
 
@@ -180,8 +180,8 @@ describe('evaluateFailCondition with RETRY exhaustion', () => {
       prompts: [],
       transitions: {
         all: true as const,
-        pass: { type: 'CONTINUE' as const },
-        fail: { type: 'RETRY' as const, max: 3, then: { type: 'STOP' as const } }
+        pass: { kind: 'pass' as const, action: { type: 'CONTINUE' as const } },
+        fail: { kind: 'fail' as const, action: { type: 'RETRY' as const, max: 3, then: { type: 'STOP' as const } } }
       }
     };
 

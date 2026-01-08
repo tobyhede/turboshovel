@@ -195,19 +195,19 @@ describe('Transitions schema-derived type', () => {
   it('parses all:true (pass all) transitions', () => {
     const parsed = TransitionsSchema.parse({
       all: true,
-      pass: { type: 'CONTINUE' },
-      fail: { type: 'STOP' }
+      pass: { kind: 'pass', action: { type: 'CONTINUE' } },
+      fail: { kind: 'fail', action: { type: 'STOP' } }
     });
     expect(parsed.all).toBe(true);
-    expect(parsed.pass.type).toBe('CONTINUE');
-    expect(parsed.fail.type).toBe('STOP');
+    expect(parsed.pass.action.type).toBe('CONTINUE');
+    expect(parsed.fail.action.type).toBe('STOP');
   });
 
   it('parses all:false (pass any) transitions', () => {
     const parsed = TransitionsSchema.parse({
       all: false,
-      pass: { type: 'COMPLETE' },
-      fail: { type: 'RETRY', max: 2, then: { type: 'STOP' } }
+      pass: { kind: 'pass', action: { type: 'COMPLETE' } },
+      fail: { kind: 'fail', action: { type: 'RETRY', max: 2, then: { type: 'STOP' } } }
     });
     expect(parsed.all).toBe(false);
   });
@@ -215,9 +215,9 @@ describe('Transitions schema-derived type', () => {
   it('parses transitions with GOTO action', () => {
     const parsed = TransitionsSchema.parse({
       all: true,
-      pass: { type: 'GOTO', target: { step: 3 } },
-      fail: { type: 'STOP', message: 'Failed' }
+      pass: { kind: 'pass', action: { type: 'GOTO', target: { step: 3 } } },
+      fail: { kind: 'fail', action: { type: 'STOP', message: 'Failed' } }
     });
-    expect(parsed.pass.type).toBe('GOTO');
+    expect(parsed.pass.action.type).toBe('GOTO');
   });
 });

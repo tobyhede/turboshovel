@@ -22,8 +22,8 @@ export type WorkflowEvent =
  */
 const DEFAULT_TRANSITIONS: Transitions = {
   all: true,
-  pass: { type: 'CONTINUE' },
-  fail: { type: 'STOP' }
+  pass: { kind: 'pass', action: { type: 'CONTINUE' } },
+  fail: { kind: 'fail', action: { type: 'STOP' } }
 };
 
 /**
@@ -232,9 +232,9 @@ export function compileWorkflowToMachine(steps: Step[]) {
     states[config.id] = {
       on: {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        PASS: actionToTransition(config.transitions.pass, config.id, config.stepNum, config.substepId, steps),
+        PASS: actionToTransition(config.transitions.pass.action, config.id, config.stepNum, config.substepId, steps),
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        FAIL: actionToTransition(config.transitions.fail, config.id, config.stepNum, config.substepId, steps),
+        FAIL: actionToTransition(config.transitions.fail.action, config.id, config.stepNum, config.substepId, steps),
         RETRY: {
           actions: assign({
             retryCount: ({ context }) => (context.retryCount as number) + 1

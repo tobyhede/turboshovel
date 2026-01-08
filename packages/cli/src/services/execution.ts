@@ -201,8 +201,8 @@ export function isValidResult(r: string): r is 'pass' | 'fail' {
  */
 export function getStepRetryMax(step: Step): number {
   // eslint-disable-next-line @typescript-eslint/prefer-optional-chain, @typescript-eslint/no-unnecessary-condition
-  if (step.transitions && step.transitions.fail && step.transitions.fail.type === 'RETRY') {
-    return step.transitions.fail.max;
+  if (step.transitions && step.transitions.fail && step.transitions.fail.action.type === 'RETRY') {
+    return step.transitions.fail.action.max;
   }
   return 0; // No retry configured
 }

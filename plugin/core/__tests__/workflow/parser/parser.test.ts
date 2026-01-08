@@ -58,8 +58,8 @@ npm test
 
       const steps = parseWorkflow(markdown);
       expect(steps[0].transitions).toBeDefined();
-      expect(steps[0].transitions?.pass).toEqual({ type: 'CONTINUE' });
-      expect(steps[0].transitions?.fail).toEqual({ type: 'STOP', message: 'fix tests' });
+      expect(steps[0].transitions?.pass).toEqual({ kind: 'pass', action: { type: 'CONTINUE' } });
+      expect(steps[0].transitions?.fail).toEqual({ kind: 'fail', action: { type: 'STOP', message: 'fix tests' } });
     });
 
     test('parses GOTO action', () => {
@@ -87,7 +87,7 @@ echo "reached"
 `;
 
       const steps = parseWorkflow(markdown);
-      expect(steps[0].transitions?.pass).toEqual({ type: 'GOTO', target: { step: 3, substep: undefined } });
+      expect(steps[0].transitions?.pass).toEqual({ kind: 'pass', action: { type: 'GOTO', target: { step: 3, substep: undefined } } });
     });
   });
 
@@ -233,7 +233,7 @@ Process the item.
       expect(steps[0].prompts).toHaveLength(1);
       expect(steps[0].prompts[0].text).toBe('Process the item.');
       expect(steps[0].transitions).toBeDefined();
-      expect(steps[0].transitions?.pass).toEqual({ type: 'CONTINUE' });
+      expect(steps[0].transitions?.pass).toEqual({ kind: 'pass', action: { type: 'CONTINUE' } });
     });
   });
 

@@ -6,7 +6,11 @@ describe('evaluateTransitions', () => {
   const failAction = { type: 'STOP' as const };
 
   describe('all: true (PASS ALL + FAIL ANY)', () => {
-    const transitions: Transitions = { all: true, pass: passAction, fail: failAction };
+    const transitions: Transitions = {
+      all: true,
+      pass: { kind: 'pass', action: passAction },
+      fail: { kind: 'fail', action: failAction }
+    };
 
     it('returns pass when all complete', () => {
       const steps = [
@@ -26,7 +30,11 @@ describe('evaluateTransitions', () => {
   });
 
   describe('all: false (PASS ANY + FAIL ALL)', () => {
-    const transitions: Transitions = { all: false, pass: passAction, fail: failAction };
+    const transitions: Transitions = {
+      all: false,
+      pass: { kind: 'pass', action: passAction },
+      fail: { kind: 'fail', action: failAction }
+    };
 
     it('returns pass when any complete', () => {
       const steps = [
@@ -47,8 +55,16 @@ describe('evaluateTransitions', () => {
 
   describe('single task (unified behavior)', () => {
     it('works identically for both modes with single task', () => {
-      const pessimistic: Transitions = { all: true, pass: passAction, fail: failAction };
-      const optimistic: Transitions = { all: false, pass: passAction, fail: failAction };
+      const pessimistic: Transitions = {
+        all: true,
+        pass: { kind: 'pass', action: passAction },
+        fail: { kind: 'fail', action: failAction }
+      };
+      const optimistic: Transitions = {
+        all: false,
+        pass: { kind: 'pass', action: passAction },
+        fail: { kind: 'fail', action: failAction }
+      };
 
       const complete = [{ id: '1', status: 'complete' }] as StepState[];
       const stopped = [{ id: '1', status: 'stopped' }] as StepState[];

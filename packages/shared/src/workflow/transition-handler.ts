@@ -1,4 +1,4 @@
-import type { Step, SubstepState, Action, NonRetryAction, StepId } from './types.js';
+import type { Step, SubstepState, Action, NonRetryAction, StepId, Transitions } from './types.js';
 
 export interface ConditionResult {
   action: 'retry' | 'stopped' | 'goto' | 'continue' | 'complete';
@@ -21,7 +21,7 @@ export function evaluateFailCondition(
     };
   }
 
-  const failAction = step.transitions.fail;
+  const failAction = step.transitions.fail.action;
 
   switch (failAction.type) {
     case 'RETRY': {
@@ -69,7 +69,7 @@ export function evaluatePassCondition(step: Step): ConditionResult {
     return { action: 'continue' };
   }
 
-  const passAction = step.transitions.pass;
+  const passAction = step.transitions.pass.action;
 
   switch (passAction.type) {
     case 'COMPLETE':
@@ -101,7 +101,7 @@ export function evaluatePassCondition(step: Step): ConditionResult {
  */
 export function evaluateSubstepAggregation(
   substepStates: readonly SubstepState[],
-  transitions: { all: boolean; pass: Action; fail: Action }
+  transitions: Transitions
 ): ConditionResult | null {
   const allDone = substepStates.every(s => s.status === 'done');
   if (!allDone) return null;
@@ -110,11 +110,11 @@ export function evaluateSubstepAggregation(
 
   if (transitions.all) {
     const anyFailed = substepStates.some(s => s.result === 'fail');
-    if (anyFailed) return evaluateAction(transitions.fail);
-    return evaluateAction(transitions.pass);
+    if (anyFailed) return evaluateAction(transitions.fail.action);
+    return evaluateAction(transitions.pass.action);
   } else {
-    if (passCount > 0) return evaluateAction(transitions.pass);
-    return evaluateAction(transitions.fail);
+    if (passCount > 0) return evaluateAction(transitions.pass.action);
+    return evaluateAction(transitions.fail.action);
   }
 }
 

@@ -55,8 +55,8 @@ describe('renderTransitions', () => {
   it('renders pass and fail transitions', () => {
     const result = renderTransitions({
       all: true,
-      pass: { type: 'CONTINUE' },
-      fail: { type: 'STOP', message: 'failed' }
+      pass: { kind: 'pass', action: { type: 'CONTINUE' } },
+      fail: { kind: 'fail', action: { type: 'STOP', message: 'failed' } }
     });
     expect(result).toBe('- PASS: CONTINUE\n- FAIL: STOP "failed"');
   });
@@ -274,12 +274,12 @@ PASS ALL: CONTINUE
 FAIL ANY: STOP`;
 
     const parsed1 = parseWorkflow(original);
-    expect(parsed1[0].transitions?.pass).toEqual({ type: 'GOTO', target: { step: 2, substep: '1' } });
+    expect(parsed1[0].transitions?.pass).toEqual({ kind: 'pass', action: { type: 'GOTO', target: { step: 2, substep: '1' } } });
 
     const rendered = parsed1.map(renderStep).join('\n\n');
     const parsed2 = parseWorkflow(rendered);
 
-    expect(parsed2[0].transitions?.pass).toEqual({ type: 'GOTO', target: { step: 2, substep: '1' } });
+    expect(parsed2[0].transitions?.pass).toEqual({ kind: 'pass', action: { type: 'GOTO', target: { step: 2, substep: '1' } } });
   });
 
   it('validates substep workflows parsing', () => {

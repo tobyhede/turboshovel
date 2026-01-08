@@ -21,8 +21,8 @@ describe('workflow compiler', () => {
               prompts: [],
               transitions: {
                 all: true,
-                pass: { type: 'CONTINUE' },
-                fail: { type: 'GOTO', target: { step: '{N}', substep: '1' } }
+                pass: { kind: 'pass', action: { type: 'CONTINUE' } },
+                fail: { kind: 'fail', action: { type: 'GOTO', target: { step: '{N}', substep: '1' } } }
               }
             }
           ]
@@ -41,8 +41,8 @@ describe('workflow compiler', () => {
           prompts: [],
           transitions: {
             all: true,
-            pass: { type: 'GOTO', target: { step: 'NEXT' } },
-            fail: { type: 'STOP' }
+            pass: { kind: 'pass', action: { type: 'GOTO', target: { step: 'NEXT' } } },
+            fail: { kind: 'fail', action: { type: 'STOP' } }
           }
         }
       ];
@@ -98,8 +98,8 @@ describe('workflow compiler', () => {
           prompts: [],
           transitions: {
             all: true,
-            pass: { type: 'GOTO', target: { step: 'NEXT' } },
-            fail: { type: 'STOP' }
+            pass: { kind: 'pass', action: { type: 'GOTO', target: { step: 'NEXT' } } },
+            fail: { kind: 'fail', action: { type: 'STOP' } }
           }
         }
       ];

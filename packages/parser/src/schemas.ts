@@ -71,18 +71,34 @@ export const ActionSchema = z.union([
 export type Action = Readonly<z.output<typeof ActionSchema>>;
 
 /**
+ * Valid transition kinds
+ */
+export const TransitionKindSchema = z.enum(['pass', 'fail', 'yes', 'no']);
+export type TransitionKind = z.output<typeof TransitionKindSchema>;
+
+/**
+ * Zod schema for TransitionObject (individual transition with kind)
+ */
+export const TransitionObjectSchema = z.object({
+  kind: TransitionKindSchema,
+  action: ActionSchema,
+});
+
+export type TransitionObject = Readonly<z.output<typeof TransitionObjectSchema>>;
+
+/**
  * Zod schema for Transitions
  */
 export const TransitionsSchema = z.union([
   z.object({
     all: z.literal(true),
-    pass: ActionSchema,
-    fail: ActionSchema,
+    pass: TransitionObjectSchema,
+    fail: TransitionObjectSchema,
   }),
   z.object({
     all: z.literal(false),
-    pass: ActionSchema,
-    fail: ActionSchema,
+    pass: TransitionObjectSchema,
+    fail: TransitionObjectSchema,
   }),
 ]);
 

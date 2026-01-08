@@ -77,8 +77,8 @@ export function validateWorkflow(steps: readonly Step[]): ValidationError[] {
     }
 
     if (step.transitions) {
-      validateAction(step.transitions.pass, stepNum, undefined, steps, step, errors);
-      validateAction(step.transitions.fail, stepNum, undefined, steps, step, errors);
+      validateAction(step.transitions.pass.action, stepNum, undefined, steps, step, errors);
+      validateAction(step.transitions.fail.action, stepNum, undefined, steps, step, errors);
     }
 
     if (step.substeps) {
@@ -94,8 +94,8 @@ export function validateWorkflow(steps: readonly Step[]): ValidationError[] {
         }
 
         if (substep.transitions) {
-          validateAction(substep.transitions.pass, stepNum, substep.id, steps, step, errors);
-          validateAction(substep.transitions.fail, stepNum, substep.id, steps, step, errors);
+          validateAction(substep.transitions.pass.action, stepNum, substep.id, steps, step, errors);
+          validateAction(substep.transitions.fail.action, stepNum, substep.id, steps, step, errors);
         }
       }
     }

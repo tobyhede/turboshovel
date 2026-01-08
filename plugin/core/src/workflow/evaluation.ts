@@ -9,8 +9,8 @@ export function evaluateTransitions(steps: readonly StepState[], transitions: Tr
 
   switch (transitions.all) {
     case true:
-      return anyStopped ? transitions.fail : transitions.pass;
+      return anyStopped ? transitions.fail.action : transitions.pass.action;
     case false:
-      return anyComplete ? transitions.pass : transitions.fail;
+      return anyComplete ? transitions.pass.action : transitions.fail.action;
   }
 }

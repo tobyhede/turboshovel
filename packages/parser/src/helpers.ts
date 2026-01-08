@@ -137,6 +137,10 @@ export function parseAction(text: string): Action | null {
     return { type: 'GOTO', target };
   }
 
+  if (trimmed === 'NEXT') {
+    return { type: 'GOTO', target: { step: 'NEXT' as const } };
+  }
+
   if (trimmed === 'RETRY') {
     return { type: 'RETRY', max: 1, then: { type: 'STOP' } };
   }
@@ -346,15 +350,27 @@ export function convertToTransitions(conditionals: ParsedConditional[]): Transit
   const all = resolveAggregationMode(passModifier, failModifier);
 
   if (passAction && failAction) {
-    return { all, pass: passAction, fail: failAction };
+    return {
+      all,
+      pass: { kind: 'pass', action: passAction },
+      fail: { kind: 'fail', action: failAction },
+    };
   }
 
   if (passAction && !failAction) {
-    return { all, pass: passAction, fail: { type: 'STOP' } };
+    return {
+      all,
+      pass: { kind: 'pass', action: passAction },
+      fail: { kind: 'fail', action: { type: 'STOP' } },
+    };
   }
 
   if (!passAction && failAction) {
-    return { all, pass: { type: 'CONTINUE' }, fail: failAction };
+    return {
+      all,
+      pass: { kind: 'pass', action: { type: 'CONTINUE' } },
+      fail: { kind: 'fail', action: failAction },
+    };
   }
 
   return null;
