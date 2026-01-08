@@ -1,8 +1,8 @@
 # Turboshovel
 
-**Automate context, enforce quality, and guide agents.**
+**Automate context and enforce quality.**
 
-Turboshovel is a Claude Code plugin that turns your documentation into active agent instructions. It injects context when it matters, enforces quality checks before code is committed, and guides agents through complex **Runbooks**.
+Turboshovel is a Claude Code plugin that turns your documentation into active agent instructions. It injects context when it matters and enforces quality checks before code is committed.
 
 ## Features
 
@@ -11,10 +11,6 @@ Turboshovel is a Claude Code plugin that turns your documentation into active ag
 Simply create markdown files in `.claude/context/` and they will be injected into the agent's context exactly when needed—when a session starts, when a command runs, or when a tool is used.
 *Zero configuration required.*
 
-### 📋 Runbooks (Guided Workflows)
-**Keep agents on track with executable plans.**
-Define step-by-step processes in simple Markdown using the **Rundown** format. Turboshovel enforces the process, ensuring no steps are skipped and criteria are met before moving forward.
-
 ### 🛡️ Quality Gates
 **Prevent mistakes with automatic checks.**
 Configure gates to run linting, testing, or custom scripts. Block the agent from proceeding if quality checks fail.
@@ -22,15 +18,16 @@ Configure gates to run linting, testing, or custom scripts. Block the agent from
 
 ## Installation
 
-### Plugin (Required for Context & Gates)
+### Plugin
 ```bash
 claude plugin marketplace add tobyhede/turboshovel
 claude plugin install turboshovel@turboshovel
 ```
 
-### CLI (Required for Runbooks)
+### Rundown CLI (Optional - for guided workflows)
+Turboshovel integrates with the [Rundown CLI](https://github.com/tobyhede/rundown) for guided workflow execution:
 ```bash
-npm install -g @turboshovel/cli
+npm install -g @rundown/cli
 ```
 
 ## Quick Start
@@ -51,15 +48,7 @@ EOF
 ```
 *Now, every time you start a session, the agent knows the rules.*
 
-### 2. Execute a Runbook
-Use a Runbook to guide the agent through a standard process.
-
-**Run an existing example:**
-```bash
-tsv run examples/runbooks/simple.runbook.md
-```
-
-### 3. Add Safety Nets (Quality Gates)
+### 2. Add Safety Nets (Quality Gates)
 Ensure the agent doesn't break the build.
 
 **Create configuration:**
@@ -84,14 +73,13 @@ Ensure the agent doesn't break the build.
 
 ## Documentation
 
-- **[RUNDOWN.md](docs/RUNDOWN.md)** - detailed guide to the Rundown format and execution.
 - **[SETUP.md](SETUP.md)** - full configuration guide for gates and hooks.
+- **[CONVENTIONS.md](CONVENTIONS.md)** - context file naming conventions.
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - deep dive into how Turboshovel works.
-- **[VERIFICATION.md](docs/VERIFICATION.md)** - guide to the "Verify by Consensus" skill.
+- **[TYPESCRIPT.md](TYPESCRIPT.md)** - custom TypeScript gates.
 
 ## Examples
-Check the `examples/` directory for ready-to-use configurations and Runbooks:
-- `examples/runbooks/simple.runbook.md` - Minimal Runbook.
+Check the `examples/` directory for ready-to-use configurations:
 - `examples/context/` - Example context files.
 - `examples/strict.json` - Strict quality gate configuration.
 

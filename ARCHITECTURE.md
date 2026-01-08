@@ -117,20 +117,11 @@ plugin/
         ├── gates/              # Built-in TypeScript gates
         │   ├── index.ts        # Gate registry
         │   └── plugin-path.ts
-        └── workflow/           # Workflow system
-            ├── index.ts        # Workflow exports
-            ├── state.ts        # Workflow state management
-            ├── types.ts        # Workflow type definitions
+        └── workflow/           # Rundown CLI integration
             ├── context.ts      # Workflow context injection
-            ├── compiler.ts     # XState Machine compiler
-            ├── step-id.ts      # Step ID parsing
-            ├── parser/         # Workflow file parsing
-            │   ├── index.ts
-            │   ├── parser.ts
-            │   ├── helpers.ts
-            │   └── types.ts
-            └── hooks/          # Workflow hook handlers
+            └── hooks/          # Workflow hook handlers (call rundown CLI)
                 ├── index.ts
+                ├── rundown.ts      # Rundown CLI wrapper
                 ├── subagent-start.ts
                 ├── subagent-stop.ts
                 └── step-tracker.ts
@@ -355,10 +346,6 @@ Gate name maps to export: `"plugin-path"` → `gates.pluginPath.execute()`
 
 ## Session State
 
-The hook system maintains two separate session state mechanisms:
-
-### Hook Session State
-
 Cross-hook coordination state for context tracking:
 
 ```typescript
@@ -375,21 +362,9 @@ interface SessionState {
 
 State persists in `.claude/session/state.json`.
 
-### Workflow Session State
+### Rundown Integration
 
-Active workflow tracking (separate from hook session):
-
-State persists in `.claude/turboshovel/session.json` and tracks:
-- Active workflow ID
-- Stashed workflow ID (for paused enforcement)
-- Current step
-- Workflow variables
-
-**Workflow stashing:** Use `tsv stash` to pause enforcement for ad-hoc work, then `tsv pop` to resume. When stashed, workflow hooks pass through silently without enforcing step prefixes.
-
-**Important:** These are two distinct session mechanisms:
-- **Hook session** (`.claude/session/state.json`) - tracks active commands, edited files, etc.
-- **Workflow session** (`.claude/turboshovel/session.json`) - tracks active workflow state
+Turboshovel integrates with the external [Rundown CLI](https://github.com/tobyhede/rundown) for workflow execution. Workflow state is managed entirely by Rundown (persists in `.claude/rundown/`). Turboshovel hooks call `rundown` CLI commands to report agent progress without managing workflow state directly.
 
 ## Logging
 
