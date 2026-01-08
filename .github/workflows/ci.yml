@@ -5,6 +5,15 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  repository_dispatch:
+    types: [rundown-updated]
+  workflow_dispatch:
+    inputs:
+      rundown_ref:
+        description: 'Rundown git ref (branch/tag/SHA) to test against. Leave empty for current dependency.'
+        required: false
+        default: ''
+        type: string
 
 jobs:
   test:
@@ -28,8 +37,31 @@ jobs:
           cache: 'npm'
           cache-dependency-path: plugin/core/package-lock.json
 
-      - name: Install dependencies
+      - name: Validate dispatch payload
+        if: github.event_name == 'repository_dispatch'
+        run: |
+          if [ -z "${{ github.event.client_payload.sha }}" ]; then
+            echo "ERROR: repository_dispatch missing required 'sha' in client_payload"
+            exit 1
+          fi
+        working-directory: .
+
+      - name: Override @rundown/cli with git ref
+        if: inputs.rundown_ref != '' || github.event_name == 'repository_dispatch'
+        run: |
+          REF="${{ inputs.rundown_ref || github.event.client_payload.sha || 'main' }}"
+          echo "Installing @rundown/cli from git ref: $REF"
+          # Use GitPkg to install from monorepo subdirectory (npm can't do this natively)
+          npm pkg set "dependencies.@rundown/cli=https://gitpkg.now.sh/tobyhede/rundown/packages/cli?${REF}"
+          cat package.json | grep rundown
+
+      - name: Install dependencies (standard)
+        if: inputs.rundown_ref == '' && github.event_name != 'repository_dispatch'
         run: npm ci
+
+      - name: Install dependencies (with override)
+        if: inputs.rundown_ref != '' || github.event_name == 'repository_dispatch'
+        run: npm install
 
       - name: Build
         run: npm run build
@@ -42,3 +74,9 @@ jobs:
 
       - name: Test with coverage
         run: npm test -- --coverage
+
+      - name: Report rundown version
+        if: inputs.rundown_ref != '' || github.event_name == 'repository_dispatch'
+        run: |
+          echo "Tested with @rundown/cli:"
+          npm ls @rundown/cli || true
