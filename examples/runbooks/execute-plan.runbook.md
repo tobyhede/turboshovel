@@ -2,15 +2,14 @@
 
 Execute an implementation plan in batches with review checkpoints.
 
-## 1. Load plan
+ ## 1. Review plan
 
-Read and validate the implementation plan.
+Read and review the implementation plan.
 
-**tsv pass:** Plan is clear, tasks well-defined, batches identified
-**tsv fail:** Plan has gaps, ambiguities, or blocking concerns
+Is the plan clear and complete?
 
-- PASS: CONTINUE
-- FAIL: STOP "STOPPED: Plan validation failed"
+- YES: CONTINUE
+- NO: STOP
 
 ## 2. Execute batch
 

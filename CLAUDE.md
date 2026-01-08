@@ -137,7 +137,7 @@ State persists in `.claude/turboshovel/runbooks/` (workflow files) and `.claude/
 When runbooks auto-execute bash code blocks:
 - **Working directory**: Project root (where `tsv run` was invoked)
 - **Result**: Exit code only (0 = pass, non-zero = fail)
-- **Timeout**: None (use agent-driven mode for long commands)
+- **Timeout**: None (for long commands, use `--prompted` flag)
 - **stderr**: Diagnostic only, doesn't affect pass/fail
 
 ## Commands

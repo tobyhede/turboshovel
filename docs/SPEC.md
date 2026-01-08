@@ -129,7 +129,7 @@ When executable code blocks run:
 **Notes:**
 - stderr content does NOT affect pass/fail determination
 - For monorepo patterns, use explicit `cd`: `cd packages/foo && npm test`
-- Long-running commands should use agent-driven mode (`tsv pass`/`tsv fail`)
+- For long-running commands, use `--prompted` and signal with `tsv pass`/`tsv fail`
 
 ---
 

@@ -72,3 +72,38 @@ describe('renderStepForCLI', () => {
     expect(result).not.toContain('Substep');
   });
 });
+
+describe('renderStepForCLI with response prompt', () => {
+  it('should show Yes/No prompt for yes-no transitions', () => {
+    const step: Step = {
+      number: createStepNumber(1)!,
+      isDynamic: false,
+      description: 'Review plan',
+      prompts: [{ text: 'Is the plan clear?' }],
+      transitions: {
+        all: true,
+        pass: { kind: 'yes', action: { type: 'CONTINUE' } },
+        fail: { kind: 'no', action: { type: 'STOP' } },
+      },
+    };
+    const result = renderStepForCLI(step);
+    expect(result).toContain('Yes/No? (tsv yes | tsv no)');
+  });
+
+  it('should show Pass/Fail prompt for pass-fail transitions', () => {
+    const step: Step = {
+      number: createStepNumber(1)!,
+      isDynamic: false,
+      description: 'Run tests',
+      prompts: [],
+      command: { code: 'npm test' },
+      transitions: {
+        all: true,
+        pass: { kind: 'pass', action: { type: 'CONTINUE' } },
+        fail: { kind: 'fail', action: { type: 'STOP' } },
+      },
+    };
+    const result = renderStepForCLI(step);
+    expect(result).toContain('Pass/Fail? (tsv pass | tsv fail)');
+  });
+});

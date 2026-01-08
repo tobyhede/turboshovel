@@ -26,6 +26,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@rundown/cli": "file:../../../rundown/packages/cli",
     "@turboshovel/shared": "*",
     "commander": "^14.0.2",
     "js-yaml": "^4.1.1",

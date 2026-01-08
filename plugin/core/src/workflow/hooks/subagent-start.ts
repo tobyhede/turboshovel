@@ -1,5 +1,4 @@
 import { execSync } from 'child_process';
-import { WorkflowStateManager } from '@turboshovel/shared';
 import type { HookInput } from '@turboshovel/shared';
 
 export interface SubagentStartResult {
@@ -28,46 +27,9 @@ export async function handleSubagentStart(input: HookInput): Promise<SubagentSta
     return {};
   }
 
-  const manager = new WorkflowStateManager(input.cwd);
-
   try {
-    const state = await manager.getActive();
-    if (!state) {
-      return handleCliCall(input.cwd, agentId);
-    }
-
-    const pending = state.pendingSteps[0];
-
-    const output = execSync(`tsv run --agent ${agentId}`, {
+    const output = execSync(`rundown run --agent ${agentId}`, {
       cwd: input.cwd,
-      encoding: 'utf8',
-      stdio: 'pipe'
-    });
-
-    if (pending.stepId.substep) {
-      await manager.bindSubstepAgent(state.id, pending.stepId.substep, agentId);
-    }
-
-    const context = parseStartAgentOutput(output, agentId);
-    return { context };
-  } catch (error) {
-    if (!isExecSyncError(error)) {
-      return {};
-    }
-    const stderr = error.stderr?.toString() ?? '';
-    if (stderr.includes('No pending step')) {
-      return {
-        violation: 'SubagentStart with no pending step. Step dispatch must precede agent start.'
-      };
-    }
-    return {};
-  }
-}
-
-function handleCliCall(cwd: string, agentId: string): SubagentStartResult {
-  try {
-    const output = execSync(`tsv run --agent ${agentId}`, {
-      cwd,
       encoding: 'utf8',
       stdio: 'pipe'
     });
@@ -107,8 +69,8 @@ function parseStartAgentOutput(output: string, agentId: string): string {
   }
 
   lines.push('', '## Commands', '');
-  lines.push(`tsv pass --agent ${agentId}`);
-  lines.push(`tsv fail --agent ${agentId}`);
+  lines.push(`rundown pass --agent ${agentId}`);
+  lines.push(`rundown fail --agent ${agentId}`);
   lines.push('');
 
   return lines.join('\n');

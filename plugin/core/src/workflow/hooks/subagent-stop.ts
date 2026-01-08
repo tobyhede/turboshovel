@@ -1,8 +1,5 @@
 // src/workflow/hooks/subagent-stop.ts
-import {
-  WorkflowStateManager,
-  type HookInput
-} from '@turboshovel/shared';
+import type { HookInput } from '@turboshovel/shared';
 import { execSync as nodeExecSync } from 'child_process';
 
 export interface SubagentStopResult {
@@ -48,25 +45,10 @@ export async function handleSubagentStop(input: HookInput): Promise<SubagentStop
   if (!agentId) return {};
 
   const status = parseAgentStatus(input.output);
-  const passFlag = status === 'pass' ? '--pass' : '--fail';
+  const command = status === 'pass' ? 'pass' : 'fail';
 
   try {
-    const manager = new WorkflowStateManager(input.cwd);
-    const state = await manager.getActive();
-
-    if (state?.agentBindings[agentId]) {
-      const binding = state.agentBindings[agentId];
-      if (binding.stepId.substep) {
-        await manager.completeSubstep(
-          state.id,
-          binding.stepId.substep,
-          status
-        );
-      }
-    }
-
-    const command = passFlag === '--pass' ? 'pass' : 'fail';
-    const output = execSyncImpl(`tsv ${command} --agent ${agentId}`, {
+    const output = execSyncImpl(`rundown ${command} --agent ${agentId}`, {
       cwd: input.cwd,
       encoding: 'utf8',
       stdio: 'pipe'

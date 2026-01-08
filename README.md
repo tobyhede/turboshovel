@@ -19,6 +19,20 @@ Define step-by-step processes in simple Markdown using the **Rundown** format. T
 **Prevent mistakes with automatic checks.**
 Configure gates to run linting, testing, or custom scripts. Block the agent from proceeding if quality checks fail.
 
+
+## Installation
+
+### Plugin (Required for Context & Gates)
+```bash
+claude plugin marketplace add tobyhede/turboshovel
+claude plugin install turboshovel@turboshovel
+```
+
+### CLI (Required for Runbooks)
+```bash
+npm install -g @turboshovel/cli
+```
+
 ## Quick Start
 
 ### 1. Onboard Your Agent (Context Injection)
@@ -67,18 +81,6 @@ Ensure the agent doesn't break the build.
 ```
 *Now, the agent cannot finish a sub-task if tests fail.*
 
-## Installation
-
-### Plugin (Required for Context & Gates)
-```bash
-claude plugin marketplace add tobyhede/turboshovel
-claude plugin install turboshovel@turboshovel
-```
-
-### CLI (Required for Runbooks)
-```bash
-npm install -g @turboshovel/cli
-```
 
 ## Documentation
 

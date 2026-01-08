@@ -11,9 +11,10 @@ export {
   decrementStepNumber,
   MAX_STEP_NUMBER
 } from './types.js';
-export type { 
-  ParsedConditional, 
+export type {
+  ParsedConditional,
   AggregationModifier,
+  ConditionKind,
   StepNumber
 } from './types.js';
 export type * from './ast.js';

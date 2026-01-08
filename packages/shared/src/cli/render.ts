@@ -2,8 +2,8 @@ import type { Step } from '../workflow/types.js';
 
 /**
  * Render step for CLI output.
- * Order: heading → prompts → command block
- * Excludes: transitions, substeps (not needed for CLI display)
+ * Order: heading → prompts → command block → response prompt
+ * Excludes: transitions details, substeps (not needed for CLI display)
  */
 export function renderStepForCLI(step: Step): string {
   const lines: string[] = [];
@@ -23,6 +23,17 @@ export function renderStepForCLI(step: Step): string {
     lines.push('```bash');
     lines.push(step.command.code);
     lines.push('```');
+  }
+
+  // Response prompt based on transition kinds
+  if (step.transitions) {
+    const isYesNo = step.transitions.pass.kind === 'yes' || step.transitions.fail.kind === 'no';
+    lines.push('');
+    if (isYesNo) {
+      lines.push('Yes/No? (tsv yes | tsv no)');
+    } else {
+      lines.push('Pass/Fail? (tsv pass | tsv fail)');
+    }
   }
 
   return lines.join('\n');

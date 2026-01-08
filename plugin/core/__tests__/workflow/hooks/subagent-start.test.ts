@@ -1,17 +1,10 @@
 import {
   handleSubagentStart
 } from '../../../src/workflow/hooks/subagent-start.js';
-import { WorkflowStateManager, createStepNumber, type Step, type StepNumber } from '@turboshovel/shared';
 import type { HookInput } from '@turboshovel/shared';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
-
-const mockSteps: Step[] = [{
-  number: 1 as StepNumber,
-  description: 'Initial step',
-  prompts: []
-}];
 
 describe('handleSubagentStart', () => {
   let testDir: string;
@@ -62,7 +55,7 @@ describe('handleSubagentStart', () => {
 });
 
 describe('handleSubagentStart calls CLI', () => {
-  it('should call tsv run --agent with correct parameters', async () => {
+  it('should call rundown run --agent with correct parameters', async () => {
     const testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'subagent-cli-test-'));
     try {
       const { handleSubagentStart } = await import('../../../src/workflow/hooks/subagent-start.js');
@@ -106,44 +99,3 @@ describe('handleSubagentStart via synthetic dispatch', () => {
   });
 });
 
-describe('handleSubagentStart with substeps', () => {
-  let testDir: string;
-
-  beforeEach(async () => {
-    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'subagent-substep-test-'));
-  });
-
-  afterEach(async () => {
-    await fs.rm(testDir, { recursive: true, force: true });
-  });
-
-  it('binds agent to substep and updates substepState', async () => {
-    const manager = new WorkflowStateManager(testDir);
-
-    const state = await manager.create('test.runbook.md', { steps: mockSteps });
-    await manager.initializeSubsteps(state.id, [
-      { id: '1', description: 'First', isDynamic: false }
-    ]);
-    await manager.pushWorkflow(state.id);
-
-    await manager.pushPendingStep(state.id, {
-      stepId: { step: createStepNumber(1)!, substep: '1' }
-    });
-
-    const input: HookInput = {
-      hook_event_name: 'SubagentStart',
-      agent_id: 'agent-123',
-      cwd: testDir
-    };
-
-    await handleSubagentStart(input);
-
-    const updated = await manager.load(state.id);
-    expect(updated?.substepStates?.[0]).toEqual({
-      id: '1',
-      status: 'running',
-      agentId: 'agent-123',
-      result: undefined
-    });
-  });
-});

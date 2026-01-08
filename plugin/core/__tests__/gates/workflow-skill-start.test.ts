@@ -106,7 +106,7 @@ workflow: verify.runbook.md
         additionalContext: 'Started workflow: verify.runbook.md'
       });
       expect(mockExecSync).toHaveBeenCalledWith(
-        'tsv run verify.runbook.md',
+        'rundown run verify.runbook.md',
         expect.objectContaining({ cwd: '/test' })
       );
 

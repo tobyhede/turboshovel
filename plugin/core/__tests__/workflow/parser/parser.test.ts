@@ -427,22 +427,22 @@ Some content
   });
 
   describe('NEXT action validation', () => {
-    it('allows NEXT in dynamic step context', () => {
+    it('allows GOTO NEXT in dynamic step context', () => {
       const markdown = `
 ## {N}. Process item
 
 ### {N}.1 Work
-- PASS: NEXT
+- PASS: GOTO NEXT
 - FAIL: STOP
 `;
       const steps = parseWorkflow(markdown);
       expect(steps[0].isDynamic).toBe(true);
     });
 
-    it('rejects NEXT in static step context', () => {
+    it('rejects GOTO NEXT in static step context', () => {
       const markdown = `
 ## 1. Static step
-- PASS: NEXT
+- PASS: GOTO NEXT
 - FAIL: STOP
 `;
       expect(() => parseWorkflow(markdown)).toThrow(WorkflowSyntaxError);

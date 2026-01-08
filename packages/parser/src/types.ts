@@ -48,10 +48,15 @@ export class WorkflowSyntaxError extends Error {
 }
 
 /**
+ * Condition type in parsed conditionals
+ */
+export type ConditionKind = 'pass' | 'fail' | 'yes' | 'no';
+
+/**
  * Parsed conditional line (internal to parser)
  */
 export interface ParsedConditional {
-  type: 'pass' | 'fail';
+  type: ConditionKind;
   action: Action;
   modifier: AggregationModifier;
   raw: string;
