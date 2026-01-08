@@ -1,6 +1,6 @@
 // src/workflow/hooks/step-tracker.ts
-import { execSync } from 'child_process';
 import type { HookInput } from '@turboshovel/shared';
+import { rundown } from './rundown.js';
 
 export interface StepDispatchResult {
   violation?: string;
@@ -24,10 +24,8 @@ export function trackStepDispatch(input: HookInput): StepDispatchResult {
       };
     }
 
-    const cmd = `rundown run --step "${description}"`;
-
     try {
-      execSync(cmd, { cwd: input.cwd, stdio: 'pipe' });
+      rundown(`run --step "${description}"`, input.cwd);
       return {};
     } catch {
       return {};

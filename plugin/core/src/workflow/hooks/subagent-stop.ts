@@ -1,18 +1,14 @@
 // src/workflow/hooks/subagent-stop.ts
 import type { HookInput } from '@turboshovel/shared';
-import { execSync as nodeExecSync } from 'child_process';
+import { rundown, setExecSync } from './rundown.js';
 
 export interface SubagentStopResult {
   context?: string;
   violation?: string;
 }
 
-// Allow dependency injection for testing
-let execSyncImpl = nodeExecSync;
-
-export function setExecSync(fn: typeof nodeExecSync): void {
-  execSyncImpl = fn;
-}
+// Re-export for testing
+export { setExecSync };
 
 /**
  * Pattern for parsing STATUS field from agent output.
@@ -48,11 +44,7 @@ export function handleSubagentStop(input: HookInput): SubagentStopResult {
   const command = status === 'pass' ? 'pass' : 'fail';
 
   try {
-    const output = execSyncImpl(`rundown ${command} --agent ${agentId}`, {
-      cwd: input.cwd,
-      encoding: 'utf8',
-      stdio: 'pipe'
-    });
+    const output = rundown(`${command} --agent ${agentId}`, input.cwd);
 
     const context = formatCompletionContext(output, agentId, status);
     return { context };

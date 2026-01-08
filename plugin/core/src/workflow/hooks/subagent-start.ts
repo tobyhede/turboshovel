@@ -1,5 +1,5 @@
-import { execSync } from 'child_process';
 import type { HookInput } from '@turboshovel/shared';
+import { rundown } from './rundown.js';
 
 export interface SubagentStartResult {
   context?: string;
@@ -28,11 +28,7 @@ export function handleSubagentStart(input: HookInput): SubagentStartResult {
   }
 
   try {
-    const output = execSync(`rundown run --agent ${agentId}`, {
-      cwd: input.cwd,
-      encoding: 'utf8',
-      stdio: 'pipe'
-    });
+    const output = rundown(`run --agent ${agentId}`, input.cwd);
 
     const context = parseStartAgentOutput(output, agentId);
     return { context };
