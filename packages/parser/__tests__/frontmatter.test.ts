@@ -106,7 +106,7 @@ describe('nameFromFilename()', () => {
   });
 
   it('handles case-insensitive extension matching', () => {
-    const filename = 'Test.WORKFLOW.MD';
+    const filename = 'Test.RUNBOOK.MD';
     const name = nameFromFilename(filename);
     expect(name).toBe('Test');
   });

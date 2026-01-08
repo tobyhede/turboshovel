@@ -7,9 +7,9 @@ describe('parseAction GOTO NEXT', () => {
     expect(result).toEqual({ type: 'GOTO', target: { step: 'NEXT' } });
   });
 
-  it('rejects standalone NEXT', () => {
+  it('parses standalone NEXT as GOTO NEXT', () => {
     const result = parseAction('NEXT');
-    expect(result).toBeNull();
+    expect(result).toEqual({ type: 'GOTO', target: { step: 'NEXT' } });
   });
 
   it('parses RETRY 3 GOTO NEXT', () => {
@@ -104,12 +104,12 @@ describe('parseAction RETRY with exhaustion', () => {
     });
   });
 
-  it('parses RETRY 2 DONE', () => {
-    const result = parseAction('RETRY 2 DONE');
+  it('parses RETRY 2 COMPLETE', () => {
+    const result = parseAction('RETRY 2 COMPLETE');
     expect(result).toEqual({
       type: 'RETRY',
       max: 2,
-      then: { type: 'DONE' }
+      then: { type: 'COMPLETE' }
     });
   });
 });

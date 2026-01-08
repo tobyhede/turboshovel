@@ -125,7 +125,7 @@ Show this to agent.
 npm run example --flag value
 \`\`\`
 
-- PASS: DONE
+- PASS: COMPLETE
 `;
     const steps = parseWorkflow(md);
     expect(steps[0].command).toEqual({
@@ -143,7 +143,7 @@ Run this automatically.
 npm run build
 \`\`\`
 
-- PASS: DONE
+- PASS: COMPLETE
 `;
     const steps = parseWorkflow(md);
     expect(steps[0].command).toEqual({
@@ -189,8 +189,8 @@ Do something.
 `;
     const steps = parseWorkflow(markdown);
     expect(steps[0].transitions?.pass).toEqual({
-      type: 'GOTO',
-      target: { step: 2, substep: '1' }
+      kind: 'pass',
+      action: { type: 'GOTO', target: { step: 2, substep: '1' } }
     });
   });
 
@@ -263,14 +263,14 @@ Do work.
 
 More work.
 
-- PASS: DONE
+- PASS: COMPLETE
 - FAIL: GOTO 1.1
 `;
     const steps = parseWorkflow(markdown);
-    expect(steps[0].substeps![0].transitions?.pass).toEqual({ type: 'CONTINUE' });
-    expect(steps[0].substeps![0].transitions?.fail).toEqual({ type: 'STOP', message: 'BLOCKED' });
-    expect(steps[0].substeps![1].transitions?.pass).toEqual({ type: 'DONE' });
-    expect(steps[0].substeps![1].transitions?.fail).toEqual({ type: 'GOTO', target: { step: 1, substep: '1' } });
+    expect(steps[0].substeps![0].transitions?.pass).toEqual({ kind: 'pass', action: { type: 'CONTINUE' } });
+    expect(steps[0].substeps![0].transitions?.fail).toEqual({ kind: 'fail', action: { type: 'STOP', message: 'BLOCKED' } });
+    expect(steps[0].substeps![1].transitions?.pass).toEqual({ kind: 'pass', action: { type: 'COMPLETE' } });
+    expect(steps[0].substeps![1].transitions?.fail).toEqual({ kind: 'fail', action: { type: 'GOTO', target: { step: 1, substep: '1' } } });
   });
 
   it('single substep gets transitions not step', () => {
@@ -284,8 +284,8 @@ Do work.
 - FAIL: STOP
 `;
     const steps = parseWorkflow(markdown);
-    expect(steps[0].substeps![0].transitions?.pass).toEqual({ type: 'CONTINUE' });
-    expect(steps[0].substeps![0].transitions?.fail).toEqual({ type: 'STOP' });
+    expect(steps[0].substeps![0].transitions?.pass).toEqual({ kind: 'pass', action: { type: 'CONTINUE' } });
+    expect(steps[0].substeps![0].transitions?.fail).toEqual({ kind: 'fail', action: { type: 'STOP' } });
   });
 });
 
@@ -308,8 +308,8 @@ describe('substep GOTO validation', () => {
 `;
     const steps = parseWorkflow(markdown);
     expect(steps[0].substeps![0].transitions?.fail).toEqual({
-      type: 'GOTO',
-      target: { step: 1, substep: '2' }
+      kind: 'fail',
+      action: { type: 'GOTO', target: { step: 1, substep: '2' } }
     });
   });
 

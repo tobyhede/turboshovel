@@ -13,7 +13,7 @@ describe('validator strict rules', () => {
     it('rejects GOTO {N} without substep', () => {
       const steps = [mockStep({
         isDynamic: true,
-        transitions: { all: true, pass: { type: 'GOTO', target: { step: '{N}' } }, fail: { type: 'STOP' } }
+        transitions: { all: true, pass: { kind: 'pass', action: { type: 'GOTO', target: { step: '{N}' } } }, fail: { kind: 'fail', action: { type: 'STOP' } } }
       })];
       const errors = validateWorkflow(steps);
       expect(errors.length).toBeGreaterThan(0);
@@ -23,7 +23,7 @@ describe('validator strict rules', () => {
     it('rejects GOTO self (step level)', () => {
       const steps = [mockStep({
         number: createStepNumber(1)!,
-        transitions: { all: true, pass: { type: 'GOTO', target: { step: 1 as any } }, fail: { type: 'STOP' } }
+        transitions: { all: true, pass: { kind: 'pass', action: { type: 'GOTO', target: { step: 1 as any } } }, fail: { kind: 'fail', action: { type: 'STOP' } } }
       })];
       const errors = validateWorkflow(steps);
       expect(errors.length).toBeGreaterThan(0);
@@ -35,7 +35,7 @@ describe('validator strict rules', () => {
         number: createStepNumber(1)!,
         substeps: [{
           id: '1', description: 'S1', isDynamic: false, prompts: [],
-          transitions: { all: true, pass: { type: 'GOTO', target: { step: 1 as any, substep: '1' } }, fail: { type: 'STOP' } }
+          transitions: { all: true, pass: { kind: 'pass', action: { type: 'GOTO', target: { step: 1 as any, substep: '1' } } }, fail: { kind: 'fail', action: { type: 'STOP' } } }
         }]
       })];
       const errors = validateWorkflow(steps);
@@ -47,7 +47,7 @@ describe('validator strict rules', () => {
       const steps = [
         mockStep({
           number: createStepNumber(1)!,
-          transitions: { all: true, pass: { type: 'GOTO', target: { step: 2 as any } }, fail: { type: 'STOP' } }
+          transitions: { all: true, pass: { kind: 'pass', action: { type: 'GOTO', target: { step: 2 as any } } }, fail: { kind: 'fail', action: { type: 'STOP' } } }
         }),
         mockStep({
           number: createStepNumber(2)!,
@@ -63,7 +63,7 @@ describe('validator strict rules', () => {
     it('rejects GOTO NEXT in static context', () => {
       const steps = [mockStep({
         number: createStepNumber(1)!,
-        transitions: { all: true, pass: { type: 'GOTO', target: { step: 'NEXT' } }, fail: { type: 'STOP' } }
+        transitions: { all: true, pass: { kind: 'pass', action: { type: 'GOTO', target: { step: 'NEXT' } } }, fail: { kind: 'fail', action: { type: 'STOP' } } }
       })];
       const errors = validateWorkflow(steps);
       expect(errors.length).toBeGreaterThan(0);
@@ -73,7 +73,7 @@ describe('validator strict rules', () => {
     it('accepts GOTO NEXT in dynamic context', () => {
       const steps = [mockStep({
         isDynamic: true,
-        transitions: { all: true, pass: { type: 'GOTO', target: { step: 'NEXT' } }, fail: { type: 'STOP' } }
+        transitions: { all: true, pass: { kind: 'pass', action: { type: 'GOTO', target: { step: 'NEXT' } } }, fail: { kind: 'fail', action: { type: 'STOP' } } }
       })];
       const errors = validateWorkflow(steps);
       expect(errors.filter(e => e.message.includes('GOTO NEXT'))).toHaveLength(0);
@@ -83,7 +83,7 @@ describe('validator strict rules', () => {
       const steps = [
         mockStep({
           number: createStepNumber(1)!,
-          transitions: { all: true, pass: { type: 'GOTO', target: { step: '{N}', substep: '1' } }, fail: { type: 'STOP' } }
+          transitions: { all: true, pass: { kind: 'pass', action: { type: 'GOTO', target: { step: '{N}', substep: '1' } } }, fail: { kind: 'fail', action: { type: 'STOP' } } }
         })
       ];
       const errors = validateWorkflow(steps);
@@ -95,7 +95,7 @@ describe('validator strict rules', () => {
       const steps = [mockStep({
         isDynamic: true,
         substeps: [{ id: '1', description: 'Sub', isDynamic: false, prompts: [] }],
-        transitions: { all: true, pass: { type: 'GOTO', target: { step: '{N}', substep: '1' } }, fail: { type: 'STOP' } }
+        transitions: { all: true, pass: { kind: 'pass', action: { type: 'GOTO', target: { step: '{N}', substep: '1' } } }, fail: { kind: 'fail', action: { type: 'STOP' } } }
       })];
       const errors = validateWorkflow(steps);
       expect(errors.filter(e => e.message.includes('GOTO {N}'))).toHaveLength(0);
@@ -137,7 +137,7 @@ describe('validator strict rules', () => {
           number: createStepNumber(1)!,
           prompts: [{ text: 'P' }],
           substeps: [{ id: '1', description: 'S', isDynamic: false, prompts: [] }],
-          transitions: { all: true, pass: { type: 'GOTO', target: { step: 1 as any } }, fail: { type: 'STOP' } }
+          transitions: { all: true, pass: { kind: 'pass', action: { type: 'GOTO', target: { step: 1 as any } } }, fail: { kind: 'fail', action: { type: 'STOP' } } }
         })
       ];
       const errors = validateWorkflow(steps);
