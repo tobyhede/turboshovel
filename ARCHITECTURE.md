@@ -69,21 +69,15 @@ Merged Configuration             ← Project takes precedence
 ```json
 {
   "gates": {
-    "plugin-path": {
-      "description": "Verify plugin path resolution in subagents",
-      "on_pass": "CONTINUE",
-      "on_fail": "CONTINUE"
-    },
     "check": {
-      "description": "Run project quality checks",
-      "keywords": ["lint", "check", "format"],
-      "command": "echo '[PLACEHOLDER] Configure with actual command'",
+      "command": "npm run lint",
       "on_pass": "CONTINUE",
       "on_fail": "BLOCK"
     }
   },
   "hooks": {
-    "UserPromptSubmit": {
+    "PostToolUse": {
+      "enabled_tools": ["Edit", "Write", "Step", "Task"],
       "gates": ["check"]
     }
   }
@@ -101,31 +95,41 @@ plugin/
 ├── hooks.json                  # Hook registration (routes to CLI)
 ├── turboshovel.json            # Plugin default gates configuration
 └── core/
+    ├── src/
+    │   ├── cli.ts              # Entry point
+    │   ├── dispatcher.ts       # Main dispatch logic
+    │   ├── context.ts          # Context file discovery/injection
+    │   ├── gate-loader.ts      # Gate execution
+    │   ├── action-handler.ts   # Action processing
+    │   ├── session.ts          # Session state management
+    │   ├── index.ts            # Package exports
+    │   ├── gates/              # Built-in TypeScript gates
+    │   │   ├── index.ts        # Gate registry
+    │   │   ├── plugin-path.ts
+    │   │   ├── workflow-skill-start.ts
+    │   │   ├── workflow-step-tracker.ts
+    │   │   ├── workflow-subagent-start.ts
+    │   │   └── workflow-subagent-stop.ts
+    │   └── workflow/           # Rundown CLI integration
+    │       ├── context.ts      # Workflow context injection
+    │       └── hooks/          # Workflow hook handlers (call rundown CLI)
+    │           ├── index.ts
+    │           ├── rundown.ts      # Rundown CLI wrapper
+    │           ├── subagent-start.ts
+    │           ├── subagent-stop.ts
+    │           └── step-tracker.ts
+    └── dist/                   # Compiled JavaScript output
+
+packages/
+└── shared/                     # Shared utilities (used by plugin/core)
     └── src/
-        ├── cli.ts              # Entry point
-        ├── dispatcher.ts       # Main dispatch logic
-        ├── context.ts          # Context file discovery/injection
         ├── config.ts           # Config loading/merging
-        ├── gate-loader.ts      # Gate execution
-        ├── action-handler.ts   # Action processing
-        ├── session.ts          # Session state management
-        ├── logger.ts           # Debug logging
         ├── schemas.ts          # Zod validation schemas
         ├── types.ts            # TypeScript interfaces
         ├── errors.ts           # Custom error types
         ├── utils.ts            # Utility functions
-        ├── gates/              # Built-in TypeScript gates
-        │   ├── index.ts        # Gate registry
-        │   └── plugin-path.ts
-        └── workflow/           # Rundown CLI integration
-            ├── context.ts      # Workflow context injection
-            └── hooks/          # Workflow hook handlers (call rundown CLI)
-                ├── index.ts
-                ├── rundown.ts      # Rundown CLI wrapper
-                ├── subagent-start.ts
-                ├── subagent-stop.ts
-                └── step-tracker.ts
-    └── dist/                   # Compiled JavaScript output
+        ├── logger.ts           # Debug logging
+        └── index.ts            # Package exports
 
 examples/                       # Project root examples
 ├── context/                    # Example context files
@@ -308,36 +312,41 @@ Gate name maps to export: `"plugin-path"` → `gates.pluginPath.execute()`
 // Plugin turboshovel.json (defaults)
 {
   "hooks": {
-    "UserPromptSubmit": { "gates": ["check"] },
-    "PostToolUse": { "gates": ["check"] }
+    "PostToolUse": {
+      "enabled_tools": ["Edit", "Write", "Step", "Task"],
+      "gates": ["check"]
+    }
   },
   "gates": {
-    "plugin-path": { "on_pass": "CONTINUE" },
-    "check": { "command": "echo placeholder" }
+    "check": {
+      "command": "npm run lint",
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
+    }
   }
 }
 
 // Project .claude/turboshovel.json (overrides)
 {
   "hooks": {
-    "PostToolUse": { "gates": ["lint", "test"] }  // Replaces plugin's PostToolUse
+    "PostToolUse": { "gates": ["lint", "test"] },  // Replaces plugin's PostToolUse
+    "UserPromptSubmit": { "gates": ["check"] }     // New hook
   },
   "gates": {
-    "check": { "command": "npm run lint" },       // Replaces plugin's check
-    "lint": { "command": "eslint ." },            // New gate
-    "test": { "command": "npm test" }             // New gate
+    "check": { "command": "npm run ci:check" },    // Replaces plugin's check
+    "lint": { "command": "eslint ." },             // New gate
+    "test": { "command": "npm test" }              // New gate
   }
 }
 
 // Merged result
 {
   "hooks": {
-    "UserPromptSubmit": { "gates": ["check"] },    // From plugin
-    "PostToolUse": { "gates": ["lint", "test"] }   // From project (replaced)
+    "PostToolUse": { "gates": ["lint", "test"] },  // From project (replaced)
+    "UserPromptSubmit": { "gates": ["check"] }     // From project (new)
   },
   "gates": {
-    "plugin-path": { "on_pass": "CONTINUE" },      // From plugin
-    "check": { "command": "npm run lint" },        // From project (replaced)
+    "check": { "command": "npm run ci:check" },    // From project (replaced)
     "lint": { "command": "eslint ." },             // From project (new)
     "test": { "command": "npm test" }              // From project (new)
   }

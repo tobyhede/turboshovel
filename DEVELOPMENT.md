@@ -234,7 +234,7 @@ Workflow fixtures in `packages/cli/__tests__/fixtures/`:
 | `retry.runbook.md` | RETRY condition handling |
 | `goto.runbook.md` | GOTO navigation |
 | `fail-goto.runbook.md` | FAIL with GOTO |
-| `subtasks.runbook.md` | Nested subtask structure |
+| `substeps.runbook.md` | Nested substep structure |
 
 **Adding fixtures:**
 1. Create `.runbook.md` file in fixtures directory

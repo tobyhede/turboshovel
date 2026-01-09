@@ -79,9 +79,7 @@ Ensure the agent doesn't break the build.
 - **[TYPESCRIPT.md](TYPESCRIPT.md)** - custom TypeScript gates.
 
 ## Examples
-Check the `examples/` directory for ready-to-use configurations:
-- `examples/context/` - Example context files.
-- `examples/strict.json` - Strict quality gate configuration.
+Check the `examples/` directory for ready-to-use configurations.
 
 ## License
 MIT

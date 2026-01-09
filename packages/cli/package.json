@@ -1,7 +1,7 @@
 {
   "name": "@turboshovel/cli",
   "version": "1.0.0",
-  "description": "Workflow orchestration CLI for Claude Code",
+  "description": "Quality gates CLI for turboshovel",
   "type": "module",
   "main": "dist/cli.js",
   "bin": {

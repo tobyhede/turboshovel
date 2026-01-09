@@ -24,7 +24,7 @@ Conventions allow project-specific hook behavior without editing `turboshovel.js
 - Agent with different command: `.claude/context/rust-agent-execute-end.md`
 - Plan review agent: `.claude/context/plan-review-agent-verify-start.md`
 
-**Registered hooks (11 total):**
+**Registered hooks (10 real hooks + synthetic events):**
 
 Context injection supported:
 - `SessionStart` - At beginning of Claude Code session ✅
@@ -37,9 +37,10 @@ Context injection supported:
 - `Notification` - When notification is received ✅
 
 Gates only (context injection not implemented):
-- `SubagentStart` - Before agent starts (gates work, context files not discovered)
 - `PreCompact` - Before context compaction (gates work, context files not discovered)
 - `PermissionRequest` - When permission dialog is shown (gates work, context files not discovered)
+
+**Synthetic events:** SubagentStart is a synthetic event derived from PostToolUse (see ARCHITECTURE.md). It supports context injection and gates but is not registered in hooks.json.
 
 **Planned hooks:** SlashCommandStart, SlashCommandEnd, SkillStart, SkillEnd - recognized by config validation but not yet registered in `hooks.json` for Claude Code routing. Context patterns exist for future use.
 

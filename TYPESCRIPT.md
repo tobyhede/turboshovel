@@ -27,6 +27,10 @@ The plugin includes these TypeScript gates:
 | Gate | Purpose | Default Hook |
 |------|---------|--------------|
 | `plugin-path` | Verify plugin path resolution in subagents | (manual) |
+| `workflow-step-tracker` | Track workflow step execution | PostToolUse |
+| `workflow-subagent-start` | Handle workflow subagent start events | SubagentStart |
+| `workflow-subagent-stop` | Handle workflow subagent stop events | SubagentStop |
+| `workflow-skill-start` | Handle workflow skill start events | SkillStart |
 
 ## Creating a TypeScript Gate
 

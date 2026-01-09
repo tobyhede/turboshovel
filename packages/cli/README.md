@@ -1,8 +1,6 @@
 # @turboshovel/cli
 
-Workflow orchestration CLI for Claude Code.
-
-**For the complete Workflow System Guide, see [docs/WORKFLOWS.md](../../docs/WORKFLOWS.md).**
+Quality gates CLI for turboshovel.
 
 ## Installation
 
@@ -10,36 +8,50 @@ Workflow orchestration CLI for Claude Code.
 npm install -g @turboshovel/cli
 ```
 
-## Quick Reference
+## Usage
 
-### Commands
-
-| Command | Description |
-|---------|-------------|
-| `tsv run <file>` | Run a workflow |
-| `tsv pass` | Mark current step as passed |
-| `tsv fail` | Mark current step as failed |
-| `tsv goto <n>` | Jump to specific step number |
-| `tsv status` | Show current state |
-| `tsv stop` | Abort workflow |
-| `tsv complete` | Mark workflow as complete |
-| `tsv stash` | Pause enforcement |
-| `tsv pop` | Resume enforcement |
-| `tsv ls` | List active workflows |
-| `tsv ls --all` | List available workflow files |
-| `tsv check <file>` | Check workflow for errors |
-
-### Subagent Dispatch
+Run quality gates defined in your project's `.claude/turboshovel.json` configuration:
 
 ```bash
-# Task Binding (Agent execution)
-tsv run --step 3.1
-tsv run --agent <id>
-
-# Subworkflow Dispatch (Enforced execution)
-tsv run --step 3.1 <workflow-file>
-tsv run --agent <id>
+turboshovel gate <name>
 ```
+
+The gate name must match a gate defined in the `gates` section of your turboshovel configuration.
+
+## Example
+
+Given this configuration in `.claude/turboshovel.json`:
+
+```json
+{
+  "gates": {
+    "check": {
+      "description": "Run project quality checks",
+      "command": "npm run lint"
+    }
+  }
+}
+```
+
+Run the gate:
+
+```bash
+turboshovel gate check
+```
+
+Exit codes:
+- `0` - Gate passed
+- `1` - Gate failed or not found
+
+## Workflow Orchestration
+
+For workflow orchestration functionality (running multi-step processes), use the separate `@rundown/cli` package:
+
+```bash
+npm install -g @rundown/cli
+```
+
+See the [Rundown System](../../CLAUDE.md#rundown-system) section in the main documentation for workflow commands.
 
 ## License
 

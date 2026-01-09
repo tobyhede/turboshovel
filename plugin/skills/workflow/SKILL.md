@@ -49,16 +49,15 @@ You orchestrate the workflow. Use these commands:
 
 | Command | Purpose |
 |---------|---------|
-| `tsv run <file>` | Begin a runbook |
-| `tsv pass` | Mark current step as passed |
-| `tsv fail` | Mark current step as failed |
-| `tsv goto N` | Jump to specific step |
-| `tsv status` | Check current state |
-| `tsv complete` | Mark workflow finished |
-| `tsv stop` | Abort workflow |
-| `tsv stash` | Pause enforcement (for ad-hoc work) |
-| `tsv pop` | Resume enforcement |
-| `tsv gate <name>` | Run a gate by name |
+| `rundown run <file>` | Begin a runbook |
+| `rundown pass` | Mark current step as passed |
+| `rundown fail` | Mark current step as failed |
+| `rundown goto N` | Jump to specific step |
+| `rundown status` | Check current state |
+| `rundown complete` | Mark workflow finished |
+| `rundown stop` | Abort workflow |
+| `rundown stash` | Pause enforcement (for ad-hoc work) |
+| `rundown pop` | Resume enforcement |
 
 ### Dispatching Steps
 
@@ -70,18 +69,18 @@ Step(description="2.1 - Review authentication code", ...)
 The StepId format is `N.X` where N is step number, X is substep number.
 
 **Hook automation:**
-- PostToolUse hook parses StepId from description, calls `tsv run --step 2.1`
+- PostToolUse hook parses StepId from description, calls `rundown run --step 2.1`
 - SubagentStart hook binds the agent to the queued step
-- SubagentStop hook parses STATUS line, calls `tsv next --pass/--fail --agent {id}`
+- SubagentStop hook parses STATUS line, calls `rundown next --pass/--fail --agent {id}`
 
-**Do NOT manually call `tsv run --step`** - hooks handle this.
+**Do NOT manually call `rundown run --step`** - hooks handle this.
 
 ### Parallel Substeps
 
 For parallel execution (e.g., `### 2.{n}` substeps):
 1. Dispatch all agents in one message (multiple Step tool calls)
-2. Run `tsv status` to check agent completion
-3. When all agents report done, run `tsv next`
+2. Run `rundown status` to check agent completion
+3. When all agents report done, run `rundown next`
 
 ### Dynamic Substep `{n}` Syntax
 
@@ -110,5 +109,5 @@ When subagent reports `STATUS: FAIL`: check output, discuss with user, then retr
 | Subagent auto-retries on failure | Report `STATUS: FAIL` and let main handle |
 | Main agent auto-retries without user | Always discuss failures before retry |
 | Missing StepId in dispatch | Include `N.X` format in Step tool description |
-| Parallel steps without status check | Run `tsv status` before advancing |
-| Manually calling `tsv run --step` | Remove - hooks handle step queuing automatically |
+| Parallel steps without status check | Run `rundown status` before advancing |
+| Manually calling `rundown run --step` | Remove - hooks handle step queuing automatically |
