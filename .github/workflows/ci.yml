@@ -23,10 +23,6 @@ jobs:
       matrix:
         node-version: [20, 22]
 
-    defaults:
-      run:
-        working-directory: plugin/core
-
     steps:
       - uses: actions/checkout@v4
 
@@ -44,10 +40,10 @@ jobs:
             echo "ERROR: repository_dispatch missing required 'sha' in client_payload"
             exit 1
           fi
-        working-directory: .
 
       - name: Override @rundown/cli with git ref
         if: inputs.rundown_ref != '' || github.event_name == 'repository_dispatch'
+        working-directory: plugin/core
         run: |
           REF="${{ inputs.rundown_ref || github.event.client_payload.sha || 'main' }}"
           echo "Installing @rundown/cli from git ref: $REF"
@@ -70,6 +66,7 @@ jobs:
         run: npm run lint
 
       - name: Format check
+        working-directory: plugin/core
         run: npm run format:check
 
       - name: Test with coverage
