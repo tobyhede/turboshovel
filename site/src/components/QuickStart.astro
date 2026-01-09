@@ -1,0 +1,73 @@
+---
+const installCommand = 'claude plugin add tobyhede/turboshovel';
+
+const exampleConfig = `{
+  "gates": {
+    "check": {
+      "description": "Run project quality checks",
+      "command": "npm run lint",
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
+    }
+  },
+  "hooks": {
+    "PostToolUse": {
+      "enabled_tools": ["Edit", "Write"],
+      "gates": ["check"]
+    }
+  }
+}`;
+
+const contextExample = `# Code Review Guidelines
+
+- All functions must have JSDoc comments
+- No console.log in production code
+- Run tests before committing`;
+---
+
+<section id="quickstart" class="py-24 px-4">
+  <div class="container mx-auto max-w-4xl">
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">
+      <span class="text-cyber-cyan neon-text-cyan">Quick Start</span>
+    </h2>
+
+    <!-- Install -->
+    <div class="mb-12">
+      <p class="text-gray-400 mb-2">1. Install the plugin:</p>
+      <div class="neon-border rounded-lg p-4 bg-cyber-dark/80 overflow-x-auto">
+        <code class="text-cyber-cyan">{installCommand}</code>
+      </div>
+    </div>
+
+    <!-- Context injection -->
+    <div class="mb-12">
+      <p class="text-gray-400 mb-2">
+        2. Create context files in <code class="text-cyber-magenta">.claude/context/</code>:
+      </p>
+      <div class="neon-border rounded-lg p-4 bg-cyber-dark/80 overflow-x-auto">
+        <p class="text-sm text-gray-500 mb-2"># code-review-start.md</p>
+        <pre class="text-sm text-gray-300 whitespace-pre">{contextExample}</pre>
+      </div>
+    </div>
+
+    <!-- Config -->
+    <div class="mb-12">
+      <p class="text-gray-400 mb-2">
+        3. Add quality gates in <code class="text-cyber-magenta">.claude/turboshovel.json</code>:
+      </p>
+      <div class="neon-border rounded-lg p-4 bg-cyber-dark/80 overflow-x-auto">
+        <pre class="text-sm text-gray-300 whitespace-pre">{exampleConfig}</pre>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div>
+      <p class="text-gray-400 mb-2">That's it! Now your agents will:</p>
+      <ul class="text-gray-300 list-disc list-inside space-y-2 ml-4">
+        <li>Automatically receive context when starting code review</li>
+        <li>Run lint checks after every file edit</li>
+        <li>Be blocked from proceeding if checks fail</li>
+      </ul>
+    </div>
+  </div>
+</section>
