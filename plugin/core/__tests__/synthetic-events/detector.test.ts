@@ -48,9 +48,7 @@ describe('detectSyntheticEvents', () => {
 
       const events = detectSyntheticEvents(input);
 
-      expect(events).toContainEqual(
-        expect.objectContaining({ syntheticEvent: 'SlashCommandEnd' })
-      );
+      expect(events).toContainEqual(expect.objectContaining({ syntheticEvent: 'SlashCommandEnd' }));
     });
   });
 

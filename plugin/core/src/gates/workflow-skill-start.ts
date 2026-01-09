@@ -47,7 +47,7 @@ function findSkillWorkflow(skillName: string, cwd: string): string | undefined {
     // Plugin skills (via CLAUDE_PLUGIN_ROOT)
     path.join(process.env.CLAUDE_PLUGIN_ROOT ?? '', 'skills', name, 'SKILL.md'),
     // User skills (in project .claude directory)
-    path.join(cwd, '.claude', 'skills', name, 'SKILL.md'),
+    path.join(cwd, '.claude', 'skills', name, 'SKILL.md')
   ];
 
   for (const skillPath of searchPaths) {

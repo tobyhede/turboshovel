@@ -12,7 +12,8 @@ jest.unstable_mockModule('fs', () => ({
   readFileSync: mockReadFileSync
 }));
 
-const { execute, parseWorkflowFromFrontmatter } = await import('../../src/gates/workflow-skill-start.js');
+const { execute, parseWorkflowFromFrontmatter } =
+  await import('../../src/gates/workflow-skill-start.js');
 
 describe('workflow-skill-start gate', () => {
   beforeEach(() => {

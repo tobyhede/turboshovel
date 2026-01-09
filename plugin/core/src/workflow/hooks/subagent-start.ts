@@ -47,12 +47,7 @@ export function handleSubagentStart(input: HookInput): SubagentStartResult {
 }
 
 function parseStartAgentOutput(output: string, agentId: string): string {
-  const lines = [
-    '## Workflow Agent Context',
-    '',
-    `AGENT_ID: ${agentId}`,
-    ''
-  ];
+  const lines = ['## Workflow Agent Context', '', `AGENT_ID: ${agentId}`, ''];
 
   const stepMatch = /bound to step (\d+(?:\.\d+)?)/.exec(output);
   if (stepMatch) {

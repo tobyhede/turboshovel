@@ -161,7 +161,7 @@ async function updateSessionState(input: HookInput): Promise<void> {
       case 'SlashCommandStart':
         // command field set by synthetic dispatcher
         if (input.command) {
-          await session.set('active_command', input.command);  // Full name preserved
+          await session.set('active_command', input.command); // Full name preserved
         }
         break;
 
@@ -172,7 +172,7 @@ async function updateSessionState(input: HookInput): Promise<void> {
       case 'SkillStart':
         // skill field set by synthetic dispatcher
         if (input.skill) {
-          await session.set('active_skill', input.skill);  // Full name preserved
+          await session.set('active_skill', input.skill); // Full name preserved
         }
         break;
 
@@ -183,7 +183,7 @@ async function updateSessionState(input: HookInput): Promise<void> {
       case 'SubagentStart':
         // Store tool_use_id → stepId mapping for correlation
         if (input.tool_use_id && input.step_id) {
-          const metadata = (await session.get('metadata'));
+          const metadata = await session.get('metadata');
           const mapping = (metadata.toolUseIdToStepId ?? {}) as Record<string, string>;
           await session.set('metadata', {
             ...metadata,
@@ -275,7 +275,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
       if (synthetic.syntheticEvent === 'SlashCommandEnd') {
         const activeCommand = await syntheticSession.get('active_command');
         if (!activeCommand) {
-          continue;  // Skip SlashCommandEnd if no active command
+          continue; // Skip SlashCommandEnd if no active command
         }
         slashCommandEndCommand = activeCommand;
       }
@@ -285,7 +285,9 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
         ...input,
         hook_event_name: synthetic.syntheticEvent,
         // Add event-specific fields (slashCommandEndCommand for SlashCommandEnd, synthetic.commandName for others)
-        ...(slashCommandEndCommand ? { command: slashCommandEndCommand } : synthetic.commandName && { command: synthetic.commandName }),
+        ...(slashCommandEndCommand
+          ? { command: slashCommandEndCommand }
+          : synthetic.commandName && { command: synthetic.commandName }),
         ...(synthetic.skillName && { skill: synthetic.skillName }),
         ...(synthetic.stepId && { step_id: synthetic.stepId }),
         ...(synthetic.toolUseId && { tool_use_id: synthetic.toolUseId }),
@@ -345,7 +347,6 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
   let gatesExecuted = 0;
 
   for (const gateName of gates) {
-
     // Circuit breaker: prevent infinite chains
     if (gatesExecuted >= MAX_GATES_PER_DISPATCH) {
       return {
@@ -391,7 +392,7 @@ export async function dispatch(input: HookInput): Promise<DispatchResult> {
     });
 
     // Determine action
-    const action = passed ? gateConfig.on_pass ?? 'CONTINUE' : gateConfig.on_fail ?? 'BLOCK';
+    const action = passed ? (gateConfig.on_pass ?? 'CONTINUE') : (gateConfig.on_fail ?? 'BLOCK');
 
     // Handle action
     const actionResult = handleAction(action, result, config, input);

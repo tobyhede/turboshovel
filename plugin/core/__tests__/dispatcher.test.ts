@@ -6,7 +6,12 @@ import {
   gateMatchesKeywords,
   gateMatchesFilePattern
 } from '../src/dispatcher.js';
-import { validateFilePatterns, type HookInput, type HookConfig, type GateConfig } from '@turboshovel/shared';
+import {
+  validateFilePatterns,
+  type HookInput,
+  type HookConfig,
+  type GateConfig
+} from '@turboshovel/shared';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -139,7 +144,10 @@ describe('Dispatcher - Gate Chaining', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(gatesConfig, null, 2));
+    await fs.writeFile(
+      path.join(testDir, 'turboshovel.json'),
+      JSON.stringify(gatesConfig, null, 2)
+    );
 
     const input: HookInput = {
       hook_event_name: 'PostToolUse',
@@ -175,7 +183,10 @@ describe('Dispatcher - Gate Chaining', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(gatesConfig, null, 2));
+    await fs.writeFile(
+      path.join(testDir, 'turboshovel.json'),
+      JSON.stringify(gatesConfig, null, 2)
+    );
 
     const input: HookInput = {
       hook_event_name: 'PostToolUse',
@@ -198,7 +209,9 @@ describe('validateFilePatterns', () => {
       file_patterns: ['packages/cts/**', 'src/**/*.ts', '*.json'],
       on_pass: 'CONTINUE'
     };
-    expect(() => { validateFilePatterns(config); }).not.toThrow();
+    expect(() => {
+      validateFilePatterns(config);
+    }).not.toThrow();
   });
 
   it('should throw error for non-string pattern', () => {
@@ -207,7 +220,9 @@ describe('validateFilePatterns', () => {
       file_patterns: ['valid', 123, 'also-valid'],
       on_pass: 'CONTINUE'
     } as GateConfig;
-    expect(() => { validateFilePatterns(config); }).toThrow(/expected string/);
+    expect(() => {
+      validateFilePatterns(config);
+    }).toThrow(/expected string/);
   });
 
   it('should skip validation when no patterns specified', () => {
@@ -215,7 +230,9 @@ describe('validateFilePatterns', () => {
       command: 'echo test',
       on_pass: 'CONTINUE'
     };
-    expect(() => { validateFilePatterns(config); }).not.toThrow();
+    expect(() => {
+      validateFilePatterns(config);
+    }).not.toThrow();
   });
 });
 
@@ -647,7 +664,10 @@ describe('File pattern filtering integration', () => {
       }
     };
 
-    await fs.writeFile(path.join(testDir, 'turboshovel.json'), JSON.stringify(multiGateConfig, null, 2));
+    await fs.writeFile(
+      path.join(testDir, 'turboshovel.json'),
+      JSON.stringify(multiGateConfig, null, 2)
+    );
 
     const input: HookInput = {
       hook_event_name: 'PostToolUse',

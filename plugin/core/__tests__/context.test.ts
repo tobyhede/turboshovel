@@ -105,10 +105,7 @@ describe('extractNameAndStage coverage', () => {
       command: '/commit'
     };
     await fs.mkdir(path.join(testDir, '.claude', 'context'), { recursive: true });
-    await fs.writeFile(
-      path.join(testDir, '.claude', 'context', 'commit-end.md'),
-      'End content'
-    );
+    await fs.writeFile(path.join(testDir, '.claude', 'context', 'commit-end.md'), 'End content');
     const result = await injectContext('SlashCommandEnd', input as any);
     expect(result).toBe('End content');
   });

@@ -52,7 +52,7 @@ describe('Synthetic Events Integration', () => {
       const metadata = await session.get('metadata');
       expect(metadata).toEqual(
         expect.objectContaining({
-          toolUseIdToStepId: { 'toolu_abc123': '1.1' }
+          toolUseIdToStepId: { toolu_abc123: '1.1' }
         })
       );
     });
@@ -80,8 +80,8 @@ describe('Synthetic Events Integration', () => {
       const session = new Session(testDir);
       const metadata = await session.get('metadata');
       expect(metadata.toolUseIdToStepId).toEqual({
-        'toolu_1': '1.1',
-        'toolu_2': '1.2'
+        toolu_1: '1.1',
+        toolu_2: '1.2'
       });
     });
   });
