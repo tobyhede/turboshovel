@@ -1,28 +1,29 @@
 ---
 const installCommand = 'claude plugin add tobyhede/turboshovel';
 
-const exampleConfig = `{
+const runbookExample = `## 1. Create Plan
+Design the implementation approach.
+- PASS: CONTINUE
+- FAIL: STOP
+
+## 2. Implement Feature
+Write the code following the plan.
+- PASS: CONTINUE
+- FAIL: RETRY 2
+
+## 3. Run Tests
+Verify everything works.
+- PASS: COMPLETE
+- FAIL: GOTO 2`;
+
+const gateConfig = `{
   "gates": {
-    "check": {
-      "description": "Run project quality checks",
-      "command": "npm run lint",
-      "on_pass": "CONTINUE",
+    "test": {
+      "command": "npm test",
       "on_fail": "BLOCK"
-    }
-  },
-  "hooks": {
-    "PostToolUse": {
-      "enabled_tools": ["Edit", "Write"],
-      "gates": ["check"]
     }
   }
 }`;
-
-const contextExample = `# Code Review Guidelines
-
-- All functions must have JSDoc comments
-- No console.log in production code
-- Run tests before committing`;
 ---
 
 <section id="quickstart" class="py-24 px-4">
@@ -39,34 +40,46 @@ const contextExample = `# Code Review Guidelines
       </div>
     </div>
 
-    <!-- Context injection -->
+    <!-- Runbook example -->
     <div class="mb-12">
       <p class="text-gray-400 mb-2">
-        2. Create context files in <code class="text-cyber-magenta">.claude/context/</code>:
+        2. Create a runbook <code class="text-cyber-magenta">.claude/rundown/runbooks/feature.runbook.md</code>:
       </p>
       <div class="neon-border rounded-lg p-4 bg-cyber-dark/80 overflow-x-auto">
-        <p class="text-sm text-gray-500 mb-2"># code-review-start.md</p>
-        <pre class="text-sm text-gray-300 whitespace-pre">{contextExample}</pre>
+        <pre class="text-sm text-gray-300 whitespace-pre">{runbookExample}</pre>
       </div>
     </div>
 
-    <!-- Config -->
+    <!-- Gate config -->
     <div class="mb-12">
       <p class="text-gray-400 mb-2">
         3. Add quality gates in <code class="text-cyber-magenta">.claude/turboshovel.json</code>:
       </p>
       <div class="neon-border rounded-lg p-4 bg-cyber-dark/80 overflow-x-auto">
-        <pre class="text-sm text-gray-300 whitespace-pre">{exampleConfig}</pre>
+        <pre class="text-sm text-gray-300 whitespace-pre">{gateConfig}</pre>
       </div>
     </div>
 
-    <!-- Result -->
+    <!-- How it works -->
     <div>
-      <p class="text-gray-400 mb-2">That's it! Now your agents will:</p>
-      <ul class="text-gray-300 list-disc list-inside space-y-2 ml-4">
-        <li>Automatically receive context when starting code review</li>
-        <li>Run lint checks after every file edit</li>
-        <li>Be blocked from proceeding if checks fail</li>
+      <p class="text-gray-400 mb-4">How it works:</p>
+      <ul class="text-gray-300 space-y-3 ml-4">
+        <li class="flex items-start gap-3">
+          <span class="text-cyber-cyan">→</span>
+          <span>Runbook defines the workflow steps and transitions</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="text-cyber-magenta">→</span>
+          <span>State persists in <code class="text-cyber-cyan">.claude/rundown/session.json</code></span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="text-cyber-purple">→</span>
+          <span>Context clears? <code class="text-cyber-cyan">rundown status</code> shows where you are</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="text-cyber-cyan">→</span>
+          <span>Gates enforce quality at each step boundary</span>
+        </li>
       </ul>
     </div>
   </div>
