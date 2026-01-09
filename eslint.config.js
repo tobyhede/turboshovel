@@ -12,6 +12,7 @@ export default tseslint.config(
       '**/coverage/**',
       '**/*.js',
       '**/*.d.ts',
+      'site/**',  // Astro project with separate tooling
     ],
   },
 
