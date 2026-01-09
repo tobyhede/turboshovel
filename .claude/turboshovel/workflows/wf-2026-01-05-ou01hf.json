@@ -1,0 +1,29 @@
+{
+  "id": "wf-2026-01-05-ou01hf",
+  "workflow": "rundown/examples/implement-task.runbook.md",
+  "title": "Implement Task",
+  "description": "Execute a single task from the implementation plan.",
+  "step": 4,
+  "stepName": "Troubleshoot",
+  "retryCount": 0,
+  "variables": {
+    "completed": true
+  },
+  "steps": [],
+  "pendingSteps": [],
+  "agentBindings": {},
+  "agentId": "agent-002",
+  "startedAt": "2026-01-05T09:59:29.702Z",
+  "updatedAt": "2026-01-05T09:59:47.297Z",
+  "snapshot": {
+    "status": "active",
+    "value": "step_4",
+    "historyValue": {},
+    "context": {
+      "retryCount": 0,
+      "variables": {}
+    },
+    "children": {}
+  },
+  "lastResult": "pass"
+}

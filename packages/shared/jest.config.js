@@ -1,0 +1,33 @@
+export default {
+  testEnvironment: 'node',
+  roots: ['<rootDir>/__tests__'],
+  testMatch: ['**/*.test.ts'],
+  collectCoverageFrom: ['src/**/*.ts'],
+  moduleFileExtensions: ['ts', 'js', 'json'],
+  extensionsToTreatAsEsm: ['.ts'],
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^@turboshovel/parser$': '<rootDir>/../parser/src/index.ts',
+  },
+  transform: {
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        useESM: true,
+        tsconfig: {
+          module: 'NodeNext',
+          moduleResolution: 'NodeNext',
+          target: 'ES2020',
+          lib: ['ES2020'],
+          strict: true,
+          esModuleInterop: true,
+          allowSyntheticDefaultImports: true,
+          skipLibCheck: true,
+          forceConsistentCasingInFileNames: true,
+          resolveJsonModule: true,
+          isolatedModules: true,
+        },
+      },
+    ],
+  },
+};

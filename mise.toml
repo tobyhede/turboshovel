@@ -4,7 +4,7 @@
 [tasks.logs]
 description = "Tail hook logs"
 run = """
-LOG_FILE=$(node plugin/hooks/hooks-app/dist/cli.js log-path)
+LOG_FILE=$(node plugin/core/dist/cli.js log-path)
 if [[ -f "$LOG_FILE" ]]; then
   tail -f "$LOG_FILE"
 else
@@ -16,7 +16,7 @@ fi
 [tasks."logs:errors"]
 description = "Tail hook logs, showing only errors"
 run = """
-LOG_FILE=$(node plugin/hooks/hooks-app/dist/cli.js log-path)
+LOG_FILE=$(node plugin/core/dist/cli.js log-path)
 if [[ -f "$LOG_FILE" ]]; then
   tail -f "$LOG_FILE" | jq -c 'select(.level == "error")'
 else
@@ -27,7 +27,7 @@ fi
 [tasks."logs:all"]
 description = "Tail all recent hook logs (last 7 days)"
 run = """
-LOG_DIR=$(node plugin/hooks/hooks-app/dist/cli.js log-dir)
+LOG_DIR=$(node plugin/core/dist/cli.js log-dir)
 if [[ -d "$LOG_DIR" ]]; then
   tail -f "$LOG_DIR"/hooks-*.log
 else
@@ -38,7 +38,7 @@ fi
 [tasks."logs:pretty"]
 description = "Tail hook logs with pretty formatting"
 run = '''
-LOG_FILE=$(node plugin/hooks/hooks-app/dist/cli.js log-path)
+LOG_FILE=$(node plugin/core/dist/cli.js log-path)
 if [[ -f "$LOG_FILE" ]]; then
   tail -f "$LOG_FILE" | jq -r '"\(.ts | split("T")[1] | split(".")[0]) [\(.level | ascii_upcase)] \(.event // .message) \(del(.ts, .level, .event, .message) | to_entries | map("\(.key)=\(.value)") | join(" "))"'
 else
@@ -48,12 +48,12 @@ fi
 
 [tasks."logs:path"]
 description = "Show current log file path"
-run = "node plugin/hooks/hooks-app/dist/cli.js log-path"
+run = "node plugin/core/dist/cli.js log-path"
 
 [tasks."logs:clear"]
 description = "Clear today's log file"
 run = """
-LOG_FILE=$(node plugin/hooks/hooks-app/dist/cli.js log-path)
+LOG_FILE=$(node plugin/core/dist/cli.js log-path)
 if [[ -f "$LOG_FILE" ]]; then
   rm "$LOG_FILE"
   echo "Cleared: $LOG_FILE"

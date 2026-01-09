@@ -1,0 +1,27 @@
+{
+  "description": "Demonstrates convention-based context injection with explicit gates",
+  "comment": "Context files in .claude/context/ auto-inject without configuration. Gates run after context injection.",
+
+  "gates": {
+    "test": {
+      "description": "Run project test suite",
+      "comment": "Customize for your project: 'npm test' | 'cargo test' | your command",
+      "command": "npm test",
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
+    }
+  },
+
+  "hooks": {
+    "PostToolUse": {
+      "comment": "Convention file .claude/context/edit-post.md auto-injects if exists",
+      "enabled_tools": ["Edit", "Write"],
+      "gates": ["test"]
+    },
+    "SubagentStop": {
+      "comment": "Convention file .claude/context/{agent}-end.md auto-injects if exists",
+      "enabled_agents": ["code-agent", "rust-agent"],
+      "gates": ["test"]
+    }
+  }
+}

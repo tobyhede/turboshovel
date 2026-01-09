@@ -1,0 +1,54 @@
+---
+const features = [
+  {
+    title: 'Persistent State',
+    description: 'Workflow progress survives context clears. Resume interrupted tasks instantly. Never lose track of where you are.',
+    icon: '💾',
+    color: 'cyan',
+  },
+  {
+    title: 'Process Enforcement',
+    description: 'Enforce multi-step workflows with Rundown runbooks. Prevent agents from skipping steps or jumping around.',
+    icon: '🛡️',
+    color: 'magenta',
+  },
+  {
+    title: 'Quality Gates',
+    description: 'Run lint, test, build at workflow boundaries. Block agents when checks fail. Chain gates for complex pipelines.',
+    icon: '⚙️',
+    color: 'purple',
+  },
+  {
+    title: 'Context Injection',
+    description: 'Auto-inject context at runbook steps. Agents get focused, step-specific instructions exactly when needed.',
+    icon: '🧠',
+    color: 'cyan',
+  },
+];
+
+const colorClasses = {
+  cyan: 'border-cyber-cyan/30 hover:border-cyber-cyan hover:shadow-neon-cyan',
+  magenta: 'border-cyber-magenta/30 hover:border-cyber-magenta hover:shadow-neon-magenta',
+  purple: 'border-cyber-purple/30 hover:border-cyber-purple hover:shadow-neon-purple',
+};
+---
+
+<section id="features" class="py-24 px-4">
+  <div class="container mx-auto max-w-6xl">
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">
+      <span class="text-cyber-magenta neon-text-magenta">Features</span>
+    </h2>
+
+    <div class="grid md:grid-cols-2 gap-8">
+      {features.map((feature) => (
+        <div
+          class={`p-6 rounded-xl bg-cyber-dark/50 border transition-all duration-300 ${colorClasses[feature.color]}`}
+        >
+          <div class="text-4xl mb-4">{feature.icon}</div>
+          <h3 class="text-xl font-bold text-white mb-2">{feature.title}</h3>
+          <p class="text-gray-400">{feature.description}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

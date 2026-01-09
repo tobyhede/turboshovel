@@ -1,0 +1,32 @@
+services:
+  test-local:
+    build:
+      context: .
+      dockerfile: scripts/Dockerfile.test
+      target: local
+    hostname: claude-test
+    environment:
+      - TURBOSHOVEL_LOG_LEVEL=debug
+    volumes:
+      - ./.claude-docker:/home/testuser/.claude
+      - ./.claude-docker/.claude.json:/home/testuser/.claude.json
+      - ./logs:/tmp/turboshovel
+    stdin_open: true
+    tty: true
+    command: ["local"]
+
+  test-npm:
+    build:
+      context: .
+      dockerfile: scripts/Dockerfile.test
+      target: npm
+    hostname: claude-test
+    environment:
+      - TURBOSHOVEL_LOG_LEVEL=debug
+    volumes:
+      - ./.claude-docker:/home/testuser/.claude
+      - ./.claude-docker/.claude.json:/home/testuser/.claude.json
+      - ./logs:/tmp/turboshovel
+    stdin_open: true
+    tty: true
+    command: ["npm"]

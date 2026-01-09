@@ -1,0 +1,86 @@
+---
+const installCommand = 'claude plugin add tobyhede/turboshovel';
+
+const runbookExample = `## 1. Create Plan
+Design the implementation approach.
+- PASS: CONTINUE
+- FAIL: STOP
+
+## 2. Implement Feature
+Write the code following the plan.
+- PASS: CONTINUE
+- FAIL: RETRY 2
+
+## 3. Run Tests
+Verify everything works.
+- PASS: COMPLETE
+- FAIL: GOTO 2`;
+
+const gateConfig = `{
+  "gates": {
+    "test": {
+      "command": "npm test",
+      "on_fail": "BLOCK"
+    }
+  }
+}`;
+---
+
+<section id="quickstart" class="py-24 px-4">
+  <div class="container mx-auto max-w-4xl">
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-16">
+      <span class="text-cyber-cyan neon-text-cyan">Quick Start</span>
+    </h2>
+
+    <!-- Install -->
+    <div class="mb-12">
+      <p class="text-gray-400 mb-2">1. Install the plugin:</p>
+      <div class="neon-border rounded-lg p-4 bg-cyber-dark/80 overflow-x-auto">
+        <code class="text-cyber-cyan">{installCommand}</code>
+      </div>
+    </div>
+
+    <!-- Runbook example -->
+    <div class="mb-12">
+      <p class="text-gray-400 mb-2">
+        2. Create a runbook <code class="text-cyber-magenta">.claude/rundown/runbooks/feature.runbook.md</code>:
+      </p>
+      <div class="neon-border rounded-lg p-4 bg-cyber-dark/80 overflow-x-auto">
+        <pre class="text-sm text-gray-300 whitespace-pre">{runbookExample}</pre>
+      </div>
+    </div>
+
+    <!-- Gate config -->
+    <div class="mb-12">
+      <p class="text-gray-400 mb-2">
+        3. Add quality gates in <code class="text-cyber-magenta">.claude/turboshovel.json</code>:
+      </p>
+      <div class="neon-border rounded-lg p-4 bg-cyber-dark/80 overflow-x-auto">
+        <pre class="text-sm text-gray-300 whitespace-pre">{gateConfig}</pre>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div>
+      <p class="text-gray-400 mb-4">How it works:</p>
+      <ul class="text-gray-300 space-y-3 ml-4">
+        <li class="flex items-start gap-3">
+          <span class="text-cyber-cyan">→</span>
+          <span>Runbook defines the workflow steps and transitions</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="text-cyber-magenta">→</span>
+          <span>State persists in <code class="text-cyber-cyan">.claude/rundown/session.json</code></span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="text-cyber-purple">→</span>
+          <span>Context clears? <code class="text-cyber-cyan">rundown status</code> shows where you are</span>
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="text-cyber-cyan">→</span>
+          <span>Gates enforce quality at each step boundary</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>

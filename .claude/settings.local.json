@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__serena__create_text_file",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "mcp__serena__get_symbols_overview",
+      "Bash(env)",
+      "Skill(cipherpowers:brainstorming)",
+      "Skill(cipherpowers:dual-verification)",
+      "Skill(cipherpowers:writing-plans)",
+      "mcp__serena__list_dir",
+      "mcp__serena__find_symbol",
+      "mcp__serena__read_file",
+      "Skill(cipherpowers:commit-workflow)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Skill(turboshovel:n-verification)",
+      "mcp__serena__find_file",
+      "Skill(cipherpowers:brainstorm)",
+      "Skill(cipherpowers:plan)",
+      "Bash(mkdir:*)",
+      "mcp__serena__activate_project",
+      "Bash(npm run cli:*)",
+      "Skill(cipherpowers:requesting-code-review)",
+      "Bash(git rev-parse:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

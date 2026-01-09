@@ -1,0 +1,10 @@
+{
+  "name": "turboshovel",
+  "version": "0.1.0",
+  "description": "Generic hook framework for quality enforcement and context injection",
+  "author": {
+    "name": "Toby Hede",
+    "email": "toby@cipherstash.com"
+  },
+  "repository": "https://github.com/tobyhede/turboshovel"
+}

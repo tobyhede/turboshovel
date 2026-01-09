@@ -1,0 +1,38 @@
+{
+  "name": "@turboshovel/core",
+  "version": "1.0.0",
+  "description": "TypeScript hooks dispatcher for Turboshovel",
+  "type": "module",
+  "main": "dist/cli.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
+    "lint": "eslint src/**/*.ts __tests__/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts __tests__/**/*.ts --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\"",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/mdast": "^4.0.4",
+    "@types/node": "^20.0.0",
+    "fast-check": "^4.5.2",
+    "jest": "^29.5.0",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@rundown/cli": "file:../../../rundown/packages/cli",
+    "@turboshovel/shared": "*",
+    "commander": "^14.0.2",
+    "js-yaml": "^4.1.1",
+    "mdast-util-from-markdown": "^2.0.2",
+    "minimatch": "^10.1.1",
+    "unist-util-visit": "^5.0.0",
+    "zod": "^3.24.1"
+  }
+}

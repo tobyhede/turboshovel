@@ -1,0 +1,31 @@
+{
+  "description": "Permissive mode - warn only, never block. Supports convention-based context injection.",
+  "comment": "Context files in .claude/context/ auto-inject without configuration. See CONVENTIONS.md",
+
+  "gates": {
+    "check": {
+      "description": "Quality checks (warn only)",
+      "comment": "Customize for your project: 'npm run lint' | 'cargo clippy' | your command",
+      "command": "npm run lint",
+      "on_pass": "CONTINUE",
+      "on_fail": "CONTINUE"
+    },
+    "test": {
+      "description": "Tests (warn only)",
+      "comment": "Customize for your project: 'npm test' | 'cargo test' | your command",
+      "command": "npm test",
+      "on_pass": "CONTINUE",
+      "on_fail": "CONTINUE"
+    }
+  },
+  "hooks": {
+    "PostToolUse": {
+      "enabled_tools": ["Edit", "Write"],
+      "gates": ["check"]
+    },
+    "SubagentStop": {
+      "enabled_agents": [],
+      "gates": ["check", "test"]
+    }
+  }
+}

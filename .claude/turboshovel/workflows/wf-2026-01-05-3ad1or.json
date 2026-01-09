@@ -1,0 +1,27 @@
+{
+  "id": "wf-2026-01-05-3ad1or",
+  "workflow": "rundown/examples/execute-plan.runbook.md",
+  "title": "Execute Plan",
+  "description": "Execute an implementation plan in batches with review checkpoints.",
+  "step": 1,
+  "stepName": "Load plan",
+  "retryCount": 0,
+  "variables": {
+    "completed": true
+  },
+  "steps": [],
+  "pendingSteps": [],
+  "agentBindings": {},
+  "startedAt": "2026-01-05T09:58:25.810Z",
+  "updatedAt": "2026-01-05T10:00:20.663Z",
+  "snapshot": {
+    "status": "done",
+    "value": "complete",
+    "historyValue": {},
+    "context": {
+      "retryCount": 0,
+      "variables": {}
+    },
+    "children": {}
+  }
+}

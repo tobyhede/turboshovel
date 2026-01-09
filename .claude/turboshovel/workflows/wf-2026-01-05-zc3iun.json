@@ -1,0 +1,29 @@
+{
+  "id": "wf-2026-01-05-zc3iun",
+  "workflow": "rundown/examples/implement-task.runbook.md",
+  "title": "Implement Task",
+  "description": "Execute a single task from the implementation plan.",
+  "step": 1,
+  "stepName": "Implement",
+  "retryCount": 0,
+  "variables": {
+    "blocked": true
+  },
+  "steps": [],
+  "pendingSteps": [],
+  "agentBindings": {},
+  "agentId": "agent-002",
+  "startedAt": "2026-01-05T09:59:00.612Z",
+  "updatedAt": "2026-01-05T09:59:21.387Z",
+  "snapshot": {
+    "status": "done",
+    "value": "blocked",
+    "historyValue": {},
+    "context": {
+      "retryCount": 0,
+      "variables": {}
+    },
+    "children": {}
+  },
+  "lastResult": "pass"
+}

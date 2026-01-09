@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build outputs (not dist/ - needed for verify-install.sh)
+*.tsbuildinfo
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test artifacts
+coverage/
+.nyc_output/
+
+# Work files
+.work/
+
+# Environment
+.env*
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Claude Code
+.claude/
+.serena/

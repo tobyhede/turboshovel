@@ -3,3 +3,11 @@ dist/
 .DS_Store
 *.log
 coverage/
+.claude-docker/
+logs/
+
+.c8_output/
+.work/
+
+# Workflow state files (dev artifacts)
+.claude/turboshovel/runbooks/

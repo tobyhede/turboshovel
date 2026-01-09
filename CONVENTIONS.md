@@ -1,0 +1,359 @@
+# Hook System Conventions
+
+Convention-based patterns for zero-config hook customization.
+
+## Overview
+
+Conventions allow project-specific hook behavior without editing `turboshovel.json`. Place files following naming patterns and they auto-execute at the right time.
+
+## Convention Types
+
+### 1. Context Injection
+
+**Purpose:** Auto-inject content into conversation at hook events.
+
+**Patterns:**
+
+**Basic Pattern:** `.claude/context/{name}-{stage}.md`
+- Commands: `.claude/context/commit-start.md`
+- Skills: `.claude/context/test-driven-development-start.md`
+- Agents: `.claude/context/commit-agent-end.md`
+
+**Agent-Command Scoping:** `.claude/context/{agent}-{command}-{stage}.md`
+- Specific agent + command: `.claude/context/commit-agent-commit-start.md`
+- Agent with different command: `.claude/context/rust-agent-execute-end.md`
+- Plan review agent: `.claude/context/plan-review-agent-verify-start.md`
+
+**Registered hooks (10 real hooks + synthetic events):**
+
+Context injection supported:
+- `SessionStart` - At beginning of Claude Code session ✅
+- `SessionEnd` - At end of Claude Code session ✅
+- `UserPromptSubmit` - Before user prompt is processed ✅
+- `SubagentStop` - After agent completes (supports agent-command scoping) ✅
+- `PreToolUse` - Before a tool is used ✅
+- `PostToolUse` - After a tool is used ✅
+- `Stop` - When agent stops ✅
+- `Notification` - When notification is received ✅
+
+Gates only (context injection not implemented):
+- `PreCompact` - Before context compaction (gates work, context files not discovered)
+- `PermissionRequest` - When permission dialog is shown (gates work, context files not discovered)
+
+**Synthetic events:** SubagentStart is a synthetic event derived from PostToolUse (see ARCHITECTURE.md). It supports context injection and gates but is not registered in hooks.json.
+
+**Planned hooks:** SlashCommandStart, SlashCommandEnd, SkillStart, SkillEnd - recognized by config validation but not yet registered in `hooks.json` for Claude Code routing. Context patterns exist for future use.
+
+**Note:** SessionStart fires at the beginning of each Claude Code session and injects context from `session-start.md` if present in `.claude/context/`.
+
+**Examples:**
+
+```bash
+# Generic command context - any invocation
+.claude/context/commit-start.md
+
+# Generic agent context - any command using this agent
+.claude/context/commit-agent-end.md
+
+# Agent-command specific - commit-agent invoked by /commit
+.claude/context/commit-agent-commit-start.md
+
+# Agent-command specific - rust-agent invoked by /execute
+.claude/context/rust-agent-execute-end.md
+
+# Planning template for /plan command
+.claude/context/plan-start.md
+
+# TDD standards when skill loads
+.claude/context/test-driven-development-start.md
+```
+
+### 2. Directory Organization
+
+**Small projects (<5 files):**
+```
+.claude/context/{name}-{stage}.md
+```
+
+**Medium projects (5-20 files):**
+```
+.claude/context/slash-command/{name}-{stage}.md
+.claude/context/skill/{name}-{stage}.md
+```
+
+**Large projects (>20 files):**
+```
+.claude/context/slash-command/{name}/{stage}.md
+.claude/context/skill/{name}/{stage}.md
+```
+
+All structures supported - use what fits your project size.
+
+## Discovery Order
+
+Dispatcher searches paths in priority order within the **project's `.claude/context/` directory**.
+
+**For SubagentStop (agent completion):**
+
+1. `.claude/context/{agent}-{command}-end.md` (agent + command/skill)
+2. `.claude/context/{agent}-end.md` (agent only)
+3. Command/skill-specific paths (backward compat)
+
+**For Commands and Skills:**
+
+1. `.claude/context/{name}-{stage}.md`
+2. `.claude/context/slash-command/{name}-{stage}.md`
+3. `.claude/context/slash-command/{name}/{stage}.md`
+4. `.claude/context/skill/{name}-{stage}.md`
+5. `.claude/context/skill/{name}/{stage}.md`
+
+First match wins.
+
+**Priority Example (SubagentStop):**
+```
+Agent: rust-agent
+Active command: /execute
+
+Search order:
+1. rust-agent-execute-end.md (most specific)
+2. rust-agent-end.md (agent-specific)
+3. execute-end.md (command-specific, backward compat)
+```
+
+## Naming Rules
+
+### Command Names
+- Remove leading slash and namespace: `/turboshovel:code-review` → `code-review`
+- Use exact command name: `/turboshovel:plan` → `plan`
+- Lowercase with hyphens
+
+### Skill Names
+- Remove namespace prefix: `turboshovel:executing-plans` → `executing-plans`
+- Use exact skill name (may include hyphens)
+- Example: `test-driven-development`
+- Example: `conducting-code-review`
+
+### Agent Names
+- Remove namespace prefix: `turboshovel:rust-agent` → `rust-agent`
+- Use exact agent name (may include hyphens)
+- Example: `commit-agent`
+- Example: `code-review-agent`
+- Example: `review-collation-agent`
+
+### Tool Names (for PreToolUse/PostToolUse)
+- Tool names are **lowercased** for context file discovery
+- `Edit` tool → `edit-pre.md`, `edit-post.md`
+- `Write` tool → `write-pre.md`, `write-post.md`
+- `Step` tool → `step-pre.md`, `step-post.md`
+- `Task` tool → `task-pre.md`, `task-post.md`
+
+### Stage Names
+- `start` / `pre` - Before execution
+- `end` / `post` - After completion
+- Lowercase only
+
+## Content Format
+
+Context files are markdown with any structure:
+
+```markdown
+## Project Requirements
+
+List your requirements here.
+
+### Security
+- Requirement 1
+- Requirement 2
+
+### Performance
+- Benchmark targets
+- Optimization goals
+```
+
+Content appears as `additionalContext` in conversation.
+
+## Execution Model
+
+### Injection Timing
+
+**Before explicit gates:**
+```
+1. Convention file exists? → Auto-inject
+2. Run explicit gates (from turboshovel.json)
+3. Continue or block based on results
+```
+
+**Example flow for /code-review:**
+```
+1. SlashCommandStart fires
+2. Check for .claude/context/code-review-start.md
+3. If exists → inject content
+4. Run configured gates (e.g., verify-structure)
+5. Continue if all pass
+```
+
+### Combining Conventions and Gates
+
+**Zero-config approach:**
+```bash
+# Just create file - auto-injects!
+echo "## Requirements..." > .claude/context/code-review-start.md
+```
+
+**Mixed approach:**
+```bash
+# Convention file for injection
+.claude/context/code-review-start.md
+
+# Plus explicit gates for verification after agent completes
+{
+  "hooks": {
+    "SubagentStop": {
+      "enabled_agents": ["code-review-agent"],
+      "gates": ["verify-structure", "test"]
+    }
+  }
+}
+```
+
+Execution: Inject context → Agent runs → Run verify-structure → Run test
+
+## Control and Disabling
+
+### Disable Convention
+
+**Method 1: Rename file**
+```bash
+mv .claude/context/code-review-start.md \
+   .claude/context/code-review-start.md.disabled
+```
+
+**Method 2: Move to non-discovery path**
+```bash
+mkdir -p .claude/disabled
+mv .claude/context/code-review-start.md .claude/disabled/
+```
+
+**Method 3: Delete file**
+```bash
+rm .claude/context/code-review-start.md
+```
+
+No config changes needed - control via file presence.
+
+### Enable Convention
+
+Move/rename file back to discovery path:
+```bash
+mv .claude/context/code-review-start.md.disabled \
+   .claude/context/code-review-start.md
+```
+
+## Common Patterns
+
+### Pattern: Review Requirements
+
+**File:** `.claude/context/code-review-start.md`
+
+**Triggered by:** `/turboshovel:code-review` command
+
+**Content example:**
+```markdown
+## Security Requirements
+- Authentication required
+- Input validation
+- No secrets in logs
+
+## Performance Requirements
+- No N+1 queries
+- Response time < 200ms
+```
+
+### Pattern: Planning Template
+
+**File:** `.claude/context/plan-start.md`
+
+**Triggered by:** `/turboshovel:plan` command
+
+**Content example:**
+```markdown
+## Plan Structure
+
+Must include:
+1. Architecture impact
+2. Testing strategy
+3. Deployment plan
+4. Success criteria
+```
+
+### Pattern: Skill Standards
+
+**File:** `.claude/context/test-driven-development-start.md`
+
+**Triggered by:** TDD skill loading
+
+**Content example:**
+```markdown
+## Project TDD Standards
+
+Framework: Vitest
+Location: src/**/__tests__/*.test.ts
+Coverage: 80% minimum
+```
+
+## Migration from Custom Scripts
+
+**Before (custom script):**
+```bash
+# .claude/gates/inject-requirements.sh
+#!/bin/bash
+cat .claude/requirements.md | jq -Rs '{additionalContext: .}'
+```
+
+**After (convention):**
+```bash
+# Just rename/move the file!
+mv .claude/requirements.md .claude/context/code-review-start.md
+```
+
+Zero scripting needed.
+
+## Best Practices
+
+1. **File Organization:** Start flat, grow hierarchically as needed
+2. **Naming:** Use exact command/skill names (lowercase-only stage names)
+3. **Content:** Keep focused - one concern per file
+4. **Discovery:** Let multiple paths support project evolution
+5. **Control:** Rename/move files rather than editing turboshovel.json
+
+## Debugging
+
+**Check if file discovered:**
+```bash
+# Enable debug logging
+export TURBOSHOVEL_LOG_LEVEL=debug
+
+# View logs in real-time
+tail -f $TMPDIR/turboshovel/hooks-$(date +%Y-%m-%d).log
+```
+
+Look for: `"dispatcher: Context file: /path/to/file.md"`
+
+**Environment variables:**
+- `TURBOSHOVEL_LOG=0` - Disable logging entirely (enabled by default)
+- `TURBOSHOVEL_LOG_LEVEL=debug|info|warn|error` - Set log verbosity (default: info)
+
+**Common issues:**
+- Wrong file name (check exact command/skill name)
+- Wrong stage name (must be `start` or `end`, lowercase)
+- File not in discovery path (check supported structures)
+- Permissions (file must be readable)
+
+## Examples Directory
+
+See `examples/context/` for working examples:
+- Code review requirements
+- Planning templates
+- TDD standards
+
+Copy and customize for your project.

@@ -1,0 +1,45 @@
+# Base stage with common setup
+FROM node:22-slim AS base
+
+# Install sudo for npm mode runtime installs
+RUN apt-get update && apt-get install -y sudo && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user (Claude Code blocks --dangerously-skip-permissions with root)
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Install Claude Code CLI
+RUN npm install -g @anthropic-ai/claude-code
+
+# Verify Claude Code installed
+RUN claude --version
+
+# Create test workspace with proper ownership
+WORKDIR /test
+RUN chown -R testuser:testuser /test
+
+# Copy test entrypoint with explicit permissions
+COPY --chmod=755 scripts/docker-entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Local mode: needs tarballs and plugin source
+FROM base AS local
+COPY --chown=testuser:testuser dist/*.tgz ./packages/
+COPY --chown=testuser:testuser plugin/ ./plugin/
+
+# Install CLI packages globally (as root, before switching user)
+RUN npm install -g ./packages/turboshovel-shared-*.tgz ./packages/turboshovel-cli-*.tgz
+
+# Install plugin dependencies (shared from local tarball, rest from npm)
+RUN cd /test/plugin/core && \
+    npm install /test/packages/turboshovel-shared-*.tgz && \
+    npm install
+
+# Switch to non-root user
+USER testuser
+
+# NPM mode: minimal, installs from registry
+FROM base AS npm
+USER testuser
+# No local artifacts needed - installs from npm registry at runtime

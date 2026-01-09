@@ -1,0 +1,47 @@
+---
+const conventions = [
+  { pattern: 'session-start.md', when: 'Session start' },
+  { pattern: '{name}-start.md', when: 'Command or skill start' },
+  { pattern: '{name}-stop.md', when: 'Agent or skill completion' },
+  { pattern: 'PostToolUse.md', when: 'After any tool use' },
+  { pattern: 'UserPromptSubmit.md', when: 'Before prompt submission' },
+];
+---
+
+<section id="conventions" class="py-24 px-4">
+  <div class="container mx-auto max-w-4xl">
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">
+      <span class="text-cyber-purple">Context Conventions</span>
+    </h2>
+    <p class="text-center text-gray-400 mb-12">
+      Files in <code class="text-cyber-cyan">.claude/context/</code> are automatically injected based on naming patterns
+    </p>
+
+    <div class="neon-border rounded-xl bg-cyber-dark/50 overflow-hidden">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-cyber-purple/20">
+            <th class="px-4 py-3 text-left text-cyber-cyan text-sm font-bold">Pattern</th>
+            <th class="px-4 py-3 text-left text-gray-300 text-sm font-bold">When Injected</th>
+          </tr>
+        </thead>
+        <tbody>
+          {conventions.map((item, i) => (
+            <tr class={i % 2 === 0 ? 'bg-cyber-dark/30' : ''}>
+              <td class="px-4 py-3 font-mono text-cyber-magenta text-sm">
+                {item.pattern}
+              </td>
+              <td class="px-4 py-3 text-gray-400 text-sm">
+                {item.when}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="text-center text-gray-500 text-sm mt-6">
+      Example: <code class="text-cyber-cyan">code-review-start.md</code> is injected when <code class="text-cyber-magenta">/code-review</code> skill starts
+    </p>
+  </div>
+</section>

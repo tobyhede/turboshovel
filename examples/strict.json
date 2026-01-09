@@ -1,0 +1,38 @@
+{
+  "description": "Strict enforcement - block on all failures. Supports convention-based context injection.",
+  "comment": "Context files in .claude/context/ auto-inject without configuration. See CONVENTIONS.md",
+
+  "gates": {
+    "check": {
+      "description": "Quality checks must pass",
+      "comment": "Customize for your project: 'npm run lint' | 'cargo clippy' | your command",
+      "command": "npm run lint",
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
+    },
+    "test": {
+      "description": "All tests must pass",
+      "comment": "Customize for your project: 'npm test' | 'cargo test' | your command",
+      "command": "npm test",
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
+    },
+    "build": {
+      "description": "Build must succeed",
+      "comment": "Customize for your project: 'npm run build' | 'cargo build' | your command",
+      "command": "npm run build",
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
+    }
+  },
+  "hooks": {
+    "PostToolUse": {
+      "enabled_tools": ["Edit", "Write", "mcp__serena__replace_symbol_body"],
+      "gates": ["check"]
+    },
+    "SubagentStop": {
+      "enabled_agents": [],
+      "gates": ["check", "test", "build"]
+    }
+  }
+}

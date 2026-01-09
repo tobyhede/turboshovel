@@ -1,0 +1,41 @@
+---
+const githubUrl = 'https://github.com/tobyhede/turboshovel';
+---
+
+<section class="min-h-[80vh] flex flex-col items-center justify-center text-center px-4">
+  <div class="mb-8">
+    <img
+      src="/logo.png"
+      alt="Turboshovel Logo"
+      class="w-80 h-80 md:w-96 md:h-96 lg:w-[460px] lg:h-[460px] rounded-2xl shadow-neon-purple"
+    />
+  </div>
+
+  <h1 class="sr-only">Turboshovel</h1>
+
+  <p class="text-2xl md:text-3xl text-gray-200 mb-4 max-w-3xl">
+    Persistent Workflows for Claude Code
+  </p>
+
+  <p class="text-lg text-gray-400 mb-12 max-w-2xl">
+    Enforce process. Track progress. Resume anytime.
+    Powered by <code class="text-cyber-magenta">Rundown</code> runbooks.
+  </p>
+
+  <div class="flex flex-col sm:flex-row gap-4">
+    <a
+      href="#quickstart"
+      class="px-8 py-3 bg-cyber-cyan text-cyber-dark font-bold rounded-lg hover:shadow-neon-cyan transition-shadow"
+    >
+      Get Started
+    </a>
+    <a
+      href={githubUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="px-8 py-3 border border-cyber-magenta text-cyber-magenta font-bold rounded-lg hover:shadow-neon-magenta transition-shadow"
+    >
+      View on GitHub
+    </a>
+  </div>
+</section>

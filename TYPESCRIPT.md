@@ -1,0 +1,284 @@
+# TypeScript Gates
+
+Guide to creating and working with TypeScript gates in the Turboshovel hook system.
+
+## Overview
+
+TypeScript gates are gates defined **without a `command` field** in `turboshovel.json`. They're implemented as TypeScript modules in `plugin/core/src/gates/`.
+
+```json
+{
+  "gates": {
+    "plugin-path": {
+      "description": "Verify plugin path resolution in subagents",
+      "on_pass": "CONTINUE",
+      "on_fail": "CONTINUE"
+    }
+  }
+}
+```
+
+When this gate runs, the system loads `plugin/core/src/gates/plugin-path.ts` and calls its `execute()` function.
+
+## Built-in Gates
+
+The plugin includes these TypeScript gates:
+
+| Gate | Purpose | Default Hook |
+|------|---------|--------------|
+| `plugin-path` | Verify plugin path resolution in subagents | (manual) |
+| `workflow-step-tracker` | Track workflow step execution | PostToolUse |
+| `workflow-subagent-start` | Handle workflow subagent start events | SubagentStart |
+| `workflow-subagent-stop` | Handle workflow subagent stop events | SubagentStop |
+| `workflow-skill-start` | Handle workflow skill start events | SkillStart |
+
+## Creating a TypeScript Gate
+
+### 1. Create the Gate Module
+
+Create `plugin/core/src/gates/my-gate.ts`:
+
+```typescript
+import { HookInput, GateResult } from '../types';
+
+/**
+ * My custom gate
+ *
+ * Describe what this gate does and when it should be used.
+ */
+export async function execute(input: HookInput): Promise<GateResult> {
+  // Access hook input data
+  const { cwd, hook_event_name, tool_name, user_message } = input;
+
+  // Your gate logic here
+  const shouldPass = true;
+
+  if (shouldPass) {
+    return {
+      additionalContext: 'Gate passed - injecting this context'
+    };
+  } else {
+    return {
+      decision: 'block',
+      reason: 'Gate failed because...'
+    };
+  }
+}
+```
+
+### 2. Register in Index
+
+Add to `plugin/core/src/gates/index.ts`:
+
+```typescript
+export * as pluginPath from './plugin-path';
+export * as myGate from './my-gate';  // Add this line
+```
+
+**Note:** Gate name in `turboshovel.json` uses kebab-case (`my-gate`), which maps to camelCase export (`myGate`).
+
+### 3. Add to turboshovel.json
+
+Add to `plugin/turboshovel.json` (for plugin default) or project `.claude/turboshovel.json`:
+
+```json
+{
+  "gates": {
+    "my-gate": {
+      "description": "My custom gate",
+      "on_pass": "CONTINUE",
+      "on_fail": "BLOCK"
+    }
+  },
+  "hooks": {
+    "UserPromptSubmit": {
+      "gates": ["my-gate"]
+    }
+  }
+}
+```
+
+### 4. Build
+
+```bash
+cd plugin/core
+npm run build
+```
+
+## HookInput Interface
+
+```typescript
+interface HookInput {
+  hook_event_name: string;  // "PostToolUse", "UserPromptSubmit", etc.
+  cwd: string;              // Current working directory
+
+  // PostToolUse / PreToolUse
+  tool_name?: string;       // "Edit", "Write", "Task", etc.
+  file_path?: string;       // File being edited
+  tool_input?: {            // Task tool input (for workflow tracking)
+    description?: string;   // Task description
+    subagent_type?: string; // Agent type being spawned
+    prompt?: string;        // Prompt sent to agent
+  };
+
+  // SubagentStart / SubagentStop
+  agent_id?: string;        // Unique agent identifier (for binding tasks)
+  agent_name?: string;      // "rust-agent", "code-review-agent", etc.
+  subagent_name?: string;   // Alternative agent name field
+  output?: string;          // Agent output (SubagentStop only)
+  agent_transcript_path?: string;  // Path to agent transcript
+
+  // UserPromptSubmit
+  user_message?: string;    // User's prompt text
+
+  // SlashCommand/Skill (planned - not yet registered)
+  command?: string;         // "/code-review", etc.
+  skill?: string;           // "executing-plans", etc.
+}
+```
+
+## GateResult Interface
+
+```typescript
+interface GateResult {
+  // Success - add context and continue
+  additionalContext?: string;
+
+  // Block agent from proceeding
+  decision?: 'block';
+  reason?: string;
+
+  // Stop Claude entirely
+  continue?: false;
+  message?: string;
+}
+```
+
+### Return Values
+
+**Pass with context injection:**
+```typescript
+return {
+  additionalContext: 'This content is injected into the conversation'
+};
+```
+
+**Pass silently:**
+```typescript
+return {};
+```
+
+**Block execution:**
+```typescript
+return {
+  decision: 'block',
+  reason: 'Cannot proceed because...'
+};
+```
+
+**Stop Claude entirely:**
+```typescript
+return {
+  continue: false,
+  message: 'Stopping because...'
+};
+```
+
+## Accessing Session State
+
+Gates can read/write session state for cross-hook coordination:
+
+```typescript
+import { HookInput, GateResult } from '../types';
+import { Session } from '../session';
+
+export async function execute(input: HookInput): Promise<GateResult> {
+  const session = new Session(input.cwd);
+
+  // Read state
+  const activeCommand = await session.get('active_command');
+  const editedFiles = await session.get('edited_files');
+
+  // Write state
+  await session.set('active_command', '/my-command');
+  await session.append('edited_files', '/path/to/file.ts');
+
+  // Check array membership
+  const hasRustFiles = await session.contains('file_extensions', 'rs');
+
+  return {};
+}
+```
+
+## Using the Logger
+
+```typescript
+import { logger } from '../logger';
+
+export async function execute(input: HookInput): Promise<GateResult> {
+  await logger.debug('Gate starting', { input });
+  await logger.info('Processing', { file: input.file_path });
+  await logger.warn('Potential issue', { reason: '...' });
+  await logger.error('Gate failed', { error: '...' });
+
+  return {};
+}
+```
+
+Logs go to `$TMPDIR/turboshovel/hooks-YYYY-MM-DD.log`.
+
+## Example: Plugin Path Gate
+
+The built-in `plugin-path` gate shows a complete implementation. See `plugin/core/src/gates/plugin-path.ts` for the full source code.
+
+This gate verifies that plugin paths are correctly resolved in subagent contexts, ensuring the `CLAUDE_PLUGIN_ROOT` environment variable is properly set and accessible.
+
+## Development Workflow
+
+### Build
+
+```bash
+cd plugin/core
+npm run build
+```
+
+### Test Manually
+
+```bash
+# Test a hook event
+echo '{"hook_event_name": "UserPromptSubmit", "cwd": "/path/to/project", "user_message": "Run project test command"}' | \
+  CLAUDE_PLUGIN_ROOT=/path/to/plugin \
+  node plugin/core/dist/cli.js
+```
+
+### Run Tests
+
+```bash
+cd plugin/core
+npm test
+```
+
+### Watch Mode
+
+```bash
+cd plugin/core
+npm run build -- --watch
+```
+
+## Naming Conventions
+
+| turboshovel.json | TypeScript Export | File |
+|------------|-------------------|------|
+| `plugin-path` | `pluginPath` | `plugin-path.ts` |
+| `my-custom-gate` | `myCustomGate` | `my-custom-gate.ts` |
+
+The gate loader converts kebab-case to camelCase automatically.
+
+## Best Practices
+
+1. **Single responsibility**: Each gate does one thing well
+2. **Fast execution**: Gates run synchronously in hook flow
+3. **Graceful failures**: Return empty result `{}` on non-critical errors
+4. **Logging**: Use logger for debugging, not console
+5. **Type safety**: Leverage TypeScript interfaces
+6. **Documentation**: Add JSDoc comments explaining gate purpose
