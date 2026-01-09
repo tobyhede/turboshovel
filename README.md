@@ -1,59 +1,59 @@
 # Turboshovel
 
-**Automate context and enforce quality.**
+**Persistent Workflows for Claude Code**
 
-Turboshovel is a Claude Code plugin that turns your documentation into active agent instructions. It injects context when it matters and enforces quality checks before code is committed.
+Turboshovel is a Claude Code plugin that brings persistent, enforceable workflows to your agents. Define multi-step processes in Markdown runbooks, and Turboshovel ensures agents follow them—even across context clears.
 
 ## Features
 
+### 💾 Persistent State
+Workflow progress survives context clears. Resume interrupted tasks instantly. Never lose track of where you are.
+
+### 🛡️ Process Enforcement
+Enforce multi-step workflows with Rundown runbooks. Prevent agents from skipping steps or jumping around.
+
+### ⚙️ Quality Gates
+Run lint, test, build at workflow boundaries. Block agents when checks fail. Chain gates for complex pipelines.
+
 ### 🧠 Context Injection
-**Teach your agent your project rules automatically.**
-Simply create markdown files in `.claude/context/` and they will be injected into the agent's context exactly when needed—when a session starts, when a command runs, or when a tool is used.
-*Zero configuration required.*
-
-### 🛡️ Quality Gates
-**Prevent mistakes with automatic checks.**
-Configure gates to run linting, testing, or custom scripts. Block the agent from proceeding if quality checks fail.
-
+Auto-inject context at runbook steps. Agents get focused, step-specific instructions exactly when needed.
 
 ## Installation
 
-### Plugin
 ```bash
-claude plugin marketplace add tobyhede/turboshovel
-claude plugin install turboshovel@turboshovel
+claude plugin add tobyhede/turboshovel
 ```
 
-### Rundown CLI (Optional - for guided workflows)
-Turboshovel integrates with the [Rundown CLI](https://github.com/tobyhede/rundown) for guided workflow execution:
-```bash
-npm install -g @rundown/cli
-```
+Turboshovel includes [Rundown](https://github.com/tobyhede/rundown) for workflow orchestration.
 
 ## Quick Start
 
-### 1. Onboard Your Agent (Context Injection)
-Teach the agent about your project immediately when a session starts.
+### 1. Create a Runbook
 
-```bash
-mkdir -p .claude/context
+Define your workflow in `.claude/rundown/runbooks/feature.runbook.md`:
 
-# Create session start context
-cat > .claude/context/session-start.md << 'EOF'
-## Project Guidelines
-- We use TypeScript strict mode.
-- Prefer functional components for React.
-- Run tests before implementing features.
-EOF
+```markdown
+## 1. Create Plan
+Design the implementation approach.
+- PASS: CONTINUE
+- FAIL: STOP
+
+## 2. Implement Feature
+Write the code following the plan.
+- PASS: CONTINUE
+- FAIL: RETRY 2
+
+## 3. Run Tests
+Verify everything works.
+- PASS: COMPLETE
+- FAIL: GOTO 2
 ```
-*Now, every time you start a session, the agent knows the rules.*
 
-### 2. Add Safety Nets (Quality Gates)
-Ensure the agent doesn't break the build.
+### 2. Add Quality Gates
 
-**Create configuration:**
-```bash
-# .claude/turboshovel.json
+Create `.claude/turboshovel.json`:
+
+```json
 {
   "gates": {
     "test": {
@@ -68,18 +68,40 @@ Ensure the agent doesn't break the build.
   }
 }
 ```
-*Now, the agent cannot finish a sub-task if tests fail.*
 
+### 3. Run the Workflow
+
+```bash
+rundown run .claude/rundown/runbooks/feature.runbook.md
+```
+
+**How it works:**
+- Runbook defines the workflow steps and transitions
+- State persists in `.claude/rundown/session.json`
+- Context clears? `rundown status` shows where you are
+- Gates enforce quality at each step boundary
+
+## CLI Commands
+
+```bash
+rundown run <file>     # Start a workflow
+rundown pass           # Mark current step as passed
+rundown fail           # Mark current step as failed
+rundown goto <n>       # Jump to step number
+rundown status         # Show current state
+rundown stop           # Abort workflow
+rundown complete       # Mark complete
+rundown stash          # Pause enforcement
+rundown pop            # Resume enforcement
+```
 
 ## Documentation
 
-- **[SETUP.md](SETUP.md)** - full configuration guide for gates and hooks.
-- **[CONVENTIONS.md](CONVENTIONS.md)** - context file naming conventions.
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - deep dive into how Turboshovel works.
-- **[TYPESCRIPT.md](TYPESCRIPT.md)** - custom TypeScript gates.
-
-## Examples
-Check the `examples/` directory for ready-to-use configurations.
+- **[SETUP.md](SETUP.md)** - Full configuration guide
+- **[CONVENTIONS.md](CONVENTIONS.md)** - Context file naming conventions
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design
+- **[TYPESCRIPT.md](TYPESCRIPT.md)** - Custom TypeScript gates
 
 ## License
+
 MIT

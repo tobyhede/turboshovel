@@ -1,14 +1,14 @@
 # CLAUDE.md
 
-Turboshovel is a Claude Code plugin providing a generic hook framework for quality enforcement and context injection.
+Turboshovel is a Claude Code plugin for persistent, enforceable workflows. Powered by Rundown runbooks.
 
 ## Features
 
-- **Quality Gates**: Automatically enforce project checks (lint, test, build) at hook points (PostToolUse, SubagentStop, UserPromptSubmit)
-- **Context Injection**: Convention-based `.claude/context/{name}-{stage}.md` files auto-inject into conversations
-- **Keyword Triggers**: Gates automatically fire based on conversation keywords
+- **Persistent State**: Workflow progress survives context clears. Resume interrupted tasks instantly.
+- **Process Enforcement**: Enforce multi-step workflows with Rundown runbooks. Prevent agents from skipping steps.
+- **Quality Gates**: Run lint, test, build at workflow boundaries. Block agents when checks fail.
+- **Context Injection**: Auto-inject context at runbook steps via `.claude/context/{name}-{stage}.md` files.
 - **File Pattern Filtering**: Run gates only for specific files/directories (perfect for monorepos)
-- **Session Tracking**: Session state persists across hook invocations
 - **TypeScript Gates**: Custom gates via TypeScript for complex logic
 
 ## Configuration
@@ -98,13 +98,7 @@ Claude Code automatically sets `${CLAUDE_PLUGIN_ROOT}` to the correct path for e
 
 ## Rundown Integration
 
-Turboshovel integrates with the external [rundown CLI](https://github.com/tobyhede/rundown) for workflow orchestration (optional dependency).
-
-Install rundown globally if needed:
-
-```bash
-npm install -g @rundown/cli
-```
+Turboshovel includes [Rundown](https://github.com/tobyhede/rundown) for workflow orchestration.
 
 State persists in `.claude/rundown/runbooks/` (workflow files) and `.claude/rundown/session.json` (active workflow tracking).
 
