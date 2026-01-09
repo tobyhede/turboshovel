@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: plugin/core/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Validate dispatch payload
         if: github.event_name == 'repository_dispatch'
