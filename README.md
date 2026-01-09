@@ -1,5 +1,9 @@
 # Turboshovel
 
+<p align="center">
+  <img src="turboshovel.png" alt="Turboshovel Logo" width="200">
+</p>
+
 **Persistent Workflows for Claude Code**
 
 Turboshovel is a Claude Code plugin that brings persistent, enforceable workflows to your agents. Define multi-step processes in Markdown runbooks, and Turboshovel ensures agents follow them—even across context clears.
