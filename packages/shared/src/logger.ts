@@ -3,6 +3,10 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { tmpdir } from 'os';
 
+/**
+ * Log severity levels for turboshovel logging.
+ * Controls which messages are written based on TURBOSHOVEL_LOG_LEVEL.
+ */
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogEntry {
@@ -129,21 +133,48 @@ function createEntry(level: LogLevel, message: string, data?: Record<string, unk
  *   {"ts":"2025-11-25T10:30:00.000Z","level":"info","event":"PostToolUse","tool":"Edit"}
  */
 export const logger = {
+  /**
+   * Log a debug message.
+   * @param message - The message to log
+   * @param data - Optional structured data to include
+   * @returns Promise that resolves when log is written
+   */
   debug: (message: string, data?: Record<string, unknown>): Promise<void> =>
     writeLog(createEntry('debug', message, data)),
 
+  /**
+   * Log an info message.
+   * @param message - The message to log
+   * @param data - Optional structured data to include
+   * @returns Promise that resolves when log is written
+   */
   info: (message: string, data?: Record<string, unknown>): Promise<void> =>
     writeLog(createEntry('info', message, data)),
 
+  /**
+   * Log a warning message.
+   * @param message - The message to log
+   * @param data - Optional structured data to include
+   * @returns Promise that resolves when log is written
+   */
   warn: (message: string, data?: Record<string, unknown>): Promise<void> =>
     writeLog(createEntry('warn', message, data)),
 
+  /**
+   * Log an error message.
+   * @param message - The message to log
+   * @param data - Optional structured data to include
+   * @returns Promise that resolves when log is written
+   */
   error: (message: string, data?: Record<string, unknown>): Promise<void> =>
     writeLog(createEntry('error', message, data)),
 
   /**
    * Log unconditionally (bypasses TURBOSHOVEL_LOG check).
    * Used for startup/diagnostic logging to verify hooks are invoked.
+   * @param message - The message to log
+   * @param data - Optional structured data to include
+   * @returns Promise that resolves when log is written
    */
   always: (message: string, data?: Record<string, unknown>): Promise<void> =>
     writeLogAlways(createEntry('info', message, data)),
@@ -151,6 +182,10 @@ export const logger = {
   /**
    * Log a hook event with structured data.
    * Convenience method for common hook logging pattern.
+   * @param level - The log level for this event
+   * @param event - The hook event name (e.g., "PostToolUse")
+   * @param data - Optional structured data to include
+   * @returns Promise that resolves when log is written
    */
   event: (level: LogLevel, event: string, data?: Record<string, unknown>): Promise<void> =>
     writeLog({
@@ -162,11 +197,13 @@ export const logger = {
 
   /**
    * Get the current log file path (for mise tasks).
+   * @returns The absolute path to today's log file
    */
   getLogFilePath,
 
   /**
    * Get the log directory path (for mise tasks).
+   * @returns The absolute path to the log directory
    */
   getLogDir
 };

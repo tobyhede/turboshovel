@@ -54,7 +54,11 @@ export type HookInput = z.infer<typeof HookInputSchema>;
 export type ParseResult<T> = { success: true; data: T } | { success: false; error: string };
 
 /**
- * Parse and validate HookInput from JSON string
+ * Parse and validate HookInput from JSON string.
+ * Performs both JSON parsing and Zod schema validation.
+ *
+ * @param json - The JSON string to parse and validate
+ * @returns ParseResult with validated HookInput on success, or error message on failure
  */
 export function parseHookInput(json: string): ParseResult<HookInput> {
   let parsed: unknown;
@@ -94,4 +98,8 @@ export const SessionStateSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).default({})
 });
 
+/**
+ * Session state type inferred from SessionStateSchema.
+ * Represents validated session state with all defaults applied.
+ */
 export type ValidatedSessionState = z.infer<typeof SessionStateSchema>;

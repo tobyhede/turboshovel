@@ -6,6 +6,10 @@ import type { HookInput as SchemaHookInput } from './schemas.js';
 // Re-export for consumers
 export type HookInput = SchemaHookInput;
 
+/**
+ * Result from a gate execution.
+ * Determines how the hook system should proceed after running a gate.
+ */
 export interface GateResult {
   // Success - add context and continue
   additionalContext?: string;
@@ -19,6 +23,10 @@ export interface GateResult {
   message?: string;
 }
 
+/**
+ * Function signature for gate execution.
+ * Gates receive hook input and return a result determining how to proceed.
+ */
 export type GateExecute = (input: HookInput) => Promise<GateResult>;
 
 export interface GateConfig {
@@ -56,14 +64,27 @@ export interface GateConfig {
   on_fail?: string;
 }
 
+/**
+ * Configuration for a hook event.
+ * Specifies which tools, agents, and gates are enabled for this hook.
+ */
 export interface HookConfig {
+  /** Tool names that trigger this hook (PostToolUse only) */
   enabled_tools?: string[];
+  /** Agent types that trigger this hook (SubagentStart/Stop only) */
   enabled_agents?: string[];
+  /** Gate names to execute when this hook fires */
   gates?: string[];
 }
 
+/**
+ * Root configuration for turboshovel.
+ * Defines hooks and gates for the plugin.
+ */
 export interface TurboshovelConfig {
+  /** Hook event configurations keyed by event name */
   hooks: Record<string, HookConfig>;
+  /** Gate configurations keyed by gate name */
   gates: Record<string, GateConfig>;
 }
 

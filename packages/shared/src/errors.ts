@@ -1,19 +1,31 @@
 /**
- * Type guard for NodeJS.ErrnoException
+ * Type guard for NodeJS.ErrnoException.
+ * Checks if an unknown value is a Node.js error with an error code.
+ *
+ * @param error - The unknown value to check
+ * @returns True if error is a NodeJS.ErrnoException with 'code' property
  */
 export function isNodeError(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && 'code' in error;
 }
 
 /**
- * Type guard for Error instances
+ * Type guard for Error instances.
+ * Checks if an unknown value is an Error object.
+ *
+ * @param error - The unknown value to check
+ * @returns True if error is an Error instance
  */
 export function isError(error: unknown): error is Error {
   return error instanceof Error;
 }
 
 /**
- * Extract error message safely
+ * Extract error message safely from any value.
+ * Handles Error instances, strings, and other types.
+ *
+ * @param error - The unknown error value to extract message from
+ * @returns The error message string
  */
 export function getErrorMessage(error: unknown): string {
   if (isError(error)) {
@@ -39,7 +51,11 @@ export type SessionLoadResult<T> =
   | { success: false; error: SessionLoadError };
 
 /**
- * Check if error is file not found (expected on first run)
+ * Check if error is file not found (expected on first run).
+ * Type narrowing function for SessionLoadError discriminated union.
+ *
+ * @param error - The SessionLoadError to check
+ * @returns True if error type is 'file_not_found'
  */
 export function isFileNotFoundError(error: SessionLoadError): boolean {
   return error.type === 'file_not_found';

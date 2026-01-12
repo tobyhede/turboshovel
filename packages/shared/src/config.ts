@@ -70,6 +70,12 @@ function validateGateConfig(gateName: string, gateConfig: GateConfig): void {
 /**
  * Validate config invariants to catch configuration errors early.
  * Throws descriptive errors when invariants are violated.
+ *
+ * @param config - The TurboshovelConfig to validate
+ * @throws Error if hook event names are unknown
+ * @throws Error if gates referenced in hooks don't exist
+ * @throws Error if gate actions are invalid
+ * @throws Error if gate file patterns are invalid
  */
 export function validateConfig(config: TurboshovelConfig): void {
   // Invariant: Hook event names must be known types
@@ -156,7 +162,11 @@ function getPluginRoot(): string | null {
 }
 
 /**
- * Load a single config file
+ * Load a single config file from disk.
+ *
+ * @param configPath - Absolute path to the configuration file
+ * @returns The parsed TurboshovelConfig, or null if file doesn't exist
+ * @throws Error if file exists but contains invalid JSON
  */
 export async function loadConfigFile(configPath: string): Promise<TurboshovelConfig | null> {
   if (await fileExists(configPath)) {
@@ -193,6 +203,10 @@ function mergeConfigs(pluginConfig: TurboshovelConfig, projectConfig: Turboshove
  * 3. Plugin: ${CLAUDE_PLUGIN_ROOT}/turboshovel.json (fallback/defaults)
  *
  * Configs are MERGED - project overrides plugin for same keys.
+ *
+ * @param cwd - Current working directory to search for config files
+ * @returns The merged TurboshovelConfig, or null if no config found
+ * @throws Error if config is found but fails validation
  */
 export async function loadConfig(cwd: string): Promise<TurboshovelConfig | null> {
   const pluginRoot = getPluginRoot();

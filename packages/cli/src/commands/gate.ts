@@ -4,6 +4,12 @@ import type { Command } from 'commander';
 import { execSync, type ExecSyncOptions } from 'child_process';
 import { getCwd } from '../helpers/context.js';
 
+/**
+ * Register the 'gate' command with the CLI program.
+ * Adds 'turboshovel gate <name>' command to run named gates.
+ *
+ * @param program - The Commander program instance to register the command on
+ */
 export function registerGateCommand(program: Command): void {
   program
     .command('gate <name>')
